@@ -255,7 +255,9 @@ class tools:
             if defaultCellFillColor == "black"
             else "yellow",
             colorText.FAIL: "red",
-            colorText.WHITE: "white",
+            colorText.WHITE: "white" 
+            if defaultCellFillColor == "white"
+            else "black",
         }
         cleanedUpStyledValue = cellStyledValue
         cellFillColor = defaultCellFillColor
@@ -295,7 +297,7 @@ class tools:
         artColor = "lightgreen" if bgColor == "black" else "blue"
         menuColor = "red"
 
-        repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra |Telegram: https://t.me/PKScreener | This report is for learning/analysis purposes ONLY. pkjmesra assumes no responsibility or liability for any errors or omissions in this report or repository or gain/loss bearing out of this analysis.\n"
+        repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra | Telegram: https://t.me/PKScreener | This report is for learning/analysis purposes ONLY. pkjmesra assumes no responsibility or liability for any errors or omissions in this report or repository or gain/loss bearing out of this analysis.\n"
         repoText = f"{repoText}\n[+] Understanding this report:\n"
         legendText = "\n*** 1. Stock ***: This is the NSE symbol/ticker for a company. Stocks that are NOT stage two, are coloured red. *** 2. Consol.(30Prds) *** : It shows the price range in which stock is trading for the last 30 trading sessions(20 trading sessions per month) 3. *** Breakout(30Prds) ***: The BO is Breakout level based on last 30 sessions. R is the resistance level (if available)."
         legendText = f"{legendText} An investor should consider both BO & R level to analyse entry / exits in their trading lessons. If the BO value is green, it means the stock has already broken out (is above BO level). If BO is in red, it means the stock is yet to break out.  *** 4. LTP ***: This is the last/latest trading/closing price of the given stock on a given date at NSE. The LTP in green/red means the"
@@ -452,7 +454,7 @@ class tools:
                         )
                         if columnNumber == 0:
                             cleanValue = unstyledLine.split(separator)[1]
-                            style = style if "%" in cleanValue else gridColor
+                            # style = style if "%" in cleanValue else gridColor
                         if bgColor == "white" and style == "yellow":
                             # Yellow on a white background is difficult to read
                             style = "blue"
