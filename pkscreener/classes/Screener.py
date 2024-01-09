@@ -1208,7 +1208,7 @@ class tools:
         screenDict["%Chng"] = pct_change
         ltp = round(recent["Close"].iloc[0], 2)
         verifyStageTwo = True
-        if self.configManager.stageTwo and len(data) > 250:
+        if len(data) > 250:
             yearlyLow = data.head(250).min()["Close"]
             yearlyHigh = data.head(250).max()["Close"]
             if ltp < (2 * yearlyLow) or ltp < (0.75 * yearlyHigh):
