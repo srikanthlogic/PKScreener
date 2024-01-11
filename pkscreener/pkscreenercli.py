@@ -123,6 +123,11 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--maxdisplayresults",
+    help="Maximum number of results to display.",
+    required=False,
+)
+argParser.add_argument(
     "-o",
     "--options",
     help="Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>:etc. format. For example: ./pkscreenercli.py -a Y -o X:12:10 -e will run the screener with answer Y as default choice to questions and scan with menu choices: Scanners > Nifty (All Stocks) > Closing at least 2%% up since last 3 day",

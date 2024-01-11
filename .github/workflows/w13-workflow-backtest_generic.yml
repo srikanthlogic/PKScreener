@@ -180,7 +180,7 @@ jobs:
         RUNNER : "GitHub_Actions"
         BACKTEST_NAME: ${{ inputs.name }}
       run: |
-        pkscreenercli.exe -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }}
+        pkscreenercli.exe -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }} --maxdisplayresults 100
         copy /Y results\* Backtest-Reports
 
     - name: Run backtest on Linux
@@ -191,10 +191,10 @@ jobs:
         RUNNER : "GitHub_Actions"
         BACKTEST_NAME: ${{ inputs.name }}
       run: |
-        /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }}
+        /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }} --maxdisplayresults 100
         ls -l results
         cp results/*.html Backtest-Reports
-        # python3 pkscreener/pkscreenercli.py -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }}
+        # python3 pkscreener/pkscreenercli.py -a Y -e -p -o B:30:${{ inputs.params }} -u ${{ inputs.user }} --maxdisplayresults 100
   
     - name: Push backtest and summary reports
       continue-on-error: true

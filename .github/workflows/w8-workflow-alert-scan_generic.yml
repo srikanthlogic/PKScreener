@@ -185,7 +185,7 @@ jobs:
         RUNNER : "GitHub_Actions"
       run: |
         ${{ inputs.prerequisites }}
-        pkscreenercli.exe ${{ inputs.params }}
+        pkscreenercli.exe ${{ inputs.params }} --maxdisplayresults 100
         ${{ inputs.postrun }}
 
     - name: Run Scan on Ubuntu
@@ -195,7 +195,7 @@ jobs:
         RUNNER : "GitHub_Actions"
       run: |
         ${{ inputs.prerequisites }}
-        /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin ${{ inputs.params }}
+        /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin ${{ inputs.params }} --maxdisplayresults 100
         ${{ inputs.postrun }}
 
   Delete_Workflow_Run:

@@ -1339,7 +1339,7 @@ def printNotifySaveScreenedResults(
     screenResults, saveResults, selectedChoice, menuChoiceHierarchy, testing, user=None
 ):
     global userPassedArgs, elapsed_time
-    MAX_ALLOWED = 100 if not testing else 1
+    MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     if user is None and userPassedArgs.user is not None:
@@ -1423,7 +1423,7 @@ def printNotifySaveScreenedResults(
                     if (len(saveResults) > MAX_ALLOWED)
                     else ""
                 )
-                caption = f"<b>({len(saveResults)}</b> stocks found in {str('{:.2f}'.format(elapsed_time))} sec){warn_text}. {title}"
+                caption = f"<b>({len(saveResults)}{'+' if (len(saveResults) > MAX_ALLOWED) else ''}</b> stocks found in {str('{:.2f}'.format(elapsed_time))} sec){warn_text}. {title}"
                 backtestExtension = "_backtest.png"
                 if len(screenResultsTrimmed) > MAX_ALLOWED:
                     screenResultsTrimmed = screenResultsTrimmed.head(MAX_ALLOWED)
@@ -1663,6 +1663,7 @@ def runScanners(
 ):
     global selectedChoice, userPassedArgs, elapsed_time
     choices = userReportName(selectedChoice)
+    max_allowed = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
         numStocks = len(listStockCodes) * int(iterations)
         queueCounter = 0
@@ -1712,9 +1713,9 @@ def runScanners(
                 progressbar()
                 # If it's being run under unit testing, let's wrap up if we find at least 1
                 # stock or if we've already tried screening through 5% of the list.
-                if testing and (
+                if (testing and (
                     len(lstscreen) >= 1 or counter >= int(len(listStockCodes) * 0.05)
-                ):
+                )) or len(lstscreen) >= max_allowed:
                     break
                 if counter >= len(listStockCodes):
                     queueCounter += 1
