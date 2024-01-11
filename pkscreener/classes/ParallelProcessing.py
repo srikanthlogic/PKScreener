@@ -216,9 +216,9 @@ class StockConsumer:
                     + colorText.END
                 )
                 saveDictionary["Stock"] = stock
-                screener.find52WeekHighLow(
-                    fullData, saveDictionary, screeningDictionary
-                )
+                if not self.shouldProceedWithScanning(executeOption):
+                    return None
+                
                 isLtpValid, verifyStageTwo = screener.validateLTP(
                     fullData,
                     screeningDictionary,
@@ -247,6 +247,14 @@ class StockConsumer:
                     saveDictionary,
                     percentage=configManager.consolidationPercentage,
                 )
+                if ((executeOption == 3)
+                        and (
+                            consolidationValue == 0 or
+                            consolidationValue > configManager.consolidationPercentage
+                        or not isLtpValid
+                        )
+                    ):
+                    return None
                 isMaReversal = screener.validateMovingAverages(
                     processedData, screeningDictionary, saveDictionary, maRange=1.25
                 )
@@ -290,6 +298,11 @@ class StockConsumer:
                         saveDictionary,
                         daysToLookback=configManager.daysToLookback,
                     )
+                    if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio or not isLtpValid:
+                        return None
+                elif executeOption == 2:
+                    if not (isBreaking) or not hasMinVolumeRatio or not isLtpValid:
+                        return None
                 if executeOption == 23:
                     isBreakingOutNow = screener.findBreakingoutNow(processedData)
                 if executeOption == 24:
@@ -304,39 +317,13 @@ class StockConsumer:
                     )
                 else:
                     isLowestVolume = False
+                if executeOption == 4 and (not isLtpValid or not isLowestVolume):
+                    return None
                 isValidRsi = screener.validateRSI(
                     processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                 )
-                try:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        currentTrend = screener.findTrend(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            daysToLookback=configManager.daysToLookback,
-                            stockName=stock,
-                        )
-                except np.RankWarning as e:
-                    hostRef.default_logger.debug(e, exc_info=True)
-                    screeningDictionary["Trend"] = "Unknown"
-                    saveDictionary["Trend"] = "Unknown"
-                isValidCci = screener.validateCCI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
-                )
-                isCandlePattern = False
-                try:
-                    # Only 'doji' and 'inside' is internally implemented by pandas_ta.
-                    # Otherwise, for the rest of the candle patterns, they also need
-                    # TA-Lib. So if TA-Lib is not available, it will throw exception
-                    # We can live with no-patterns if user has not installed ta-lib
-                    # yet. If ta-lib is available, PKTalib will load it automatically.
-                    isCandlePattern = candlePatterns.findPattern(
-                        processedData, screeningDictionary, saveDictionary
-                    )
-                except Exception as e:  # pragma: no cover
-                    hostRef.default_logger.debug(e, exc_info=True)
-                    screeningDictionary["Pattern"] = ""
-                    saveDictionary["Pattern"] = ""
+                if executeOption == 5 and (not isLtpValid or not isValidRsi):
+                    return None
                 isConfluence = False
                 isInsideBar = False
                 isIpoBase = False
@@ -344,22 +331,23 @@ class StockConsumer:
                     isIpoBase = screener.validateIpoBase(
                         stock, fullData, screeningDictionary, saveDictionary
                     )
-                if respChartPattern == 3 and executeOption == 7:
-                    isConfluence = screener.validateConfluence(
-                        stock,
-                        processedData,
-                        screeningDictionary,
-                        saveDictionary,
-                        percentage=insideBarToLookback,
-                    )
-                else:
-                    isInsideBar = screener.validateInsideBar(
-                        processedData,
-                        screeningDictionary,
-                        saveDictionary,
-                        chartPattern=respChartPattern,
-                        daysToLookback=insideBarToLookback,
-                    )
+                if executeOption == 7:
+                    if respChartPattern == 3:
+                        isConfluence = screener.validateConfluence(
+                            stock,
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            percentage=insideBarToLookback,
+                        )
+                    else:
+                        isInsideBar = screener.validateInsideBar(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            chartPattern=respChartPattern,
+                            daysToLookback=insideBarToLookback,
+                        )
 
                 with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                     if (
@@ -377,10 +365,6 @@ class StockConsumer:
                         isNR = screener.validateNarrowRange(
                             processedData, screeningDictionary, saveDictionary
                         )
-
-                isMomentum = screener.validateMomentum(
-                    processedData, screeningDictionary, saveDictionary
-                )
                 if executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
                         screener.validatePriceRisingByAtLeast2Percent(
@@ -393,13 +377,13 @@ class StockConsumer:
                     isVSA = screener.validateVolumeSpreadAnalysis(
                         processedData, screeningDictionary, saveDictionary
                     )
-                if maLength is not None and executeOption == 6 and reversalOption == 4:
+                if executeOption == 6 and reversalOption == 4 and maLength is not None:
                     isMaSupport = screener.findReversalMA(
                         fullData, screeningDictionary, saveDictionary, maLength
                     )
 
                 isVCP = False
-                if respChartPattern == 4:
+                if executeOption == 7 and respChartPattern == 4:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                         isVCP = screener.validateVCP(
                             fullData, screeningDictionary, saveDictionary
@@ -422,259 +406,102 @@ class StockConsumer:
                         )
                 else:
                     isLorentzian = False
+                
+                # Must-run, but only at the end
+                isCandlePattern = False
+                try:
+                    # Only 'doji' and 'inside' is internally implemented by pandas_ta.
+                    # Otherwise, for the rest of the candle patterns, they also need
+                    # TA-Lib. So if TA-Lib is not available, it will throw exception
+                    # We can live with no-patterns if user has not installed ta-lib
+                    # yet. If ta-lib is available, PKTalib will load it automatically.
+                    isCandlePattern = candlePatterns.findPattern(
+                        processedData, screeningDictionary, saveDictionary
+                    )
+                except Exception as e:  # pragma: no cover
+                    hostRef.default_logger.debug(e, exc_info=True)
+                    screeningDictionary["Pattern"] = ""
+                    saveDictionary["Pattern"] = ""                    
+                isMomentum = screener.validateMomentum(
+                    processedData, screeningDictionary, saveDictionary
+                )
+                try:
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        currentTrend = screener.findTrend(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            daysToLookback=configManager.daysToLookback,
+                            stockName=stock,
+                        )
+                except np.RankWarning as e:
+                    hostRef.default_logger.debug(e, exc_info=True)
+                    screeningDictionary["Trend"] = "Unknown"
+                    saveDictionary["Trend"] = "Unknown"
+                isValidCci = screener.validateCCI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                )
+                screener.find52WeekHighLow(
+                    fullData, saveDictionary, screeningDictionary
+                )
                 with hostRef.processingResultsCounter.get_lock():
                     # hostRef.default_logger.info(
                     #     f"Processing results for {stock} in {hostRef.processingResultsCounter.value}th results counter"
                     # )
-                    if executeOption == 0:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
                     if (
-                        (
-                            (executeOption == 1 and (isBreaking or isPotentialBreaking))
-                            or (executeOption == 2 and isBreaking)
-                        )
-                        and hasMinVolumeRatio
-                        and isLtpValid
-                    ):
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if (
-                        (executeOption == 3)
-                        and (
-                            consolidationValue <= configManager.consolidationPercentage
-                            and consolidationValue != 0
-                        )
-                        and isLtpValid
-                    ):
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 4 and isLtpValid and isLowestVolume:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 5 and isLtpValid and isValidRsi:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 6 and isLtpValid:
-                        if reversalOption == 1:
-                            if (
-                                saveDictionary["Pattern"]
-                                in CandlePatterns.reversalPatternsBullish
-                                or isMaReversal > 0
-                            ):
-                                hostRef.processingResultsCounter.value += 1
-                                return (
-                                    screeningDictionary,
-                                    saveDictionary,
-                                    data,
-                                    stock,
-                                    backtestDuration,
-                                )
-                        elif reversalOption == 2:
-                            if (
-                                saveDictionary["Pattern"]
-                                in CandlePatterns.reversalPatternsBearish
-                                or isMaReversal < 0
-                            ):
-                                hostRef.processingResultsCounter.value += 1
-                                return (
-                                    screeningDictionary,
-                                    saveDictionary,
-                                    data,
-                                    stock,
-                                    backtestDuration,
-                                )
-                        elif reversalOption == 3 and isMomentum:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
+                        (executeOption == 0)
+                        or ((
+                            (
+                                (executeOption == 1 and (isBreaking or isPotentialBreaking))
+                                or (executeOption == 2 and isBreaking)
                             )
-                        elif reversalOption == 4 and isMaSupport:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
+                            and hasMinVolumeRatio
+                            and isLtpValid
+                        ))
+                        or ((
+                            (executeOption == 3)
+                            and (
+                                consolidationValue <= configManager.consolidationPercentage
+                                and consolidationValue != 0
                             )
-                        elif (
-                            reversalOption == 5
-                            and isVSA
-                            and saveDictionary["Pattern"]
-                            in CandlePatterns.reversalPatternsBullish
-                        ):
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        elif reversalOption == 6 and isNR:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        elif reversalOption == 7 and isLorentzian:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                    if executeOption == 7 and isLtpValid:
-                        if respChartPattern < 3 and isInsideBar:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        if isConfluence:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        if isIpoBase and newlyListedOnly and not respChartPattern < 3:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        if isVCP:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                        if isBuyingTrendline:
-                            hostRef.processingResultsCounter.value += 1
-                            return (
-                                screeningDictionary,
-                                saveDictionary,
-                                data,
-                                stock,
-                                backtestDuration,
-                            )
-                    if executeOption == 8 and isLtpValid and isValidCci:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 9 and hasMinVolumeRatio:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 10 and isPriceRisingByAtLeast2Percent:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 11 and isShortTermBullish:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 12 and is15MinutePriceVolumeBreakout:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 13 and isBullishIntradayRSIMACD:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if executeOption == 14 and isNR4Day:
-                        hostRef.processingResultsCounter.value += 1
-                        return (
-                            screeningDictionary,
-                            saveDictionary,
-                            data,
-                            stock,
-                            backtestDuration,
-                        )
-                    if (
-                        (executeOption == 15 and is52WeekLowBreakout)
+                            and isLtpValid
+                        ))
+                        or (executeOption == 4 and isLtpValid and isLowestVolume)
+                        or (executeOption == 5 and isLtpValid and isValidRsi)
+                        or ((executeOption == 6 and isLtpValid) and ((reversalOption == 1 and (
+                                                                    saveDictionary["Pattern"]
+                                                                    in CandlePatterns.reversalPatternsBearish
+                                                                    or isMaReversal < 0
+                                                                ))
+                                                                or (reversalOption == 2 and (
+                                                                    saveDictionary["Pattern"]
+                                                                    in CandlePatterns.reversalPatternsBearish
+                                                                    or isMaReversal < 0
+                                                                ))
+                                                                or (reversalOption == 3 and isMomentum)
+                                                                or (reversalOption == 4 and isMaSupport)
+                                                                or ((
+                                                                    reversalOption == 5
+                                                                    and isVSA
+                                                                    and saveDictionary["Pattern"]
+                                                                    in CandlePatterns.reversalPatternsBullish
+                                                                ))
+                                                                or (reversalOption == 6 and isNR)
+                                                                or (reversalOption == 7 and isLorentzian)
+                                                                ))
+                        or ((executeOption == 7 and isLtpValid) and ((respChartPattern < 3 and isInsideBar) 
+                                                                  or (isConfluence)
+                                                                  or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
+                                                                  or (isVCP)
+                                                                  or (isBuyingTrendline)))
+                        or (executeOption == 8 and isLtpValid and isValidCci)
+                        or (executeOption == 9 and hasMinVolumeRatio)
+                        or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
+                        or (executeOption == 11 and isShortTermBullish)
+                        or (executeOption == 12 and is15MinutePriceVolumeBreakout)
+                        or (executeOption == 13 and isBullishIntradayRSIMACD)
+                        or (executeOption == 14 and isNR4Day)
+                        or (executeOption == 15 and is52WeekLowBreakout)
                         or (executeOption == 16 and is10DaysLowBreakout)
                         or (executeOption == 17 and is52WeekHighBreakout)
                         or (executeOption == 18 and isLtpValid and isAroonCrossover)
@@ -729,6 +556,11 @@ class StockConsumer:
                 )
         return None
 
+    def shouldProceedWithScanning(self, executeOption=None):
+        proceed = True
+        
+        return proceed
+    
     def setupLoggers(self, hostRef, screener, logLevel, stock):
         # Set the loglevels for both the caller and screener
         # Also add handlers that are specific to this sub-process which
