@@ -192,22 +192,23 @@ jobs:
         git fetch
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
-    - name: Run Scan on Ubuntu
+    - name: Run Historical Scan on Ubuntu
       shell: bash
       if: startsWith(runner.os, 'Linux')
       run: |
-        python3 .github/workflows/githubutilities.py -s -l --scanDaysInPast 1
+        python3 .github/workflows/githubutilities.py --scans --local --scanDaysInPast 1
+        ls -l results
         cp results/*.txt actions-data-scan
         ls -l actions-data-scan
 
-    - name: Run scans for the past 3 days
+    - name: Run Historical Scan on Windows
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       run: |
-        python3 .github/workflows/githubutilities.py -s -l --scanDaysInPast 1
+        python3 .github/workflows/githubutilities.py --scans --local --scanDaysInPast 1
         copy results\*.txt actions-data-scan
 
-    - name: Push scan Data
+    - name: Push Historical scan Data
       shell: bash
       run: |
         git config user.name github-actions
