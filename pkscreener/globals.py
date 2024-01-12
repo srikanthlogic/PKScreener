@@ -44,6 +44,7 @@ import pandas as pd
 from alive_progress import alive_bar
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger, tracelog
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.Telegram import (
@@ -1039,7 +1040,7 @@ def main(userArgs=None):
 
         if (menuOption in ["B", "G"] and not loadedStockData) or (
             not downloadOnly
-            and not Utility.tools.isTradingTime()
+            and not PKDateUtilities.isTradingTime()
             and configManager.cacheEnabled
             and not loadedStockData
             and not testing
@@ -1352,7 +1353,7 @@ def printNotifySaveScreenedResults(
         + f"[+] You chose: {menuChoiceHierarchy}"
         + colorText.END
     )
-    pngName = f'PKS_{getFormattedChoices()}_{Utility.tools.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")}'
+    pngName = f'PKS_{getFormattedChoices()}_{PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")}'
     pngExtension = ".png"
     eligible = is_token_telegram_configured()
     if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0):
@@ -1796,7 +1797,7 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
     intradayConfig = configManager.isIntradayConfig()
     intraday = intradayConfig or argsIntraday
     if downloadOnly or (
-        configManager.cacheEnabled and not Utility.tools.isTradingTime() and not testing
+        configManager.cacheEnabled and not PKDateUtilities.isTradingTime() and not testing
     ):
         print(
             colorText.BOLD
@@ -1905,7 +1906,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     if backtest_df is None:
         return
     backtest_df.drop_duplicates()
-    summaryText = f"As of {Utility.tools.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
+    summaryText = f"As of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
     lastSummaryRow = None
     if optionalName != "Summary":
         backtest_df.sort_values(by=[sortKey], ascending=False, inplace=True)
@@ -2071,7 +2072,7 @@ def terminateAllWorkers(consumers, tasks_queue, testing):
     # Exit all processes. Without this, it threw error in next screening session
     for worker in consumers:
         try:
-            if testing:
+            if testing: # pragma: no cover
                 if sys.platform.startswith("win"):
                     import signal
 
@@ -2080,10 +2081,10 @@ def terminateAllWorkers(consumers, tasks_queue, testing):
                 # worker.join()  # necessary so that the Process exists before the test suite exits (thus coverage is collected)
             # else:
             worker.terminate()
-        except OSError as e:
+        except OSError as e: # pragma: no cover
             default_logger().debug(e, exc_info=True)
-            if e.winerror == 5:
-                continue
+            # if e.winerror == 5:
+            continue
 
     # Flush the queue so depending processes will end
     while True:

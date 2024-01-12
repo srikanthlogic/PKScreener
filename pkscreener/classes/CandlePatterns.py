@@ -60,7 +60,12 @@ class CandlePatterns:
     def findPattern(self, data, dict, saveDict):
         data = data.head(4)
         data = data[::-1]
-        existingPattern=f'{(", "+saveDict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
+        existingPattern = ''
+        if "Pattern" in saveDict.keys():
+            existingPattern=f'{(", "+saveDict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
+        else:
+            saveDict["Pattern"] = ""
+            dict["Pattern"] = ""
         # Only 'doji' and 'inside' is internally implemented by pandas_ta.
         # Otherwise, for the rest of the candle patterns, they also need
         # TA-Lib.

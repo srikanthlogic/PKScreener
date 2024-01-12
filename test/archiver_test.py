@@ -41,9 +41,8 @@ from PKDevTools.classes.Archiver import (
     readData,
     resolveFilePath,
     saveData,
-    utc_to_ist,
-)
-
+    )
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 # Positive test case: fileName is not None
 def test_resolveFilePath_positive():
@@ -72,7 +71,7 @@ def test_get_last_modified_datetime_positive():
     f = open("test_file1.txt", "wb")
     f.close()
     file_path = "test_file1.txt"
-    expected_last_modified = utc_to_ist(
+    expected_last_modified = PKDateUtilities.utc_to_ist(
         datetime.utcfromtimestamp(os.path.getmtime(file_path))
     )
 
@@ -91,7 +90,7 @@ def test_utc_to_ist_positive():
         .astimezone(tz=pytz.timezone("Asia/Kolkata"))
     )
 
-    result = utc_to_ist(utc_dt)
+    result = PKDateUtilities.utc_to_ist(utc_dt)
 
     assert result == expected_ist_dt
 
@@ -194,7 +193,7 @@ def test_utc_to_ist_negative():
     utc_dt = None
 
     with pytest.raises(AttributeError):
-        utc_to_ist(utc_dt)
+        PKDateUtilities.utc_to_ist(utc_dt)
 
 
 # Negative test case: cache file with invalid file path

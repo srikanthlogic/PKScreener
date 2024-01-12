@@ -34,7 +34,7 @@ import pandas as pd
 import pytz
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
-
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes.Utility import tools
 
 
@@ -126,9 +126,9 @@ def test_getCellColor():
 # Positive test case for tradingDate() function
 def test_tradingDate():
     # Mocking the datetime.datetime.now() function
-    with patch("pkscreener.classes.Utility.tools.currentDateTime") as mock_now:
+    with patch("PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime") as mock_now:
         mock_now.return_value = datetime.datetime(2023, 1, 1)
-        result = tools.tradingDate()
+        result = PKDateUtilities.tradingDate()
         # Assert that the result is the correct trading date
         assert result == datetime.date(2022, 12, 30)
 
@@ -138,7 +138,7 @@ def test_currentDateTime():
     curr = datetime.datetime.now(pytz.timezone("Asia/Kolkata")).strftime(
         "%d-%m-%y_%H.%M.%S"
     )
-    result = tools.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
+    result = PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
     # Assert that the result is the correct current date and time
     assert result == curr
 
@@ -147,10 +147,10 @@ def test_currentDateTime():
 def test_isTradingTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 3, 10, 30)
-        result = tools.isTradingTime()
+        result = PKDateUtilities.isTradingTime()
         # Assert that the result is True
         assert result is True
 
@@ -159,10 +159,10 @@ def test_isTradingTime():
 def test_isTradingWeekday():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 1, 10, 30)
-        result = tools.isTradingWeekday()
+        result = PKDateUtilities.isTradingWeekday()
         # Assert that the result is False
         assert result is False
 
@@ -171,10 +171,10 @@ def test_isTradingWeekday():
 def test_ispreMarketTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 3, 8, 30)
-        result = tools.ispreMarketTime()
+        result = PKDateUtilities.ispreMarketTime()
         # Assert that the result is True
         assert result is True
 
@@ -183,10 +183,10 @@ def test_ispreMarketTime():
 def test_ispostMarketTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 4, 16, 30)
-        result = tools.ispostMarketTime()
+        result = PKDateUtilities.ispostMarketTime()
         # Assert that the result is True
         assert result is True
 
@@ -195,10 +195,10 @@ def test_ispostMarketTime():
 def test_isClosingHour():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 4, 15, 30)
-        result = tools.isClosingHour()
+        result = PKDateUtilities.isClosingHour()
         # Assert that the result is True
         assert result is True
 
@@ -207,10 +207,10 @@ def test_isClosingHour():
 def test_secondsAfterCloseTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 4, 15, 35)
-        result = tools.secondsAfterCloseTime()
+        result = PKDateUtilities.secondsAfterCloseTime()
         # Assert that the result is the correct number of seconds
         assert result == 300
 
@@ -219,10 +219,10 @@ def test_secondsAfterCloseTime():
 def test_secondsBeforeOpenTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 5, 9, 10)
-        result = tools.secondsBeforeOpenTime()
+        result = PKDateUtilities.secondsBeforeOpenTime()
         # Assert that the result is the correct number of seconds
         assert result == -300
 
@@ -231,10 +231,10 @@ def test_secondsBeforeOpenTime():
 def test_nextRunAtDateTime():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 3, 10, 30)
-        result = tools.nextRunAtDateTime()
+        result = PKDateUtilities.nextRunAtDateTime()
         # Assert that the result is the correct next run datetime
         assert result == datetime.datetime(2023, 1, 3, 10, 35)
 
@@ -243,7 +243,7 @@ def test_nextRunAtDateTime():
 def test_afterMarketStockDataExists():
     # Mocking the tools.currentDateTime() function
     with patch(
-        "pkscreener.classes.Utility.tools.currentDateTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.currentDateTime"
     ) as mock_currentDateTime:
         mock_currentDateTime.return_value = datetime.datetime(2023, 1, 2, 16, 30)
         curr = mock_currentDateTime.return_value

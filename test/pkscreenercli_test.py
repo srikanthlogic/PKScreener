@@ -72,7 +72,7 @@ def test_pkscreenercli_with_cron_interval():
     pkscreenercli.args.croninterval = "3"
     with patch("pkscreener.globals.main", new=patched_caller) as mock_main:
         with patch(
-            "pkscreener.classes.Utility.tools.isTradingTime"
+            "PKDevTools.classes.PKDateUtilities.PKDateUtilities.isTradingTime"
         ) as mock_is_trading_time:
             mock_is_trading_time.return_value = True
             pkscreenercli.args.exit = False
@@ -87,11 +87,11 @@ def test_pkscreenercli_with_cron_interval_preopen():
     pkscreenercli.args.croninterval = "3"
     with patch("pkscreener.globals.main", new=patched_caller) as mock_main:
         with patch(
-            "pkscreener.classes.Utility.tools.isTradingTime"
+            "PKDevTools.classes.PKDateUtilities.PKDateUtilities.isTradingTime"
         ) as mock_is_trading_time:
             mock_is_trading_time.return_value = False
             with patch(
-                "pkscreener.classes.Utility.tools.secondsBeforeOpenTime"
+                "PKDevTools.classes.PKDateUtilities.PKDateUtilities.secondsBeforeOpenTime"
             ) as mock_secondsBeforeOpenTime:
                 mock_secondsBeforeOpenTime.return_value = -3601
                 pkscreenercli.args.exit = False
@@ -111,7 +111,7 @@ def test_pkscreenercli_exits():
 
 def test_intraday_enabled():
     with patch(
-        "pkscreener.classes.Utility.tools.isTradingTime"
+        "PKDevTools.classes.PKDateUtilities.PKDateUtilities.isTradingTime"
     ) as mock_is_trading_time:
         with patch(
             "pkscreener.classes.ConfigManager.tools.restartRequestsCache"
@@ -127,7 +127,7 @@ def test_intraday_enabled():
 def test_setupLogger_logging_enabled():
     with patch("PKDevTools.classes.log.setup_custom_logger") as mock_setup_logger:
         with patch(
-            "pkscreener.classes.Utility.tools.isTradingTime"
+            "PKDevTools.classes.PKDateUtilities.PKDateUtilities.isTradingTime"
         ) as mock_is_trading_time:
             with pytest.raises(SystemExit):
                 pkscreenercli.args.log = True
@@ -141,7 +141,7 @@ def test_setupLogger_logging_enabled():
 def test_setupLogger_logging_disabled():
     with patch("PKDevTools.classes.log.setup_custom_logger") as mock_setup_logger:
         with patch(
-            "pkscreener.classes.Utility.tools.isTradingTime"
+            "PKDevTools.classes.PKDateUtilities.PKDateUtilities.isTradingTime"
         ) as mock_is_trading_time:
             mock_is_trading_time.return_value = False
             mock_setup_logger.assert_not_called()
