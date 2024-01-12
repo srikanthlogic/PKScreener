@@ -34,6 +34,7 @@ import pandas as pd
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.SuppressOutput import SuppressOutput
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 import pkscreener.classes.Screener as Screener
 import pkscreener.classes.Utility as Utility
@@ -43,7 +44,7 @@ from pkscreener.classes.CandlePatterns import CandlePatterns
 
 class StockConsumer:
     def __init__(self):
-        self.isTradingTime = Utility.tools.isTradingTime()
+        self.isTradingTime = PKDateUtilities.isTradingTime()
 
     # @tracelog
     def screenStocks(

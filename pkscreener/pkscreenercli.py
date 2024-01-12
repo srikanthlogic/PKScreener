@@ -35,6 +35,7 @@ import multiprocessing
 import os
 import sys
 import tempfile
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -300,7 +301,7 @@ def runApplicationForScreening(tools):
 
 
 def scheduleNextRun(tools):
-    sleepUntilNextExecution = not tools.isTradingTime()
+    sleepUntilNextExecution = not PKDateUtilities.isTradingTime()
     while sleepUntilNextExecution:
         print(
             colorText.BOLD
@@ -308,10 +309,10 @@ def scheduleNextRun(tools):
             + (
                 "SecondsAfterClosingTime[%d] SecondsBeforeMarketOpen [%d]. Next run at [%s]"
                 % (
-                    int(tools.secondsAfterCloseTime()),
-                    int(tools.secondsBeforeOpenTime()),
+                    int(PKDateUtilities.secondsAfterCloseTime()),
+                    int(PKDateUtilities.secondsBeforeOpenTime()),
                     str(
-                        tools.nextRunAtDateTime(
+                        PKDateUtilities.nextRunAtDateTime(
                             bufferSeconds=3600,
                             cronWaitSeconds=int(args.croninterval),
                         )
@@ -320,12 +321,12 @@ def scheduleNextRun(tools):
             )
             + colorText.END
         )
-        if (tools.secondsAfterCloseTime() >= 3600) and (
-            tools.secondsAfterCloseTime() <= (3600 + 1.5 * int(args.croninterval))
+        if (PKDateUtilities.secondsAfterCloseTime() >= 3600) and (
+            PKDateUtilities.secondsAfterCloseTime() <= (3600 + 1.5 * int(args.croninterval))
         ):
             sleepUntilNextExecution = False
-        if (tools.secondsBeforeOpenTime() <= -3600) and (
-            tools.secondsBeforeOpenTime() >= (-3600 - 1.5 * int(args.croninterval))
+        if (PKDateUtilities.secondsBeforeOpenTime() <= -3600) and (
+            PKDateUtilities.secondsBeforeOpenTime() >= (-3600 - 1.5 * int(args.croninterval))
         ):
             sleepUntilNextExecution = False
         sleep(int(args.croninterval))

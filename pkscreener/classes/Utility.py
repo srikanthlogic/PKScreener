@@ -58,6 +58,7 @@ from alive_progress import alive_bar
 from PIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from requests_cache import CachedSession
 from tabulate import tabulate
 
@@ -300,7 +301,7 @@ class tools:
                     if chunk:  # filter out keep-alive new chunks
                         f.write(chunk)
 
-        bgColor = "white" if tools.currentDateTime().day % 2 == 0 else "black"
+        bgColor = "white" if PKDateUtilities.currentDateTime().day % 2 == 0 else "black"
         gridColor = "black" if bgColor == "white" else "white"
         artColor = "lightgreen" if bgColor == "black" else "blue"
         menuColor = "red"
@@ -394,7 +395,7 @@ class tools:
         sep_width, sep_height = font.getsize_multiline(separator)
         dfs_to_print = [styledTable, backtestSummary, backtestDetail]
         unstyled_dfs = [table, backtestSummary, backtestDetail]
-        reportTitle = f"[+] As of {tools.currentDateTime().strftime('%d-%m-%y %H.%M.%S')} IST > You chose {label}"
+        reportTitle = f"[+] As of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H.%M.%S')} IST > You chose {label}"
         titleLabels = [
             f"[+] Scan results for {label} :",
             "[+] For chosen scan, summary of correctness from past: [Example, 70% of (100) under 1-Pd, means out of 100 stocks that were in the scan result in the past, 70% of them gained next day.)",
@@ -513,124 +514,18 @@ class tools:
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
         # im.show()
 
-    def tradingDate(simulate=False, day=None):
-        curr = tools.currentDateTime(simulate=simulate, day=day)
-        if simulate:
-            return curr.replace(day=day)
-        else:
-            if tools.isTradingWeekday() and tools.ispreMarketTime():
-                # Monday to Friday but before 9:15AM.So the date should be yesterday
-                return (curr - datetime.timedelta(days=1)).date()
-            if tools.isTradingTime() or tools.ispostMarketTime():
-                # Monday to Friday but after 9:15AM or after 15:30.So the date should be today
-                return curr.date()
-            if not tools.isTradingWeekday():
-                # Weekends .So the date should be last Friday
-                return (curr - datetime.timedelta(days=(curr.weekday() - 4))).date()
-
-    def dateFromYmdString(Ymd=None):
-        return datetime.datetime.strptime(Ymd, "%Y-%m-%d")
-
-    def days_between(d1, d2):
-        return abs((d2 - d1).days)
-
-    def trading_days_between(d1, d2):
-        return np.busday_count(
-            d1, d2
-        )  # ,weekmask=[1,1,1,1,1,0,0],holidays=['2020-01-01'])
-
-    def currentDateTime(simulate=False, day=None, hour=None, minute=None):
-        curr = datetime.datetime.now(pytz.timezone("Asia/Kolkata"))
-        if simulate:
-            return curr.replace(day=day if day is not None else curr.day,
-                                hour=hour if hour is not None else curr.hour,
-                                minute=minute if minute is not None else curr.minute,)
-        else:
-            return curr
-
-    def isTradingTime():
-        curr = tools.currentDateTime()
-        openTime = curr.replace(hour=9, minute=15)
-        closeTime = curr.replace(hour=15, minute=30)
-        return (openTime <= curr <= closeTime) and tools.isTradingWeekday()
-
-    def isTradingWeekday():
-        curr = tools.currentDateTime()
-        return 0 <= curr.weekday() <= 4
-
-    def ispreMarketTime():
-        curr = tools.currentDateTime()
-        openTime = curr.replace(hour=9, minute=15)
-        return (openTime > curr) and tools.isTradingWeekday()
-
-    def ispostMarketTime():
-        curr = tools.currentDateTime()
-        closeTime = curr.replace(hour=15, minute=30)
-        return (closeTime < curr) and tools.isTradingWeekday()
-
-    def isClosingHour():
-        curr = tools.currentDateTime()
-        openTime = curr.replace(hour=15, minute=00)
-        closeTime = curr.replace(hour=15, minute=30)
-        return (openTime <= curr <= closeTime) and tools.isTradingWeekday()
-
-    def secondsAfterCloseTime():
-        curr = tools.currentDateTime()  # (simulate=True,day=7,hour=8,minute=14)
-        closeTime = curr.replace(hour=15, minute=30)
-        return (curr - closeTime).total_seconds()
-
-    def secondsBeforeOpenTime():
-        curr = tools.currentDateTime()  # (simulate=True,day=7,hour=8,minute=14)
-        openTime = curr.replace(hour=9, minute=15)
-        return (curr - openTime).total_seconds()
-
-    def nextRunAtDateTime(bufferSeconds=3600, cronWaitSeconds=300):
-        curr = tools.currentDateTime()  # (simulate=True,day=7,hour=8,minute=14)
-        nextRun = curr + datetime.timedelta(seconds=cronWaitSeconds)
-        if 0 <= curr.weekday() <= 4:
-            daysToAdd = 0
-        else:
-            daysToAdd = 7 - curr.weekday()
-        if tools.isTradingTime():
-            nextRun = curr + datetime.timedelta(seconds=cronWaitSeconds)
-        else:
-            # Same day after closing time
-            secondsAfterClosingTime = tools.secondsAfterCloseTime()
-            if secondsAfterClosingTime > 0:
-                if secondsAfterClosingTime <= bufferSeconds:
-                    nextRun = curr + datetime.timedelta(
-                        days=daysToAdd,
-                        seconds=1.5 * cronWaitSeconds
-                        + bufferSeconds
-                        - secondsAfterClosingTime,
-                    )
-                elif secondsAfterClosingTime > (bufferSeconds + 1.5 * cronWaitSeconds):
-                    # Same day, upto 11:59:59pm
-                    curr = curr + datetime.timedelta(
-                        days=3 if curr.weekday() == 4 else 1
-                    )
-                    nextRun = curr.replace(hour=9, minute=15) - datetime.timedelta(
-                        days=daysToAdd, seconds=1.5 * cronWaitSeconds + bufferSeconds
-                    )
-            elif secondsAfterClosingTime < 0:
-                # Next day
-                nextRun = curr.replace(hour=9, minute=15) - datetime.timedelta(
-                    days=daysToAdd, seconds=1.5 * cronWaitSeconds + bufferSeconds
-                )
-        return nextRun
-
     def set_github_output(name, value):
         if "GITHUB_OUTPUT" in os.environ.keys():
             with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
                 print(f"{name}={value}", file=fh)
 
     def afterMarketStockDataExists(intraday=False, forceLoad=False):
-        curr = tools.currentDateTime()
+        curr = PKDateUtilities.currentDateTime()
         openTime = curr.replace(hour=9, minute=15)
         cache_date = curr  # for monday to friday
         weekday = curr.weekday()
         # for monday to friday before 9:15 or between 9:15am to 3:30pm, we're backtesting
-        if curr < openTime or (forceLoad and tools.isTradingTime()):
+        if curr < openTime or (forceLoad and PKDateUtilities.isTradingTime()):
             cache_date = curr - datetime.timedelta(1)
         if weekday == 0 and curr < openTime:  # for monday before 9:15
             cache_date = curr - datetime.timedelta(3)
@@ -701,7 +596,7 @@ class tools:
                         print(
                             colorText.BOLD
                             + colorText.GREEN
-                            + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not tools.isTradingTime() else ''}!"
+                            + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
                             + colorText.END
                         )
                     for stock in stockData:
@@ -825,7 +720,7 @@ class tools:
         if response != "N":
             filename = (
                 "PKScreener-result_"
-                + tools.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
+                + PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
                 + ".xlsx"
             )
             desktop = os.path.expanduser("~/Desktop")

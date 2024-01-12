@@ -139,6 +139,7 @@ jobs:
 
     - name: Run Scan on Ubuntu
       shell: bash
+      continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       run: |
         rm -rf actions-data-download
@@ -150,6 +151,7 @@ jobs:
         ls -l actions-data-download
 
     - name: Download 52 week Stock Data on Windows
+      continue-on-error: true
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       id: downloader
@@ -159,6 +161,7 @@ jobs:
         pkscreenercli.exe -d -a Y
             
     - name: Download Intraday Stock Data on Windows
+      continue-on-error: true
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       id: intradaydownloader
@@ -166,6 +169,7 @@ jobs:
         pkscreenercli.exe -d -a Y -i 1m
 
     - name: Copy Stock Data Pickles on Windows
+      continue-on-error: true
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       run: |
@@ -186,6 +190,7 @@ jobs:
 
     - name: Squash Commits (Python)
       shell: bash
+      continue-on-error: true
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
@@ -194,6 +199,7 @@ jobs:
 
     - name: Run Historical Scan on Ubuntu
       shell: bash
+      continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       run: |
         python3 .github/workflows/githubutilities.py --scans --local --scanDaysInPast 1
@@ -202,6 +208,7 @@ jobs:
         ls -l actions-data-scan
 
     - name: Run Historical Scan on Windows
+      continue-on-error: true
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       run: |

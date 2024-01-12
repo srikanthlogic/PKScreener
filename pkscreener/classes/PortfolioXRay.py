@@ -25,7 +25,7 @@
 import numpy as np
 import pandas as pd
 from PKDevTools.classes.ColorText import colorText
-
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 
 
@@ -119,7 +119,7 @@ def xRaySummary(savedResults=None):
         groupItems = len(df_group)
         sum_dict = {}
         sum_dict["ScanType"] = f"[SUM]{scanType}({groupItems})"
-        sum_dict["Date"] = Utility.tools.currentDateTime().strftime("%Y-%m-%d")
+        sum_dict["Date"] = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         for prd in periods:
             if not f"{prd}D-%" in df_group.columns:
                 continue
@@ -203,9 +203,9 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
         targetDate = (
             calcForDate if calcForDate is not None else saveResults["Date"].iloc[0]
         )
-        today = Utility.tools.currentDateTime()
-        gap = Utility.tools.trading_days_between(
-            Utility.tools.dateFromYmdString(targetDate)
+        today = PKDateUtilities.currentDateTime()
+        gap = PKDateUtilities.trading_days_between(
+            PKDateUtilities.dateFromYmdString(targetDate)
             .replace(tzinfo=today.tzinfo)
             .date(),
             today.date(),

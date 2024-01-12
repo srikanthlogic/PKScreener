@@ -46,6 +46,7 @@ if Imports["scipy"]:
     from scipy.stats import linregress
 
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.SuppressOutput import SuppressOutput
 
 
@@ -668,7 +669,7 @@ class tools:
                 + colorText.BOLD
             )
             sug = "Stay Bullish!"
-        if not Utility.tools.isClosingHour():
+        if not PKDateUtilities.isClosingHour():
             print(
                 colorText.BOLD
                 + colorText.WARN
@@ -1419,7 +1420,7 @@ class tools:
 
     # Find NRx range for Reversal
     def validateNarrowRange(self, data, screenDict, saveDict, nr=4):
-        if Utility.tools.isTradingTime():
+        if PKDateUtilities.isTradingTime():
             rangeData = data.head(nr + 1)[1:]
             now_candle = data.head(1)
             rangeData["Range"] = abs(rangeData["Close"] - rangeData["Open"])

@@ -329,6 +329,13 @@ def triggerScanWorkflowActions(launchLocal=False, daysInPast=0):
         if launchLocal:
             from pkscreener import pkscreenercli
             from pkscreener.pkscreenercli import argParser as agp
+            choices = getFormattedChoices(options)
+            curr = datetime.datetime.now(pytz.timezone("Asia/Kolkata"))
+            today = curr.strftime("%Y-%m-%d")
+            fileName = f"{os.path.join(os.getcwd(),'results')}{os.sep}{choices}_{today}.txt"
+            if os.path.isfile(fileName):
+                print(f"Skipping. Latest scan result already exists:{fileName}")
+                continue
             while daysInPast >=0:
                 os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                 ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
@@ -439,6 +446,19 @@ def isTodayHoliday():
             break
     return occasion is not None, occasion
 
+def getFormattedChoices(options):
+    isIntraday = args.intraday
+    selectedChoice = options.split(":")
+    choices = ""
+    for choice in selectedChoice:
+        if len(choice) > 0 and choice != 'D':
+            if len(choices) > 0:
+                choices = f"{choices}_"
+            choices = f"{choices}{choice}"
+    if choices.endswith("_"):
+        choices = choices[:-1]
+    choices = f"{choices}{'_i' if isIntraday else ''}"
+    return choices
 
 if args.report:
     generateBacktestReportMainPage()

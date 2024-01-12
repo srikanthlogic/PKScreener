@@ -28,6 +28,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 from pkscreener.classes import Utility
 from pkscreener.classes.ConfigManager import parser, tools
@@ -131,9 +132,9 @@ def backtest(
     backTestedStock["Trend"] = screenedDict["Trend"]
     backTestedStock["Pattern"] = screenedDict["Pattern"]
     backTestedStock["CCI"] = screenedDict["CCI"]
-    today = Utility.tools.currentDateTime()
-    gap = Utility.tools.trading_days_between(
-        Utility.tools.dateFromYmdString(targetDate).replace(tzinfo=today.tzinfo).date(),
+    today = PKDateUtilities.currentDateTime()
+    gap = PKDateUtilities.trading_days_between(
+        PKDateUtilities.dateFromYmdString(targetDate).replace(tzinfo=today.tzinfo).date(),
         today.date(),
     )
     periods = gap if gap > periods else periods
