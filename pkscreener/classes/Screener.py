@@ -1233,6 +1233,9 @@ class tools:
             if len(data) >= prd + 1:
                 prevLtp = data["Close"].iloc[0]
                 ltpTdy = data["Close"].iloc[prd]
+                if isinstance(prevLtp,pd.Series):
+                    prevLtp = prevLtp[0]
+                    ltpTdy = ltpTdy[0]
                 screenDict[f"LTP{prd}"] = (
                     (colorText.GREEN if (ltpTdy >= prevLtp) else (colorText.FAIL))
                     + str("{:.2f}".format(ltpTdy))

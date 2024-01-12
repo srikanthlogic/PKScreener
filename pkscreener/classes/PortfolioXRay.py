@@ -467,6 +467,10 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
 def formatGridOutput(df):
     df = df.replace(np.nan, "-", regex=True)
     for col in df.columns:
+        try:
+            df[col] = df[col].astype(float).fillna(0.0)
+        except:
+            continue
         maxGrowth = df[col].max()
         if "D-%" in col:
             df.loc[:, col] = df.loc[:, col].apply(

@@ -1093,52 +1093,73 @@ def main(userArgs=None):
         actualHistoricalDuration = samplingDuration - fillerPlaceHolder
         # Lets begin from y days ago, evaluate from that date if the selected strategy had yielded any result
         # and then keep coming to the next day (x-1) until we get to today (actualHistoricalDuration = 0)
-        while actualHistoricalDuration >= 0:
-            moreItems = [
-                (
-                    executeOption,
-                    reversalOption,
-                    maLength,
-                    daysForLowestVolume,
-                    minRSI,
-                    maxRSI,
-                    respChartPattern,
-                    insideBarToLookback,
-                    len(listStockCodes),
-                    configManager.cacheEnabled,
-                    stock,
-                    newlyListedOnly,
-                    downloadOnly,
-                    volumeRatio,
-                    testBuild,
-                    userArgs.log,
+        bar, spinner = Utility.tools.getProgressbarStyle()
+        with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
+            while actualHistoricalDuration >= 0:
+                try:
+                    pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(actualHistoricalDuration)
+                    filePrefix = getFormattedChoices().replace("B","X").replace("G","X")
+                    url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
+                    savedListResp = fetcher.fetchURL(url)
+                    savedStocksCount = 0
+                    if savedListResp is not None and savedListResp.status_code == 200:
+                        listStockCodes = savedListResp.text.replace("\"","").split(",")
+                        savedStocksCount =len(listStockCodes)
+                except:
+                    pass
+                moreItems = [
                     (
-                        actualHistoricalDuration
-                        if (menuOption == "B")
-                        else (
-                            (backtestPeriod)
-                            if (menuOption == "G")
+                        executeOption,
+                        reversalOption,
+                        maLength,
+                        daysForLowestVolume,
+                        minRSI,
+                        maxRSI,
+                        respChartPattern,
+                        insideBarToLookback,
+                        len(listStockCodes),
+                        configManager.cacheEnabled,
+                        stock,
+                        newlyListedOnly,
+                        downloadOnly,
+                        volumeRatio,
+                        testBuild,
+                        userArgs.log,
+                        (
+                            actualHistoricalDuration
+                            if (menuOption == "B")
                             else (
-                                0
-                                if (userPassedArgs.backtestdaysago is None)
-                                else (int(userPassedArgs.backtestdaysago))
+                                (backtestPeriod)
+                                if (menuOption == "G")
+                                else (
+                                    0
+                                    if (userPassedArgs.backtestdaysago is None)
+                                    else (int(userPassedArgs.backtestdaysago))
+                                )
                             )
-                        )
-                    ),
-                    (
-                        backtestPeriod
-                        if menuOption == "B"
-                        else configManager.daysToLookback
-                    ),
-                    default_logger().level,
-                    (menuOption in ["B", "G"])
-                    or (userPassedArgs.backtestdaysago is not None),
+                        ),
+                        (
+                            backtestPeriod
+                            if menuOption == "B"
+                            else configManager.daysToLookback
+                        ),
+                        default_logger().level,
+                        (menuOption in ["B", "G"])
+                        or (userPassedArgs.backtestdaysago is not None),
+                    )
+                    for stock in listStockCodes
+                ]
+                items.extend(moreItems)
+                progressbar.text(
+                    colorText.BOLD
+                    + colorText.GREEN
+                    + f"Added {savedStocksCount} Stocks from {pastDate} saved from earlier..."
+                    + colorText.END
                 )
-                for stock in listStockCodes
-            ]
-            items.extend(moreItems)
-            fillerPlaceHolder = fillerPlaceHolder + 1
-            actualHistoricalDuration = samplingDuration - fillerPlaceHolder
+                fillerPlaceHolder = fillerPlaceHolder + 1
+                actualHistoricalDuration = samplingDuration - fillerPlaceHolder
+                if actualHistoricalDuration >= 0:
+                    progressbar()
 
         tasks_queue, results_queue, totalConsumers = initQueues(len(items))
         cp = CandlePatterns()
@@ -1240,7 +1261,7 @@ def main(userArgs=None):
             )
             showBacktestResults(backtest_df)
             showBacktestResults(summary_df, optionalName="Summary")
-            sorting = False if defaultAnswer == "Y" else True
+            sorting = False if defaultAnswer is not None else True
             sortKeys = {
                 "S": "Stock",
                 "D": "Date",
@@ -1270,7 +1291,7 @@ def main(userArgs=None):
                     + "[+] Press :\n [+] s, v, t, m : sort by Stocks, Volume, Trend, MA-Signal\n [+] d : sort by date\n [+] 1,2,3...30 : sort by period\n [+] n : Exit sorting\n"
                     + colorText.END
                 )
-                if defaultAnswer != "Y":
+                if defaultAnswer is None:
                     choice = input(
                         colorText.BOLD + colorText.FAIL + "[+] Select option:"
                     )
@@ -1284,12 +1305,12 @@ def main(userArgs=None):
                 else:
                     print("Finished backtesting!")
                     sorting = False
-            if defaultAnswer != "Y":
+            if defaultAnswer is None:
                 input("Press <Enter> to continue...")
         elif menuOption == "B":
             print("Finished backtesting with no results to show!")
         elif menuOption == "G":
-            if defaultAnswer != "Y":
+            if defaultAnswer is None:
                 input("Press <Enter> to continue...")
         newlyListedOnly = False
     if configManager.isIntradayConfig():
@@ -1343,7 +1364,7 @@ def printNotifySaveScreenedResults(
     MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
-    recordDate = None
+    recordDate = PKDateUtilities.tradingDate().strftime('%y-%m-%d')
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     Utility.tools.clearScreen()
@@ -1669,7 +1690,7 @@ def runScanners(
 ):
     global selectedChoice, userPassedArgs, elapsed_time
     choices = userReportName(selectedChoice)
-    max_allowed = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
+    max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
         numStocks = len(listStockCodes) * int(iterations)
         queueCounter = 0
