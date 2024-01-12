@@ -143,7 +143,10 @@ class tools:
             if choices is not None and df_save is not None:
                 df_s = df_save.copy()
                 df_s.reset_index(inplace=True)
-                fileName = os.path.join(Archiver.get_user_outputs_dir(),f"{choices}.txt")
+                outputFolder = os.path.join(os.getcwd(),'actions-data-scan')
+                if not os.path.isdir(outputFolder):
+                    os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
+                fileName = os.path.join(outputFolder,f"{choices}.txt")
                 with open(fileName, 'w') as f:
                     f.write(df_s["Stock"].to_json(orient='records', lines=True))
         except IOError as e:  # pragma: no cover

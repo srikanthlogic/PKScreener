@@ -334,7 +334,12 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             choices = getFormattedChoices(options)
             curr = PKDateUtilities.tradingDate()
             today = curr.strftime("%Y-%m-%d")
-            fileName = f"{os.path.join(os.getcwd(),'results')}{os.sep}{choices}_{today}.txt"
+            outputFolder = os.path.join(os.getcwd(),'actions-data-scan')
+            if not os.path.isdir(outputFolder):
+                print("This must be run with actions-data-download branch checked-out")
+                print("Creating actions-data-scan directory now...")
+                os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
+            fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
             if os.path.isfile(fileName):
                 print(f"Skipping. Latest scan result already exists:{fileName}")
                 continue

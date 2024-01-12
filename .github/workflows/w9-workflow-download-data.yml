@@ -204,7 +204,6 @@ jobs:
       run: |
         python3 .github/workflows/githubutilities.py --scans --local --scanDaysInPast 1
         ls -l results
-        cp results/*.txt actions-data-scan
         ls -l actions-data-scan
 
     - name: Run Historical Scan on Windows
@@ -213,7 +212,6 @@ jobs:
       shell: cmd
       run: |
         python3 .github/workflows/githubutilities.py --scans --local --scanDaysInPast 1
-        copy results\*.txt actions-data-scan
 
     - name: Push Historical scan Data
       shell: bash
