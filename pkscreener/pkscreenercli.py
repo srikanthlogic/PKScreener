@@ -294,6 +294,8 @@ def runApplicationForScreening(tools):
         print(
             "[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
+        if args.v:
+            return
         sys.exit(0)
 
 

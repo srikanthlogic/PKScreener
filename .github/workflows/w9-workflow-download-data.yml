@@ -192,6 +192,33 @@ jobs:
         git fetch
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
+    - name: Run Scan on Ubuntu
+      shell: bash
+      if: startsWith(runner.os, 'Linux')
+      run: |
+        python3 .github/workflows/githubutilities.py -s -l --scanDaysInPast 1
+        cp results/*.txt actions-data-scan
+        ls -l actions-data-scan
+
+    - name: Run scans for the past 3 days
+      if: startsWith(runner.os, 'Windows')
+      shell: cmd
+      run: |
+        python3 .github/workflows/githubutilities.py -s -l --scanDaysInPast 1
+        copy results\*.txt actions-data-scan
+
+    - name: Push scan Data
+      shell: bash
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+        git remote update
+        git fetch
+        git add actions-data-scan/*.txt --force
+        git commit -m "GitHub-Action-Workflow-Market-Data-Scan-Results-(Default-Config)"
+        git push -v -u origin +actions-data-download
+
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
     needs: [Download_Stock_Data]
