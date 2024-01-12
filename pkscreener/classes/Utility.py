@@ -126,7 +126,7 @@ class tools:
         print(colorText.BOLD + colorText.FAIL + issuesInfo + colorText.END)
         print(colorText.BOLD + colorText.GREEN + communityInfo + colorText.END)
         print(colorText.BOLD + colorText.BLUE + latestInfo + colorText.END)
-        if defaultAnswer != "Y":
+        if defaultAnswer is None:
             input(
                 colorText.BOLD
                 + colorText.FAIL

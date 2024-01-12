@@ -391,7 +391,7 @@ class tools:
             configData = f.read()
             f.close()
             print("\n" + configData)
-            if defaultAnswer != "Y":
+            if defaultAnswer is None:
                 input("Press <Enter> to continue...")
             return f"{prompt}\n{configData}"
         except Exception as e:  # pragma: no cover
