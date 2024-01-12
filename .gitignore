@@ -15,7 +15,6 @@ Help
 *.ini
 *.env
 *.dev
-*.png
 *.pyc
 pkscreener/__pycache__
 pkscreener/classes/__pycache__
@@ -33,4 +32,4 @@ pkscreener/classes/__pycache__
 *.png
 *.jpg
 *.pdf
-*.txt
+results/*.txt
