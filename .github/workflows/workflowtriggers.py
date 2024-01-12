@@ -119,12 +119,12 @@ m2 = menus()
 m3 = menus()
 objectDictionary = {}
 
-args.scans = True
+# args.scans = True
 # args.report = True
 # args.intraday = True
 # args.backtests = True
-args.local = True
-args.scanDaysInPast = 250
+# args.local = True
+# args.scanDaysInPast = 250
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
@@ -322,7 +322,7 @@ def run_workflow(workflow_name, postdata):
     return resp
 
 
-def triggerScanWorkflowActions(launchLocal=False, daysInPast=0):
+def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     for key in objectDictionary.keys():
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "main"
@@ -338,6 +338,7 @@ def triggerScanWorkflowActions(launchLocal=False, daysInPast=0):
             if os.path.isfile(fileName):
                 print(f"Skipping. Latest scan result already exists:{fileName}")
                 continue
+            daysInPast = scanDaysInPast
             while daysInPast >=0:
                 os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                 ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
@@ -472,4 +473,4 @@ if args.scans:
         daysInPast = 0
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
-        triggerScanWorkflowActions(args.local, daysInPast=daysInPast)
+        triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
