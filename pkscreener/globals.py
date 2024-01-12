@@ -902,7 +902,7 @@ def main(userArgs=None):
             input("Press <Enter> to continue...")
         return
     if executeOption == 42:
-        Utility.tools.getLastScreenedResults()
+        Utility.tools.getLastScreenedResults(defaultAnswer)
         return
     if executeOption >= 26 and executeOption <= 41:
         print(
@@ -1342,6 +1342,7 @@ def printNotifySaveScreenedResults(
     MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
+    recordDate = None
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     Utility.tools.clearScreen()
@@ -1353,7 +1354,8 @@ def printNotifySaveScreenedResults(
     )
     pngName = f'PKS_{getFormattedChoices()}_{Utility.tools.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")}'
     pngExtension = ".png"
-    if selectedChoice["0"] == "G" or userPassedArgs.backtestdaysago is not None:
+    eligible = is_token_telegram_configured()
+    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0):
         if saveResults is not None and len(saveResults) > 0:
             df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
             targetDateG10k = saveResults["Date"].iloc[0]
@@ -1367,7 +1369,7 @@ def printNotifySaveScreenedResults(
             )
             print(g10kStyledTable)
             g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
-            if not testing:
+            if not testing and eligible:
                 sendQuickScanResult(
                     menuChoiceHierarchy,
                     user,
@@ -1377,10 +1379,12 @@ def printNotifySaveScreenedResults(
                     pngName,
                     pngExtension,
                 )
-        elif user is not None:
+        elif user is not None and eligible:
             sendMessageToTelegramChannel(
                 message=f"No scan results found for {menuChoiceHierarchy}", user=user
             )
+    if "Date" in saveResults.columns:
+        recordDate = saveResults["Date"].iloc[0].replace("/","-")
     removedUnusedColumns(screenResults, saveResults, ["Date"])
 
     tabulated_results = colorText.miniTabulator().tabulate(
@@ -1410,7 +1414,6 @@ def printNotifySaveScreenedResults(
             "RUNNER" in os.environ.keys()
             or "PKDevTools_Default_Log_Level" in os.environ.keys()
         ):
-            eligible = is_token_telegram_configured()
             if eligible:
                 # There's no need to save data locally.
                 # This scan must have been triggered by github workflow by a user or scheduled job
@@ -1457,7 +1460,7 @@ def printNotifySaveScreenedResults(
                             tabulated_backtest_summary,
                             tabulated_backtest_detail,
                         ) = tabulateBacktestResults(
-                            saveResultsTrimmed, maxAllowed=MAX_ALLOWED
+                            saveResultsTrimmed, maxAllowed=MAX_ALLOWED, force=True
                         )
                         try:
                             # import traceback
@@ -1494,7 +1497,7 @@ def printNotifySaveScreenedResults(
                 + f"[+] Found {len(screenResults)} Stocks in {str('{:.2f}'.format(elapsed_time))} sec."
                 + colorText.END
             )
-            Utility.tools.setLastScreenedResults(screenResults)
+        Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
     elif user is not None:
         sendMessageToTelegramChannel(
             message=f"No scan results found for {menuChoiceHierarchy}", user=user
@@ -1520,7 +1523,9 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
                         screenResults.drop(col, axis=1, inplace=True, errors="ignore")
 
 
-def tabulateBacktestResults(saveResults, maxAllowed=0):
+def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
+    if "RUNNER" in os.environ.keys() and not force:
+        return
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     summarydf, detaildf = getSummaryCorrectnessOfStrategy(saveResults)
@@ -1740,6 +1745,17 @@ def runScanners(
         for worker in consumers:
             worker.terminate()
         logging.shutdown()
+    if result is not None and len(result) >=3 and "Date" not in saveResults.columns:
+        temp_df = result[2].copy()
+        temp_df.reset_index(inplace=True)
+        temp_df = temp_df.tail(1)
+        temp_df.rename(columns={"index": "Date"}, inplace=True)
+        targetDate = (
+            temp_df["Date"].iloc[0]
+            if "Date" in temp_df.columns
+            else str(temp_df.iloc[:, 0][0])
+        )
+        saveResults["Date"] = str(targetDate).split(" ")[0]
     return screenResults, saveResults, backtest_df
 
 

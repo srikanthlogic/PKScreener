@@ -135,10 +135,16 @@ class tools:
         return f"\n{Changelog.changelog()}\n\n{devInfo}\n{versionInfo}\n\n{homePage}\n{issuesInfo}\n{communityInfo}\n{latestInfo}"
 
     # Save last screened result to pickle file
-    def setLastScreenedResults(df):
+    def setLastScreenedResults(df, df_save=None, choices=None):
         try:
             df.sort_values(by=["Stock"], ascending=True, inplace=True)
             df.to_pickle(lastScreened)
+            if choices is not None and df_save is not None:
+                df_s = df_save.copy()
+                df_s.reset_index(inplace=True)
+                fileName = os.path.join(Archiver.get_user_outputs_dir(),f"{choices}.txt")
+                with open(fileName, 'w') as f:
+                    f.write(df_s["Stock"].to_json(orient='records', lines=True))
         except IOError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             input(
@@ -149,7 +155,7 @@ class tools:
             )
 
     # Load last screened result to pickle file
-    def getLastScreenedResults():
+    def getLastScreenedResults(defaultAnswer=None):
         try:
             df = pd.read_pickle(lastScreened)
             print(
@@ -158,6 +164,7 @@ class tools:
                 + "\n[+] Showing recently screened results..\n"
                 + colorText.END
             )
+            df.sort_values(by=["Volume"], ascending=False, inplace=True)
             print(
                 colorText.miniTabulator().tabulate(
                     df, headers="keys", tablefmt=colorText.No_Pad_GridFormat
@@ -169,18 +176,19 @@ class tools:
                 + "[+] Note: Trend calculation is based on number of recent days to screen as per your configuration."
                 + colorText.END
             )
-            input(
-                colorText.BOLD
-                + colorText.GREEN
-                + "[+] Press <Enter> to continue.."
-                + colorText.END
-            )
         except FileNotFoundError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             print(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] Failed to load recently screened result table from disk! Skipping.."
+                + colorText.END
+            )
+        if defaultAnswer is None:
+            input(
+                colorText.BOLD
+                + colorText.GREEN
+                + "[+] Press <Enter> to continue.."
                 + colorText.END
             )
 

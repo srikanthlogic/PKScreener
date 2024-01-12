@@ -183,6 +183,9 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
         saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
             lambda x: x.replace("BO: ", "").replace(" ", "")
         )
+        saveResults.loc[:, "Resistance"] = saveResults.loc[
+            :, "Resistance"
+        ].apply(lambda x: x.replace("(Potential)", ""))
         saveResults["Volume"] = saveResults["Volume"].astype(float).fillna(0.0)
         saveResults["Consol.(30Prds)"] = (
             saveResults["Consol.(30Prds)"].astype(float).fillna(0.0)
@@ -440,7 +443,9 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
             days += 1
             if days >= len(periods):
                 break
-
+        
+        if df is None:
+            return None
         df = df[
             [
                 col

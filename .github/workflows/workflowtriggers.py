@@ -73,6 +73,11 @@ argParser.add_argument(
     required=required,
 )
 argParser.add_argument(
+    "--scanDaysInPast",
+    help="Number of days in the past for which scan has to be run",
+    required=required,
+)
+argParser.add_argument(
     "-b",
     "--backtests",
     action="store_true",
@@ -315,37 +320,49 @@ def run_workflow(workflow_name, postdata):
     return resp
 
 
-def triggerScanWorkflowActions():
+def triggerScanWorkflowActions(launchLocal=False, daysInPast=0):
     for key in objectDictionary.keys():
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "main"
-        if args.user is None or len(args.user) == 0:
-            args.user = ""
-            postdata = (
-                '{"ref":"'
-                + branch
-                + '","inputs":{"user":"'
-                + f"{args.user}"
-                + '","params":"'
-                + f'-a Y -e -p -o {scanOptions.replace("_",":")}'
-                + '","ref":"main"}}'
-            )
+        scanOptions = objectDictionary[key]["td3"]
+        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'
+        if launchLocal:
+            from pkscreener import pkscreenercli
+            from pkscreener.pkscreenercli import argParser as agp
+            while daysInPast >=0:
+                os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
+                ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
+                pkscreenercli.args = ag
+                pkscreenercli.pkscreenercli()
+                daysInPast -=1
         else:
-            postdata = (
-                '{"ref":"'
-                + branch
-                + '","inputs":{"user":"'
-                + f"{args.user}"
-                + '","params":"'
-                + f'-a Y -e -p -u {args.user} -o {scanOptions.replace("_",":")}'
-                + '","ref":"main"}}'
-            )
+            if args.user is None or len(args.user) == 0:
+                args.user = ""
+                postdata = (
+                    '{"ref":"'
+                    + branch
+                    + '","inputs":{"user":"'
+                    + f"{args.user}"
+                    + '","params":"'
+                    + f'-a Y -e -p -o {scanOptions.replace("_",":")}'
+                    + '","ref":"main"}}'
+                )
+            else:
+                postdata = (
+                    '{"ref":"'
+                    + branch
+                    + '","inputs":{"user":"'
+                    + f"{args.user}"
+                    + '","params":"'
+                    + f'-a Y -e -p -u {args.user} -o {scanOptions.replace("_",":")}'
+                    + '","ref":"main"}}'
+                )
 
-        resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata)
-        if resp.status_code == 204:
-            sleep(5)
-        else:
-            break
+            resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata)
+            if resp.status_code == 204:
+                sleep(5)
+            else:
+                break
 
 
 def triggerBacktestWorkflowActions(launchLocal=False):
@@ -430,4 +447,7 @@ if args.backtests:
         triggerBacktestWorkflowActions(args.local)
 if args.scans:
     if not isTodayHoliday()[0] or args.force:
-        triggerScanWorkflowActions()
+        daysInPast = 0
+        if args.scanDaysInPast is not None:
+            daysInPast = int(args.scanDaysInPast)
+        triggerScanWorkflowActions(args.local, daysInPast=daysInPast)
