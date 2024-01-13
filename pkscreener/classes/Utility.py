@@ -147,8 +147,18 @@ class tools:
                 if not os.path.isdir(outputFolder):
                     os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
                 fileName = os.path.join(outputFolder,f"{choices}.txt")
+                items = []
+                if os.isfile(fileName):
+                    #File already exists. Let's combine
+                    with open(fileName, 'r') as fe:
+                        stocks = fe.read()
+                        items = stocks.split(",")
+                newStocks = df_s["Stock"].to_json(orient='records', lines=True).split(",")
+                items.extend(newStocks)
+                stockList = list(set(items))
+                finalStocks = ",".join(stockList)
                 with open(fileName, 'w') as f:
-                    f.write(df_s["Stock"].to_json(orient='records', lines=True))
+                    f.write(finalStocks)
         except IOError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             input(
@@ -157,6 +167,8 @@ class tools:
                 + "[+] Failed to save recently screened result table on disk! Skipping.."
                 + colorText.END
             )
+        except:
+            pass
 
     # Load last screened result to pickle file
     def getLastScreenedResults(defaultAnswer=None):
