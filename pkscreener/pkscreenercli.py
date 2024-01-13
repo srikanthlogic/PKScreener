@@ -223,6 +223,7 @@ def pkscreenercli():
             )
             pass
     configManager.getConfig(ConfigManager.parser)
+    configManager.restartRequestsCache()
 
     if args.log or configManager.logsEnabled:
         setupLogger(shouldLog=True, trace=args.testbuild)
