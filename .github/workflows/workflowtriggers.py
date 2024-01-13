@@ -335,7 +335,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             while daysInPast >=0:
                 if not scanResultExists(options,daysInPast):
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-                    ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
+                    ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
                     pkscreenercli.pkscreenercli()
                 daysInPast -=1
@@ -381,9 +381,12 @@ def scanResultExists(options, nthDay=0):
         print("Creating actions-data-scan directory now...")
         os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
     fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
+    print(f"Checking for {fileName}")
     if os.path.isfile(fileName):
         print(f"Skipping. Latest scan result already exists:{fileName}")
         return True
+    else:
+        print(f"Scanning for {choices}_{today}")
     return False
 
 def triggerBacktestWorkflowActions(launchLocal=False):
