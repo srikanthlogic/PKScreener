@@ -150,7 +150,7 @@ class tools:
                     #File already exists. Let's combine because there are new stocks found
                     with open(fileName, 'r') as fe:
                         stocks = fe.read()
-                        items = stocks.split(",")
+                        items = stocks.replace("\n","").replace("\"","").split(",")
                         stockList = sorted(list(set(items)))
                         finalStocks = ",".join(stockList)
             else:
@@ -161,7 +161,7 @@ class tools:
                 if choices is not None and df_save is not None:
                     df_s = df_save.copy()
                     df_s.reset_index(inplace=True)
-                    newStocks = df_s["Stock"].to_json(orient='records', lines=True).split(",")
+                    newStocks = df_s["Stock"].to_json(orient='records', lines=True).replace("\n","").replace("\"","").split(",")
                     items.extend(newStocks)
                     stockList = sorted(list(set(items)))
                     finalStocks = ",".join(stockList)
