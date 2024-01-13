@@ -1190,7 +1190,7 @@ def main(userArgs=None):
             items,
             tasks_queue,
             results_queue,
-            listStockCodes,
+            len(items),
             backtestPeriod,
             samplingDuration - 1,
             consumers,
@@ -1679,7 +1679,7 @@ def runScanners(
     items,
     tasks_queue,
     results_queue,
-    listStockCodes,
+    numStocks,
     backtestPeriod,
     iterations,
     consumers,
@@ -1692,7 +1692,8 @@ def runScanners(
     choices = userReportName(selectedChoice)
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
-        numStocks = len(listStockCodes) * int(iterations)
+        totalStocks = numStocks
+        numStocksPerIteration = int(numStocks/int(iterations))
         queueCounter = 0
         dumpFreq = 1
         print(colorText.END + colorText.BOLD)
@@ -1703,16 +1704,26 @@ def runScanners(
             lstscreen = []
             lstsave = []
             while numStocks:
-                if counter == 0 and queueCounter < int(iterations) and numStocks > 0:
-                    populateQueues(
-                        items[
-                            len(listStockCodes)
-                            * queueCounter : len(listStockCodes)
-                            * (queueCounter + 1)
-                        ],
-                        tasks_queue,
-                        queueCounter + 1 == int(iterations),
-                    )
+                if counter == 0 and numStocks > 0:
+                    if queueCounter < int(iterations):
+                        populateQueues(
+                            items[
+                                numStocksPerIteration
+                                * queueCounter : numStocksPerIteration
+                                * (queueCounter + 1)
+                            ],
+                            tasks_queue,
+                            (queueCounter + 1 == int(iterations)) and ((queueCounter + 1)*int(iterations) == totalStocks),
+                        )
+                    else:
+                        populateQueues(
+                            items[
+                                numStocksPerIteration
+                                * queueCounter :
+                            ],
+                            tasks_queue,
+                            True,
+                        )
                 counter += 1
                 result = results_queue.get()
                 if result is not None:
@@ -1741,10 +1752,10 @@ def runScanners(
                 # If it's being run under unit testing, let's wrap up if we find at least 1
                 # stock or if we've already tried screening through 5% of the list.
                 if (testing and (
-                    len(lstscreen) >= 1 or counter >= int(len(listStockCodes) * 0.05)
+                    len(lstscreen) >= 1 or counter >= int(numStocksPerIteration * 0.05)
                 )) or len(lstscreen) >= max_allowed:
                     break
-                if counter >= len(listStockCodes):
+                if counter >= numStocksPerIteration:
                     queueCounter += 1
                     counter = 0
         elapsed_time = time.time() - start_time
