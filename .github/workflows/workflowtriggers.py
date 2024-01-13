@@ -32,6 +32,7 @@ import pandas as pd
 import pytz
 import requests
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
+from PKDevTools.classes.Committer import Committer
 
 argParser = argparse.ArgumentParser()
 required = False
@@ -76,6 +77,11 @@ argParser.add_argument(
 argParser.add_argument(
     "--scanDaysInPast",
     help="Number of days in the past for which scan has to be run",
+    required=required,
+)
+argParser.add_argument(
+    "--branchname",
+    help="branch name for check-in, check-out",
     required=required,
 )
 argParser.add_argument(
@@ -339,6 +345,10 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     pkscreenercli.args = ag
                     pkscreenercli.pkscreenercli()
                 daysInPast -=1
+            choices = scanChoices(options)
+            scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
+            if args.branchname is not None:
+                Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
         else:
             if args.user is None or len(args.user) == 0:
                 args.user = ""
@@ -368,18 +378,27 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             else:
                 break
 
+def scanOutputDirectory(backtest=False):
+    dirName = 'actions-data-scan' if not backtest else "results"
+    outputFolder = os.path.join(os.getcwd(),dirName)
+    if not os.path.isdir(outputFolder):
+        print("This must be run with actions-data-download branch checked-out")
+        print("Creating actions-data-scan directory now...")
+        os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"{dirName}{os.sep}")), exist_ok=True)
+    return outputFolder
+
+def scanChoices(options):
+    choices = getFormattedChoices(options).replace("B:30","X").replace("B","X").replace("G","X")
+    return choices
+
 def scanResultExists(options, nthDay=0):
-    choices = getFormattedChoices(options).replace("B","X").replace("G","X")
+    choices = scanChoices(options)
     curr = PKDateUtilities.nthPastTradingDateStringFromFutureDate(nthDay)
     if isinstance(curr, datetime.datetime):
         today = curr.strftime("%Y-%m-%d")
     else:
         today = curr
-    outputFolder = os.path.join(os.getcwd(),'actions-data-scan')
-    if not os.path.isdir(outputFolder):
-        print("This must be run with actions-data-download branch checked-out")
-        print("Creating actions-data-scan directory now...")
-        os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
+    outputFolder = scanOutputDirectory()
     fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
     print(f"Checking for {fileName}")
     if os.path.isfile(fileName):
@@ -401,6 +420,10 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             ag = agp.parse_known_args(args=["-e", "-a", "Y", "-o", options, "-v"])[0]
             pkscreenercli.args = ag
             pkscreenercli.pkscreenercli()
+            choices = f'PKScreener_{scanChoices(options).replace("X","B")}'
+            scanResultFilesPath = f"{os.path.join(scanOutputDirectory(backtest=True),choices)}_*.html"
+            if args.branchname is not None:
+                Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
         else:
             branch = "main"
             postdata = (
@@ -426,43 +449,6 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     if launchLocal:
         sys.exit(0)
 
-
-def holidayList():
-    url = "https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/nse-holidays.json"
-    headers = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
-    }
-    res = requests.get(url, headers=headers)
-    if res is None or res.status_code != 200:
-        return None
-    try:
-        cm = res.json()["CM"]  # CM = Capital Markets
-        df = pd.DataFrame(cm)
-        df = df[["tradingDate", "weekDay", "description"]]
-        df.loc[:, "description"] = df.loc[:, "description"].apply(
-            lambda x: x.replace("\r", "")
-        )
-        return df
-    except Exception:  # pragma: no cover
-        return None
-
-
-def isTodayHoliday():
-    holidays = holidayList()
-    if holidays is None:
-        return False, None
-
-    curr = datetime.datetime.now(pytz.timezone("Asia/Kolkata"))
-    today = curr.strftime("%d-%b-%Y")
-    occasion = None
-    for holiday in holidays["tradingDate"]:
-        if today in holiday:
-            occasion = holidays[holidays["tradingDate"] == holiday]["description"].iloc[
-                0
-            ]
-            break
-    return occasion is not None, occasion
-
 def getFormattedChoices(options):
     isIntraday = args.intraday
     selectedChoice = options.split(":")
@@ -480,10 +466,10 @@ def getFormattedChoices(options):
 if args.report:
     generateBacktestReportMainPage()
 if args.backtests:
-    if not isTodayHoliday()[0] or args.force:
+    if not PKDateUtilities.isTodayHoliday()[0] or args.force:
         triggerBacktestWorkflowActions(args.local)
 if args.scans:
-    if not isTodayHoliday()[0] or args.force:
+    if not PKDateUtilities.isTodayHoliday()[0] or args.force:
         daysInPast = 0
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
