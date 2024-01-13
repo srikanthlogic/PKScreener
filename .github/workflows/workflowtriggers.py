@@ -369,7 +369,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 break
 
 def scanResultExists(options, nthDay=0):
-    choices = getFormattedChoices(options)
+    choices = getFormattedChoices(options).replace("B","X").replace("G","X")
     curr = PKDateUtilities.nthPastTradingDateStringFromFutureDate(nthDay)
     if isinstance(curr, datetime.datetime):
         today = curr.strftime("%Y-%m-%d")
