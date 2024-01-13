@@ -202,6 +202,16 @@ jobs:
         git fetch
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
+    - name: Setup Python environment for triggers
+      shell: bash
+      continue-on-error: true
+      run: |
+        pip3 install PKDevTools
+        pip3 install requests
+        pip3 install pandas
+        pip3 install pytz
+        pip3 install .
+
     - name: Run Historical Scan on Ubuntu
       shell: bash
       continue-on-error: true
