@@ -1096,8 +1096,21 @@ def main(userArgs=None):
         bar, spinner = Utility.tools.getProgressbarStyle()
         with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
             while actualHistoricalDuration >= 0:
+                daysInPast = (
+                            actualHistoricalDuration
+                            if (menuOption == "B")
+                            else (
+                                (backtestPeriod)
+                                if (menuOption == "G")
+                                else (
+                                    0
+                                    if (userPassedArgs.backtestdaysago is None)
+                                    else (int(userPassedArgs.backtestdaysago))
+                                )
+                            )
+                        )
                 try:
-                    pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(actualHistoricalDuration)
+                    pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
                     filePrefix = getFormattedChoices().replace("B","X").replace("G","X")
                     url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
                     savedListResp = fetcher.fetchURL(url)
@@ -1125,19 +1138,7 @@ def main(userArgs=None):
                         volumeRatio,
                         testBuild,
                         userArgs.log,
-                        (
-                            actualHistoricalDuration
-                            if (menuOption == "B")
-                            else (
-                                (backtestPeriod)
-                                if (menuOption == "G")
-                                else (
-                                    0
-                                    if (userPassedArgs.backtestdaysago is None)
-                                    else (int(userPassedArgs.backtestdaysago))
-                                )
-                            )
-                        ),
+                        daysInPast,
                         (
                             backtestPeriod
                             if menuOption == "B"
@@ -1364,7 +1365,7 @@ def printNotifySaveScreenedResults(
     MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
-    recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
+    recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d') if (userPassedArgs.backtestdaysago is None) else (PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago)))
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     Utility.tools.clearScreen()
