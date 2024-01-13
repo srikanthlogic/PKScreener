@@ -1433,7 +1433,7 @@ def printNotifySaveScreenedResults(
     if screenResults is not None and len(screenResults) >= 1:
         title = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b> {"" if selectedChoice["0"] != "G" else "for Date:"+ targetDateG10k}'
         if (
-            "RUNNER" in os.environ.keys()
+            ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] != "LOCAL_RUN_SCANNER")
             or "PKDevTools_Default_Log_Level" in os.environ.keys()
         ):
             if eligible:
@@ -1519,11 +1519,11 @@ def printNotifySaveScreenedResults(
                 + f"[+] Found {len(screenResults)} Stocks in {str('{:.2f}'.format(elapsed_time))} sec."
                 + colorText.END
             )
-        Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
     elif user is not None:
         sendMessageToTelegramChannel(
             message=f"No scan results found for {menuChoiceHierarchy}", user=user
         )
+    Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
