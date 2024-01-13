@@ -204,15 +204,45 @@ jobs:
 
     - name: Setup Python environment for triggers
       shell: bash
+      if: startsWith(runner.os, 'Linux')
       continue-on-error: true
       run: |
-        pip3 install PKDevTools
-        pip3 install requests
-        pip3 install pandas
-        pip3 install pytz
+        cd .github/dependencies/
+        pwd
+        tar -xzf ta-lib-0.4.0-src.tar.gz
+        cd ta-lib/
+        ./configure --prefix=/usr
+        make
+        sudo make install
+        cd /home/runner/work/PKScreener/PKScreener/
+        python3 -m pip install --upgrade pip
+        pip3 install -r requirements.txt
+        pip3 install -r requirements-dev.txt
+        pip3 install ta-lib==0.4.28
         pip3 install .
-        pip3 install pkscreener
 
+    - name: Setup Python environment for triggers on Windows
+      continue-on-error: true
+      if: startsWith(runner.os, 'Windows')
+      shell: bash
+      run: |
+        cd .github/dependencies/
+        if [[ "${{ inputs.targetPythonVersion }}" == "" ]] ;then
+          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+        elif [[ "${{ inputs.targetPythonVersion }}" == "3.9" ]] ;then
+          pip3 install TA_Lib-0.4.19-cp39-cp39-win_amd64.whl
+        elif [[ "${{ inputs.targetPythonVersion }}" == "3.11" ]] ;then
+          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+        elif [[ "${{ inputs.targetPythonVersion }}" == "3.12" ]] ;then
+          pip3 install TA_Lib-0.4.28-cp312-cp312-win_amd64.whl
+        fi
+        cd ..
+        cd ..
+        python3 -m pip install --upgrade pip
+        pip3 install -r requirements.txt
+        pip3 install -r requirements-dev.txt
+        pip3 install .
+        
     - name: Run Historical Scan on Ubuntu
       shell: bash
       continue-on-error: true
