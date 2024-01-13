@@ -31,6 +31,7 @@ from time import sleep
 import pandas as pd
 import pytz
 import requests
+import requests_cache
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 argParser = argparse.ArgumentParser()
@@ -477,6 +478,7 @@ def getFormattedChoices(options):
     choices = f"{choices}{'_i' if isIntraday else ''}"
     return choices
 
+requests_cache.clear()
 if args.report:
     generateBacktestReportMainPage()
 if args.backtests:
