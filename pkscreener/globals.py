@@ -1364,7 +1364,7 @@ def printNotifySaveScreenedResults(
     MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
-    recordDate = PKDateUtilities.tradingDate().strftime('%y-%m-%d')
+    recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     Utility.tools.clearScreen()

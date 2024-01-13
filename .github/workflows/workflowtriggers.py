@@ -331,24 +331,13 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
         if launchLocal:
             from pkscreener import pkscreenercli
             from pkscreener.pkscreenercli import argParser as agp
-            choices = getFormattedChoices(options)
-            curr = PKDateUtilities.tradingDate()
-            today = curr.strftime("%Y-%m-%d")
-            outputFolder = os.path.join(os.getcwd(),'actions-data-scan')
-            if not os.path.isdir(outputFolder):
-                print("This must be run with actions-data-download branch checked-out")
-                print("Creating actions-data-scan directory now...")
-                os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
-            fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
-            if os.path.isfile(fileName):
-                print(f"Skipping. Latest scan result already exists:{fileName}")
-                continue
             daysInPast = scanDaysInPast
             while daysInPast >=0:
-                os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-                ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
-                pkscreenercli.args = ag
-                pkscreenercli.pkscreenercli()
+                if not scanResultExists(options,daysInPast):
+                    os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
+                    ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"-v"])[0]
+                    pkscreenercli.args = ag
+                    pkscreenercli.pkscreenercli()
                 daysInPast -=1
         else:
             if args.user is None or len(args.user) == 0:
@@ -379,6 +368,23 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             else:
                 break
 
+def scanResultExists(options, nthDay=0):
+    choices = getFormattedChoices(options)
+    curr = PKDateUtilities.nthPastTradingDateStringFromFutureDate(nthDay)
+    if isinstance(curr, datetime.datetime):
+        today = curr.strftime("%Y-%m-%d")
+    else:
+        today = curr
+    outputFolder = os.path.join(os.getcwd(),'actions-data-scan')
+    if not os.path.isdir(outputFolder):
+        print("This must be run with actions-data-download branch checked-out")
+        print("Creating actions-data-scan directory now...")
+        os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
+    fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
+    if os.path.isfile(fileName):
+        print(f"Skipping. Latest scan result already exists:{fileName}")
+        return True
+    return False
 
 def triggerBacktestWorkflowActions(launchLocal=False):
     for key in objectDictionary.keys():
