@@ -1118,7 +1118,8 @@ def main(userArgs=None):
                     url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
                     savedListResp = fetcher.fetchURL(url)
                     if savedListResp is not None and savedListResp.status_code == 200:
-                        listStockCodes = savedListResp.text.replace("\"","").split(",")
+                        listStockCodes = savedListResp.text.replace("\n","").replace("\"","").split(",")
+                        listStockCodes = sorted(list(set(listStockCodes)))
                         savedStocksCount =len(listStockCodes)
                 except:
                     pass
