@@ -144,7 +144,7 @@ class tools:
                 os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"actions-data-scan{os.sep}")), exist_ok=True)
             fileName = os.path.join(outputFolder,f"{choices}.txt")
             items = []
-            if os.isfile(fileName):
+            if os.path.isfile(fileName):
                 #File already exists. Let's combine
                 with open(fileName, 'r') as fe:
                     stocks = fe.read()
