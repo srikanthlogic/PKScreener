@@ -211,6 +211,7 @@ jobs:
         pip3 install pandas
         pip3 install pytz
         pip3 install .
+        pip3 install pkscreener
 
     - name: Run Historical Scan on Ubuntu
       shell: bash
