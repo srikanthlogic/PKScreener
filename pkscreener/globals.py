@@ -1110,11 +1110,13 @@ def main(userArgs=None):
                             )
                         )
                 try:
+                    savedStocksCount = 0
+                    # if daysInPast > 0:
+                    # Always run from the entire list for today
                     pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
                     filePrefix = getFormattedChoices().replace("B","X").replace("G","X")
                     url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
                     savedListResp = fetcher.fetchURL(url)
-                    savedStocksCount = 0
                     if savedListResp is not None and savedListResp.status_code == 200:
                         listStockCodes = savedListResp.text.replace("\"","").split(",")
                         savedStocksCount =len(listStockCodes)
@@ -1151,12 +1153,13 @@ def main(userArgs=None):
                     for stock in listStockCodes
                 ]
                 items.extend(moreItems)
-                progressbar.text(
-                    colorText.BOLD
-                    + colorText.GREEN
-                    + f"Added {savedStocksCount} Stocks from {pastDate} saved from earlier..."
-                    + colorText.END
-                )
+                if savedStocksCount > 0:
+                    progressbar.text(
+                        colorText.BOLD
+                        + colorText.GREEN
+                        + f"Added {savedStocksCount} Stocks from {pastDate} saved from earlier..."
+                        + colorText.END
+                    )
                 fillerPlaceHolder = fillerPlaceHolder + 1
                 actualHistoricalDuration = samplingDuration - fillerPlaceHolder
                 if actualHistoricalDuration >= 0:
@@ -1206,10 +1209,11 @@ def main(userArgs=None):
         if not downloadOnly and menuOption in ["X", "G"]:
             if menuOption == "G":
                 userPassedArgs.backtestdaysago = backtestPeriod
-            screenResults, saveResults = labelDataForPrinting(
-                screenResults, saveResults, configManager, volumeRatio
-            )
-            if not newlyListedOnly and not configManager.showunknowntrends:
+            if len(screenResults) > 0:
+                screenResults, saveResults = labelDataForPrinting(
+                    screenResults, saveResults, configManager, volumeRatio
+                )
+            if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                 screenResults, saveResults = removeUnknowns(screenResults, saveResults)
             printNotifySaveScreenedResults(
                 screenResults,
