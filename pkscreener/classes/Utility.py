@@ -145,13 +145,16 @@ class tools:
             fileName = os.path.join(outputFolder,f"{choices}.txt")
             items = []
             needsWriting = False
-            if os.path.isfile(fileName) and df is not None and len(df) > 0:
-                #File already exists. Let's combine because there are new stocks found
-                with open(fileName, 'r') as fe:
-                    stocks = fe.read()
-                    items = stocks.split(",")
-                    stockList = list(set(items))
-                    finalStocks = ",".join(stockList)
+            if os.path.isfile(fileName):
+                if df is not None and len(df) > 0:
+                    #File already exists. Let's combine because there are new stocks found
+                    with open(fileName, 'r') as fe:
+                        stocks = fe.read()
+                        items = stocks.split(",")
+                        stockList = list(set(items))
+                        finalStocks = ",".join(stockList)
+            else:
+                needsWriting = True
             if df is not None and len(df) > 0:
                 df.sort_values(by=["Stock"], ascending=True, inplace=True)
                 df.to_pickle(lastScreened)
