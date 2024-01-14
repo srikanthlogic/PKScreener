@@ -30,6 +30,7 @@ import argparse
 import builtins
 import logging
 import multiprocessing
+# import traceback
 
 # Keep module imports prior to classes
 import os
@@ -59,12 +60,12 @@ def decorator(func):
 def disableSysOut(input=True, disable=True):
     global printenabled
     printenabled = not disable
-    builtins.print = decorator(builtins.print)  # all files
-    if input:
-        builtins.input = decorator(builtins.input)  # all files
     if disable:
         global originalStdOut, original__stdout
         if originalStdOut is None:
+            builtins.print = decorator(builtins.print)  # all files
+            if input:
+                builtins.input = decorator(builtins.input)  # all files
             originalStdOut = sys.stdout
             original__stdout = sys.__stdout__
         sys.stdout = open(os.devnull, "w")
@@ -228,11 +229,14 @@ def runApplication():
 def pkscreenercli():
     if sys.platform.startswith("darwin"):
         try:
-            multiprocessing.set_start_method("fork")
-        except RuntimeError:
+            if multiprocessing.get_start_method() != "fork":
+                multiprocessing.set_start_method("fork")
+        except RuntimeError as e:
             print(
                 "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
             )
+            # print(e)
+            # traceback.print_exc()
             pass
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
@@ -248,7 +252,11 @@ def pkscreenercli():
     import pkscreener.classes.Utility as Utility
 
     configManager.default_logger = default_logger()
-    Utility.tools.clearScreen()
+    global originalStdOut
+    if originalStdOut is None:
+        # Clear only if this is the first time it's being called from some
+        # loop within workflowtriggers.
+        Utility.tools.clearScreen()
 
     if args.prodbuild:
         disableSysOut()
