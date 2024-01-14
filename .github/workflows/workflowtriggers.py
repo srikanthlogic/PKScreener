@@ -125,12 +125,12 @@ m2 = menus()
 m3 = menus()
 objectDictionary = {}
 
-# args.scans = True
+args.scans = True
 # args.report = True
 # args.intraday = True
 # args.backtests = True
-# args.local = True
-# args.scanDaysInPast = 250
+args.local = True
+args.scanDaysInPast = 250
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
@@ -138,11 +138,11 @@ objectDictionary = {}
 # args.skiplistlevel3 = "0,1,2,4,5,6"
 
 if args.skiplistlevel0 is None:
-    args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "X", "H", "Y", "G"])
+    args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G"])
 if args.skiplistlevel1 is None:
     args.skiplistlevel1 = ",".join(["W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13"])
 if args.skiplistlevel2 is None:
-    args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,21,22,26,27,28,29,30,42,M,Z"])
+    args.skiplistlevel2 = ",".join(["0,21,22,26,27,28,29,30,42,M,Z"])
 if args.skiplistlevel3 is None:
     args.skiplistlevel3 = ",".join(["0"])
 if not args.report and not args.scans and not args.backtests:
@@ -410,11 +410,13 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
             fileSize = os.path.getsize(fileName)
             if fileSize <= 2:
                 print(f"Saved scan result size is 0:{fileName}")
+            else:
+                print(f"Skipping. Latest scan result already exists:{fileName}")
+                return True
         else:
             print(f"Skipping. Latest scan result already exists:{fileName}")
             return True
-    else:
-        print(f"Scanning for {choices}_{today}")
+    print(f"Scanning for {choices}_{today}")
     return False
 
 def triggerBacktestWorkflowActions(launchLocal=False):
