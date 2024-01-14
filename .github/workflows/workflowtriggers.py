@@ -343,7 +343,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             while daysInPast >=0:
                 # sys.stdout = original_stdout
                 # sys.__stdout__ = original__stdout
-                if not scanResultExists(options,daysInPast):
+                if not scanResultExists(options,daysInPast,True):
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
@@ -395,7 +395,7 @@ def scanChoices(options):
     choices = getFormattedChoices(options).replace("B:30","X").replace("B","X").replace("G","X")
     return choices
 
-def scanResultExists(options, nthDay=0):
+def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
     choices = scanChoices(options)
     curr = PKDateUtilities.nthPastTradingDateStringFromFutureDate(nthDay)
     if isinstance(curr, datetime.datetime):
@@ -406,8 +406,13 @@ def scanResultExists(options, nthDay=0):
     fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
     print(f"Checking for {fileName}")
     if os.path.isfile(fileName):
-        print(f"Skipping. Latest scan result already exists:{fileName}")
-        return True
+        if returnFalseIfSizeZero:
+            fileSize = os.path.getsize(fileName)
+            if fileSize <= 2:
+                print(f"Saved scan result size is 0:{fileName}")
+        else:
+            print(f"Skipping. Latest scan result already exists:{fileName}")
+            return True
     else:
         print(f"Scanning for {choices}_{today}")
     return False
