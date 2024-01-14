@@ -36,7 +36,6 @@ import multiprocessing
 import os
 import sys
 import tempfile
-from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -44,6 +43,19 @@ try:
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
 except Exception:
     pass
+
+from time import sleep
+
+from PKDevTools.classes import log as log
+from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.log import default_logger
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
+import pkscreener.classes.ConfigManager as ConfigManager
+
+multiprocessing.freeze_support()
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["AUTOGRAPH_VERBOSITY"] = "0"
+# from pkscreener.classes.IntradayMonitor import intradayMonitorInstance
 
 printenabled=False
 originalStdOut=None
@@ -75,20 +87,6 @@ def disableSysOut(input=True, disable=True):
         sys.__stdout__.close()
         sys.stdout = originalStdOut
         sys.__stdout__ = original__stdout
-
-
-from time import sleep
-
-from PKDevTools.classes import log as log
-from PKDevTools.classes.ColorText import colorText
-from PKDevTools.classes.log import default_logger
-
-import pkscreener.classes.ConfigManager as ConfigManager
-
-multiprocessing.freeze_support()
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["AUTOGRAPH_VERBOSITY"] = "0"
-# from pkscreener.classes.IntradayMonitor import intradayMonitorInstance
 
 # Argument Parsing for test purpose
 argParser = argparse.ArgumentParser()
@@ -227,14 +225,14 @@ def runApplication():
 
 
 def pkscreenercli():
+    global originalStdOut
     if sys.platform.startswith("darwin"):
         try:
-            if multiprocessing.get_start_method() != "fork":
-                multiprocessing.set_start_method("fork")
-        except RuntimeError as e:
-            print(
-                "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
-            )
+            multiprocessing.set_start_method("fork")
+        except RuntimeError: #as e:
+            # print(
+            #     "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
+            # )
             # print(e)
             # traceback.print_exc()
             pass
@@ -252,7 +250,6 @@ def pkscreenercli():
     import pkscreener.classes.Utility as Utility
 
     configManager.default_logger = default_logger()
-    global originalStdOut
     if originalStdOut is None:
         # Clear only if this is the first time it's being called from some
         # loop within workflowtriggers.
