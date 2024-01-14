@@ -329,6 +329,8 @@ def run_workflow(workflow_name, postdata):
 
 
 def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
+    # original_stdout = sys.stdout
+    # original__stdout = sys.__stdout__
     for key in objectDictionary.keys():
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "main"
@@ -339,9 +341,11 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             from pkscreener.pkscreenercli import argParser as agp
             daysInPast = scanDaysInPast
             while daysInPast >=0:
+                # sys.stdout = original_stdout
+                # sys.__stdout__ = original__stdout
                 if not scanResultExists(options,daysInPast):
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-                    ag = agp.parse_known_args(args=["-p", "-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
+                    ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
                     pkscreenercli.pkscreenercli()
                 daysInPast -=1
