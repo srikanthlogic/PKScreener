@@ -44,24 +44,36 @@ try:
 except Exception:
     pass
 
-
+printenabled=False
+originalStdOut=None
+original__stdout=None
 def decorator(func):
     def new_func(*args, **kwargs):
-        return
-        # if printenabled:
-        #     func("print:",*args,**kwargs)
-        #     func("input:",*args,**kwargs)
+        if printenabled:
+            func(*args,**kwargs)
 
     return new_func
 
 
 # print = decorator(print) # current file
-def disableSysOut(input=True):
+def disableSysOut(input=True, disable=True):
+    global printenabled
+    printenabled = not disable
     builtins.print = decorator(builtins.print)  # all files
     if input:
         builtins.input = decorator(builtins.input)  # all files
-    sys.stdout = open(os.devnull, "w")
-    sys.__stdout__ = open(os.devnull, "w")
+    if disable:
+        global originalStdOut, original__stdout
+        if originalStdOut is None:
+            originalStdOut = sys.stdout
+            original__stdout = sys.__stdout__
+        sys.stdout = open(os.devnull, "w")
+        sys.__stdout__ = open(os.devnull, "w")
+    else:
+        sys.stdout.close()
+        sys.__stdout__.close()
+        sys.stdout = originalStdOut
+        sys.__stdout__ = original__stdout
 
 
 from time import sleep
@@ -289,6 +301,7 @@ def runApplicationForScreening(tools):
             if args.exit or args.user is not None:
                 break
         if args.v:
+            disableSysOut(disable=False)
             return
         sys.exit(0)
     except Exception as e:  # pragma: no cover
@@ -297,6 +310,7 @@ def runApplicationForScreening(tools):
             "[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
         if args.v:
+            disableSysOut(disable=False)
             return
         sys.exit(0)
 
