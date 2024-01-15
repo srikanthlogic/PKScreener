@@ -115,7 +115,7 @@ def backtest(
     }
     backTestedStock["Stock"] = stock
     targetDate = (
-        previous_recent["Date"].iloc[0]
+        str(previous_recent["Date"].iloc[0])
         if "Date" in previous_recent.columns
         else str(previous_recent.iloc[:, 0][0])
     )

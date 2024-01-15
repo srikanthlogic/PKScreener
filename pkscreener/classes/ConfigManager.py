@@ -36,7 +36,7 @@ from PKDevTools.classes.log import default_logger
 parser = configparser.ConfigParser(strict=False)
 
 # Default attributes for Downloading Cache from Git repo
-default_period = "560d"
+default_period = "450d"
 default_duration = "1d"
 default_timeout = 2
 
@@ -48,7 +48,7 @@ class tools:
         self.volumeRatio = 2.5
         self.minLTP = 20.0
         self.maxLTP = 50000
-        self.period = "560d"
+        self.period = "450d"
         self.duration = "1d"
         self.daysToLookback = 30
         self.shuffleEnabled = True
@@ -157,7 +157,7 @@ class tools:
                 + colorText.END
             )
             self.period = input(
-                "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 560): "
+                "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 450): "
             )
             self.daysToLookback = input(
                 "[+] Number of recent days (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 30): "
@@ -346,7 +346,7 @@ class tools:
             candleDuration = self.duration.lower()
         self.getConfig(parser)
         if candleDuration[-1] in ["d"]:
-            self.period = "560d"
+            self.period = "450d"
             self.cacheEnabled = True
         if candleDuration[-1] in ["m", "h"] and not self.isIntradayConfig():
             self.period = "1d"
