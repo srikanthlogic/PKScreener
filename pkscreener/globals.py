@@ -1321,11 +1321,11 @@ def main(userArgs=None):
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
         newlyListedOnly = False
-    if configManager.isIntradayConfig():
-        isIntraday = userPassedArgs.intraday is not None
-        configManager.toggleConfig(
-            candleDuration="1m" if isIntraday else "1d", clearCache=False
-        )
+    
+    # Change it back to usual
+    isIntraday = userPassedArgs.intraday is not None
+    if configManager.isIntradayConfig() or isIntraday:
+        configManager.toggleConfig(candleDuration="1d", clearCache=False)
 
 
 def updateMenuChoiceHierarchy():
