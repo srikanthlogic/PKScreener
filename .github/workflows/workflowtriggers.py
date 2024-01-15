@@ -125,12 +125,12 @@ m2 = menus()
 m3 = menus()
 objectDictionary = {}
 
-args.scans = True
+# args.scans = True
 # args.report = True
 # args.intraday = True
 # args.backtests = True
-args.local = True
-args.scanDaysInPast = 250
+# args.local = True
+# args.scanDaysInPast = 250
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
