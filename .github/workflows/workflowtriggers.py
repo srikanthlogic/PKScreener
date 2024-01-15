@@ -409,14 +409,14 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
         if returnFalseIfSizeZero:
             fileSize = os.path.getsize(fileName)
             if fileSize <= 2:
-                print(f"Saved scan result size is 0:{fileName}")
+                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Saved scan result size is 0:{fileName}")
             else:
-                print(f"Skipping. Latest scan result already exists:{fileName}")
+                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Skipping. Latest scan result already exists:{fileName}")
                 return True
         else:
-            print(f"Skipping. Latest scan result already exists:{fileName}")
+            print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Skipping. Latest scan result already exists:{fileName}")
             return True
-    print(f"Scanning for {choices}_{today}")
+    print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Scanning for {choices}_{today}")
     return False
 
 def triggerBacktestWorkflowActions(launchLocal=False):
