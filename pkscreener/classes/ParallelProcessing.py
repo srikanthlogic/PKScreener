@@ -403,7 +403,7 @@ class StockConsumer:
                             fullData,
                             screeningDictionary,
                             saveDictionary,
-                            lookFor=maLength,
+                            lookFor= 1, #maLength, 1 =Any, 2 =Buy, 3 = Sell
                         )
                 else:
                     isLorentzian = False

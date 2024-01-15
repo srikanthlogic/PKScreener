@@ -176,7 +176,8 @@ class tools:
 
         # Find stocks that have broken through 52 week low.
 
-    def findAroonBullishCrossover(self, data):
+    def findAroonBullishCrossover(self, df):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         period = 14
@@ -343,7 +344,8 @@ class tools:
             return not alreadyBrokenout
 
     # Find stocks that are bullish intraday: RSI crosses 55, Macd Histogram positive, price above EMA 10
-    def findBullishIntradayRSIMACD(self, data):
+    def findBullishIntradayRSIMACD(self, df):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
@@ -358,7 +360,8 @@ class tools:
         cond4 = cond3 and (recent["Close"].iloc[0] > recent["EMA200"].iloc[0])
         return cond4
 
-    def findNR4Day(self, data):
+    def findNR4Day(self, df):
+        data = df.copy()
         # https://chartink.com/screener/nr4-daily-today
         if data.tail(1)["Volume"].iloc[0] <= 50000:
             return False
@@ -392,7 +395,8 @@ class tools:
     # in the previous 30 candles is lower than the highest high made in the
     # previous 200 candles, starting from the previous 30th candle. At the
     # same time the current candle volume is higher than 200 SMA of volume.
-    def findPotentialBreakout(self, data, screenDict, saveDict, daysToLookback):
+    def findPotentialBreakout(self, df, screenDict, saveDict, daysToLookback):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data.head(231)
@@ -430,7 +434,8 @@ class tools:
         return False
 
     # Find stock reversing at given MA
-    def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.02):
+    def findReversalMA(self, df, screenDict, saveDict, maLength, percentage=0.02):
+        data = df.copy()
         maRange = [10, 20, 50, 200]
         results = []
         hasReversals = False
@@ -476,7 +481,8 @@ class tools:
         return hasReversals
 
     # Find out trend for days to lookback
-    def findTrend(self, data, screenDict, saveDict, daysToLookback=None, stockName=""):
+    def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
+        data = df.copy()
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
         data = data.head(daysToLookback)
@@ -557,11 +563,11 @@ class tools:
         return saveDict["Trend"]
 
     # Find stocks approching to long term trendlines
-    def findTrendlines(self, data, screenDict, saveDict, percentage=0.05):
+    def findTrendlines(self, df, screenDict, saveDict, percentage=0.05):
         # period = int("".join(c for c in self.configManager.period if c.isdigit()))
         # if len(data) < period:
         #     return False
-
+        data = df.copy()
         data = data[::-1]
         data["Number"] = np.arange(len(data)) + 1
         data_low = data.copy()
@@ -819,7 +825,8 @@ class tools:
         return result_df[::-1]
 
     # Preprocess the acquired data
-    def preprocessData(self, data, daysToLookback=None):
+    def preprocessData(self, df, daysToLookback=None):
+        data = df.copy()
         self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
@@ -857,8 +864,9 @@ class tools:
         return (fullData, trimmedData)
 
     # Validate if the stock is bullish in the short term
-    def validate15MinutePriceVolumeBreakout(self, data):
+    def validate15MinutePriceVolumeBreakout(self, df):
         # https://chartink.com/screener/15-min-price-volume-breakout
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
@@ -875,7 +883,8 @@ class tools:
         cond5 = cond4 and (recent["Volume"].iloc[1] > recent["SMA20V"].iloc[0])
         return cond5
 
-    def validateBullishForTomorrow(self, data):
+    def validateBullishForTomorrow(self, df):
+        data = df.copy()
         # https://chartink.com/screener/bullish-for-tomorrow
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -984,7 +993,8 @@ class tools:
 
     # validate if the stock has been having higher highs, higher lows
     # and higher close with latest close > supertrend and 8-EMA.
-    def validateHigherHighsHigherLowsHigherClose(self, data):
+    def validateHigherHighsHigherLowsHigherClose(self, df):
+        data = df.copy()
         day0 = data
         day1 = data[1:]
         day2 = data[2:]
@@ -1107,7 +1117,8 @@ class tools:
         return False
 
     # Validate Lorentzian Classification signal
-    def validateLorentzian(self, data, screenDict, saveDict, lookFor=1):
+    def validateLorentzian(self, df, screenDict, saveDict, lookFor=1):
+        data = df.copy()
         # lookFor: 1-Any, 2-Buy, 3-Sell
         data = data[::-1]  # Reverse the dataframe
         data = data.rename(
@@ -1126,14 +1137,14 @@ class tools:
                     colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
                 )
                 saveDict["Pattern"] = "Lorentzian-Buy"
-                if lookFor != 3:
+                if lookFor != 3: # Not Sell
                     return True
             elif lc.df.iloc[-1]["isNewSellSignal"]:
                 screenDict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + "Lorentzian-Sell" + colorText.END
                 )
                 saveDict["Pattern"] = "Lorentzian-Sell"
-                if lookFor != 2:
+                if lookFor != 2: # Not Buy
                     return True
         except Exception:  # pragma: no cover
             # ValueError: operands could not be broadcast together with shapes (20,) (26,)
@@ -1257,7 +1268,8 @@ class tools:
                 saveDict["Date"] = calc_date
 
     # Find stocks that are bearish intraday: Macd Histogram negative
-    def validateMACDHistogramBelow0(self, data):
+    def validateMACDHistogramBelow0(self, df):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
@@ -1736,8 +1748,9 @@ class tools:
 
     """
     # Find out trend for days to lookback
-    def validateVCP(data, screenDict, saveDict, daysToLookback=ConfigManager.daysToLookback, stockName=None):
+    def validateVCP(df, screenDict, saveDict, daysToLookback=ConfigManager.daysToLookback, stockName=None):
         // De-index date
+        data = df.copy()
         data.reset_index(inplace=True)
         data.rename(columns={'index':'Date'}, inplace=True)
         data = data.head(daysToLookback)
