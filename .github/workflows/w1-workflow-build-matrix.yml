@@ -40,6 +40,11 @@ on:
         required: false
         type: string
         default: 'no'
+      buildDocker:
+        description: 'Build docker image?'
+        required: false
+        type: string
+        default: 'N'
       targetPythonVersion:
         description: 'Target Python version: 3.9 , 3.10, 3.11 ?'
         required: false
@@ -81,6 +86,7 @@ jobs:
         devVersion: ${{ steps.vars.outputs.DEV_VERSION }}
         tag: refs/tags/${{ steps.vars.outputs.THIS_VERSION }}
         sendNotification: ${{ inputs.sendNotification }}
+        buildDocker: ${{ inputs.buildDocker }}
     strategy:
       matrix:
         include:
@@ -315,7 +321,7 @@ jobs:
   Call-Docker-workflow:
     uses: pkjmesra/PKScreener/.github/workflows/w15-docker-image.yml@main
     needs: [Build, README_Update]
-    if: ${{ needs.Build.outputs.sendNotification == 'Y' }}
+    if: ${{ needs.Build.outputs.buildDocker == 'Y' }}
     with:
       branch-name: ${{ needs.Build.outputs.tag }}
     secrets: inherit

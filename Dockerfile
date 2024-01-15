@@ -25,12 +25,16 @@
 FROM pkjmesra/ta-lib-debian_gnu_linux:latest as base-image
 ENV PYTHONUNBUFFERED 1
 
-FROM scratch
-COPY --from=base-image ["/", "/"]
-
+RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && \
+  unzip main.zip
+WORKDIR /PKScreener-main
+RUN pip3 install -r "requirements.txt"
+RUN pip3 install .
+RUN pip3 install --no-deps advanced-ta
 RUN pip3 install pkscreener
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
   cp courbd.ttf /usr/local/share/fonts/courbd.ttf
-RUN TERM=xterm
+RUN export TERM=xterm
 ENTRYPOINT ["pkscreener"]
-# Run with docker run -it pkjmesra/pkscreener:latest
+# Run with 
+# docker run -it pkjmesra/pkscreener:latest
