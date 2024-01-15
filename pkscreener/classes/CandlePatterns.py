@@ -72,7 +72,7 @@ class CandlePatterns:
         check = pktalib.CDLDOJI(data["Open"], data["High"], data["Low"], data["Close"])
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = colorText.BOLD + f"Doji{existingPattern}" + colorText.END
-            saveDict["Pattern"] = "Doji"
+            saveDict["Pattern"] = f"Doji{existingPattern}"
             return True
 
         check = pktalib.CDLMORNINGSTAR(
@@ -82,7 +82,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"Morning Star{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Morning Star"
+            saveDict["Pattern"] = f"Morning Star{existingPattern}"
             return True
 
         check = pktalib.CDLMORNINGDOJISTAR(
@@ -92,7 +92,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"Morning Doji Star{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Morning Doji Star"
+            saveDict["Pattern"] = f"Morning Doji Star{existingPattern}"
             return True
 
         check = pktalib.CDLEVENINGSTAR(
@@ -102,7 +102,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"Evening Star{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Evening Star"
+            saveDict["Pattern"] = f"Evening Star{existingPattern}"
             return True
 
         check = pktalib.CDLEVENINGDOJISTAR(
@@ -112,7 +112,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"Evening Doji Star{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Evening Doji Star"
+            saveDict["Pattern"] = f"Evening Doji Star{existingPattern}"
             return True
 
         check = pktalib.CDLLADDERBOTTOM(
@@ -121,14 +121,14 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"Ladder Bottom{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"Bullish Ladder Bottom{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "Bullish Ladder Bottom"
+                saveDict["Pattern"] = f"Bullish Ladder Bottom{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"Ladder Bottom{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"Bearish Ladder Bottom{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "Bearish Ladder Bottom"
+                saveDict["Pattern"] = f"Bearish Ladder Bottom{existingPattern}"
             return True
 
         check = pktalib.CDL3LINESTRIKE(
@@ -143,7 +143,7 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"3 Line Strike{existingPattern}" + colorText.END
                 )
-            saveDict["Pattern"] = "3 Line Strike"
+            saveDict["Pattern"] = f"3 Line Strike{existingPattern}"
             return True
 
         check = pktalib.CDL3BLACKCROWS(
@@ -153,7 +153,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"3 Black Crows{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "3 Black Crows"
+            saveDict["Pattern"] = f"3 Black Crows{existingPattern}"
             return True
 
         check = pktalib.CDL3INSIDE(
@@ -164,12 +164,12 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.GREEN + f"3 Outside Up{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "3 Inside Up"
+                saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"3 Outside Down{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "3 Inside Down"
+                saveDict["Pattern"] = f"3 Outside Down{existingPattern}"
             return True
 
         check = pktalib.CDL3OUTSIDE(
@@ -180,12 +180,12 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.GREEN + f"3 Outside Up{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "3 Outside Up"
+                saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"3 Outside Down{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "3 Outside Down"
+                saveDict["Pattern"] = f"3 Outside Down{existingPattern}"
             return True
 
         check = pktalib.CDL3WHITESOLDIERS(
@@ -195,7 +195,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"3 White Soldiers{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "3 White Soldiers"
+            saveDict["Pattern"] = f"3 White Soldiers{existingPattern}"
             return True
 
         check = pktalib.CDLHARAMI(
@@ -206,12 +206,12 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.GREEN + f"Bullish Harami{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "Bullish Harami"
+                saveDict["Pattern"] = f"Bullish Harami{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"Bearish Harami{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "Bearish Harami"
+                saveDict["Pattern"] = f"Bearish Harami{existingPattern}"
             return True
 
         check = pktalib.CDLHARAMICROSS(
@@ -225,7 +225,7 @@ class CandlePatterns:
                     + f"Bullish Harami Cross{existingPattern}"
                     + colorText.END
                 )
-                saveDict["Pattern"] = "Bullish Harami Cross"
+                saveDict["Pattern"] = f"Bullish Harami Cross{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD
@@ -233,7 +233,7 @@ class CandlePatterns:
                     + f"Bearish Harami Cross{existingPattern}"
                     + colorText.END
                 )
-                saveDict["Pattern"] = "Bearish Harami Cross"
+                saveDict["Pattern"] = f"Bearish Harami Cross{existingPattern}"
             return True
 
         check = pktalib.CDLMARUBOZU(
@@ -247,12 +247,12 @@ class CandlePatterns:
                     + f"Bullish Marubozu{existingPattern}"
                     + colorText.END
                 )
-                saveDict["Pattern"] = "Bullish Marubozu"
+                saveDict["Pattern"] = f"Bullish Marubozu{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"Bearish Marubozu{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = "Bearish Marubozu"
+                saveDict["Pattern"] = f"Bearish Marubozu{existingPattern}"
             return True
 
         check = pktalib.CDLHANGINGMAN(
@@ -262,7 +262,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"Hanging Man{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Hanging Man"
+            saveDict["Pattern"] = f"Hanging Man{existingPattern}"
             return True
 
         check = pktalib.CDLHAMMER(
@@ -272,7 +272,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"Hammer{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Hammer"
+            saveDict["Pattern"] = f"Hammer{existingPattern}"
             return True
 
         check = pktalib.CDLINVERTEDHAMMER(
@@ -282,7 +282,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"Inverted Hammer{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Inverted Hammer"
+            saveDict["Pattern"] = f"Inverted Hammer{existingPattern}"
             return True
 
         check = pktalib.CDLSHOOTINGSTAR(
@@ -292,7 +292,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"Shooting Star{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Shooting Star"
+            saveDict["Pattern"] = f"Shooting Star{existingPattern}"
             return True
 
         check = pktalib.CDLDRAGONFLYDOJI(
@@ -302,7 +302,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.GREEN + f"Dragonfly Doji{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Dragonfly Doji"
+            saveDict["Pattern"] = f"Dragonfly Doji{existingPattern}"
             return True
 
         check = pktalib.CDLGRAVESTONEDOJI(
@@ -312,7 +312,7 @@ class CandlePatterns:
             dict["Pattern"] = (
                 colorText.BOLD + colorText.FAIL + f"Gravestone Doji{existingPattern}" + colorText.END
             )
-            saveDict["Pattern"] = "Gravestone Doji"
+            saveDict["Pattern"] = f"Gravestone Doji{existingPattern}"
             return True
 
         check = pktalib.CDLENGULFING(
@@ -326,15 +326,15 @@ class CandlePatterns:
                     + f"Bullish Engulfing{existingPattern}"
                     + colorText.END
                 )
-                saveDict["Pattern"] = "Bullish Engulfing"
+                saveDict["Pattern"] = f"Bullish Engulfing{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.FAIL
-                    + "Bearish Engulfing"
+                    + f"Bearish Engulfing{existingPattern}"
                     + colorText.END
                 )
-                saveDict["Pattern"] = "Bearish Engulfing"
+                saveDict["Pattern"] = f"Bearish Engulfing{existingPattern}"
             return True
 
         return False
