@@ -44,7 +44,7 @@ on:
         required: false
         default: 'Y'
       skipDownload:
-          description: 'Skip pkl download for 560d'
+          description: 'Skip pkl download for 450d'
           required: false
           default: ''
       scanOptions:

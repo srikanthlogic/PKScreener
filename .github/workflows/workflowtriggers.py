@@ -352,7 +352,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             choices = scanChoices(options)
             scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
             if args.branchname is not None:
-                Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
+                Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit-{choices}]",branchName=args.branchname)
         else:
             if args.user is None or len(args.user) == 0:
                 args.user = ""
@@ -392,7 +392,7 @@ def scanOutputDirectory(backtest=False):
     return outputFolder
 
 def scanChoices(options):
-    choices = getFormattedChoices(options).replace("B:30","X").replace("B","X").replace("G","X")
+    choices = getFormattedChoices(options).replace("B:30","X").replace("B_30","X").replace("B","X").replace("G","X")
     return choices
 
 def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):

@@ -90,6 +90,7 @@ defaultAnswer = None
 fetcher = Fetcher.screenerStockDataFetcher(configManager)
 mstarFetcher = morningstarDataFetcher(configManager)
 keyboardInterruptEvent = None
+keyboardInterruptEventFired=False
 loadCount = 0
 loadedStockData = False
 m0 = menus()
@@ -604,7 +605,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio)
 
 @tracelog
 def main(userArgs=None):
-    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
+    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     testing = False if userArgs is None else (userArgs.testbuild and userArgs.prodbuild)
     testBuild = False if userArgs is None else (userArgs.testbuild and not testing)
@@ -617,7 +618,7 @@ def main(userArgs=None):
     screenCounter = multiprocessing.Value("i", 1)
     screenResultsCounter = multiprocessing.Value("i", 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
-
+    keyboardInterruptEventFired = False
     if stockDict is None:
         stockDict = multiprocessing.Manager().dict()
         loadCount = 0
@@ -1094,6 +1095,7 @@ def main(userArgs=None):
         # Lets begin from y days ago, evaluate from that date if the selected strategy had yielded any result
         # and then keep coming to the next day (x-1) until we get to today (actualHistoricalDuration = 0)
         bar, spinner = Utility.tools.getProgressbarStyle()
+        totalStocksInReview = 0
         with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
             while actualHistoricalDuration >= 0:
                 daysInPast = (
@@ -1119,10 +1121,15 @@ def main(userArgs=None):
                     savedListResp = fetcher.fetchURL(url)
                     if savedListResp is not None and savedListResp.status_code == 200:
                         savedListStockCodes = savedListResp.text.replace("\n","").replace("\"","").split(",")
-                        savedListStockCodes = sorted(list(set(savedListStockCodes)))
-                        savedStocksCount =len(savedListStockCodes)
-                        if savedStocksCount > 0 and savedStocksCount[0] != "":
-                            listStockCodes = savedStocksCount
+                        savedListStockCodes = sorted(list(filter(None,list(set(savedListStockCodes)))))
+                        savedStocksCount = len(savedListStockCodes)
+                        if savedStocksCount > 0:
+                            listStockCodes = savedListStockCodes
+                            totalStocksInReview += savedStocksCount
+                        else:
+                            totalStocksInReview += len(listStockCodes)
+                    else:
+                        totalStocksInReview += len(listStockCodes)
                 except:
                     pass
                 moreItems = [
@@ -1160,7 +1167,7 @@ def main(userArgs=None):
                     progressbar.text(
                         colorText.BOLD
                         + colorText.GREEN
-                        + f"Added {savedStocksCount} Stocks from {pastDate} saved from earlier..."
+                        + f"Total Stocks: {len(items)}. Added {savedStocksCount} to Stocks from {pastDate} saved from earlier..."
                         + colorText.END
                     )
                 fillerPlaceHolder = fillerPlaceHolder + 1
@@ -1700,6 +1707,12 @@ def runScanners(
     choices = userReportName(selectedChoice)
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
+        print(
+            colorText.BOLD
+            + colorText.GREEN
+            + f"[+] Total Stocks under review: {numStocks} over {iterations} iterations..."
+            + colorText.END
+        )
         totalStocks = numStocks
         numStocksPerIteration = int(numStocks/int(iterations))
         queueCounter = 0
@@ -1753,7 +1766,7 @@ def runScanners(
                 progressbar.text(
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"Found {screenResultsCounter.value} Stocks"
+                    + f"{'Found' if menuOption in ['X'] else 'Analysed'} {screenResultsCounter.value} Stocks"
                     + colorText.END
                 )
                 progressbar()
@@ -1774,7 +1787,9 @@ def runScanners(
 
     except KeyboardInterrupt:
         try:
+            global keyboardInterruptEventFired
             keyboardInterruptEvent.set()
+            keyboardInterruptEventFired = True
         except KeyboardInterrupt:
             pass
         print(
@@ -1786,6 +1801,18 @@ def runScanners(
         for worker in consumers:
             worker.terminate()
         logging.shutdown()
+    except Exception as e:
+        default_logger().debug(e, exc_info=True)
+        print(
+            colorText.BOLD
+            + colorText.FAIL
+            + f"\nException:\n{e}\n[+] Terminating Script, Please wait..."
+            + colorText.END
+        )
+        for worker in consumers:
+            worker.terminate()
+        logging.shutdown()
+
     if result is not None and len(result) >=3 and "Date" not in saveResults.columns:
         temp_df = result[2].copy()
         temp_df.reset_index(inplace=True)
@@ -1832,13 +1859,13 @@ def updateBacktestResults(
 
 
 def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCount):
-    global userPassedArgs
+    global userPassedArgs, keyboardInterruptEventFired
     argsIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     intradayConfig = configManager.isIntradayConfig()
     intraday = intradayConfig or argsIntraday
-    if downloadOnly or (
+    if not keyboardInterruptEventFired and (downloadOnly or (
         configManager.cacheEnabled and not PKDateUtilities.isTradingTime() and not testing
-    ):
+    )):
         print(
             colorText.BOLD
             + colorText.GREEN

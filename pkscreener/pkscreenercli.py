@@ -311,8 +311,10 @@ def runApplicationForScreening(tools):
         sys.exit(0)
     except Exception as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
+        if args.prodbuild:
+            disableSysOut(disable=False)
         print(
-            "[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
+            f"{e}\n[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
         if args.v:
             disableSysOut(disable=False)
