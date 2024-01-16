@@ -103,6 +103,8 @@ lastScreened = os.path.join(
 
 class tools:
     def clearScreen():
+        if "RUNNER" in os.environ.keys():
+            return
         if platform.system() == "Windows":
             os.system("cls")
         else:
