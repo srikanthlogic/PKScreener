@@ -2004,7 +2004,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     summaryText = summaryText.replace("\n", "<br />")
     colored_text = reformatTable(summaryText, headerDict, colored_text, sorting=True)
     # Delete any pre-existing backtesting report for the same parameters
-    filename = os.path.join(Archiver.get_user_outputs_dir(), filename)
+    filename = os.path.join(scanOutputDirectory(True), filename)
     try:
         os.remove(filename)
     except Exception:
@@ -2020,7 +2020,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         )
         onelineSummaryFile = f"PKScreener_{choices}_OneLine_{optionalName}.html"
         onelineSummaryFile = os.path.join(
-            Archiver.get_user_outputs_dir(), onelineSummaryFile
+            scanOutputDirectory(True), onelineSummaryFile
         )
         try:
             os.remove(onelineSummaryFile)
@@ -2030,6 +2030,13 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
             with open(onelineSummaryFile, "w") as f:
                 f.write(oneline_text)
 
+def scanOutputDirectory(backtest=False):
+    dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
+    outputFolder = os.path.join(os.getcwd(),dirName)
+    if not os.path.isdir(outputFolder):
+        print("Creating actions-data-scan directory now...")
+        os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"{dirName}{os.sep}")), exist_ok=True)
+    return outputFolder
 
 def getBacktestReportFilename(sortKey="Stock", optionalName="backtest_result"):
     choices = getFormattedChoices()
