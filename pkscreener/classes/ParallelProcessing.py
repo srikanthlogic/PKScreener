@@ -341,16 +341,6 @@ class StockConsumer:
                         )
                         if not isConfluence:
                             return None
-                    elif respChartPattern < 3:
-                        isInsideBar = screener.validateInsideBar(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            chartPattern=respChartPattern,
-                            daysToLookback=insideBarToLookback,
-                        )
-                        if not isInsideBar:
-                            return None
 
                 with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                     if (executeOption == 6
@@ -455,9 +445,20 @@ class StockConsumer:
                     return None
                 
                 # Must-run, but only at the end
-                isMaReversal = screener.validateMovingAverages(
-                    processedData, screeningDictionary, saveDictionary, maRange=1.25
-                )
+                isCandlePattern = False
+                try:
+                    # Only 'doji' and 'inside' is internally implemented by pandas_ta.
+                    # Otherwise, for the rest of the candle patterns, they also need
+                    # TA-Lib. So if TA-Lib is not available, it will throw exception
+                    # We can live with no-patterns if user has not installed ta-lib
+                    # yet. If ta-lib is available, PKTalib will load it automatically.
+                    isCandlePattern = candlePatterns.findPattern(
+                        processedData, screeningDictionary, saveDictionary
+                    )
+                except Exception as e:  # pragma: no cover
+                    hostRef.default_logger.debug(e, exc_info=True)
+                    screeningDictionary["Pattern"] = ""
+                    saveDictionary["Pattern"] = ""
                 if executeOption == 6:
                     if reversalOption == 1 and not (str(saveDictionary["Pattern"]).split(",")[0]
                                                                     in CandlePatterns.reversalPatternsBullish
@@ -473,28 +474,7 @@ class StockConsumer:
                 )
                 if executeOption == 6 and reversalOption ==3 and not isMomentum:
                     return None
-
-                isValidCci = screener.validateCCI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
-                )
-                if executeOption == 8 and not isValidCci:
-                    return None
                 
-                isCandlePattern = False
-                try:
-                    # Only 'doji' and 'inside' is internally implemented by pandas_ta.
-                    # Otherwise, for the rest of the candle patterns, they also need
-                    # TA-Lib. So if TA-Lib is not available, it will throw exception
-                    # We can live with no-patterns if user has not installed ta-lib
-                    # yet. If ta-lib is available, PKTalib will load it automatically.
-                    isCandlePattern = candlePatterns.findPattern(
-                        processedData, screeningDictionary, saveDictionary
-                    )
-                except Exception as e:  # pragma: no cover
-                    hostRef.default_logger.debug(e, exc_info=True)
-                    screeningDictionary["Pattern"] = ""
-                    saveDictionary["Pattern"] = ""
-
                 try:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                         currentTrend = screener.findTrend(
@@ -508,10 +488,33 @@ class StockConsumer:
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
                     saveDictionary["Trend"] = "Unknown"
+                # CCI also uses "Trend" value from findTrend above.
+                # So it must only be called after findTrend
+                isValidCci = screener.validateCCI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                )
+                if executeOption == 8 and not isValidCci:
+                    return None
+
+                isMaReversal = screener.validateMovingAverages(
+                    processedData, screeningDictionary, saveDictionary, maRange=1.25
+                )
+                # validateInsideBar needs "Trend" to be already defined
+                # ValidateInsideBar also needs "MA-Signal" to be setup
+                isInsideBar = screener.validateInsideBar(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            chartPattern=respChartPattern,
+                            daysToLookback=insideBarToLookback,
+                        )
+                if executeOption == 7 and respChartPattern < 3 and not isInsideBar:
+                    return None
 
                 screener.find52WeekHighLow(
                     fullData, saveDictionary, screeningDictionary
                 )
+
                 with hostRef.processingResultsCounter.get_lock():
                     # hostRef.default_logger.info(
                     #     f"Processing results for {stock} in {hostRef.processingResultsCounter.value}th results counter"
