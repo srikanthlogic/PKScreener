@@ -151,7 +151,7 @@ class tools:
                     with open(fileName, 'r') as fe:
                         stocks = fe.read()
                         items = stocks.replace("\n","").replace("\"","").split(",")
-                        stockList = sorted(list(set(items)))
+                        stockList = sorted(list(filter(None,list(set(items)))))
                         finalStocks = ",".join(stockList)
             else:
                 needsWriting = True
@@ -163,7 +163,7 @@ class tools:
                     df_s.reset_index(inplace=True)
                     newStocks = df_s["Stock"].to_json(orient='records', lines=True).replace("\n","").replace("\"","").split(",")
                     items.extend(newStocks)
-                    stockList = sorted(list(set(items)))
+                    stockList = sorted(list(filter(None,list(set(items)))))
                     finalStocks = ",".join(stockList)
                     needsWriting = True
             if needsWriting:
