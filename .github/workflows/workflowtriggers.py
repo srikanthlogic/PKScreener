@@ -404,14 +404,14 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
         today = curr
     outputFolder = scanOutputDirectory()
     fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
-    print(f"Checking for {fileName}")
+    print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Checking for {fileName}")
     if os.path.isfile(fileName):
         if returnFalseIfSizeZero:
             fileSize = os.path.getsize(fileName)
             if fileSize <= 2:
-                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Saved scan result size is 0:{fileName}")
+                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Saved scan result size is 0 : {fileName}")
             else:
-                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Skipping. Latest scan result already exists:{fileName}")
+                print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Skipping. Latest scan result already exists : {fileName}")
                 return True
         else:
             print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} :Skipping. Latest scan result already exists:{fileName}")
