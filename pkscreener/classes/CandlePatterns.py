@@ -162,14 +162,14 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"3 Outside Up{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"3 Inside Up{existingPattern}" + colorText.END
                 )
                 saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"3 Outside Down{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"3 Inside Down{existingPattern}" + colorText.END
                 )
-                saveDict["Pattern"] = f"3 Outside Down{existingPattern}"
+                saveDict["Pattern"] = f"3 Inside Down{existingPattern}"
             return True
 
         check = pktalib.CDL3OUTSIDE(
