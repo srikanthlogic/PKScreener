@@ -227,6 +227,8 @@ class StockConsumer:
                     minLTP=configManager.minLTP,
                     maxLTP=configManager.maxLTP,
                 )
+                if not isLtpValid:
+                    raise Screener.LTPNotInConfiguredRange
                 if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
                     raise Screener.NotAStageTwoStock
                 minVolume = configManager.minVolume / (
@@ -521,27 +523,30 @@ class StockConsumer:
                             backtestDuration,
                         )
 
-        except KeyboardInterrupt:
+        except KeyboardInterrupt: # pragma: no cover
             # Capturing Ctr+C Here isn't a great idea
             pass
-        except StockDataEmptyException as e:
+        except StockDataEmptyException as e: # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotNewlyListed as e:
+        except Screener.NotNewlyListed as e: # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotAStageTwoStock as e:
+        except Screener.NotAStageTwoStock as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
         except Screener.NotEnoughVolumeAsPerConfig as e:
             pass
-        except Screener.DownloadDataOnly as e:
+        except Screener.DownloadDataOnly as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except KeyError as e:
+        except Screener.LTPNotInConfiguredRange as e: # pragma: no cover
+            # hostRef.default_logger.debug(e, exc_info=True)
+            pass
+        except KeyError as e: # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except OSError as e:
+        except OSError as e: # pragma: no cover
             pass
         except Exception as e:  # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)

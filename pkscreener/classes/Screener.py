@@ -64,6 +64,9 @@ class NotNewlyListed(Exception):
 class NotAStageTwoStock(Exception):
     pass
 
+# Exception for LTP not being in the range as per config
+class LTPNotInConfiguredRange(Exception):
+    pass
 
 # Exception for stocks which are low in volume as per configuration of 'minimumVolume'
 class NotEnoughVolumeAsPerConfig(Exception):
