@@ -656,6 +656,18 @@ class tools:
             and ("1m" if isIntraday else ConfigManager.default_duration)
             == configManager.duration
         ):
+            print(
+                    colorText.BOLD
+                    + colorText.FAIL
+                    + "[+] After-Market Stock Data is not cached.."
+                    + colorText.END
+                )
+            print(
+                colorText.BOLD
+                + colorText.GREEN
+                + "[+] Downloading cache from pkscreener server for faster processing, Please Wait.."
+                + colorText.END
+            )
             cache_url = (
                 "https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-download/"
                 + cache_file  # .split(os.sep)[-1]
@@ -666,18 +678,6 @@ class tools:
                     f"Stock data cache file:{cache_file} request status ->{resp.status_code}"
                 )
             if resp is not None and resp.status_code == 200:
-                print(
-                    colorText.BOLD
-                    + colorText.FAIL
-                    + "[+] After-Market Stock Data is not cached.."
-                    + colorText.END
-                )
-                print(
-                    colorText.BOLD
-                    + colorText.GREEN
-                    + "[+] Downloading cache from pkscreener server for faster processing, Please Wait.."
-                    + colorText.END
-                )
                 try:
                     chunksize = 1024 * 1024 * 1
                     filesize = int(int(resp.headers.get("content-length")) / chunksize)

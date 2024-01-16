@@ -82,8 +82,9 @@ class tools:
         self.default_logger = default_logger
 
     # Find stocks that have broken through 52 week low.
-    def find52WeekHighBreakout(self, data):
+    def find52WeekHighBreakout(self, df):
         # https://chartink.com/screener/52-week-low-breakout
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
@@ -106,7 +107,8 @@ class tools:
         )
 
     # Find stocks' 52 week high/low.
-    def find52WeekHighLow(self, data, saveDict, screenDict):
+    def find52WeekHighLow(self, df, saveDict, screenDict):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
@@ -139,8 +141,9 @@ class tools:
         ] = f"{lowColor}{str('{:.2f}'.format(full52WeekLow))}{colorText.END}"
 
     # Find stocks that have broken through 52 week low.
-    def find52WeekLowBreakout(self, data):
+    def find52WeekLowBreakout(self, df):
         # https://chartink.com/screener/52-week-low-breakout
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
@@ -160,7 +163,8 @@ class tools:
 
         # Find stocks that have broken through 52 week low.
 
-    def find10DaysLowBreakout(self, data):
+    def find10DaysLowBreakout(self, df):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
@@ -189,7 +193,8 @@ class tools:
         return up > down
 
     # Find accurate breakout value
-    def findBreakingoutNow(self, data):
+    def findBreakingoutNow(self, df):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
@@ -211,8 +216,9 @@ class tools:
 
     # Find accurate breakout value
     def findBreakoutValue(
-        self, data, screenDict, saveDict, daysToLookback, alreadyBrokenout=False
+        self, df, screenDict, saveDict, daysToLookback, alreadyBrokenout=False
     ):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
@@ -637,10 +643,11 @@ class tools:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
-    def getNiftyPrediction(self, data):
+    def getNiftyPrediction(self, df):
         import warnings
 
         warnings.filterwarnings("ignore")
+        data = df.copy()
         model, pkl = Utility.tools.getNiftyModel()
         if model is None or pkl is None:
             return 0, "Unknown", "Unknown"
@@ -915,7 +922,8 @@ class tools:
         )
 
     # validate if CCI is within given range
-    def validateCCI(self, data, screenDict, saveDict, minCCI, maxCCI):
+    def validateCCI(self, df, screenDict, saveDict, minCCI, maxCCI):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         cci = int(data.head(1)["CCI"].iloc[0])
@@ -934,7 +942,8 @@ class tools:
         return False
 
     # Find Conflucence
-    def validateConfluence(self, stock, data, screenDict, saveDict, percentage=0.1):
+    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1):
+        data = df.copy()
         recent = data.head(1)
         if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
             recent["SMA"].iloc[0] * percentage
@@ -965,7 +974,8 @@ class tools:
         return False
 
     # Validate if share prices are consolidating
-    def validateConsolidation(self, data, screenDict, saveDict, percentage=10):
+    def validateConsolidation(self, df, screenDict, saveDict, percentage=10):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         hc = data.describe()["Close"]["max"]
@@ -1030,8 +1040,9 @@ class tools:
 
     # Validate 'Inside Bar' structure for recent days
     def validateInsideBar(
-        self, data, screenDict, saveDict, chartPattern=1, daysToLookback=5
+        self, df, screenDict, saveDict, chartPattern=1, daysToLookback=5
     ):
+        data = df.copy()
         orgData = data
         for i in range(daysToLookback, round(daysToLookback * 0.5) - 1, -1):
             if i == 2:
@@ -1084,7 +1095,8 @@ class tools:
         return 0
 
     # Find IPO base
-    def validateIpoBase(self, stock, data, screenDict, saveDict, percentage=0.3):
+    def validateIpoBase(self, stock, df, screenDict, saveDict, percentage=0.3):
+        data = df.copy()
         listingPrice = data[::-1].head(1)["Open"].iloc[0]
         currentPrice = data.head(1)["Close"].iloc[0]
         ATH = data.describe()["High"]["max"]
@@ -1160,7 +1172,8 @@ class tools:
         return False
 
     # validate if the stock has been having lower lows, lower highs
-    def validateLowerHighsLowerLows(self, data):
+    def validateLowerHighsLowerLows(self, df):
+        data = df.copy()
         day0 = data
         day1 = data[1:]
         day2 = data[2:]
@@ -1184,7 +1197,8 @@ class tools:
         return lowerHighs and lowerLows and higherRSI
 
     # Validate if recent volume is lowest of last 'N' Days
-    def validateLowestVolume(self, data, daysForLowestVolume):
+    def validateLowestVolume(self, df, daysForLowestVolume):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         if daysForLowestVolume is None:
@@ -1198,7 +1212,8 @@ class tools:
         return False
 
     # Validate LTP within limits
-    def validateLTP(self, data, screenDict, saveDict, minLTP=None, maxLTP=None):
+    def validateLTP(self, df, screenDict, saveDict, minLTP=None, maxLTP=None):
+        data = df.copy()
         ltpValid = False
         if minLTP is None:
             minLTP = self.configManager.minLTP
@@ -1235,7 +1250,8 @@ class tools:
         saveDict["LTP"] = round(ltp, 2)
         return ltpValid, verifyStageTwo
 
-    def validateLTPForPortfolioCalc(self, data, screenDict, saveDict):
+    def validateLTPForPortfolioCalc(self, df, screenDict, saveDict):
+        data = df.copy()
         periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
         previous_recent = data.head(1)
         previous_recent.reset_index(inplace=True)
@@ -1277,7 +1293,8 @@ class tools:
         return macd.iloc[:1][0] < 0
 
     # Find if stock gaining bullish momentum
-    def validateMomentum(self, data, screenDict, saveDict):
+    def validateMomentum(self, df, screenDict, saveDict):
+        data = df.copy()
         try:
             data = data.head(3)
             if len(data) < 3:
@@ -1332,7 +1349,8 @@ class tools:
             return False
 
     # Validate Moving averages and look for buy/sell signals
-    def validateMovingAverages(self, data, screenDict, saveDict, maRange=2.5):
+    def validateMovingAverages(self, df, screenDict, saveDict, maRange=2.5):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
@@ -1434,7 +1452,8 @@ class tools:
         return maReversal
 
     # Find NRx range for Reversal
-    def validateNarrowRange(self, data, screenDict, saveDict, nr=4):
+    def validateNarrowRange(self, df, screenDict, saveDict, nr=4):
+        data = df.copy()
         if PKDateUtilities.isTradingTime():
             rangeData = data.head(nr + 1)[1:]
             now_candle = data.head(1)
@@ -1476,7 +1495,8 @@ class tools:
             return False
 
     # Find if stock is newly listed
-    def validateNewlyListed(self, data, daysToLookback):
+    def validateNewlyListed(self, df, daysToLookback):
+        data = df.copy()
         daysToLookback = int(daysToLookback[:-1])
         recent = data.head(1)
         if len(data) < daysToLookback and (
@@ -1486,7 +1506,8 @@ class tools:
         return False
 
     # Validate if the stock prices are at least rising by 2% for the last 3 sessions
-    def validatePriceRisingByAtLeast2Percent(self, data, screenDict, saveDict):
+    def validatePriceRisingByAtLeast2Percent(self, df, screenDict, saveDict):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data.head(4)
@@ -1512,7 +1533,8 @@ class tools:
         return False
 
     # validate if RSI is within given range
-    def validateRSI(self, data, screenDict, saveDict, minRSI, maxRSI):
+    def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         rsi = int(data.head(1)["RSI"].iloc[0])
@@ -1527,7 +1549,8 @@ class tools:
         return False
 
     # Validate if the stock is bullish in the short term
-    def validateShortTermBullish(self, data, screenDict, saveDict):
+    def validateShortTermBullish(self, df, screenDict, saveDict):
+        data = df.copy()
         # https://chartink.com/screener/short-term-bullish
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -1594,8 +1617,9 @@ class tools:
 
     # Validate VPC
     def validateVCP(
-        self, data, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3
+        self, df, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3
     ):
+        data = df.copy()
         try:
             percentageFromTop /= 100
             data.reset_index(inplace=True)
@@ -1668,8 +1692,9 @@ class tools:
 
     # Validate if volume of last day is higher than avg
     def validateVolume(
-        self, data, screenDict, saveDict, volumeRatio=2.5, minVolume=100
+        self, df, screenDict, saveDict, volumeRatio=2.5, minVolume=100
     ):
+        data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
@@ -1691,8 +1716,9 @@ class tools:
         return False, hasMinimumVolume
 
     # Find if stock is validating volume spread analysis
-    def validateVolumeSpreadAnalysis(self, data, screenDict, saveDict):
+    def validateVolumeSpreadAnalysis(self, df, screenDict, saveDict):
         try:
+            data = df.copy()
             data = data.head(2)
             if len(data) < 2:
                 return False
