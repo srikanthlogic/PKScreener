@@ -323,7 +323,7 @@ class StockConsumer:
                     return None
                 
                 isConfluence = False
-                isInsideBar = False
+                isInsideBar = 0
                 isIpoBase = False
                 if newlyListedOnly:
                     isIpoBase = screener.validateIpoBase(
@@ -508,7 +508,7 @@ class StockConsumer:
                             chartPattern=respChartPattern,
                             daysToLookback=insideBarToLookback,
                         )
-                if executeOption == 7 and respChartPattern < 3 and not isInsideBar:
+                if executeOption == 7 and respChartPattern < 3 and isInsideBar ==0:
                     return None
 
                 screener.find52WeekHighLow(
@@ -558,7 +558,7 @@ class StockConsumer:
                                                                 or (reversalOption == 6 and isNR)
                                                                 or (reversalOption == 7 and isLorentzian)
                                                                 ))
-                        or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar) 
+                        or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar >0) 
                                                                   or (isConfluence)
                                                                   or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
                                                                   or (isVCP)
