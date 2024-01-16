@@ -241,52 +241,185 @@ class StockConsumer:
                     volumeRatio=volumeRatio,
                     minVolume=minVolume,
                 )
-                if not hasMinVolQty and executeOption > 0:
+                if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
                     raise Screener.NotEnoughVolumeAsPerConfig
-
-                consolidationValue = screener.validateConsolidation(
-                    processedData,
-                    screeningDictionary,
-                    saveDictionary,
-                    percentage=configManager.consolidationPercentage,
-                )
-                if ((executeOption == 3)
-                        and (
-                            consolidationValue == 0 or
-                            consolidationValue > configManager.consolidationPercentage
-                        or not isLtpValid
-                        )
-                    ):
-                    return None
-                isMaReversal = screener.validateMovingAverages(
-                    processedData, screeningDictionary, saveDictionary, maRange=1.25
-                )
+                
                 if executeOption == 11:
                     isShortTermBullish = screener.validateShortTermBullish(
                         fullData, screeningDictionary, saveDictionary
                     )
+                    if not isShortTermBullish:
+                        return None
                 if executeOption == 12:
                     is15MinutePriceVolumeBreakout = (
                         screener.validate15MinutePriceVolumeBreakout(fullData)
                     )
+                    if not is15MinutePriceVolumeBreakout:
+                        return None
                 if executeOption == 13:
                     isBullishIntradayRSIMACD = screener.findBullishIntradayRSIMACD(
                         fullData
                     )
+                    if not isBullishIntradayRSIMACD:
+                        return None
                 if executeOption == 14:
                     isNR4Day = screener.findNR4Day(fullData)
+                    if not isNR4Day:
+                        return None
                 if executeOption == 15:
                     is52WeekLowBreakout = screener.find52WeekLowBreakout(fullData)
+                    if not is52WeekLowBreakout:
+                        return None
                 if executeOption == 16:
                     is10DaysLowBreakout = screener.find10DaysLowBreakout(fullData)
+                    if not is10DaysLowBreakout:
+                        return None
                 if executeOption == 17:
                     is52WeekHighBreakout = screener.find52WeekHighBreakout(fullData)
+                    if not is52WeekHighBreakout:
+                        return None
                 if executeOption == 18:
                     isAroonCrossover = screener.findAroonBullishCrossover(fullData)
+                    if not isAroonCrossover:
+                        return None
                 if executeOption == 19:
                     macdHistBelow0 = screener.validateMACDHistogramBelow0(fullData)
+                    if not macdHistBelow0:
+                        return None
                 if executeOption == 20:
                     bullishForTomorrow = screener.validateBullishForTomorrow(fullData)
+                    if not bullishForTomorrow:
+                        return None
+                if executeOption == 23:
+                    isBreakingOutNow = screener.findBreakingoutNow(processedData)
+                    if not isBreakingOutNow:
+                        return None
+                if executeOption == 24:
+                    higherHighsLowsClose = (
+                        screener.validateHigherHighsHigherLowsHigherClose(fullData)
+                    )
+                    if not higherHighsLowsClose:
+                        return None
+                if executeOption == 25:
+                    hasLowerLows = screener.validateLowerHighsLowerLows(processedData)
+                    if not hasLowerLows:
+                        return None
+                
+                if executeOption == 4:
+                    isLowestVolume = screener.validateLowestVolume(
+                        processedData, daysForLowestVolume
+                    )
+                    if not isLowestVolume:
+                        return None
+                else:
+                    isLowestVolume = False
+                if executeOption == 4 and (not isLowestVolume):
+                    return None
+                
+                isValidRsi = screener.validateRSI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                )
+                if executeOption == 5 and (not isValidRsi):
+                    return None
+                
+                isConfluence = False
+                isInsideBar = False
+                isIpoBase = False
+                if newlyListedOnly:
+                    isIpoBase = screener.validateIpoBase(
+                        stock, fullData, screeningDictionary, saveDictionary
+                    )
+
+                if executeOption == 7:
+                    if respChartPattern == 3:
+                        isConfluence = screener.validateConfluence(
+                            stock,
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            percentage=insideBarToLookback,
+                        )
+                        if not isConfluence:
+                            return None
+                    elif respChartPattern < 3:
+                        isInsideBar = screener.validateInsideBar(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            chartPattern=respChartPattern,
+                            daysToLookback=insideBarToLookback,
+                        )
+                        if not isInsideBar:
+                            return None
+
+                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                    if (executeOption == 6
+                        and reversalOption == 6
+                    ):
+                        isNR = screener.validateNarrowRange(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            nr=maLength if maLength is not None else 4,
+                        )
+                        if not isNR:
+                            return None
+
+                if executeOption == 10:
+                    isPriceRisingByAtLeast2Percent = (
+                        screener.validatePriceRisingByAtLeast2Percent(
+                            processedData, screeningDictionary, saveDictionary
+                        )
+                    )
+                    if not isPriceRisingByAtLeast2Percent:
+                        return None
+
+                isVSA = False
+                if (executeOption == 6 and reversalOption == 5):
+                    isVSA = screener.validateVolumeSpreadAnalysis(
+                        processedData, screeningDictionary, saveDictionary
+                    )
+                    if not isVSA:
+                        return None
+                    
+                if executeOption == 6 and reversalOption == 4 and maLength is not None:
+                    isMaSupport = screener.findReversalMA(
+                        fullData, screeningDictionary, saveDictionary, maLength
+                    )
+                    if not isMaSupport:
+                        return None
+
+                isVCP = False
+                if executeOption == 7 and respChartPattern == 4:
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        isVCP = screener.validateVCP(
+                            fullData, screeningDictionary, saveDictionary
+                        )
+                        if not isVCP:
+                            return None
+
+                isBuyingTrendline = False
+                if executeOption == 7 and respChartPattern == 5:
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        if Imports["scipy"]:
+                            isBuyingTrendline = screener.findTrendlines(
+                                fullData, screeningDictionary, saveDictionary
+                            )
+                            if not isBuyingTrendline:
+                                return None
+                if sys.version_info >= (3, 11):
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        isLorentzian = screener.validateLorentzian(
+                            fullData,
+                            screeningDictionary,
+                            saveDictionary,
+                            lookFor= 1, #maLength, 1 =Any, 2 =Buy, 3 = Sell
+                        )
+                        if executeOption == 6 and reversalOption == 7 and not isLorentzian:
+                            return None
+                else:
+                    isLorentzian = False
+                
                 isBreaking = screener.findBreakoutValue(
                     processedData,
                     screeningDictionary,
@@ -301,116 +434,52 @@ class StockConsumer:
                         saveDictionary,
                         daysToLookback=configManager.daysToLookback,
                     )
-                    if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio or not isLtpValid:
+                    if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio:
                         return None
                 elif executeOption == 2:
-                    if not (isBreaking) or not hasMinVolumeRatio or not isLtpValid:
+                    if not (isBreaking) or not hasMinVolumeRatio:
                         return None
-                if executeOption == 23:
-                    isBreakingOutNow = screener.findBreakingoutNow(processedData)
-                if executeOption == 24:
-                    higherHighsLowsClose = (
-                        screener.validateHigherHighsHigherLowsHigherClose(fullData)
-                    )
-                if executeOption == 25:
-                    hasLowerLows = screener.validateLowerHighsLowerLows(processedData)
-                if executeOption == 4:
-                    isLowestVolume = screener.validateLowestVolume(
-                        processedData, daysForLowestVolume
-                    )
-                else:
-                    isLowestVolume = False
-                if executeOption == 4 and (not isLtpValid or not isLowestVolume):
-                    return None
-                isValidRsi = screener.validateRSI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                    
+                consolidationValue = screener.validateConsolidation(
+                    processedData,
+                    screeningDictionary,
+                    saveDictionary,
+                    percentage=configManager.consolidationPercentage,
                 )
-                if executeOption == 5 and (not isLtpValid or not isValidRsi):
-                    return None
-                isConfluence = False
-                isInsideBar = False
-                isIpoBase = False
-                if newlyListedOnly:
-                    isIpoBase = screener.validateIpoBase(
-                        stock, fullData, screeningDictionary, saveDictionary
-                    )
-                if executeOption == 7:
-                    if respChartPattern == 3:
-                        isConfluence = screener.validateConfluence(
-                            stock,
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            percentage=insideBarToLookback,
+                if ((executeOption == 3)
+                        and (
+                            consolidationValue == 0 or
+                            consolidationValue > configManager.consolidationPercentage
                         )
-                    else:
-                        isInsideBar = screener.validateInsideBar(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            chartPattern=respChartPattern,
-                            daysToLookback=insideBarToLookback,
-                        )
-
-                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                    if (
-                        maLength is not None
-                        and executeOption == 6
-                        and reversalOption == 6
                     ):
-                        isNR = screener.validateNarrowRange(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            nr=maLength,
-                        )
-                    else:
-                        isNR = screener.validateNarrowRange(
-                            processedData, screeningDictionary, saveDictionary
-                        )
-                if executeOption == 10:
-                    isPriceRisingByAtLeast2Percent = (
-                        screener.validatePriceRisingByAtLeast2Percent(
-                            processedData, screeningDictionary, saveDictionary
-                        )
-                    )
-
-                isVSA = False
-                if not (executeOption == 7 and respChartPattern < 3):
-                    isVSA = screener.validateVolumeSpreadAnalysis(
-                        processedData, screeningDictionary, saveDictionary
-                    )
-                if executeOption == 6 and reversalOption == 4 and maLength is not None:
-                    isMaSupport = screener.findReversalMA(
-                        fullData, screeningDictionary, saveDictionary, maLength
-                    )
-
-                isVCP = False
-                if executeOption == 7 and respChartPattern == 4:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        isVCP = screener.validateVCP(
-                            fullData, screeningDictionary, saveDictionary
-                        )
-
-                isBuyingTrendline = False
-                if executeOption == 7 and respChartPattern == 5:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        if Imports["scipy"]:
-                            isBuyingTrendline = screener.findTrendlines(
-                                fullData, screeningDictionary, saveDictionary
-                            )
-                if sys.version_info >= (3, 11):
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        isLorentzian = screener.validateLorentzian(
-                            fullData,
-                            screeningDictionary,
-                            saveDictionary,
-                            lookFor= 1, #maLength, 1 =Any, 2 =Buy, 3 = Sell
-                        )
-                else:
-                    isLorentzian = False
+                    return None
                 
                 # Must-run, but only at the end
+                isMaReversal = screener.validateMovingAverages(
+                    processedData, screeningDictionary, saveDictionary, maRange=1.25
+                )
+                if executeOption == 6:
+                    if reversalOption == 1 and not (str(saveDictionary["Pattern"]).split(",")[0]
+                                                                    in CandlePatterns.reversalPatternsBullish
+                                                                    or isMaReversal > 0):
+                        return None
+                    elif reversalOption == 2 and not (str(saveDictionary["Pattern"]).split(",")[0]
+                                                                    in CandlePatterns.reversalPatternsBearish
+                                                                    or isMaReversal < 0):
+                        return None
+
+                isMomentum = screener.validateMomentum(
+                    processedData, screeningDictionary, saveDictionary
+                )
+                if executeOption == 6 and reversalOption ==3 and not isMomentum:
+                    return None
+
+                isValidCci = screener.validateCCI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                )
+                if executeOption == 8 and not isValidCci:
+                    return None
+                
                 isCandlePattern = False
                 try:
                     # Only 'doji' and 'inside' is internally implemented by pandas_ta.
@@ -424,10 +493,8 @@ class StockConsumer:
                 except Exception as e:  # pragma: no cover
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Pattern"] = ""
-                    saveDictionary["Pattern"] = ""                    
-                isMomentum = screener.validateMomentum(
-                    processedData, screeningDictionary, saveDictionary
-                )
+                    saveDictionary["Pattern"] = ""
+
                 try:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                         currentTrend = screener.findTrend(
@@ -441,9 +508,7 @@ class StockConsumer:
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
                     saveDictionary["Trend"] = "Unknown"
-                isValidCci = screener.validateCCI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
-                )
+
                 screener.find52WeekHighLow(
                     fullData, saveDictionary, screeningDictionary
                 )
@@ -459,7 +524,6 @@ class StockConsumer:
                                 or (executeOption == 2 and isBreaking)
                             )
                             and hasMinVolumeRatio
-                            and isLtpValid
                         ))
                         or ((
                             (executeOption == 3)
@@ -467,17 +531,16 @@ class StockConsumer:
                                 consolidationValue <= configManager.consolidationPercentage
                                 and consolidationValue != 0
                             )
-                            and isLtpValid
                         ))
-                        or (executeOption == 4 and isLtpValid and isLowestVolume)
-                        or (executeOption == 5 and isLtpValid and isValidRsi)
-                        or ((executeOption == 6 and isLtpValid) and ((reversalOption == 1 and (
-                                                                    saveDictionary["Pattern"]
-                                                                    in CandlePatterns.reversalPatternsBearish
-                                                                    or isMaReversal < 0
+                        or (executeOption == 4 and isLowestVolume)
+                        or (executeOption == 5 and isValidRsi)
+                        or ((executeOption == 6) and ((reversalOption == 1 and (
+                                                                    str(saveDictionary["Pattern"]).split(",")[0]
+                                                                    in CandlePatterns.reversalPatternsBullish
+                                                                    or isMaReversal > 0
                                                                 ))
                                                                 or (reversalOption == 2 and (
-                                                                    saveDictionary["Pattern"]
+                                                                    str(saveDictionary["Pattern"]).split(",")[0]
                                                                     in CandlePatterns.reversalPatternsBearish
                                                                     or isMaReversal < 0
                                                                 ))
@@ -492,12 +555,12 @@ class StockConsumer:
                                                                 or (reversalOption == 6 and isNR)
                                                                 or (reversalOption == 7 and isLorentzian)
                                                                 ))
-                        or ((executeOption == 7 and isLtpValid) and ((respChartPattern < 3 and isInsideBar) 
+                        or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar) 
                                                                   or (isConfluence)
                                                                   or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
                                                                   or (isVCP)
                                                                   or (isBuyingTrendline)))
-                        or (executeOption == 8 and isLtpValid and isValidCci)
+                        or (executeOption == 8 and isValidCci)
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
@@ -507,7 +570,7 @@ class StockConsumer:
                         or (executeOption == 15 and is52WeekLowBreakout)
                         or (executeOption == 16 and is10DaysLowBreakout)
                         or (executeOption == 17 and is52WeekHighBreakout)
-                        or (executeOption == 18 and isLtpValid and isAroonCrossover)
+                        or (executeOption == 18 and isAroonCrossover)
                         or (executeOption == 19 and macdHistBelow0)
                         or (executeOption == 20 and bullishForTomorrow)
                         or (executeOption == 23 and isBreakingOutNow)
