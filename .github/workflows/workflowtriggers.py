@@ -383,7 +383,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 break
 
 def scanOutputDirectory(backtest=False):
-    dirName = 'actions-data-scan' if not backtest else "results"
+    dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
     outputFolder = os.path.join(os.getcwd(),dirName)
     if not os.path.isdir(outputFolder):
         print("This must be run with actions-data-download branch checked-out")
@@ -391,9 +391,9 @@ def scanOutputDirectory(backtest=False):
         os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"{dirName}{os.sep}")), exist_ok=True)
     return outputFolder
 
-def scanChoices(options):
+def scanChoices(options, backtest=False):
     choices = getFormattedChoices(options).replace("B:30","X").replace("B_30","X").replace("B","X").replace("G","X")
-    return choices
+    return choices if not backtest else choices.replace("X","B")
 
 def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
     choices = scanChoices(options)
@@ -431,7 +431,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             ag = agp.parse_known_args(args=["-e", "-a", "Y", "-o", options, "-v"])[0]
             pkscreenercli.args = ag
             pkscreenercli.pkscreenercli()
-            choices = f'PKScreener_{scanChoices(options).replace("X","B")}'
+            choices = f'PKScreener_{scanChoices(options, True).replace("X","B")}'
             scanResultFilesPath = f"{os.path.join(scanOutputDirectory(backtest=True),choices)}_*.html"
             if args.branchname is not None:
                 Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
