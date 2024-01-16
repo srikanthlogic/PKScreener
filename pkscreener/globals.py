@@ -1705,12 +1705,15 @@ def runScanners(
 ):
     global selectedChoice, userPassedArgs, elapsed_time
     choices = userReportName(selectedChoice)
+    reviewDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
+    if userPassedArgs.backtestdaysago is not None:
+        reviewDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago))
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
         print(
             colorText.BOLD
             + colorText.GREEN
-            + f"[+] Total Stocks under review: {numStocks} over {iterations} iterations..."
+            + f"[+] For {reviewDate}, total Stocks under review: {numStocks} over {iterations} iterations..."
             + colorText.END
         )
         totalStocks = numStocks
