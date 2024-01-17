@@ -30,7 +30,7 @@ import argparse
 import builtins
 import logging
 import multiprocessing
-# import traceback
+import traceback
 
 # Keep module imports prior to classes
 import os
@@ -316,6 +316,8 @@ def runApplicationForScreening(tools):
         print(
             f"{e}\n[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
+        if "RUNNER" in os.environ.keys():
+            traceback.print_exc()
         if args.v:
             disableSysOut(disable=False)
             return

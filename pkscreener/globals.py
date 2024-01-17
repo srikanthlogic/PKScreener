@@ -1392,7 +1392,7 @@ def printNotifySaveScreenedResults(
     pngName = f'PKS_{getFormattedChoices()}_{PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")}'
     pngExtension = ".png"
     eligible = is_token_telegram_configured()
-    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0):
+    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
         if saveResults is not None and len(saveResults) > 0:
             df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
             targetDateG10k = saveResults["Date"].iloc[0]
