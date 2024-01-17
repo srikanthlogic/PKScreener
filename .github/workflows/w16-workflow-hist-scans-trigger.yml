@@ -46,7 +46,7 @@ on:
       scanOptions:
         description: 'Scan options for historical scans'
         required: false
-        default: '--scanDaysInPast 250 --triggerRemotely --scans'
+        default: '--reScanForZeroSize --scanDaysInPast 250 --triggerRemotely --scans'
 
   schedule:
   - cron: '30 10 * * 1-5'
@@ -166,7 +166,7 @@ jobs:
       continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans --reScanForZeroSize' }}
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
@@ -175,7 +175,7 @@ jobs:
       env:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans --reScanForZeroSize' }}
 
     - name: Push Historical scan Data
       shell: bash
