@@ -331,6 +331,7 @@ def run_workflow(workflow_name, postdata):
 def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original_stdout = sys.stdout
     # original__stdout = sys.__stdout__
+    commitFrequency = [21,34,55,89,144,200]
     for key in objectDictionary.keys():
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "main"
@@ -348,11 +349,10 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
                     pkscreenercli.pkscreenercli()
+                if daysInPast in commitFrequency:
+                    tryCommitOutcomes(options)
                 daysInPast -=1
-            choices = scanChoices(options)
-            scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
-            if args.branchname is not None:
-                Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit-{choices}]",branchName=args.branchname)
+            tryCommitOutcomes(options)
         else:
             if args.user is None or len(args.user) == 0:
                 args.user = ""
@@ -381,6 +381,12 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 sleep(5)
             else:
                 break
+
+def tryCommitOutcomes(options):
+    choices = scanChoices(options)
+    scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
+    if args.branchname is not None:
+        Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit-{choices}]",branchName=args.branchname)
 
 def scanOutputDirectory(backtest=False):
     dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
