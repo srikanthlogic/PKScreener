@@ -107,6 +107,13 @@ argParser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 argParser.add_argument(
+    "-t",
+    "--triggerRemotely",
+    help="Launch Remote trigger",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
     "-f",
     "--force",
     help="Force launch scan/backtests",
@@ -130,7 +137,8 @@ objectDictionary = {}
 # args.intraday = True
 # args.backtests = True
 # args.local = True
-# args.scanDaysInPast = 250
+# args.triggerRemotely = True
+# args.scanDaysInPast = 1
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
@@ -381,7 +389,32 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 sleep(5)
             else:
                 break
+def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
+    defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
+    defaultS2 = "42,0,21,22,26,27,28,29,30,31,M,Z"
+    runForIndices = [12,5,8,1,11,14]
+    runForOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25]
+    runForIndicesStr = f" {' , '.join(map(str, runForIndices))},"
+    runForOptionsStr = f" {' , '.join(map(str, runForOptions))},"
+    branch = "actions-data-download"
+    for index in runForIndices:
+        skip1List = runForIndicesStr.replace(f' {str(index)} , ',f"{defaultS1},").replace(" ","")[:-1]
+        for option in runForOptions:
+            skip2List = runForOptionsStr.replace(f' {str(option)} , ',f"{defaultS2},").replace(" ","")[:-1]
+            postdata = (
+                        '{"ref":"'
+                        + branch
+                        + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
+                        + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} --branchname actions-data-download --scans --local"'
+                        + '}'
+                        )
 
+            resp = run_workflow("w9-workflow-download-data.yml", postdata)
+            if resp.status_code == 204:
+                sleep(60)
+            else:
+                continue
+    
 def tryCommitOutcomes(options):
     choices = scanChoices(options)
     scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
@@ -490,4 +523,7 @@ if args.scans:
         daysInPast = 0
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
-        triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
+        if args.local:
+            triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
+        elif args.triggerRemotely:
+            triggerHistoricalScanWorkflowActions(scanDaysInPast=daysInPast)
