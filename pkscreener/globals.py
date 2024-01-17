@@ -777,8 +777,8 @@ def main(userArgs=None):
             selectedChoice["3"] = options[3]
             if respChartPattern in [1, 2, 3]:
                 if len(options) >= 5:
-                    if str(options[4]).isnumeric():
-                        insideBarToLookback = int(options[4])
+                    if "".join(str(options[4]).split(".")).isdecimal():
+                        insideBarToLookback = float(options[4])
                     elif str(options[4]).upper() == "D":
                         insideBarToLookback = 7 if respChartPattern in [1, 2] else 0.02
                 elif defaultAnswer == "Y" and user is not None:
