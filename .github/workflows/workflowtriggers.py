@@ -114,6 +114,14 @@ argParser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 argParser.add_argument(
+    "-x",
+    "--reScanForZeroSize",
+    help="Re scan if the existing file size of the previous scan is zero",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+
+argParser.add_argument(
     "-f",
     "--force",
     help="Force launch scan/backtests",
@@ -139,6 +147,7 @@ objectDictionary = {}
 # args.local = True
 # args.triggerRemotely = True
 # args.scanDaysInPast = 1
+# args.reScanForZeroSize = True
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
@@ -352,7 +361,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             while daysInPast >=0:
                 # sys.stdout = original_stdout
                 # sys.__stdout__ = original__stdout
-                if not scanResultExists(options,daysInPast,True):
+                if not scanResultExists(options,daysInPast,args.reScanForZeroSize):
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
