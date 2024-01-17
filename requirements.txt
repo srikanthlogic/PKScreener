@@ -21,4 +21,4 @@ tabulate
 tensorflow
 urllib3
 xlsxwriter
-yfinance==0.1.87
+yfinance #==0.1.87

@@ -52,6 +52,8 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         screenCounter,
         totalSymbols,
         printCounter=False,
+        start=None, 
+        end=None,
     ):
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
             data = yf.download(
@@ -61,6 +63,8 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 proxy=proxyServer,
                 progress=False,
                 timeout=self.configManager.longTimeout,
+                start=start,
+                end=end
             )
         if printCounter:
             sys.stdout.write("\r\033[K")
