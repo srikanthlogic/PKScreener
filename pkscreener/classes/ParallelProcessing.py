@@ -244,6 +244,17 @@ class StockConsumer:
                 if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
                     raise Screener.NotEnoughVolumeAsPerConfig
                 
+                isConfluence = False
+                isInsideBar = 0
+                isIpoBase = False
+                isMaSupport = False
+                isShortTermBullish = False
+                isLorentzian = False
+                isVCP = False
+                isVSA = False
+                isNR = False
+                isBuyingTrendline = False
+
                 if executeOption == 11:
                     isShortTermBullish = screener.validateShortTermBullish(
                         fullData, screeningDictionary, saveDictionary
@@ -321,10 +332,7 @@ class StockConsumer:
                 )
                 if executeOption == 5 and (not isValidRsi):
                     return None
-                
-                isConfluence = False
-                isInsideBar = 0
-                isIpoBase = False
+
                 if newlyListedOnly:
                     isIpoBase = screener.validateIpoBase(
                         stock, fullData, screeningDictionary, saveDictionary
@@ -468,12 +476,6 @@ class StockConsumer:
                                                                     in CandlePatterns.reversalPatternsBearish
                                                                     or isMaReversal < 0):
                         return None
-
-                isMomentum = screener.validateMomentum(
-                    processedData, screeningDictionary, saveDictionary
-                )
-                if executeOption == 6 and reversalOption ==3 and not isMomentum:
-                    return None
                 
                 try:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
@@ -496,20 +498,29 @@ class StockConsumer:
                 if executeOption == 8 and not isValidCci:
                     return None
 
-                isMaReversal = screener.validateMovingAverages(
-                    processedData, screeningDictionary, saveDictionary, maRange=1.25
-                )
+                if not (isConfluence or isShortTermBullish or isMaSupport):
+                    isMaReversal = screener.validateMovingAverages(
+                        processedData, screeningDictionary, saveDictionary, maRange=1.25
+                    )
                 # validateInsideBar needs "Trend" to be already defined
                 # ValidateInsideBar also needs "MA-Signal" to be setup
-                isInsideBar = screener.validateInsideBar(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            chartPattern=respChartPattern,
-                            daysToLookback=insideBarToLookback,
-                        )
-                if executeOption == 7 and respChartPattern < 3 and isInsideBar ==0:
-                    return None
+                if executeOption == 7 and respChartPattern < 3:
+                    isInsideBar = screener.validateInsideBar(
+                                processedData,
+                                screeningDictionary,
+                                saveDictionary,
+                                chartPattern=respChartPattern,
+                                daysToLookback=insideBarToLookback,
+                            )
+                    if isInsideBar ==0:
+                        return None
+
+                if not (isLorentzian or (isInsideBar !=0) or isBuyingTrendline or isIpoBase or isNR or isVCP or isVSA):
+                    isMomentum = screener.validateMomentum(
+                        processedData, screeningDictionary, saveDictionary
+                    )
+                    if executeOption == 6 and reversalOption ==3 and not isMomentum:
+                        return None
 
                 screener.find52WeekHighLow(
                     fullData, saveDictionary, screeningDictionary
