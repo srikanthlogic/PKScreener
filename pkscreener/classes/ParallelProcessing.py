@@ -106,6 +106,10 @@ class StockConsumer:
             ) and (
                 hostData is None and backtestDuration >= 0
             ):  # Fetch only if we are NOT backtesting
+                start = None
+                if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
+                    start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
+                    end = start
                 data = fetcher.fetchStockData(
                     stock,
                     period,
@@ -114,6 +118,8 @@ class StockConsumer:
                     hostRef.processingResultsCounter,
                     hostRef.processingCounter,
                     totalSymbols,
+                    start=start,
+                    end=start
                 )
                 # hostRef.default_logger.info(f"Fetcher fetched stock data:\n{data}")
                 if (
@@ -122,7 +128,9 @@ class StockConsumer:
                 ) or (
                     shouldCache and hostData is None
                 ):  # and backtestDuration == 0 # save only if we're NOT backtesting
-                    hostRef.objectDictionary[stock] = data.to_dict("split")
+                    if start is None and data is not None:
+                        # Don't need to save if it's not for today. Save only for today
+                        hostRef.objectDictionary[stock] = data.to_dict("split")
                     # hostRef.default_logger.info(
                     #     f"Stock data saved:\n{hostRef.objectDictionary[stock]}"
                     # )
