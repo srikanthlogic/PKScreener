@@ -60,7 +60,8 @@ jobs:
   Download_Stock_Data:
 
     runs-on: ${{ inputs.runson || 'ubuntu-20.04'}} #ubuntu-20.04 #windows-latest
-
+    outputs:
+      should_clean: ${{ inputs.scanOptions }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -279,6 +280,7 @@ jobs:
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
     needs: [Download_Stock_Data]
+    if: ${{ needs.Download_Stock_Data.outputs.should_clean == ''}}
     name: Delete workflow run
     steps:
       - uses: actions/checkout@v2
