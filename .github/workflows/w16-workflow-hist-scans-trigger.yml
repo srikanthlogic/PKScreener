@@ -177,18 +177,6 @@ jobs:
       run: |
         python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans --reScanForZeroSize' }}
 
-    - name: Push Historical scan Data
-      shell: bash
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-        git remote update
-        git fetch
-        git add actions-data-scan/*.txt --force
-        git commit -m "GitHub-Action-Workflow-Market-Data-Scan-Results-(Default-Config)"
-        git push -v -u origin +actions-data-download
-
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
     needs: [Download_Historical_Data]
@@ -204,6 +192,7 @@ jobs:
         run: |
           gh run list --status success --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
           gh run list --status cancelled --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+          gh run list --status failed --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
