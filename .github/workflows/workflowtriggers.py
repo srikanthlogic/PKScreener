@@ -152,13 +152,14 @@ objectDictionary = {}
 # args.backtests = True
 # args.local = True
 # args.triggerRemotely = True
+# args.cleanuphistoricalscans = True
 # args.scanDaysInPast = 1
 # args.reScanForZeroSize = True
 # args.user="-1001785195297"
-# args.skiplistlevel0 ="S,T,E,U,Z,H,Y,X"
-# args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
-# args.skiplistlevel2 ="0,1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,42,M,Z"
-# args.skiplistlevel3 = "0,1,2,4,5,6"
+# args.skiplistlevel0 ="S,T,E,U,Z,H,Y,B,G"
+# args.skiplistlevel1 ="W,N,E,M,Z,0"
+# args.skiplistlevel2 ="0,26,27,28,29,30,42,M,Z"
+# args.skiplistlevel3 = "0"
 
 if args.skiplistlevel0 is None:
     args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G"])
@@ -359,12 +360,15 @@ def cleanuphistoricalscans(scanDaysInPast=270):
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'
         daysInPast = scanDaysInPast
+        removedItemCount = 0
         while daysInPast >=251:
             exists, fileSize, fileName = scanResultExists(options,daysInPast,True)
             if exists or fileSize >=0:
                 os.remove(fileName)
+                removedItemCount += 1
             daysInPast -=1
-        tryCommitOutcomes(options)
+        if removedItemCount > 0:
+            tryCommitOutcomes(options)
 
 def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original_stdout = sys.stdout
