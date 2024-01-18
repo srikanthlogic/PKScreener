@@ -532,7 +532,7 @@ if args.scans:
         daysInPast = 0
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
-        if args.local:
-            triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
-        elif args.triggerRemotely:
+        if args.triggerRemotely:
             triggerHistoricalScanWorkflowActions(scanDaysInPast=daysInPast)
+        else:
+            triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
