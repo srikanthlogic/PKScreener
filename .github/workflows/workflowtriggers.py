@@ -414,7 +414,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
                         '{"ref":"'
                         + branch
                         + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
-                        + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} --branchname actions-data-download --scans --local"'
+                        + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} --branchname actions-data-download --scans --local","name":"X_{index}_{option}"'
                         + '}'
                         )
 
