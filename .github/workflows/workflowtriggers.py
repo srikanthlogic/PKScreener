@@ -107,6 +107,12 @@ argParser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 argParser.add_argument(
+    "--cleanuphistoricalscans",
+    help="clean up historical scan results from github server commits",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
     "-t",
     "--triggerRemotely",
     help="Launch Remote trigger",
@@ -344,6 +350,21 @@ def run_workflow(workflow_name, postdata):
         print(f"Something went wrong while triggering {workflow_name}")
     return resp
 
+def cleanuphistoricalscans(scanDaysInPast=270):
+    for key in objectDictionary.keys():
+        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
+        branch = "actions-data-download"
+        if args.branchname is None:
+            args.branchname = branch
+        scanOptions = objectDictionary[key]["td3"]
+        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'
+        daysInPast = scanDaysInPast
+        while daysInPast >=251:
+            exists, fileSize, fileName = scanResultExists(options,daysInPast,True)
+            if exists or fileSize >=0:
+                os.remove(fileName)
+            daysInPast -=1
+        tryCommitOutcomes(options)
 
 def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original_stdout = sys.stdout
@@ -361,7 +382,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             while daysInPast >=0:
                 # sys.stdout = original_stdout
                 # sys.__stdout__ = original__stdout
-                if not scanResultExists(options,daysInPast,args.reScanForZeroSize):
+                if not scanResultExists(options,daysInPast,args.reScanForZeroSize)[0]:
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     pkscreenercli.args = ag
@@ -453,6 +474,7 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
     outputFolder = scanOutputDirectory()
     fileName = f"{outputFolder}{os.sep}{choices}_{today}.txt"
     print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Checking for {fileName}")
+    fileSize = -1
     if os.path.isfile(fileName):
         if returnFalseIfSizeZero:
             fileSize = os.path.getsize(fileName)
@@ -465,7 +487,7 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
             print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Skipping. Latest scan result already exists: {fileName}")
             return True
     print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Scanning for {choices}_{today}")
-    return False
+    return False, fileSize,fileName
 
 def triggerBacktestWorkflowActions(launchLocal=False):
     for key in objectDictionary.keys():
@@ -536,3 +558,8 @@ if args.scans:
             triggerHistoricalScanWorkflowActions(scanDaysInPast=daysInPast)
         else:
             triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
+if args.cleanuphistoricalscans:
+    daysInPast = 270
+    if args.scanDaysInPast is not None:
+        daysInPast = int(args.scanDaysInPast)
+    cleanuphistoricalscans(daysInPast)
