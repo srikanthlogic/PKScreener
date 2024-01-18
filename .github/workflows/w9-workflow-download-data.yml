@@ -29,7 +29,7 @@ on:
       name:
         description: 'Run Details'
         required: false
-        default: 'Data Download'
+        default: 'After-Market Data Gen'
       targetPythonVersion:
         description: 'Target Python version: 3.9 , 3.10, 3.11 ?'
         required: false
@@ -54,6 +54,8 @@ on:
 
   schedule:
   - cron: '58 9 * * 1-5'
+
+run-name: ${{ inputs.name || 'After-Market Data Gen'}}
 
 jobs:
 
