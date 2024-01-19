@@ -486,10 +486,10 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
                 print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Saved scan result size is 0 : {fileName}")
             else:
                 print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Skipping. Latest scan result already exists : {fileName}")
-                return True
+                return True,fileSize,fileName
         else:
             print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Skipping. Latest scan result already exists: {fileName}")
-            return True
+            return True,fileSize,fileName
     print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Scanning for {choices}_{today}")
     return False, fileSize,fileName
 
