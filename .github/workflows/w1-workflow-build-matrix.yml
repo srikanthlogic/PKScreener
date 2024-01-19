@@ -50,6 +50,11 @@ on:
         required: false
         type: string
         default: '3.11'
+      lastReleasedVersion:
+        description: 'Last Released Version'
+        required: false
+        type: string
+        default: ''
   # schedule:
   #   - cron: '35 11 * * 5'
 
@@ -173,7 +178,7 @@ jobs:
         id: releaseversiongetter
         run: |
           pip3 install requests
-          python3 .github/workflows/githubutilities.py -d
+          python3 .github/workflows/githubutilities.py --getreleaseurl --lastReleasedVersion ${{ inputs.lastReleasedVersion }}
           
       - name: Declare env variables
         id: vars

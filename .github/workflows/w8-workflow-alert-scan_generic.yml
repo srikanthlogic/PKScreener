@@ -150,7 +150,7 @@ jobs:
       id: releaseurlsetter
       run: |
         pip3 install requests
-        python3 .github/workflows/githubutilities.py -d
+        python3 .github/workflows/githubutilities.py --getreleaseurl
 
     - name: Download latest executable on Windows
       shell: cmd
