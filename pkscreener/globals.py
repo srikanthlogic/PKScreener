@@ -1127,6 +1127,10 @@ def main(userArgs=None):
                             listStockCodes = savedListStockCodes
                             totalStocksInReview += savedStocksCount
                         else:
+                            if menuOption in ["B"] and not userPassedArgs.forceBacktestsForZeroResultDays:
+                                # We have a zero length result saved in repo.
+                                # Likely we didn't have any stock in the result output. So why run the scan again?
+                                listStockCodes = savedListStockCodes
                             totalStocksInReview += len(listStockCodes)
                     else:
                         totalStocksInReview += len(listStockCodes)
