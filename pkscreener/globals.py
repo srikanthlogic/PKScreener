@@ -42,7 +42,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from alive_progress import alive_bar
-from PKDevTools.classes import Archiver
+from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger, tracelog
@@ -1860,8 +1860,10 @@ def updateBacktestResults(
     #     showBacktestResults(summary_df,optionalName="Summary")
     #     dumpFreq = dumpFreq + 1
     # Commit intermittently if its been running for over x hours
-    # if userPassedArgs.prodbuild and elapsed_time >= dumpFreq * 3600:
-    #     Committer.commitTempOutcomes(choices)
+    if userPassedArgs.prodbuild and elapsed_time >= 5 * 3600:
+        Committer.commitTempOutcomes(addPath="Backtest-Reports/*.html",
+                                     commitMessage=f"[Temp-Commit]-{choices}",
+                                     branchName="gh-pages")
     return backtest_df
 
 
