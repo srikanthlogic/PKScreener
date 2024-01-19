@@ -103,83 +103,107 @@ jobs:
         TOKEN_DEV : ${{secrets.TOKEN_DEV}}
         CHAT_IDADMIN_DEV : ${{secrets.CHAT_IDADMIN_DEV}}
 
-    - name: 2.10 Momentum gainers (Rising bullish momentum)
+    - name: X_12_0 All relevant technical indicators
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -o X:12:6:3 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:0 -e -u "-1001785195297"
 
-    - name: 2.1 All relevant technical indicators
+    - name: X_12_1 Probable breakouts
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:0 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:1 -e -u "-1001785195297"
 
-    - name: 2.2 Probable breakouts
+    - name: X_12_2 Recent breakouts and volumes
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:1 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:2 -e -u "-1001785195297"
 
-    - name: 2.3 Recent breakouts and volumes
+    - name: X_12_3 Consolidation 
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:2 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:3 -e -u "-1001785195297"
 
-    - name: 2.4 Volume gainers/shockers
+    - name: X_12_6_1 Buy signals(Bullish reversals)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:9:2.5 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:6:1 -e -u "-1001785195297"
   
-    - name: 2.5 Stocks gaining at least 2% since last 3 sessions
+    - name: X_12_6_2 Sell signals(bearish reversals)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:10 -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:6:2 -e -u "-1001785195297"
 
-    - name: 2.6 Short term bullish stocks
+    - name: X_12_6_3 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:11 -e
-
-    - name: 2.7 CCI outside the -100,+150 range
-      shell: cmd
-      run: |
-        cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:8:-100:150 -e
-
-    - name: 2.8 Buy signals(Bullish reversals)
-      shell: cmd
-      run: |
-        cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:6:1 -e
-
-    - name: 2.9 Sell signals(bearish reversals)
-      shell: cmd
-      run: |
-        cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:6:2 -e
+        python3 pkscreenercli.py -a Y -p -o -t X:12:6:3 -e -u "-1001785195297"
   
-    - name: 2.11 NR4 daily
+    - name: X_12_6_7 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:14 -e
+        python3 pkscreenercli.py -a Y -p -o -t X:12:6:7 -e -u "-1001785195297"
 
-    - name: 21. Most Popular stocks by change of shares
+    - name: X_12_7_3 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -o X:12:21:1 -e
+        python3 pkscreenercli.py -a Y -p -o -t X:12:7:3:D:D -e -u "-1001785195297"
 
-    - name: 1. Next day Nifty/Market AI prediction
+    - name: X_12_8 CCI outside the -100,+150 range
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:N -e
+        python3 pkscreenercli.py -a Y -p -t -o X:12:8:-100:150 -e -u "-1001785195297"
+
+    - name: X_12_9 Volume gainers/shockers
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:9:2.5 -e -u "-1001785195297"
+  
+    - name: X_12_10 Stocks gaining at least 2% since last 3 sessions
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:10 -e -u "-1001785195297"
+
+    - name: X_12_11 Short term bullish stocks
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:11 -e -u "-1001785195297"
+  
+    - name: X_12_14 NR4 daily
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:14 -e -u "-1001785195297"
+
+    - name: X_12_23 Breaking out now
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:23 -e -u "-1001785195297"
+
+    - name: X_12_24 Higher Highs, lows and close
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:12:24 -e -u "-1001785195297"
+
+    - name: X_N Next day Nifty/Market AI prediction
+      shell: cmd
+      run: |
+        cd pkscreener/
+        python3 pkscreenercli.py -a Y -p -t -o X:N -e -u "-1001785195297"
 
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
@@ -194,7 +218,8 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         shell: bash
         run: |
-          for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+          gh run list --status success --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+          # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
           # for id in $(gh run list -w "13. Backtest for Generic" --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
         env:
