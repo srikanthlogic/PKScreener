@@ -936,7 +936,7 @@ def main(userArgs=None):
             elif tickerOption == "N":
                 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
                 prediction, pText, sText = screener.getNiftyPrediction(
-                    data=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
+                    df=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
                 )
                 sendMessageToTelegramChannel(
                     message=f"Nifty AI prediction for the next day: {pText}. {sText}.",
