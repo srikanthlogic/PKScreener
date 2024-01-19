@@ -178,7 +178,7 @@ jobs:
         id: releaseversiongetter
         run: |
           pip3 install requests
-          python3 .github/workflows/githubutilities.py --getreleaseurl --lastReleasedVersion ${{ inputs.lastReleasedVersion }}
+          python3 .github/workflows/githubutilities.py -d
           
       - name: Declare env variables
         id: vars
