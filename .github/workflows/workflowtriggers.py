@@ -157,7 +157,7 @@ objectDictionary = {}
 # args.reScanForZeroSize = True
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,B,G"
-# args.skiplistlevel1 ="W,N,E,M,Z,0"
+# args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,9,10,13"
 # args.skiplistlevel2 ="0,26,27,28,29,30,42,M,Z"
 # args.skiplistlevel3 = "0"
 
@@ -352,6 +352,8 @@ def run_workflow(workflow_name, postdata):
     return resp
 
 def cleanuphistoricalscans(scanDaysInPast=270):
+    removedFileCount = 0
+    options = "X:"
     for key in objectDictionary.keys():
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "actions-data-download"
@@ -364,8 +366,11 @@ def cleanuphistoricalscans(scanDaysInPast=270):
             exists, fileSize, fileName = scanResultExists(options,daysInPast,True)
             if exists or fileSize >=0:
                 os.remove(fileName)
-                tryCommitOutcomes(options,fileName,delete=True)
+                Committer.execOSCommand(f"git rm {fileName}")
+                removedFileCount += 1
             daysInPast -=1
+    if removedFileCount > 0:
+        tryCommitOutcomes(options, pathSpec=None, delete=True)
 
 def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original_stdout = sys.stdout
@@ -448,13 +453,15 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
     
 def tryCommitOutcomes(options,pathSpec=None,delete=False):
     choices = scanChoices(options)
+    if delete:
+        choices =f"Cleanup-{choices}"
     if pathSpec is None:
         scanResultFilesPath = f"{os.path.join(scanOutputDirectory(),choices)}_*.txt"
     else:
         scanResultFilesPath = pathSpec
         if delete:
             scanResultFilesPath = f"-A {scanResultFilesPath}"
-            choices =f"Cleanup-{choices}"
+
     if args.branchname is not None:
         Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit-{choices}]",branchName=args.branchname)
 
