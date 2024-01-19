@@ -1721,7 +1721,7 @@ def runScanners(
             + colorText.END
         )
         totalStocks = numStocks
-        numStocksPerIteration = int(numStocks/int(iterations))
+        numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
         queueCounter = 0
         dumpFreq = 1
         print(colorText.END + colorText.BOLD)
@@ -2021,7 +2021,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     finally:
         with open(filename, "w") as f:
             f.write(colored_text)
-        Committer.execOSCommand(f"git add {filename}")
+        Committer.execOSCommand(f"git add {filename} -f")
 
     if lastSummaryRow is not None:
         oneline_text = lastSummaryRow.to_html(header=False, index=False)
@@ -2039,7 +2039,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         finally:
             with open(onelineSummaryFile, "w") as f:
                 f.write(oneline_text)
-            Committer.execOSCommand(f"git add {onelineSummaryFile}")
+            Committer.execOSCommand(f"git add {onelineSummaryFile} -f")
 
 def scanOutputDirectory(backtest=False):
     dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
