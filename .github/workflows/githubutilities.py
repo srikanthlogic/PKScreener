@@ -22,6 +22,7 @@
     SOFTWARE.
 
 """
+
 import argparse
 import os
 import platform
@@ -58,9 +59,15 @@ argParser.add_argument(
     help="Whats new in this release",
     required=required,
 )
+argParser.add_argument(
+    "--lastReleasedVersion",
+    help="the string containing the last released version",
+    required=required,
+)
 argsv = argParser.parse_known_args()
 args = argsv[0]
 
+args.getreleaseurl = True
 
 def aset_output(name, value):
     if "GITHUB_OUTPUT" in os.environ.keys():
@@ -88,22 +95,33 @@ def cfetchURL(key, url):
 
 
 def dget_latest_release_url():
-    resp = cfetchURL(
-        "ReleaseResponse",
-        "https://api.github.com/repos/pkjmesra/PKScreener/releases/latest",
-    )
-    url = ""
-    if "Windows" in platform.system():
-        url = resp.json()["assets"][1]["browser_download_url"]
-        aset_output("DOWNLOAD_URL", url)
-    elif "Darwin" in platform.system():
-        url = resp.json()["assets"][2]["browser_download_url"]
-        aset_output("DOWNLOAD_URL", url)
-    else:
-        url = resp.json()["assets"][0]["browser_download_url"]
-        aset_output("DOWNLOAD_URL", url)
-    rel_version = url.split("/")[-2]
+    exe_name = "pkscreenercli.bin"
+    try:
+        resp = cfetchURL(
+            "ReleaseResponse",
+            "https://api.github.com/repos/pkjmesra/PKScreener/releases/latest",
+        )
+        url = ""
+        if "Windows" in platform.system():
+            exe_name = "pkscreenercli.exe"
+            url = resp.json()["assets"][1]["browser_download_url"]
+            aset_output("DOWNLOAD_URL", url)
+        elif "Darwin" in platform.system():
+            exe_name = "pkscreenercli.run"
+            url = resp.json()["assets"][2]["browser_download_url"]
+            aset_output("DOWNLOAD_URL", url)
+        else:
+            exe_name = "pkscreenercli.bin"
+            url = resp.json()["assets"][0]["browser_download_url"]
+            aset_output("DOWNLOAD_URL", url)
+        rel_version = url.split("/")[-2]
+    except:
+        if args.lastReleasedVersion is not None:
+            rel_version = args.lastReleasedVersion
+            url = f"https://github.com/pkjmesra/PKScreener/releases/download/{rel_version}/{exe_name}"
+        pass
     aset_output("LAST_RELEASE_VERSION", rel_version)
+    aset_output("DOWNLOAD_URL", url)
     return url
 
 def whatsNew():
@@ -116,8 +134,15 @@ def whatsNew():
     txt = txt + "\n"
     bset_multiline_output("WHATS_NEW_IN_THIS_RELEASE",txt)
     return txt
-    
+
+def lastReleasedVersionFromWhatsNew():
+      wNew = whatsNew()
+      releaseVersion = wNew.split("[")[1].split("]")[0]
+      return releaseVersion.replace("v","")
+
 if args.getreleaseurl:
+    if args.lastReleasedVersion is None or args.lastReleasedVersion == '':
+        args.lastReleasedVersion = lastReleasedVersionFromWhatsNew()
     print(dget_latest_release_url())
 if args.whatsnew:
     print(whatsNew())
