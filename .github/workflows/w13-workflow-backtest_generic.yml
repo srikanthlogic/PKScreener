@@ -227,26 +227,26 @@ jobs:
       run: |
           python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message(message='Hello! The workflow('+os.environ['BACKTEST_NAME']+') for backtesting has finished and will soon get deployed in the next 2-3 minutes. You can check directly at https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_Summary_StockSorted.html for summary and https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_backtest_result_StockSorted.html for details after it gets deployed.', userID=os.environ['NOTIFY_USER']);"
 
-  Delete_Workflow_Run:
-    runs-on: ubuntu-20.04
-    needs: [Generic]
-    name: Delete workflow run
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: main
+  # Delete_Workflow_Run:
+  #   runs-on: ubuntu-20.04
+  #   needs: [Generic]
+  #   name: Delete workflow run
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         ref: main
 
-      - name: Delete this workflow run
-        if: startsWith(runner.os, 'Linux')
-        shell: bash
-        run: |
-          for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          gh run list -w "pages-build-deployment" --status cancelled --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          gh run list -w "pages-build-deployment" --status success --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          # echo ${{ needs.Generic.outputs.runIdentifier }} | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
-          # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
-        env:
-          GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
+  #     - name: Delete this workflow run
+  #       if: startsWith(runner.os, 'Linux')
+  #       shell: bash
+  #       run: |
+  #         for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         gh run list -w "pages-build-deployment" --status cancelled --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+  #         gh run list -w "pages-build-deployment" --status success --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+  #         # echo ${{ needs.Generic.outputs.runIdentifier }} | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+  #         # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
+  #         # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
+  #       env:
+  #         GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
