@@ -66,13 +66,16 @@ import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Fetcher as Fetcher
 from pkscreener.classes import VERSION, Changelog
 from pkscreener.classes.MenuOptions import menus
+from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 
+nseFetcher = nseStockDataFetcher()
 session = CachedSession(
     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
     db_path=os.path.join(Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite"),
     cache_control=True,
 )
 fetcher = Fetcher.screenerStockDataFetcher(ConfigManager.tools())
+
 artText = """
 PPPPPPPPPPPPPPPPP   KKKKKKKKK    KKKKKKK   SSSSSSSSSSSSSSS                                                                                                                                         TM
 UPI:8007162973@APL  K:::::::K    K:::::K SS:::::::::::::::S
@@ -91,15 +94,19 @@ P::::::::P          K:::::::K    K:::::KS::::::SSSSSS:::::S c:::::::::::::::::c 
 P::::::::P          K:::::::K    K:::::KS:::::::::::::::SS   cc:::::::::::::::c r:::::r              ee:::::::::::::e    ee:::::::::::::e    n::::n    n::::n  ee:::::::::::::e   r:::::r
 PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc rrrrrrr                eeeeeeeeeeeeee      eeeeeeeeeeeeee    nnnnnn    nnnnnn    eeeeeeeeeeeeee   rrrrrrr
 """
-artText = f"{artText}\nv{VERSION}"
-art = colorText.GREEN + artText + colorText.END
+artText = f"{artText}\nv{VERSION}\n"
+
+def marketStatus():
+    _,lngStatus = nseFetcher.capitalMarketStatus()
+    return lngStatus if lngStatus is not None else ""
+
+art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
 
 lastScreened = os.path.join(
     Archiver.get_user_outputs_dir(), "last_screened_results.pkl"
 )
 
 # Class for managing misc and utility methods
-
 
 class tools:
     def clearScreen():
@@ -351,7 +358,7 @@ class tools:
 
         artfont = ImageFont.truetype(fontPath, 30)
         font = ImageFont.truetype(fontPath, 60)
-        arttext_width, arttext_height = artfont.getsize_multiline(artText)
+        arttext_width, arttext_height = artfont.getsize_multiline(artText+ f" | {marketStatus()}")
         oneLinelabel_width, oneLinelabel_height = font.getsize_multiline(label)
         scanResulttext_width, scanResulttext_height = font.getsize_multiline(table)
         (
@@ -416,7 +423,7 @@ class tools:
         )
         draw = ImageDraw.Draw(im)
         # artwork
-        draw.text((startColValue, 7), artText, font=artfont, fill=artColor)
+        draw.text((startColValue, 7), artText+ f" | {tools.removeAllColorStyles(marketStatus())}", font=artfont, fill=artColor)
         rowPixelRunValue = 10 + arttext_height
         separator = "|"
         sep_width, sep_height = font.getsize_multiline(separator)

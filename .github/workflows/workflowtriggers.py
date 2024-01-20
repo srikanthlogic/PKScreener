@@ -33,9 +33,63 @@ import pytz
 import requests
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
+from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 
 argParser = argparse.ArgumentParser()
 required = False
+argParser.add_argument(
+    "-b",
+    "--backtests",
+    action="store_true",
+    help="Trigger backtests if true",
+    required=required,
+)
+argParser.add_argument(
+    "--branchname",
+    help="branch name for check-in, check-out",
+    required=required,
+)
+argParser.add_argument(
+    "--cleanuphistoricalscans",
+    help="clean up historical scan results from github server commits",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
+    "-f",
+    "--force",
+    help="Force launch scan/backtests",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
+    "-i",
+    "--intraday",
+    action="store_true",
+    help="Trigger backtests for intraday if true",
+    required=required,
+)
+argParser.add_argument(
+    "-l",
+    "--local",
+    help="Launch locally",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
+    "-r",
+    "--report",
+    action="store_true",
+    help="Generate backtest-report main page if true",
+    required=required,
+)
+argParser.add_argument(
+    "-s",
+    "--scans",
+    action="store_true",
+    help="Trigger scans if true",
+    required=required,
+)
 argParser.add_argument(
     "-s0",
     "--skiplistlevel0",
@@ -61,56 +115,9 @@ argParser.add_argument(
     required=required,
 )
 argParser.add_argument(
-    "-r",
-    "--report",
-    action="store_true",
-    help="Generate backtest-report main page if true",
-    required=required,
-)
-argParser.add_argument(
-    "-s",
-    "--scans",
-    action="store_true",
-    help="Trigger scans if true",
-    required=required,
-)
-argParser.add_argument(
     "--scanDaysInPast",
     help="Number of days in the past for which scan has to be run",
     required=required,
-)
-argParser.add_argument(
-    "--branchname",
-    help="branch name for check-in, check-out",
-    required=required,
-)
-argParser.add_argument(
-    "-b",
-    "--backtests",
-    action="store_true",
-    help="Trigger backtests if true",
-    required=required,
-)
-argParser.add_argument(
-    "-i",
-    "--intraday",
-    action="store_true",
-    help="Trigger backtests for intraday if true",
-    required=required,
-)
-argParser.add_argument("-u", "--user", help="Telegram user id", required=required)
-argParser.add_argument(
-    "-l",
-    "--local",
-    help="Launch locally",
-    required=required,
-    action=argparse.BooleanOptionalAction,
-)
-argParser.add_argument(
-    "--cleanuphistoricalscans",
-    help="clean up historical scan results from github server commits",
-    required=required,
-    action=argparse.BooleanOptionalAction,
 )
 argParser.add_argument(
     "-t",
@@ -119,18 +126,17 @@ argParser.add_argument(
     required=required,
     action=argparse.BooleanOptionalAction,
 )
+argParser.add_argument("-u", "--user", help="Telegram user id", required=required)
+argParser.add_argument(
+    "--updateholidays",
+    help="Force update holidays",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
 argParser.add_argument(
     "-x",
     "--reScanForZeroSize",
     help="Re scan if the existing file size of the previous scan is zero",
-    required=required,
-    action=argparse.BooleanOptionalAction,
-)
-
-argParser.add_argument(
-    "-f",
-    "--force",
-    help="Force launch scan/backtests",
     required=required,
     action=argparse.BooleanOptionalAction,
 )
@@ -160,6 +166,7 @@ objectDictionary = {}
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,9,10,13"
 # args.skiplistlevel2 ="0,26,27,28,29,30,42,M,Z"
 # args.skiplistlevel3 = "0"
+# args.updateholidays = True
 
 if args.skiplistlevel0 is None:
     args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G"])
@@ -558,6 +565,16 @@ def getFormattedChoices(options):
     choices = f"{choices}{'_i' if isIntraday else ''}"
     return choices
 
+def updateHolidays():
+    holidays, raw = nseStockDataFetcher().updatedHolidays()
+    print(holidays)
+    import json
+    holidays_file = os.path.join(os.getcwd(),".github/dependencies/nse-holidays.json")
+    with open(holidays_file, "w", encoding='utf-8') as f:
+        json.dump(raw, f, ensure_ascii=False, indent=4)
+    Committer.execOSCommand(f"git add {holidays_file} -f")
+    Committer.commitTempOutcomes(holidays_file,"Update-Holidays","main")
+
 if args.report:
     generateBacktestReportMainPage()
 if args.backtests:
@@ -577,3 +594,5 @@ if args.cleanuphistoricalscans:
     if args.scanDaysInPast is not None:
         daysInPast = int(args.scanDaysInPast)
     cleanuphistoricalscans(daysInPast)
+if args.updateholidays:
+    updateHolidays()
