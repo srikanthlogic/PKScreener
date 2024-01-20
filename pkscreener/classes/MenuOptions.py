@@ -351,7 +351,7 @@ class menus:
                 + menuText
                 + """
 
-        Enter your choice >  (default is """
+    Enter your choice > (default is """
                 + colorText.WARN
                 + self.find("X").keyTextLabel()
                 + ") "
@@ -385,7 +385,7 @@ class menus:
                 + menuText
                 + """
 
-        Enter your choice > (default is """
+    Enter your choice > (default is """
                 + colorText.WARN
                 + self.find("12").keyTextLabel()
                 + ")  "

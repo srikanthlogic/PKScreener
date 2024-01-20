@@ -50,7 +50,7 @@ on:
       scanOptions:
         description: 'Scan options for historical scans'
         required: false
-        default: '--reScanForZeroSize --scanDaysInPast 250 -s2 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,42,0,21,22,26,27,28,29,30,31,M,Z -s1 W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14 -s0 S,T,E,U,Z,H,Y,B,G -s3 "0" --branchname actions-data-download --scans --local'
+        default: '--reScanForZeroSize --scanDaysInPast 7 -s2 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,42,0,21,22,26,27,28,29,30,31,M,Z -s1 W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14 -s0 S,T,E,U,Z,H,Y,B,G -s3 "0" --branchname actions-data-download --scans --local'
 
   schedule:
   - cron: '58 9 * * 0-6'
@@ -150,7 +150,7 @@ jobs:
         curl -o /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -JL $exe_path
         chmod +x /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin
 
-    - name: Run Scan on Ubuntu
+    - name: Download 52 week Stock Data on Ubuntu
       shell: bash
       continue-on-error: true
       if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
@@ -213,7 +213,6 @@ jobs:
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
     - name: Clean up old historical scan results
-      if: ${{ inputs.scanOptions == ''}}
       shell: bash
       continue-on-error: true
       run: |

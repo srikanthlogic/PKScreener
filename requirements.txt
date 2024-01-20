@@ -11,6 +11,7 @@ pandas_ta
 Pillow==9.5.0 # Keep at this version because getsize_multiline is deprecated/removed in higher versions
 PKDevTools
 PKNSETools
+Pyarrow
 pytz
 requests_cache
 rich
