@@ -27,6 +27,7 @@ import datetime
 import glob
 import math
 import os
+import sys
 import textwrap
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -94,11 +95,11 @@ P::::::::P          K:::::::K    K:::::KS::::::SSSSSS:::::S c:::::::::::::::::c 
 P::::::::P          K:::::::K    K:::::KS:::::::::::::::SS   cc:::::::::::::::c r:::::r              ee:::::::::::::e    ee:::::::::::::e    n::::n    n::::n  ee:::::::::::::e   r:::::r
 PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc rrrrrrr                eeeeeeeeeeeeee      eeeeeeeeeeeeee    nnnnnn    nnnnnn    eeeeeeeeeeeeee   rrrrrrr
 """
-artText = f"{artText}\nv{VERSION}\n"
+artText = f"{artText}\nv{VERSION}"
 
 def marketStatus():
     _,lngStatus = nseFetcher.capitalMarketStatus()
-    return lngStatus if lngStatus is not None else ""
+    return (lngStatus +"\n") if lngStatus is not None else "\n"
 
 art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
 
@@ -116,7 +117,7 @@ class tools:
             os.system("cls")
         else:
             os.system("clear")
-        print(art)
+        print(art.encode('utf-8').decode(sys.stdout.encoding))
 
     # Print about developers and repository
     def showDevInfo(defaultAnswer=None):
