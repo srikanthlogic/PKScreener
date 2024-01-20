@@ -501,7 +501,7 @@ class tools:
         im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
-        im.show()
+        # im.show()
 
     def wrapFitLegendText(table, backtestSummary, legendText):
         wrapper = textwrap.TextWrapper(
