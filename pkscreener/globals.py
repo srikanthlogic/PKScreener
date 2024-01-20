@@ -939,7 +939,7 @@ def main(userArgs=None):
                     df=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
                 )
                 sendMessageToTelegramChannel(
-                    message=f"Nifty AI prediction for the next day: {pText}. {sText}.",
+                    message=f"Today: {Utility.tools.removeAllColorStyles(Utility.marketStatus())}\n Nifty AI prediction for the Next Day: {pText}. {sText}.",
                     user=user,
                 )
                 if defaultAnswer is None:

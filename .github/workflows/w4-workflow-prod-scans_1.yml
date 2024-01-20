@@ -97,6 +97,12 @@ jobs:
       run: |
         cd pkscreener/
         python3 pkscreenercli.py -a Y -p -o X:N -e
+        cd ..
+    
+    - name: Update holidays list
+      shell: cmd
+      run: |
+        python3 .github/workflows/workflowtriggers.py --updateholidays
 
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
