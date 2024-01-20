@@ -107,103 +107,103 @@ jobs:
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:0 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:0 -e
 
     - name: X_12_1 Probable breakouts
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:1 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:1 -e
 
     - name: X_12_2 Recent breakouts and volumes
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:2 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:2 -e
 
     - name: X_12_3 Consolidation 
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:3 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:3 -e
 
     - name: X_12_6_1 Buy signals(Bullish reversals)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:6:1 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:6:1 -e
   
     - name: X_12_6_2 Sell signals(bearish reversals)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:6:2 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:6:2 -e
 
     - name: X_12_6_3 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -o -t X:12:6:3 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -o X:12:6:3 -e -t
   
     - name: X_12_6_7 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -o -t X:12:6:7 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:6:7 -e
 
     - name: X_12_7_3 Momentum gainers (Rising bullish momentum)
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -o -t X:12:7:3:D:D -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:7:3:D:D -e
 
     - name: X_12_8 CCI outside the -100,+150 range
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:8:-100:150 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:8:-100:150 -e
 
     - name: X_12_9 Volume gainers/shockers
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:9:2.5 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:9:2.5 -e
   
     - name: X_12_10 Stocks gaining at least 2% since last 3 sessions
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:10 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:10 -e
 
     - name: X_12_11 Short term bullish stocks
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:11 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:11 -e
   
     - name: X_12_14 NR4 daily
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:14 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:14 -e
 
     - name: X_12_23 Breaking out now
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:23 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:23 -e
 
     - name: X_12_24 Higher Highs, lows and close
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:12:24 -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:12:24 -e
 
     - name: X_N Next day Nifty/Market AI prediction
       shell: cmd
       run: |
         cd pkscreener/
-        python3 pkscreenercli.py -a Y -p -t -o X:N -e -u "-1001785195297"
+        python3 pkscreenercli.py -a Y -p -t -o X:N -e
 
   Delete_Workflow_Run:
     runs-on: ubuntu-20.04
