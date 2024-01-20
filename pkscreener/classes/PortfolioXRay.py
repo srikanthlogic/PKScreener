@@ -79,28 +79,36 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False):
     if len(dfs) > 0:
         df = dfs[0]
         if len(dfs) > 0:
+            periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+            for period in periods:
+                df.rename(
+                    columns={
+                        f"{period}D-%": f"{period}Pd-%",
+                        f"{period}D-10k": f"{period}Pd-10k",
+                    },
+                    inplace=True,
+                )
             insights = df[df["ScanType"].astype(str).str.startswith("[SUM]")]
             insights = insights.replace(" %", "", regex=True)
             # insights = insights.replace('', np.nan, regex=True)
             # insights = insights.replace('-', np.nan, regex=True)
-            periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
             for prd in periods:
                 try:
-                    insights[f"{prd}D-%"] = (
-                        insights[f"{prd}D-%"].astype(float).fillna(0.0)
+                    insights[f"{prd}Pd-%"] = (
+                        insights[f"{prd}Pd-%"].astype(float).fillna(0.0)
                     )
-                    max_p = insights[f"{prd}D-%"].max()
+                    max_p = insights[f"{prd}Pd-%"].max()
                     bestScanFilter = str(
-                        insights["ScanType"].iloc[insights[f"{prd}D-%"].idxmax()]
+                        insights["ScanType"].iloc[insights[f"{prd}Pd-%"].idxmax()]
                     ).replace("[SUM]", "")
                     resultPoints = bestScanFilter.split("(")[1]
                     strategy_percent[
-                        f"{prd}D"
+                        f"{prd}-Pd"
                     ] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
                     scanType = (
                         bestScanFilter.split("(")[0] if not summary else bestScanFilter
                     )
-                    strategy[f"{prd}D"] = scanType
+                    strategy[f"{prd}-Pd"] = scanType
                 except:
                     pass
             insights_list = [strategy, strategy_percent]
@@ -121,25 +129,25 @@ def xRaySummary(savedResults=None):
         sum_dict["ScanType"] = f"[SUM]{scanType}({groupItems})"
         sum_dict["Date"] = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         for prd in periods:
-            if not f"{prd}D-%" in df_group.columns:
+            if not f"{prd}Pd-%" in df_group.columns:
                 continue
-            prd_df = df_group[[f"{prd}D-%", f"{prd}D-10k"]]
-            prd_df.loc[:, f"{prd}D-10k"] = prd_df.loc[:, f"{prd}D-10k"].apply(
+            prd_df = df_group[[f"{prd}Pd-%", f"{prd}Pd-10k"]]
+            prd_df.loc[:, f"{prd}Pd-10k"] = prd_df.loc[:, f"{prd}Pd-10k"].apply(
                 lambda x: Utility.tools.removeAllColorStyles(x)
             )
             prd_df = prd_df.replace("-", np.nan, regex=True)
             prd_df = prd_df.replace("", np.nan, regex=True)
             prd_df.dropna(axis=0, how="all", inplace=True)
-            prd_df[f"{prd}D-10k"] = prd_df[f"{prd}D-10k"].astype(float).fillna(0.0)
+            prd_df[f"{prd}Pd-10k"] = prd_df[f"{prd}Pd-10k"].astype(float).fillna(0.0)
             gain = round(
-                (prd_df[f"{prd}D-10k"].sum() - 10000 * len(prd_df))
+                (prd_df[f"{prd}Pd-10k"].sum() - 10000 * len(prd_df))
                 * 100
                 / (10000 * len(prd_df)),
                 2,
             )
-            sum_dict[f"{prd}D-%"] = gain
-            sum_dict[f"{prd}D-10k"] = round(
-                prd_df[f"{prd}D-10k"].sum() / len(prd_df), 2
+            sum_dict[f"{prd}Pd-%"] = gain
+            sum_dict[f"{prd}Pd-10k"] = round(
+                prd_df[f"{prd}Pd-10k"].sum() / len(prd_df), 2
             )
         sum_list.append(sum_dict)
     df = pd.DataFrame(sum_list)
@@ -437,7 +445,7 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
             else:
                 df1 = pd.DataFrame(scanResults)
                 df_target = df1[
-                    [col for col in df1.columns if ("D-%" in col or "D-10k" in col)]
+                    [col for col in df1.columns if ("Pd-%" in col or "Pd-10k" in col)]
                 ]
                 df = pd.concat([df, df_target], axis=1)
             days += 1
@@ -450,7 +458,7 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
             [
                 col
                 for col in df.columns
-                if ("ScanType" in col or "D-%" in col or "D-10k" in col)
+                if ("ScanType" in col or "Pd-%" in col or "Pd-10k" in col)
             ]
         ]
         df = df.replace(999999999, np.nan, regex=True)
@@ -472,7 +480,7 @@ def formatGridOutput(df):
         except:
             continue
         maxGrowth = df[col].max()
-        if "D-%" in col:
+        if "Pd-%" in col:
             df.loc[:, col] = df.loc[:, col].apply(
                 lambda x: x
                 if (str(x) == "-")
@@ -494,7 +502,7 @@ def formatGridOutput(df):
                     )
                 )
             )
-        if "D-10k" in col:
+        if "Pd-10k" in col:
             df.loc[:, col] = df.loc[:, col].apply(
                 lambda x: x
                 if (str(x) == "-")
@@ -528,16 +536,16 @@ def getCalculatedValues(df, period, key, args=None):
     growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
     df = {
         "ScanType": key if tdySum1ShareEach != 0 else 999999999,
-        f"{period}D-PFV": tdySum1ShareEach,
-        f"{period}D-%": percentGrowth if tdySum1ShareEach != 0 else 999999999,
-        f"{period}D-10k": growth10k if tdySum1ShareEach != 0 else 999999999,
+        f"{period}Pd-PFV": tdySum1ShareEach,
+        f"{period}Pd-%": percentGrowth if tdySum1ShareEach != 0 else 999999999,
+        f"{period}Pd-10k": growth10k if tdySum1ShareEach != 0 else 999999999,
     }
     # percentGrowth = colorText.GREEN if percentGrowth >=0 else colorText.FAIL + percentGrowth + colorText.END
     # growth10k = colorText.GREEN if percentGrowth >=0 else colorText.FAIL + growth10k + colorText.END
     # df_col = {'ScanType':key,
-    #     f'{period}D-PFV':tdySum1ShareEach,
-    #     f'{period}D-PFG':percentGrowth if tdySum1ShareEach != 0 else '-',
-    #     f'{period}D-Go10k':growth10k if tdySum1ShareEach != 0 else '-',
+    #     f'{period}Pd-PFV':tdySum1ShareEach,
+    #     f'{period}Pd-PFG':percentGrowth if tdySum1ShareEach != 0 else '-',
+    #     f'{period}Pd-Go10k':growth10k if tdySum1ShareEach != 0 else '-',
     #     }
     return df  # , df_col
 

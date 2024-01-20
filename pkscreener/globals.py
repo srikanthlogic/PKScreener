@@ -462,7 +462,6 @@ def initPostLevel0Execution(
         + colorText.FAIL
         + "[+] You chose: "
         + level0MenuDict[menuOption].strip()
-        + " > "
         + colorText.END
     )
     if tickerOption is None:
@@ -680,6 +679,7 @@ def main(userArgs=None):
                     headers="keys",
                     tablefmt=colorText.No_Pad_GridFormat,
                     showindex=False,
+                    maxcolwidths=Utility.tools.getMaxColumnWidths(df_all)
                 )
             )
             showBacktestResults(
@@ -1004,6 +1004,7 @@ def main(userArgs=None):
                                 result_df,
                                 headers="keys",
                                 tablefmt=colorText.No_Pad_GridFormat,
+                                maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
                             )
                         )
                         print("\nPress Ctrl+C to exit.")
@@ -1407,6 +1408,7 @@ def printNotifySaveScreenedResults(
                 headers="keys",
                 tablefmt=colorText.No_Pad_GridFormat,
                 showindex=False,
+                maxcolwidths=Utility.tools.getMaxColumnWidths(df)
             )
             print(g10kStyledTable)
             g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
@@ -1429,7 +1431,8 @@ def printNotifySaveScreenedResults(
     removedUnusedColumns(screenResults, saveResults, ["Date"])
 
     tabulated_results = colorText.miniTabulator().tabulate(
-        screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat
+        screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
+        maxcolwidths=Utility.tools.getMaxColumnWidths(screenResults)
     )
     print(tabulated_results)
     _, reportNameInsights = getBacktestReportFilename(
@@ -1446,6 +1449,7 @@ def printNotifySaveScreenedResults(
             headers="keys",
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(strategy_df)
         )
         print(addendumLabel)
         print(tabulated_strategy)
@@ -1476,11 +1480,13 @@ def printNotifySaveScreenedResults(
                         screenResultsTrimmed,
                         headers="keys",
                         tablefmt=colorText.No_Pad_GridFormat,
+                        maxcolwidths=Utility.tools.getMaxColumnWidths(screenResultsTrimmed)
                     )
                 markdown_results = colorText.miniTabulator().tabulate(
                     saveResultsTrimmed,
                     headers="keys",
                     tablefmt=colorText.No_Pad_GridFormat,
+                    maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                 )
                 if not testing:
                     sendQuickScanResult(
@@ -1576,6 +1582,7 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
             headers="keys",
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(summarydf)
         )
     if detaildf is not None and len(detaildf) > 0:
         if maxAllowed != 0 and len(detaildf) > 2 * maxAllowed:
@@ -1585,6 +1592,7 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
                 headers="keys",
                 tablefmt=colorText.No_Pad_GridFormat,
                 showindex=False,
+                maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
             )
         else:
             tabulated_backtest_detail = colorText.miniTabulator().tabulate(
@@ -1592,6 +1600,7 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
                 headers="keys",
                 tablefmt=colorText.No_Pad_GridFormat,
                 showindex=False,
+                maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
             )
     if tabulated_backtest_summary != "":
         print(
@@ -1998,6 +2007,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         headers="keys",
         tablefmt=colorText.No_Pad_GridFormat,
         showindex=False,
+        maxcolwidths=Utility.tools.getMaxColumnWidths(backtest_df)
     )
     print(colorText.FAIL + summaryText + colorText.END + "\n")
     print(tabulated_text + "\n")

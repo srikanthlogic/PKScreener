@@ -111,7 +111,7 @@ jobs:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
 
     - name: Telegram Bot
-      timeout-minutes: 100
+      timeout-minutes: 350
       shell: cmd
       run: |
         cd pkscreener/
