@@ -151,7 +151,13 @@ m1 = menus()
 m2 = menus()
 m3 = menus()
 objectDictionary = {}
-
+nse = nseStockDataFetcher()
+try:
+    today = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
+    marketStatus, _ ,tradeDate = nse.capitalMarketStatus()
+except:
+    marketStatus ,tradeDate = None,None
+    pass
 # args.scans = True
 # args.report = True
 # args.intraday = True
@@ -566,7 +572,7 @@ def getFormattedChoices(options):
     return choices
 
 def updateHolidays():
-    holidays, raw = nseStockDataFetcher().updatedHolidays()
+    holidays, raw = nse.updatedHolidays()
     print(holidays)
     import json
     holidays_file = os.path.join(os.getcwd(),".github/dependencies/nse-holidays.json")
@@ -578,10 +584,10 @@ def updateHolidays():
 if args.report:
     generateBacktestReportMainPage()
 if args.backtests:
-    if not PKDateUtilities.isTodayHoliday()[0] or args.force:
+    if marketStatus == "Open" or today == tradeDate or not PKDateUtilities.isTodayHoliday()[0] or args.force:
         triggerBacktestWorkflowActions(args.local)
 if args.scans:
-    if not PKDateUtilities.isTodayHoliday()[0] or args.force:
+    if marketStatus == "Open" or today == tradeDate or not PKDateUtilities.isTodayHoliday()[0] or args.force:
         daysInPast = 0
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
