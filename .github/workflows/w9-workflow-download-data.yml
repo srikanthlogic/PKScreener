@@ -215,6 +215,8 @@ jobs:
     - name: Clean up old historical scan results
       shell: bash
       continue-on-error: true
+      env:
+        RUNNER : "LOCAL_RUN_SCANNER"
       run: |
         python3 .github/workflows/workflowtriggers.py --cleanuphistoricalscans --scanDaysInPast 7 -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13 -s2 0,22,26,27,28,29,30,42,M,Z -s3 0 --branchname actions-data-download
 
@@ -262,12 +264,16 @@ jobs:
     - name: Run Historical Scan on Ubuntu
       shell: bash
       continue-on-error: true
+      env:
+        RUNNER : "LOCAL_RUN_SCANNER"
       if: startsWith(runner.os, 'Linux')
       run: |
         python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download' }}
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
+      env:
+        RUNNER : "LOCAL_RUN_SCANNER"
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       run: |

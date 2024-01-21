@@ -328,6 +328,8 @@ class tools:
         addendum=None,
         addendumLabel=None,
     ):
+        if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
+            return
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         # First 4 lines are headers. Last 1 line is bottom grid line
         fontPath = tools.setupReportFont()
