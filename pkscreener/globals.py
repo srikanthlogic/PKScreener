@@ -672,7 +672,7 @@ def main(userArgs=None):
             + colorText.END
         )
         df_all = PortfolioXRay.summariseAllStrategies()
-        if df_all is not None:
+        if df_all is not None and len(df_all) > 0:
             print(
                 colorText.miniTabulator().tabulate(
                     df_all,
@@ -999,14 +999,15 @@ def main(userArgs=None):
                             + f'Last Scanned: {datetime.now().strftime("%H:%M:%S")}\n'
                             + colorText.END
                         )
-                        print(
-                            colorText.miniTabulator().tabulate(
-                                result_df,
-                                headers="keys",
-                                tablefmt=colorText.No_Pad_GridFormat,
-                                maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
+                        if result_df is not None and len(result_df) > 0:
+                            print(
+                                colorText.miniTabulator().tabulate(
+                                    result_df,
+                                    headers="keys",
+                                    tablefmt=colorText.No_Pad_GridFormat,
+                                    maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
+                                )
                             )
-                        )
                         print("\nPress Ctrl+C to exit.")
                         if len(result_df) != last_result_len and not first_scan:
                             Utility.tools.alertSound(beeps=5)
@@ -1401,27 +1402,28 @@ def printNotifySaveScreenedResults(
         if saveResults is not None and len(saveResults) > 0:
             df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
             targetDateG10k = saveResults["Date"].iloc[0]
-            titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
-            print(f"\n\n{titleLabelG10k}\n")
-            g10kStyledTable = colorText.miniTabulator().tabulate(
-                df,
-                headers="keys",
-                tablefmt=colorText.No_Pad_GridFormat,
-                showindex=False,
-                maxcolwidths=Utility.tools.getMaxColumnWidths(df)
-            )
-            print(g10kStyledTable)
-            g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
-            if not testing and eligible:
-                sendQuickScanResult(
-                    menuChoiceHierarchy,
-                    user,
-                    g10kStyledTable,
-                    g10kUnStyledTable,
-                    titleLabelG10k,
-                    pngName,
-                    pngExtension,
+            if df is not None and len(df) > 0:
+                titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
+                print(f"\n\n{titleLabelG10k}\n")
+                g10kStyledTable = colorText.miniTabulator().tabulate(
+                    df,
+                    headers="keys",
+                    tablefmt=colorText.No_Pad_GridFormat,
+                    showindex=False,
+                    maxcolwidths=Utility.tools.getMaxColumnWidths(df)
                 )
+                print(g10kStyledTable)
+                g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
+                if not testing and eligible:
+                    sendQuickScanResult(
+                        menuChoiceHierarchy,
+                        user,
+                        g10kStyledTable,
+                        g10kUnStyledTable,
+                        titleLabelG10k,
+                        pngName,
+                        pngExtension,
+                    )
         elif user is not None and eligible:
             sendMessageToTelegramChannel(
                 message=f"No scan results found for {menuChoiceHierarchy}", user=user
@@ -1430,10 +1432,12 @@ def printNotifySaveScreenedResults(
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
     removedUnusedColumns(screenResults, saveResults, ["Date"])
 
-    tabulated_results = colorText.miniTabulator().tabulate(
-        screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
-        maxcolwidths=Utility.tools.getMaxColumnWidths(screenResults)
-    )
+    tabulated_results = ""
+    if screenResults is not None and len(screenResults) > 0:
+        tabulated_results = colorText.miniTabulator().tabulate(
+            screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(screenResults)
+        )
     print(tabulated_results)
     _, reportNameInsights = getBacktestReportFilename(
         sortKey="Date", optionalName="Insights"
@@ -1443,7 +1447,7 @@ def printNotifySaveScreenedResults(
         "[+] Strategy that has best results in the past for this scan option:"
     )
     tabulated_strategy = ""
-    if strategy_df is not None:
+    if strategy_df is not None and len(strategy_df) > 0:
         tabulated_strategy = colorText.miniTabulator().tabulate(
             strategy_df,
             headers="keys",
@@ -1476,18 +1480,21 @@ def printNotifySaveScreenedResults(
                 if len(screenResultsTrimmed) > MAX_ALLOWED:
                     screenResultsTrimmed = screenResultsTrimmed.head(MAX_ALLOWED)
                     saveResultsTrimmed = saveResultsTrimmed.head(MAX_ALLOWED)
-                    tabulated_results = colorText.miniTabulator().tabulate(
-                        screenResultsTrimmed,
+                    if saveResultsTrimmed is not None and len(saveResultsTrimmed) > 0:
+                        tabulated_results = colorText.miniTabulator().tabulate(
+                            screenResultsTrimmed,
+                            headers="keys",
+                            tablefmt=colorText.No_Pad_GridFormat,
+                            maxcolwidths=Utility.tools.getMaxColumnWidths(screenResultsTrimmed)
+                        )
+                markdown_results = ""
+                if saveResultsTrimmed is not None and len(saveResultsTrimmed) > 0:
+                    markdown_results = colorText.miniTabulator().tabulate(
+                        saveResultsTrimmed,
                         headers="keys",
                         tablefmt=colorText.No_Pad_GridFormat,
-                        maxcolwidths=Utility.tools.getMaxColumnWidths(screenResultsTrimmed)
+                        maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                     )
-                markdown_results = colorText.miniTabulator().tabulate(
-                    saveResultsTrimmed,
-                    headers="keys",
-                    tablefmt=colorText.No_Pad_GridFormat,
-                    maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
-                )
                 if not testing:
                     sendQuickScanResult(
                         menuChoiceHierarchy,
@@ -1587,21 +1594,13 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
     if detaildf is not None and len(detaildf) > 0:
         if maxAllowed != 0 and len(detaildf) > 2 * maxAllowed:
             detaildf = detaildf.head(2 * maxAllowed)
-            tabulated_backtest_detail = colorText.miniTabulator().tabulate(
-                detaildf,
-                headers="keys",
-                tablefmt=colorText.No_Pad_GridFormat,
-                showindex=False,
-                maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
-            )
-        else:
-            tabulated_backtest_detail = colorText.miniTabulator().tabulate(
-                detaildf,
-                headers="keys",
-                tablefmt=colorText.No_Pad_GridFormat,
-                showindex=False,
-                maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
-            )
+        tabulated_backtest_detail = colorText.miniTabulator().tabulate(
+            detaildf,
+            headers="keys",
+            tablefmt=colorText.No_Pad_GridFormat,
+            showindex=False,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
+        )
     if tabulated_backtest_summary != "":
         print(
             colorText.BOLD
@@ -2002,13 +2001,15 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
             lastSummaryRow.set_index("Stock", inplace=True)
             lastSummaryRow = lastSummaryRow.iloc[:, lastSummaryRow.columns != "Stock"]
         summaryText = f"{summaryText}\nOverall Summary of (correctness of) Strategy Prediction Positive outcomes:"
-    tabulated_text = colorText.miniTabulator().tabulate(
-        backtest_df,
-        headers="keys",
-        tablefmt=colorText.No_Pad_GridFormat,
-        showindex=False,
-        maxcolwidths=Utility.tools.getMaxColumnWidths(backtest_df)
-    )
+    tabulated_text = ""
+    if backtest_df is not None and len(backtest_df) > 0:
+        tabulated_text = colorText.miniTabulator().tabulate(
+            backtest_df,
+            headers="keys",
+            tablefmt=colorText.No_Pad_GridFormat,
+            showindex=False,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(backtest_df)
+        )
     print(colorText.FAIL + summaryText + colorText.END + "\n")
     print(tabulated_text + "\n")
     choices, filename = getBacktestReportFilename(sortKey, optionalName)
