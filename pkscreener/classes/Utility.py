@@ -194,25 +194,28 @@ class tools:
     def getLastScreenedResults(defaultAnswer=None):
         try:
             df = pd.read_pickle(lastScreened)
-            print(
-                colorText.BOLD
-                + colorText.GREEN
-                + "\n[+] Showing recently screened results..\n"
-                + colorText.END
-            )
-            df.sort_values(by=["Volume"], ascending=False, inplace=True)
-            print(
-                colorText.miniTabulator().tabulate(
-                    df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
-                    maxcolwidths=tools.getMaxColumnWidths(df)
+            if df is not None and len(df) > 0:
+                print(
+                    colorText.BOLD
+                    + colorText.GREEN
+                    + "\n[+] Showing recently screened results..\n"
+                    + colorText.END
                 )
-            )
-            print(
-                colorText.BOLD
-                + colorText.WARN
-                + "[+] Note: Trend calculation is based on number of recent days to screen as per your configuration."
-                + colorText.END
-            )
+                df.sort_values(by=["Volume"], ascending=False, inplace=True)
+                print(
+                    colorText.miniTabulator().tabulate(
+                        df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
+                        maxcolwidths=tools.getMaxColumnWidths(df)
+                    )
+                )
+                print(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Note: Trend calculation is based on number of recent days to screen as per your configuration."
+                    + colorText.END
+                )
+            else:
+                print("Nothing to show here!")
         except FileNotFoundError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             print(
@@ -344,11 +347,11 @@ class tools:
 
         artfont_arttext_width, artfont_arttext_height = artfont.getsize_multiline(artText+ f" | {marketStatus()}")
         stdFont_oneLinelabel_width, stdFont_oneLinelabel_height = stdfont.getsize_multiline(label)
-        stdFont_scanResulttext_width, stdFont_scanResulttext_height = stdfont.getsize_multiline(table)
-        stdFont_backtestSummary_text_width,stdFont_backtestSummary_text_height= stdfont.getsize_multiline(backtestSummary)
-        stdFont_backtestDetail_text_width, stdFont_backtestDetail_text_height = stdfont.getsize_multiline(backtestDetail)
-        artfont_scanResultText_width, _ = artfont.getsize_multiline(table)
-        artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary)
+        stdFont_scanResulttext_width, stdFont_scanResulttext_height = stdfont.getsize_multiline(table) if len(table) > 0 else (0,0)
+        stdFont_backtestSummary_text_width,stdFont_backtestSummary_text_height= stdfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
+        stdFont_backtestDetail_text_width, stdFont_backtestDetail_text_height = stdfont.getsize_multiline(backtestDetail) if len(backtestDetail) > 0 else (0,0)
+        artfont_scanResultText_width, _ = artfont.getsize_multiline(table) if len(table) > 0 else (0,0)
+        artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
         stdfont_addendumtext_height = 0
         if addendum is not None and len(addendum) > 0:
             _ , stdfont_addendumtext_height = stdfont.getsize_multiline(addendum)
@@ -378,7 +381,7 @@ class tools:
         ) + int(startColValue * 2)
         im_height = int(
                     artfont_arttext_height # Always
-                    + stdFont_oneLinelabel_height # Title label # Always
+                    + 3*stdFont_oneLinelabel_height # Title label # Always
                     + stdFont_scanResulttext_height + (stdFont_oneLinelabel_height if stdFont_scanResulttext_height > 0 else 0)
                     + stdFont_backtestSummary_text_height + (stdFont_oneLinelabel_height if stdFont_backtestSummary_text_height > 0 else 0)
                     + stdFont_backtestDetail_text_height + (stdFont_oneLinelabel_height if stdFont_backtestDetail_text_height > 0 else 0)
