@@ -1631,6 +1631,8 @@ def sendQuickScanResult(
     addendum=None,
     addendumLabel=None,
 ):
+    if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
+        return
     try:
         Utility.tools.tableToImage(
             markdown_results,
