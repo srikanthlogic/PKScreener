@@ -134,7 +134,11 @@ jobs:
       id: releaseurlsetter
       run: |
         pip3 install requests
+        pip3 install pandas
+        pip3 install pytz
+        pip3 install PKDevTools
         pip3 install pkscreener
+        pip3 install PKNSETools
         python3 .github/workflows/githubutilities.py -d
   
     - name: Download latest executable on Windows
