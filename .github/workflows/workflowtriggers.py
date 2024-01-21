@@ -31,6 +31,7 @@ from time import sleep
 import pandas as pd
 import pytz
 import requests
+from githubutilities import aset_output
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
@@ -155,6 +156,8 @@ nse = nseStockDataFetcher()
 try:
     today = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
     marketStatus, _ ,tradeDate = nse.capitalMarketStatus()
+    aset_output("MARKET_STATUS", marketStatus)
+    aset_output("MARKET_TRADED_TODAY", "1" if (today == tradeDate) else "0")
 except:
     marketStatus ,tradeDate = None,None
     pass
@@ -574,8 +577,9 @@ def getFormattedChoices(options):
     return choices
 
 def updateHolidays():
-    holidays, raw = nse.updatedHolidays()
-    print(holidays)
+    _, raw = nse.updatedHolidays()
+    if raw is None or len(raw) == 0:
+        return
     import json
     holidays_file = os.path.join(os.getcwd(),".github/dependencies/nse-holidays.json")
     with open(holidays_file, "w", encoding='utf-8') as f:
