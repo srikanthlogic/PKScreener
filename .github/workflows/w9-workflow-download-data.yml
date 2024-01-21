@@ -50,7 +50,7 @@ on:
       scanOptions:
         description: 'Scan options for historical scans'
         required: false
-        default: '--reScanForZeroSize --scanDaysInPast 7 -s2 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,42,0,21,22,26,27,28,29,30,31,M,Z -s1 W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14 -s0 S,T,E,U,Z,H,Y,B,G -s3 "0" --branchname actions-data-download --scans --local'
+        default: '--reScanForZeroSize --scanDaysInPast 7 -s2 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,42,0,21,22,26,27,28,29,30,31,M,Z -s1 W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14 -s0 S,T,E,U,Z,H,Y,B,G -s3 "0" --branchname actions-data-download --scans --local -f'
 
   schedule:
   - cron: '58 9 * * 0-6'
@@ -268,7 +268,7 @@ jobs:
         RUNNER : "LOCAL_RUN_SCANNER"
       if: startsWith(runner.os, 'Linux')
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download -f' }}
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
@@ -277,7 +277,7 @@ jobs:
       if: startsWith(runner.os, 'Windows')
       shell: cmd
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download -f' }}
 
     - name: Push Historical scan Data
       shell: bash
