@@ -31,7 +31,6 @@ from time import sleep
 import pandas as pd
 import pytz
 import requests
-from githubutilities import aset_output
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
@@ -153,6 +152,11 @@ m2 = menus()
 m3 = menus()
 objectDictionary = {}
 nse = nseStockDataFetcher()
+
+def aset_output(name, value):
+    if "GITHUB_OUTPUT" in os.environ.keys():
+        with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+            print(f"{name}={value}", file=fh)
 try:
     today = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
     marketStatus, _ ,tradeDate = nse.capitalMarketStatus()
