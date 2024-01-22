@@ -256,6 +256,7 @@ for mnu0 in cmds0:
 
 
 def generateBacktestReportMainPage():
+    generated_date = f"Auto-generated as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}"
     HTMLHEAD_TEXT = """
     <!DOCTYPE html><html>
         <head>
@@ -273,11 +274,14 @@ def generateBacktestReportMainPage():
         <body>
             <span style='background-color:black; color:white;' >
             <span>1. Backtest, Summary and Insights Reports for All Nifty Stocks over the last 30-trading-sessions-periods</span><br />
-            <span>2. Stock-wise report (Click on the link in the 'Stock-wise Report' column) for a given scan strategy shows what profit/loss one would have incurred following that strategy over that given x-trading-period. The percentages are actual gains/losses.</span><br />
-            <span>3. Summary report (Click on the link in the 'Summary Report' column) shows the overall correctness of the strategy outcome for a given period and then overall for all periods combined altogether in the last row. For example, 80 percent in summary report means, the prediction under that strategy was correct 80 percent of the time.</span><br />
-            <span>4. Insights (Click on the link in the 'Insights' column) shows the summary of specific pattern, RSI value, or any other strategy within that scan type that gave the returns (for an investment of 10k) for respective periods.</span><br />
+            <span>2. Stock-wise report (Click on the link in the <span class='r'>'Stock-wise Report'</span> column) for a given scan strategy shows what profit/loss one would have incurred following that strategy over that given x-trading-period. The percentages are actual gains/losses.</span><br />
+            <span>3. Summary report (Click on the link in the <span class='r'>'Summary Report'</span> column) shows the overall correctness of the strategy outcome for a given period and then overall for all periods combined altogether in the last row. For example, 80 percent in summary report means, the prediction under that strategy was correct 80 percent of the time.</span><br />
+            <span>4. Insights (Click on the link in the <span class='r'>'Insights'</span> column) shows the summary of specific pattern, RSI value, or any other strategy within that scan type that gave the returns (for an investment of 10k) for respective periods.</span><br />
             <span>5. This report is just the summary of correctness of predictions for all scan types respectively at one place.</span><br />
             <span><b>Disclaimer: Only for learning purposes! Use at your own risk!</b></span><br />
+    """
+    HTMLHEAD_TEXT = f"{HTMLHEAD_TEXT}<span class='g'>{generated_date}</span><br />"
+    HTMLHEAD_TEXT = HTMLHEAD_TEXT + """
             <table id='resultsTable' style='' >
                 <thead><tr>
                     <th>Srl #</th>
