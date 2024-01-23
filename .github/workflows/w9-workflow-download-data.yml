@@ -282,6 +282,8 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       run: |
         python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download -f' }}
+        echo "STAGED_COMMITS=$(git diff --cached --numstat | wc -l)" >> $GITHUB_OUTPUT
+      id: histRunnnerLinux
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
@@ -291,9 +293,12 @@ jobs:
       shell: cmd
       run: |
         python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scans --local --scanDaysInPast 1 -s2 0,21,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,1,2,3,4,6,7,8,9,10,11,13 -s3 "0" --branchname actions-data-download -f' }}
+        echo "STAGED_COMMITS=$(git diff --cached --numstat | wc -l)" >> $GITHUB_OUTPUT
+      id: histRunnnerWindows
 
     - name: Push Historical scan Data
       shell: bash
+      if: ${{ steps.histRunnnerLinux.outputs.STAGED_COMMITS != 0 || steps.histRunnnerWindows.outputs.STAGED_COMMITS != 0 }}
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com

@@ -1663,7 +1663,7 @@ def reformatTable(summaryText, headerDict, colored_text, sorting=True):
         colored_text = colored_text.replace(
             "<table", f"{tableText}{summaryText}<br /><table"
         )
-        colored_text = colored_text.replace("<table ", "<table id='resultsTable' ")
+        colored_text = colored_text.replace("<table ", "<input type='checkbox' id='chkActualNumbers' name='chkActualNumbers' value='0'><label for='chkActualNumbers'>Sort by actual numbers</label><br><table id='resultsTable' ")
         for key in headerDict.keys():
             if key > 0:
                 colored_text = colored_text.replace(
@@ -1851,7 +1851,7 @@ def updateBacktestResults(
     global elapsed_time
     sellSignal = (
         str(selectedChoice["2"]) in ["6", "7"] and str(selectedChoice["3"]) in ["2"]
-    ) or selectedChoice["2"] in ["15", "16", "19"]
+    ) or selectedChoice["2"] in ["15", "16", "19", "25"]
     backtest_df = backtest(
         result[3],
         result[2],
@@ -1987,13 +1987,13 @@ def sendTestStatus(screenResults, label, user=None):
 
 
 def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_result"):
-    global menuChoiceHierarchy, selectedChoice, userPassedArgs
+    global menuChoiceHierarchy, selectedChoice, userPassedArgs, elapsed_time
     pd.set_option("display.max_rows", 800)
     # pd.set_option("display.max_columns", 20)
     if backtest_df is None:
         return
     backtest_df.drop_duplicates()
-    summaryText = f"As of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
+    summaryText = f"Auto-generated in {round(elapsed_time,2)} sec. as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
     lastSummaryRow = None
     if optionalName != "Summary":
         backtest_df.sort_values(by=[sortKey], ascending=False, inplace=True)
