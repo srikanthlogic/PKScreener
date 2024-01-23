@@ -98,7 +98,11 @@ PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc 
 artText = f"{artText}\nv{VERSION}"
 
 def marketStatus():
-    _,lngStatus,_ = nseFetcher.capitalMarketStatus()
+    lngStatus = None
+    try:
+        _,lngStatus,_ = nseFetcher.capitalMarketStatus()
+    except:
+        pass
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
 art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"

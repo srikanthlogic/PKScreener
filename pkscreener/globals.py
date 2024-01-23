@@ -1719,6 +1719,7 @@ def runScanners(
     testing=False,
 ):
     global selectedChoice, userPassedArgs, elapsed_time
+    result = None
     choices = userReportName(selectedChoice)
     reviewDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
     if userPassedArgs.backtestdaysago is not None:
