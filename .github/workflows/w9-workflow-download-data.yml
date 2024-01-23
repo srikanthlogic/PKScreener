@@ -223,7 +223,8 @@ jobs:
         pip3 install pytz
         pip3 install PKDevTools
         pip3 install PKNSETools
-
+        pip3 install pkscreener
+        
     - name: Clean up old historical scan results
       shell: bash
       if: ${{ inputs.cleanuphistoricalscans == 'Y' }}
