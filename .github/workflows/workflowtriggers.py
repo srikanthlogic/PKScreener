@@ -168,19 +168,23 @@ except:
 # args.scans = True
 # args.report = True
 # args.intraday = True
+# args.updateholidays = True
 # args.backtests = True
+# args.cleanuphistoricalscans = True
 # args.local = True
 # args.triggerRemotely = True
-# args.cleanuphistoricalscans = True
-# args.scanDaysInPast = 1
+# args.scanDaysInPast = 280
 # args.reScanForZeroSize = True
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,B,G"
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,9,10,13"
 # args.skiplistlevel2 ="0,26,27,28,29,30,42,M,Z"
 # args.skiplistlevel3 = "0"
-# args.updateholidays = True
-
+noActionableArguments = not args.report and \
+                        not args.scans and \
+                        not args.backtests and \
+                        not args.cleanuphistoricalscans and \
+                        not args.updateholidays
 if args.skiplistlevel0 is None:
     args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G"])
 if args.skiplistlevel1 is None:
@@ -189,9 +193,14 @@ if args.skiplistlevel2 is None:
     args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,42,M,Z"])
 if args.skiplistlevel3 is None:
     args.skiplistlevel3 = ",".join(["0,1,2,3,4,5,6,7"])
-if not args.report and not args.scans and not args.backtests:
+
+if noActionableArguments:
     # By default, just generate the report
     args.report = True
+    args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G" 
+    args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
+    args.skiplistlevel2 = "0,21,22,26,27,28,29,30,42,M,Z"
+    args.skiplistlevel3 = "0"
 
 cmds0 = m0.renderForMenu(
     selectedMenu=None,
@@ -455,8 +464,8 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 break
 
 def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
-    defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
-    defaultS2 = "42,0,21,22,26,27,28,29,30,31,M,Z"
+    defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13" if args.skiplistlevel1 is None else args.skiplistlevel1
+    defaultS2 = "42,0,21,22,26,27,28,29,30,31,M,Z" if args.skiplistlevel2 is None else args.skiplistlevel2
     runForIndices = [12,5,8,1,11,14]
     runForOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25]
     runForIndicesStr = f" {' , '.join(map(str, runForIndices))} , "

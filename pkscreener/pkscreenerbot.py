@@ -634,10 +634,18 @@ async def sendUpdatedMenu(menuText, update: Update, context, reply_markup):
 async def launchScreener(options, user, context, optionChoices, update):
     try:
         if str(optionChoices.upper()).startswith("B"):
-            optionChoices = optionChoices.replace(" ", "").replace(">", "_")
+            optionChoices = optionChoices.replace(" ", "").replace(">", "_").replace(":","_")
             while optionChoices.endswith("_"):
                 optionChoices = optionChoices[:-1]
-            run_workflow(optionChoices, str(user.id), str(options.upper()))
+            responseText = f"Insights: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Insights_DateSorted.html"
+            responseText = f"{responseText}\n\nSummary: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Summary_StockSorted.html"
+            responseText = f"{responseText}\n\nStock-wise: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_backtest_result_StockSorted.html"
+            responseText = f"{responseText}\n\nOther Reports: https://pkjmesra.github.io/PKScreener/BacktestReports.html"
+            await update.message.reply_text(responseText)
+            await shareUpdateWithChannel(
+                update=update, context=context, optionChoices=optionChoices
+            )
+            # run_workflow(optionChoices, str(user.id), str(options.upper()))
         elif str(optionChoices.upper()).startswith("X"):
             optionChoices = optionChoices.replace(" ", "").replace(">", "_")
             while optionChoices.endswith("_"):
