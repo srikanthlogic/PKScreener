@@ -177,9 +177,9 @@ except:
 # args.reScanForZeroSize = True
 # args.user="-1001785195297"
 # args.skiplistlevel0 ="S,T,E,U,Z,H,Y,B,G"
-# args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,9,10,13"
-# args.skiplistlevel2 ="0,26,27,28,29,30,42,M,Z"
-# args.skiplistlevel3 = "0"
+# args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,12,13"
+# args.skiplistlevel2 ="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26,27,28,29,30,42,M,Z"
+# args.skiplistlevel3 = "0,1,2,3,4,5,6,7"
 noActionableArguments = not args.report and \
                         not args.scans and \
                         not args.backtests and \
@@ -472,22 +472,26 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
     runForOptionsStr = f" {' , '.join(map(str, runForOptions))} , "
     branch = "actions-data-download"
     for index in runForIndices:
-        skip1List = runForIndicesStr.replace(f' {str(index)} , ',f"{defaultS1},").replace(" ","")[:-1]
-        for option in runForOptions:
-            skip2List = runForOptionsStr.replace(f' {str(option)} , ',f"{defaultS2},").replace(" ","")[:-1]
-            postdata = (
-                        '{"ref":"'
-                        + branch
-                        + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
-                        + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} --branchname actions-data-download --scans --local","name":"X_{index}_{option}"'
-                        + (',"cleanuphistoricalscans":"Y"}' if (index == runForIndices[-1] and option==runForOptions[-1]) else "}")
-                        + '}'
-                        )
-            resp = run_workflow("w9-workflow-download-data.yml", postdata)
-            if resp.status_code == 204:
-                sleep(60)
-            else:
-                continue
+        skip1List = runForIndicesStr.replace(f' {str(index)} , ',f"{defaultS1},").replace(" ","")
+        if f"{str(index)}," not in skip1List:
+            skip1List = skip1List[:-1]
+            for option in runForOptions:
+                skip2List = runForOptionsStr.replace(f' {str(option)} , ',f"{defaultS2},").replace(" ","")[:-1]
+                if f"{str(option)}," not in skip2List:
+                    skip2List = skip2List[:-1]
+                    postdata = (
+                                '{"ref":"'
+                                + branch
+                                + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
+                                + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} --branchname actions-data-download --scans --local","name":"X_{index}_{option}"'
+                                + (',"cleanuphistoricalscans":"Y"}' if (index == runForIndices[-1] and option==runForOptions[-1]) else "}")
+                                + '}'
+                                )
+                    resp = run_workflow("w9-workflow-download-data.yml", postdata)
+                    if resp.status_code == 204:
+                        sleep(60)
+                    else:
+                        continue
     
 def tryCommitOutcomes(options,pathSpec=None,delete=False):
     choices = scanChoices(options)
