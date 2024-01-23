@@ -200,6 +200,10 @@ jobs:
       continue-on-error: true
       shell: bash
       run: |
+        pip3 install pandas
+        pip3 install pytz
+        pip3 install PKDevTools
+        pip3 install PKNSETools
         git config user.name github-actions
         git config user.email github-actions@github.com
         git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
