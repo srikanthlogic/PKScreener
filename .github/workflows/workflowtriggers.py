@@ -282,6 +282,8 @@ def generateBacktestReportMainPage():
     """
     HTMLHEAD_TEXT = f"{HTMLHEAD_TEXT}<span class='g'>{generated_date}</span><br />"
     HTMLHEAD_TEXT = HTMLHEAD_TEXT + """
+            <input type="checkbox" id="chkActualNumbers" name="chkActualNumbers" value="0">
+            <label for="chkActualNumbers">Sort by actual numbers</label><br>
             <table id='resultsTable' style='' >
                 <thead><tr>
                     <th>Srl #</th>
