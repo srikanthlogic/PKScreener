@@ -938,8 +938,9 @@ def main(userArgs=None):
                 prediction, pText, sText = screener.getNiftyPrediction(
                     df=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
                 )
+                warningText = "\nNifty AI prediction works best if you request after market is closed. It may not be accurate while market is still open!" if "Open" in Utility.marketStatus() else ""
                 sendMessageToTelegramChannel(
-                    message=f"Today: {Utility.tools.removeAllColorStyles(Utility.marketStatus())}\n Nifty AI prediction for the Next Day: {pText}. {sText}.",
+                    message=f"{Utility.tools.removeAllColorStyles(Utility.marketStatus())}\nNifty AI prediction for the Next Day: {pText}. {sText}.{warningText}",
                     user=user,
                 )
                 if defaultAnswer is None:
