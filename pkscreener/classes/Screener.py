@@ -1132,9 +1132,9 @@ class tools:
         return False
 
     # Validate Lorentzian Classification signal
-    def validateLorentzian(self, df, screenDict, saveDict, lookFor=1):
+    def validateLorentzian(self, df, screenDict, saveDict, lookFor=3):
         data = df.copy()
-        # lookFor: 1-Any, 2-Buy, 3-Sell
+        # lookFor: 1-Buy, 2-Sell, 3-Any
         data = data[::-1]  # Reverse the dataframe
         data = data.rename(
             columns={
@@ -1152,14 +1152,14 @@ class tools:
                     colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
                 )
                 saveDict["Pattern"] = "Lorentzian-Buy"
-                if lookFor != 3: # Not Sell
+                if lookFor != 2: # Not Sell
                     return True
             elif lc.df.iloc[-1]["isNewSellSignal"]:
                 screenDict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + "Lorentzian-Sell" + colorText.END
                 )
                 saveDict["Pattern"] = "Lorentzian-Sell"
-                if lookFor != 2: # Not Buy
+                if lookFor != 1: # Not Buy
                     return True
         except Exception:  # pragma: no cover
             # ValueError: operands could not be broadcast together with shapes (20,) (26,)

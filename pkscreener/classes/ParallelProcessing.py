@@ -419,7 +419,7 @@ class StockConsumer:
                             fullData,
                             screeningDictionary,
                             saveDictionary,
-                            lookFor= 1, #maLength, 1 =Any, 2 =Buy, 3 = Sell
+                            lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
                         )
                         if executeOption == 6 and reversalOption == 7 and not isLorentzian:
                             return None

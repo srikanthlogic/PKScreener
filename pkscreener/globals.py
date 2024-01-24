@@ -69,6 +69,7 @@ from pkscreener.classes.MenuOptions import (
     level3_X_ChartPattern_MenuDict,
     level3_X_PopularStocks_MenuDict,
     level3_X_Reversal_MenuDict,
+    level4_X_Lorenzian_MenuDict,
     menus,
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
@@ -749,15 +750,15 @@ def main(userArgs=None):
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
             reversalOption = int(options[3])
-            if reversalOption == 4 or reversalOption == 6:
+            if reversalOption in [4, 6, 7]:
                 if len(options) >= 5:
                     if str(options[4]).isnumeric():
                         maLength = int(options[4])
                     elif str(options[4]).upper() == "D":
-                        maLength = 50 if reversalOption == 4 else 7
+                        maLength = 50 if reversalOption == 4 else (3 if reversalOption == 7 else 7)
                 elif defaultAnswer == "Y" and user is not None:
                     # bot mode
-                    maLength = 50 if reversalOption == 4 else 7
+                    maLength = 50 if reversalOption == 4 else (3 if reversalOption == 7 else 7)
                 else:
                     reversalOption, maLength = Utility.tools.promptReversalScreening(
                         selectedMenu
@@ -770,6 +771,8 @@ def main(userArgs=None):
             return
         else:
             selectedChoice["3"] = str(reversalOption)
+            if str(reversalOption) == "7":
+                selectedChoice["4"] = str(maLength)
     if executeOption == 7:
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
@@ -1350,6 +1353,11 @@ def updateMenuChoiceHierarchy():
             menuChoiceHierarchy
             + f'>{level3_X_Reversal_MenuDict[selectedChoice["3"]].strip()}'
         )
+        if len(selectedChoice) >= 5 and selectedChoice["3"] == "7":
+            menuChoiceHierarchy = (
+            menuChoiceHierarchy
+            + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["4"]].strip()}'
+        )
     elif selectedChoice["2"] == "7":
         menuChoiceHierarchy = (
             menuChoiceHierarchy
@@ -1459,7 +1467,9 @@ def printNotifySaveScreenedResults(
         print(addendumLabel)
         print(tabulated_strategy)
     if screenResults is not None and len(screenResults) >= 1:
-        title = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b> {"" if selectedChoice["0"] != "G" else "for Date:"+ targetDateG10k}'
+        choiceSegments = menuChoiceHierarchy.split(">")
+        choiceSegments = f"{choiceSegments[-2]} > {choiceSegments[-1]}" if len(choiceSegments)>=4 else f"{choiceSegments[-1]}"
+        title = f'<b>{choiceSegments}</b> {"" if selectedChoice["0"] != "G" else "for Date:"+ targetDateG10k}'
         if (
             ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] != "LOCAL_RUN_SCANNER")
             or "PKDevTools_Default_Log_Level" in os.environ.keys()

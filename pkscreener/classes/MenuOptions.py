@@ -133,6 +133,13 @@ level3_X_StockPerformance_MenuDict = {
     "0": "Cancel",
 }
 
+level4_X_Lorenzian_MenuDict = {
+    "1": "Buy",
+    "2": "Sell",
+    "3": "Any/All",
+    "0": "Cancel",
+}
+
 
 class MenuRenderStyle(Enum):
     STANDALONE = 1
@@ -312,6 +319,16 @@ class menus:
                     )
                 elif selectedMenu.menuKey == "22":
                     return self.renderLevel3_X_StockPerformance_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+            elif selectedMenu.level == 3:
+                self.level = 4
+                # next levelsub-menu of the selected sub-menu
+                if selectedMenu.menuKey == "7":
+                    return self.renderLevel4_X_Lorenzian_Menus(
                         skip=skip,
                         asList=asList,
                         renderStyle=renderStyle,
@@ -548,6 +565,36 @@ class menus:
             )
             return menuText
 
+    def renderLevel4_X_Lorenzian_Menus(
+        self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level4_X_Lorenzian_MenuDict,
+            renderExceptionKeys=["0"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            print(
+                colorText.BOLD
+                + colorText.WARN
+                + "[+] Select an option: "
+                + colorText.END
+            )
+            print(
+                colorText.BOLD
+                + menuText
+                + """
+
+        """
+                + colorText.END
+            )
+            return menuText
 
 # Fundamentally good compnaies but nearing 52 week low
 # https://www.tickertape.in/screener/equity/prebuilt/SCR0005
