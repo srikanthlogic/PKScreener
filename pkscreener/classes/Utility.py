@@ -924,6 +924,7 @@ class tools:
 
     def promptMenus(menu):
         m = menus()
+        m.level = menu.level
         return m.renderForMenu(menu)
 
     # Prompt for Popular stocks
@@ -1004,6 +1005,11 @@ class tools:
                             + colorText.END
                         )
                         raise ValueError
+                elif resp == 7:
+                    m3 = menus()
+                    m3.renderForMenu(menu,asList=True)
+                    lMenu =  m3.find(str(resp))
+                    return 7, tools.promptPopularStocks(lMenu)
                 return resp, None
             raise ValueError
         except ValueError as e:  # pragma: no cover

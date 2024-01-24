@@ -642,6 +642,8 @@ async def launchScreener(options, user, context, optionChoices, update):
             optionChoices = optionChoices.replace(" ", "").replace(">", "_").replace(":","_")
             while optionChoices.endswith("_"):
                 optionChoices = optionChoices[:-1]
+            if str(optionChoices).split("_")[2] == "6" and str(optionChoices).split("_")[3] == "7":
+                optionChoices = f"{optionChoices}_3" # Lorenzian Any/All
             responseText = f"Thank you for choosing {optionChoices}!\n\nHere are the results:\n\nInsights: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Insights_DateSorted.html"
             responseText = f"{responseText}\n\nSummary: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Summary_StockSorted.html"
             responseText = f"{responseText}\n\nStock-wise: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_backtest_result_StockSorted.html"

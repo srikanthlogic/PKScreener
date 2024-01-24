@@ -115,6 +115,12 @@ argParser.add_argument(
     required=required,
 )
 argParser.add_argument(
+    "-s4",
+    "--skiplistlevel4",
+    help="skip list of menus for level 4 menus",
+    required=required,
+)
+argParser.add_argument(
     "--scanDaysInPast",
     help="Number of days in the past for which scan has to be run",
     required=required,
@@ -150,6 +156,7 @@ m0 = menus()
 m1 = menus()
 m2 = menus()
 m3 = menus()
+m4 = menus()
 objectDictionary = {}
 nse = nseStockDataFetcher()
 
@@ -180,6 +187,7 @@ except:
 # args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,12,13"
 # args.skiplistlevel2 ="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,26,27,28,29,30,42,M,Z"
 # args.skiplistlevel3 = "0,1,2,3,4,5,6,7"
+# args.skiplistlevel4 = "0,1,2,3"
 noActionableArguments = not args.report and \
                         not args.scans and \
                         not args.backtests and \
@@ -193,6 +201,8 @@ if args.skiplistlevel2 is None:
     args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,42,M,Z"])
 if args.skiplistlevel3 is None:
     args.skiplistlevel3 = ",".join(["0,1,2,3,4,5,6,7"])
+if args.skiplistlevel4 is None:
+    args.skiplistlevel4 = ",".join(["0"])
 
 if noActionableArguments:
     # By default, just generate the report
@@ -201,7 +211,9 @@ if noActionableArguments:
     args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
     args.skiplistlevel2 = "0,21,22,26,27,28,29,30,42,M,Z"
     args.skiplistlevel3 = "0"
+    args.skiplistlevel4 = "0"
 
+# Find the top level menus, skipping those in the provided list
 cmds0 = m0.renderForMenu(
     selectedMenu=None,
     skip=args.skiplistlevel0.split(","),
@@ -209,9 +221,11 @@ cmds0 = m0.renderForMenu(
     renderStyle=MenuRenderStyle.STANDALONE,
 )
 counter = 1
+# Iterate through the top level menus
 for mnu0 in cmds0:
     p0 = mnu0.menuKey.upper()
     selectedMenu = m0.find(p0)
+    # Find the first level menus, skipping those in the provided list
     cmds1 = m1.renderForMenu(
         selectedMenu=selectedMenu,
         skip=args.skiplistlevel1.split(","),
@@ -221,6 +235,7 @@ for mnu0 in cmds0:
     for mnu1 in cmds1:
         p1 = mnu1.menuKey.upper()
         selectedMenu = m1.find(p1)
+        # Find the 2nd level menus, skipping those in the provided list
         cmds2 = m2.renderForMenu(
             selectedMenu=selectedMenu,
             skip=args.skiplistlevel2.split(","),
@@ -233,6 +248,7 @@ for mnu0 in cmds0:
                 continue
             if p2 in ["6", "7", "21"]:
                 selectedMenu = m2.find(p2)
+                # Find the 3rd level menus, skipping those in the provided list
                 cmds3 = m3.renderForMenu(
                     selectedMenu=selectedMenu,
                     asList=True,
@@ -241,18 +257,47 @@ for mnu0 in cmds0:
                 )
                 for mnu3 in cmds3:
                     p3 = mnu3.menuKey.upper()
-                    p_all = f"{p0}_{p1}_{p2}_{p3}"
-                    if p_all.endswith("_"):
-                        p_all = p_all[:-1]
-                    objectDictionary[counter] = {
-                        "td2": [
-                            mnu1.menuText.strip(),
-                            mnu2.menuText.strip(),
-                            mnu3.menuText.strip(),
-                        ],
-                        "td3": p_all,
-                    }
-                    counter += 1
+                    if p3 == "0":
+                        continue
+                    if p3 in [ "7"]:
+                        selectedMenu = m3.find(p3)
+                        # Find the 2nd level menus, skipping those in the provided list
+                        cmds4 = m4.renderForMenu(
+                            selectedMenu=selectedMenu,
+                            skip=args.skiplistlevel4.split(","),
+                            asList=True,
+                            renderStyle=MenuRenderStyle.STANDALONE,
+                        )
+                        for mnu4 in cmds4:
+                            p4 = mnu4.menuKey.upper()
+                            if p4 == "0":
+                                continue
+                            p_all = f"{p0}_{p1}_{p2}_{p3}_{p4}"
+                            if p_all.endswith("_"):
+                                p_all = p_all[:-1]
+                            objectDictionary[counter] = {
+                                "td2": [
+                                    mnu1.menuText.strip(),
+                                    mnu2.menuText.strip(),
+                                    mnu3.menuText.strip(),
+                                    mnu4.menuText.strip(),
+                                ],
+                                "td3": p_all,
+                            }
+                            counter += 1
+                    else:
+                        p_all = f"{p0}_{p1}_{p2}_{p3}"
+                        if p_all.endswith("_"):
+                            p_all = p_all[:-1]
+                        objectDictionary[counter] = {
+                            "td2": [
+                                mnu1.menuText.strip(),
+                                mnu2.menuText.strip(),
+                                mnu3.menuText.strip(),
+                            ],
+                            "td3": p_all,
+                        }
+                        counter += 1
             else:
                 p_all = f"{p0}_{p1}_{p2}"
                 if p_all.endswith("_"):
