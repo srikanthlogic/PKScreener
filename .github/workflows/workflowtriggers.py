@@ -537,6 +537,17 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
                         sleep(60)
                     else:
                         continue
+    # Finally trigger clean up of historical results
+    postdata = (
+        '{"ref":"'
+        + branch
+        + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
+        + f'--scanDaysInPast 280 -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13 -s2 0,22,26,27,28,29,30,42,M,Z -s3 0 -s4 0 --branchname actions-data-download","name":"X_{index}_{option}_Cleanup"'
+        + (',"cleanuphistoricalscans":"Y"}')
+        + '}'
+        )
+    resp = run_workflow("w9-workflow-download-data.yml", postdata)
+    
     
 def tryCommitOutcomes(options,pathSpec=None,delete=False):
     choices = scanChoices(options)
