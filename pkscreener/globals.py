@@ -1663,7 +1663,7 @@ def reformatTable(summaryText, headerDict, colored_text, sorting=True):
         colored_text = colored_text.replace(
             "<table", f"{tableText}{summaryText}<br /><table"
         )
-        colored_text = colored_text.replace("<table ", "<input type='checkbox' id='chkActualNumbers' name='chkActualNumbers' value='0'><label for='chkActualNumbers'>Sort by actual numbers</label><br><table id='resultsTable' ")
+        colored_text = colored_text.replace("<table ", "<table id='resultsTable' ")
         for key in headerDict.keys():
             if key > 0:
                 colored_text = colored_text.replace(
@@ -2026,6 +2026,8 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
 
     colored_text = backtest_df.to_html(index=False)
     summaryText = summaryText.replace("\n", "<br />")
+    if optionalName == "Summary":
+       summaryText = f"{summaryText}<br /><input type='checkbox' id='chkActualNumbers' name='chkActualNumbers' value='0'><label for='chkActualNumbers'>Sort by actual numbers (Stocks + Date combinations of results. Higher the count, better the prediction reliability)</label><br>"
     colored_text = reformatTable(summaryText, headerDict, colored_text, sorting=True)
     # Delete any pre-existing backtesting report for the same parameters
     filename = os.path.join(scanOutputDirectory(True), filename)
