@@ -166,7 +166,7 @@ jobs:
       continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans --reScanForZeroSize -f' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 7 --triggerRemotely --scans --reScanForZeroSize -f' }}
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
@@ -175,7 +175,7 @@ jobs:
       env:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 5 --triggerRemotely --scans --reScanForZeroSize -f' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 7 --triggerRemotely --scans --reScanForZeroSize -f' }}
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04
