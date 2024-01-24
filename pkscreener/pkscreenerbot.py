@@ -587,17 +587,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
         menuText = f"Thank you for choosing {optionChoices}. You will receive the notification/results in about 1 to 5 minutes except during the maintenance window of 9PM to 6AM IST when the response can be very slow from low cost servers! \n\nConsider donating to help keep this project going:\n\nUPI (India): 8007162973@APL \n\nor\nhttps://github.com/sponsors/pkjmesra?frequency=one-time&sponsor=pkjmesra"
 
-        mns = m0.renderForMenu(asList=True)
-        for mnu in mns:
-            if mnu.menuKey in ["X", "B", "G"]:
-                inlineMenus.append(
-                    InlineKeyboardButton(
-                        mnu.menuText.split("(")[0],
-                        callback_data="C" + str(mnu.menuKey),
-                    )
-                )
-        keyboard = [inlineMenus]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = default_markup(inlineMenus)
         options = ":".join(selection)
         await launchScreener(
             options=options,
@@ -615,10 +605,25 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             )
     except Exception:
         await start(update, context)
-    await sendUpdatedMenu(
-        menuText=menuText, update=update, context=context, reply_markup=reply_markup
-    )
+    if not str(optionChoices.upper()).startswith("B"):
+        await sendUpdatedMenu(
+            menuText=menuText, update=update, context=context, reply_markup=reply_markup
+        )
     return START_ROUTES
+
+def default_markup(inlineMenus):
+    mns = m0.renderForMenu(asList=True)
+    for mnu in mns:
+        if mnu.menuKey in ["X", "B", "G"]:
+            inlineMenus.append(
+                    InlineKeyboardButton(
+                        mnu.menuText.split("(")[0],
+                        callback_data="C" + str(mnu.menuKey),
+                    )
+                )
+    keyboard = [inlineMenus]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    return reply_markup
 
 
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup):
@@ -637,11 +642,17 @@ async def launchScreener(options, user, context, optionChoices, update):
             optionChoices = optionChoices.replace(" ", "").replace(">", "_").replace(":","_")
             while optionChoices.endswith("_"):
                 optionChoices = optionChoices[:-1]
-            responseText = f"Insights: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Insights_DateSorted.html"
+            responseText = f"Thank you for choosing {optionChoices}!\n\nHere are the results:\n\nInsights: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Insights_DateSorted.html"
             responseText = f"{responseText}\n\nSummary: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_Summary_StockSorted.html"
             responseText = f"{responseText}\n\nStock-wise: https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_{optionChoices}_backtest_result_StockSorted.html"
             responseText = f"{responseText}\n\nOther Reports: https://pkjmesra.github.io/PKScreener/BacktestReports.html"
-            await update.message.reply_text(responseText)
+            if update is not None and update.message is not None:
+                await update.message.reply_text(responseText)
+            else:
+                await update.callback_query.edit_message_text(
+                    text=responseText,
+                    reply_markup=default_markup([]),
+                )
             await shareUpdateWithChannel(
                 update=update, context=context, optionChoices=optionChoices
             )
@@ -674,7 +685,10 @@ async def launchScreener(options, user, context, optionChoices, update):
             #         str(user.id),
             #     ]
             # )
-    except Exception:
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(e)
         await start(update, context)
 
 
@@ -1035,7 +1049,7 @@ async def sendRequestSubmitted(optionChoices, update, context):
 
 
 async def shareUpdateWithChannel(update, context, optionChoices=""):
-    query = update.message
+    query = update.message or update.callback_query
     message = f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> began using ({optionChoices}) the bot!"
     await context.bot.send_message(
         chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=ParseMode.HTML
