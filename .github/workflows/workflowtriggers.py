@@ -172,6 +172,8 @@ try:
 except:
     marketStatus ,tradeDate = None,None
     pass
+
+# args.force = True
 # args.scans = True
 # args.report = True
 # args.intraday = True
@@ -604,6 +606,17 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
     return False, fileSize,fileName
 
 def triggerBacktestWorkflowActions(launchLocal=False):
+    dfs = []
+    existing_df = None
+    try:
+        dfs = pd.read_html("https://pkjmesra.github.io/PKScreener/BacktestReports.html")
+    except:
+        pass
+    if len(dfs) > 0:
+        df = dfs[0]
+        if len(df) > 0:
+            existing_df= df
+
     for key in objectDictionary.keys():
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'
@@ -620,6 +633,8 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             if args.branchname is not None:
                 Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
         else:
+            if not shouldRunBacktests(scanOptions,existing_df):
+                continue
             branch = "main"
             postdata = (
                 '{"ref":"'
@@ -643,6 +658,14 @@ def triggerBacktestWorkflowActions(launchLocal=False):
                 break
     if launchLocal:
         sys.exit(0)
+
+def shouldRunBacktests(backtestName="",df=None):
+    shouldRun = True
+    if df is not None:
+        gen_date_row = df[df["Insights"] == backtestName]
+        if gen_date_row is not None:
+            shouldRun = str(gen_date_row["Generated Date"].iloc[0]) != today.replace("-","/")
+    return shouldRun
 
 def getFormattedChoices(options):
     isIntraday = args.intraday
