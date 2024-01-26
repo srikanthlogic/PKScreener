@@ -2064,7 +2064,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         except Exception:
             pass
         finally:
-            oneline_text = f"{oneline_text}<td class='w'>{PKDateUtilities.currentDateTime().strftime('%y/%m/%d')}</td><td class='w'>{round(elapsed_time,2)}</td>"
+            oneline_text = f"{oneline_text}<td class='w'>{PKDateUtilities.currentDateTime().strftime('%Y/%m/%d')}</td><td class='w'>{round(elapsed_time,2)}</td>"
             with open(onelineSummaryFile, "w") as f:
                 f.write(oneline_text)
             Committer.execOSCommand(f"git add {onelineSummaryFile} -f")

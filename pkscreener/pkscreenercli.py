@@ -347,7 +347,7 @@ def runApplicationForScreening(tools):
         print(
             f"{e}\n[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
-        if "RUNNER" in os.environ.keys():
+        if "RUNNER" in os.environ.keys() or ('PKDevTools_Default_Log_Level' in os.environ.keys() and os.environ["PKDevTools_Default_Log_Level"] != str(log.logging.NOTSET)):
             traceback.print_exc()
         if args.v:
             disableSysOut(disable=False)
