@@ -210,6 +210,8 @@ jobs:
         git remote update
         git fetch
         git pull
+        git push -v -u origin +gh-pages
+        git pull
         git add Backtest-Reports/PKScreener_${{ inputs.name }}_backtest_result_StockSorted.html --force
         git add Backtest-Reports/PKScreener_${{ inputs.name }}_Summary_StockSorted.html --force
         git add Backtest-Reports/PKScreener_${{ inputs.name }}_OneLine_Summary.html --force
