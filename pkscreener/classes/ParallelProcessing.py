@@ -254,6 +254,7 @@ class StockConsumer:
                 
                 isConfluence = False
                 isInsideBar = 0
+                isMaReversal = 0
                 isIpoBase = False
                 isMaSupport = False
                 isShortTermBullish = False
