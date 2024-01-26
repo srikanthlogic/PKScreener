@@ -222,6 +222,32 @@ def setupLogger(shouldLog=False, trace=False):
     )
     os.environ["PKDevTools_Default_Log_Level"] = str(log.logging.DEBUG)
 
+def warnAboutDependencies():
+    from pkscreener import Imports
+    if not Imports["talib"]:
+        print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] TA-Lib is not installed. Looking for pandas_ta."
+                + colorText.END
+            )
+        sleep(1)
+        if Imports["pandas_ta"]:
+            print(
+                colorText.BOLD
+                + colorText.GREEN
+                + "[+] Found and falling back on pandas_ta.\n[+] For full coverage(candle patterns), you may wish to read the README file in PKScreener repo : https://github.com/pkjmesra/PKScreener \n[+] or follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
+                + colorText.END
+            )
+            sleep(1)
+        else:
+            print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] Neither ta-lib nor pandas_ta was located. You need at least one of them to continue! \n[+] Please follow instructions from README file under PKScreener repo: https://github.com/pkjmesra/PKScreener"
+                + colorText.END
+            )
+            input("Press any key to try anyway...")
 
 def runApplication():
     from pkscreener.globals import main
@@ -259,7 +285,7 @@ def pkscreenercli():
         # Clear only if this is the first time it's being called from some
         # loop within workflowtriggers.
         Utility.tools.clearScreen()
-
+    warnAboutDependencies()
     if args.prodbuild:
         disableSysOut()
 
