@@ -355,6 +355,8 @@ def generateBacktestReportMainPage():
                     <th>22-Pd</th>
                     <th>30-Pd</th>
                     <th>Overall</th>
+                    <th>Generated Date</th>
+                    <th>Time Taken(sec)</th>
                 </tr></thead>"""
     HTMLFOOTER_TEXT = """
             </table>
