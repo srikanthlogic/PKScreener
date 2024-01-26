@@ -78,7 +78,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False):
     strategy = {}
     if len(dfs) > 0:
         df = dfs[0]
-        if len(dfs) > 0:
+        if len(df) > 0:
             periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
             for period in periods:
                 df.rename(
