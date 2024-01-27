@@ -308,5 +308,5 @@ def test_pkscreenercli_workflow_mode_screening():
             pkscreenercli.args.monitor = False
             pkscreenercli.args.croninterval = None
             pkscreenercli.args.download = False
-            pkscreenercli.pkscreenercli()
+            pkscreenercli.runApplicationForScreening(None)
             mock_disableSysOut.assert_called_with(disable=False)
