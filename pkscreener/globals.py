@@ -576,8 +576,9 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio)
         saveResults.sort_values(by=["Volume"], ascending=False, inplace=True)
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
+        screenResults['Volume'] = screenResults['Volume'].astype(str)
         screenResults.loc[:, "Volume"] = screenResults.loc[:, "Volume"].apply(
-            lambda x: Utility.tools.formatRatio(x, volumeRatio)
+            lambda x: Utility.tools.formatRatio(float(x), volumeRatio)
         )
         saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: str(x) + "x"
@@ -1437,7 +1438,7 @@ def printNotifySaveScreenedResults(
             sendMessageToTelegramChannel(
                 message=f"No scan results found for {menuChoiceHierarchy}", user=user
             )
-    if "Date" in saveResults.columns:
+    if saveResults is not None and "Date" in saveResults.columns:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
     removedUnusedColumns(screenResults, saveResults, ["Date"])
 
