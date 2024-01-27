@@ -326,6 +326,8 @@ def generateBacktestReportMainPage():
                 .g {color:lightgreen;font-weight:bold;} 
                 .w {color:white;font-weight:bold;}
                 .y {color:yellow;}
+                .bg {background-color:darkslategrey;}
+                .bb {background-color:black;}
             </style>
         </head>
         <body>
@@ -366,7 +368,7 @@ def generateBacktestReportMainPage():
         </body>
     </html>
     """
-    TR_OPENER = "\n            <tr>"
+    TR_OPENER = "\n            <tr id='{}' class='{}'>"
     TR_CLOSER = "            </tr>\n"
     TD_GENERAL = "\n                <td>{}</td>"
     TD_GENERAL_OPEN = "\n                {}"
@@ -379,6 +381,7 @@ def generateBacktestReportMainPage():
         "w",
     )
     f.write(HTMLHEAD_TEXT)
+    tr_class = 'bb'
     for key in objectDictionary.keys():
         td2 = " > <br />".join(objectDictionary[key]["td2"])
         td3 = objectDictionary[key]["td3"]
@@ -392,9 +395,10 @@ def generateBacktestReportMainPage():
                     oneline_summary = sf.read()
             except Exception:# pragma: no cover
                 pass
+        category = '_'.join(str(td3).split("_")[:2])
         f.writelines(
             [
-                TR_OPENER,
+                f"{TR_OPENER}".format(str(td3),tr_class + f' {category}'),
                 f"{TD_GENERAL}".format(str(key)),
                 f"{TD_GENERAL}".format(
                     f"{td2}{' (Intraday)' if args.intraday else ''}"
@@ -415,6 +419,7 @@ def generateBacktestReportMainPage():
                 TR_CLOSER,
             ]
         )
+        tr_class = 'bg' if tr_class == 'bb' else 'bb'
     f.write(HTMLFOOTER_TEXT)
     f.close()
 
