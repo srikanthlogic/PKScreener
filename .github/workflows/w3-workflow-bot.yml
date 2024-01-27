@@ -130,8 +130,8 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         shell: bash
         run: |
-          gh run list --status success --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          gh run list --status cancelled --limit 100 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+          gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+          gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
