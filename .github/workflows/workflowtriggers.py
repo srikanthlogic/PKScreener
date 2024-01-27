@@ -22,6 +22,24 @@
     SOFTWARE.
 
 """
+# args.force = True
+# args.scans = True
+# args.report = True
+# args.intraday = True
+# args.updateholidays = True
+# args.backtests = True
+# args.cleanuphistoricalscans = True
+# args.local = True
+# args.triggerRemotely = True
+# args.scanDaysInPast = 280
+# args.reScanForZeroSize = True
+# args.user = "-1001785195297"
+# args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G"
+# args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
+# args.skiplistlevel2 = "0,21,22,26,27,28,29,30,42,M,Z"
+# args.skiplistlevel3 = "0"
+# args.skiplistlevel4 = "0"
+
 import argparse
 import datetime
 import os
@@ -173,24 +191,6 @@ except:
     marketStatus ,tradeDate = None,None
     pass
 
-# args.force = True
-args.scans = True
-# args.report = True
-# args.intraday = True
-# args.updateholidays = True
-# args.backtests = True
-# args.cleanuphistoricalscans = True
-# args.local = True
-# args.triggerRemotely = True
-# args.scanDaysInPast = 280
-# args.reScanForZeroSize = True
-# args.user="-1001785195297"
-
-args.skiplistlevel0 ="S,T,E,U,Z,H,Y,B,G"
-args.skiplistlevel1 ="W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14"
-args.skiplistlevel2 ="0,4,5,8,11,12,13,14,15,16,17,18,19,20,21,22,25,26,27,28,29,30,42,M,Z"
-args.skiplistlevel3 = "0,1,2,4,5,6"
-args.skiplistlevel4 = "0,3"
 noActionableArguments = not args.report and \
                         not args.scans and \
                         not args.backtests and \
@@ -390,7 +390,7 @@ def generateBacktestReportMainPage():
             try:
                 with open(f"Backtest-Reports/{oneline_summary_file}", "r") as sf:
                     oneline_summary = sf.read()
-            except Exception:
+            except Exception:# pragma: no cover
                 pass
         f.writelines(
             [

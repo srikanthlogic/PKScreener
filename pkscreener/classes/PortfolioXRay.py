@@ -35,6 +35,8 @@ def summariseAllStrategies():
     scanSkipIndices = [21, 22]
     indexWithSubindices = [6, 7]
     subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]}
+    indexWithSubLevelindices = [7]
+    subLevelIndices = {7: [1, 2, 3]}
     reportName = "B_12_"
     reports = []
     while scanTypeStartIndex <= scanTypeEndIndex:
@@ -43,7 +45,12 @@ def summariseAllStrategies():
             if scanTypeStartIndex in indexWithSubindices:
                 for subIndex in subIndices[scanTypeStartIndex]:
                     subReportName = f"{reportName}_{subIndex}"
-                    reports.append(subReportName)
+                    if subIndex in indexWithSubLevelindices:
+                        for subLevelIndex in subLevelIndices[subIndex]:
+                            subLevelReportName = f"{subReportName}_{subLevelIndex}"
+                            reports.append(subLevelReportName)
+                    else:
+                        reports.append(subReportName)
             else:
                 reports.append(reportName)
         reportName = "B_12_"

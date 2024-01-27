@@ -457,7 +457,7 @@ class tools:
                 maRev = pktalib.MA(dataCopy["Close"], timeperiod=maLength)
             try:
                 dataCopy.drop("maRev", axis=1, inplace=True, errors="ignore")
-            except Exception:
+            except Exception:# pragma: no cover
                 pass
             dataCopy.insert(len(dataCopy.columns), "maRev", maRev)
             dataCopy = dataCopy[::-1].head(3)

@@ -69,7 +69,7 @@ def test_showDevInfo():
 # Positive test case for setLastScreenedResults() function
 def test_setLastScreenedResults():
     # Mocking the pd.DataFrame.to_pickle() function
-    mock_df = pd.DataFrame()
+    mock_df = pd.DataFrame([{"Stock":"StockName"}])
     with patch("pandas.DataFrame.to_pickle") as mock_to_pickle:
         with patch("pandas.DataFrame.sort_values") as mock_sort_values:
             tools.setLastScreenedResults(mock_df)
@@ -265,7 +265,7 @@ def test_saveStockData():
     loadCount = 2
     try:
         os.remove(os.path.join(Archiver.get_user_outputs_dir(), "stock_data_1.pkl"))
-    except Exception:
+    except Exception:# pragma: no cover
         pass
     with patch(
         "pkscreener.classes.Utility.tools.afterMarketStockDataExists"

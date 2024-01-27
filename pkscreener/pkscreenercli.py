@@ -41,7 +41,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
-except Exception:
+except Exception:# pragma: no cover
     pass
 
 from time import sleep
@@ -50,6 +50,7 @@ from PKDevTools.classes import log as log
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
+from pkscreener import Imports
 import pkscreener.classes.ConfigManager as ConfigManager
 
 multiprocessing.freeze_support()
@@ -83,8 +84,11 @@ def disableSysOut(input=True, disable=True):
         sys.stdout = open(os.devnull, "w")
         sys.__stdout__ = open(os.devnull, "w")
     else:
-        sys.stdout.close()
-        sys.__stdout__.close()
+        try:
+            sys.stdout.close()
+            sys.__stdout__.close()
+        except:# pragma: no cover
+            pass
         sys.stdout = originalStdOut
         sys.__stdout__ = original__stdout
 
@@ -192,7 +196,7 @@ def logFilePath():
         f = open(filePath, "w")
         f.write("Logger file for pkscreener!")
         f.close()
-    except Exception:
+    except Exception:# pragma: no cover
         filePath = os.path.join(tempfile.gettempdir(), "pkscreener-logs.txt")
     return filePath
 
@@ -205,7 +209,7 @@ def setupLogger(shouldLog=False, trace=False):
     if os.path.exists(log_file_path):
         try:
             os.remove(log_file_path)
-        except Exception:
+        except Exception:# pragma: no cover
             pass
     print("[+] Logs will be written to:")
     print(f"[+] {log_file_path}")
@@ -223,7 +227,6 @@ def setupLogger(shouldLog=False, trace=False):
     os.environ["PKDevTools_Default_Log_Level"] = str(log.logging.DEBUG)
 
 def warnAboutDependencies():
-    from pkscreener import Imports
     if not Imports["talib"]:
         print(
                 colorText.BOLD
@@ -260,12 +263,13 @@ def pkscreenercli():
     if sys.platform.startswith("darwin"):
         try:
             multiprocessing.set_start_method("fork")
-        except RuntimeError: #as e:
-            # print(
-            #     "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
-            # )
-            # print(e)
-            # traceback.print_exc()
+        except RuntimeError as e:# pragma: no cover
+            if "RUNNER" not in os.environ.keys() and ('PKDevTools_Default_Log_Level' in os.environ.keys() and os.environ["PKDevTools_Default_Log_Level"] != str(log.logging.NOTSET)):
+                print(
+                    "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
+                )
+                print(e)
+                traceback.print_exc()
             pass
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
@@ -334,7 +338,7 @@ def runApplicationForScreening(tools):
                 scheduleNextRun(tools)
             else:
                 runApplication()
-            if args.exit or args.user is not None:
+            if tools is None or args.exit or args.user is not None or args.testbuild:
                 break
         if args.v:
             disableSysOut(disable=False)

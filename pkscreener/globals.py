@@ -576,8 +576,10 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio)
         saveResults.sort_values(by=["Volume"], ascending=False, inplace=True)
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
+        screenResults['Volume'] = screenResults['Volume'].astype(str)
+        saveResults['Volume'] = saveResults['Volume'].astype(str)
         screenResults.loc[:, "Volume"] = screenResults.loc[:, "Volume"].apply(
-            lambda x: Utility.tools.formatRatio(x, volumeRatio)
+            lambda x: Utility.tools.formatRatio(float(x), volumeRatio)
         )
         saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: str(x) + "x"
@@ -1437,7 +1439,7 @@ def printNotifySaveScreenedResults(
             sendMessageToTelegramChannel(
                 message=f"No scan results found for {menuChoiceHierarchy}", user=user
             )
-    if "Date" in saveResults.columns:
+    if saveResults is not None and "Date" in saveResults.columns:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
     removedUnusedColumns(screenResults, saveResults, ["Date"])
 
@@ -1566,7 +1568,8 @@ def printNotifySaveScreenedResults(
         sendMessageToTelegramChannel(
             message=f"No scan results found for {menuChoiceHierarchy}", user=user
         )
-    Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
+    if not testing:
+        Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
@@ -2043,7 +2046,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     filename = os.path.join(scanOutputDirectory(True), filename)
     try:
         os.remove(filename)
-    except Exception:
+    except Exception:# pragma: no cover
         pass
     finally:
         with open(filename, "w") as f:
@@ -2061,7 +2064,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         )
         try:
             os.remove(onelineSummaryFile)
-        except Exception:
+        except Exception:# pragma: no cover
             pass
         finally:
             oneline_text = f"{oneline_text}<td class='w'>{PKDateUtilities.currentDateTime().strftime('%Y/%m/%d')}</td><td class='w'>{round(elapsed_time,2)}</td>"
