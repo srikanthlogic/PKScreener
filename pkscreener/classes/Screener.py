@@ -84,9 +84,11 @@ class tools:
         self.configManager = configManager
         self.default_logger = default_logger
 
-    # Find stocks that have broken through 52 week low.
+    # Find stocks that have broken through 52 week high.
     def find52WeekHighBreakout(self, df):
         # https://chartink.com/screener/52-week-low-breakout
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -111,6 +113,8 @@ class tools:
 
     # Find stocks' 52 week high/low.
     def find52WeekHighLow(self, df, saveDict, screenDict):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -197,6 +201,8 @@ class tools:
 
     # Find accurate breakout value
     def findBreakingoutNow(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -354,6 +360,8 @@ class tools:
 
     # Find stocks that are bullish intraday: RSI crosses 55, Macd Histogram positive, price above EMA 10
     def findBullishIntradayRSIMACD(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -370,6 +378,8 @@ class tools:
         return cond4
 
     def findNR4Day(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         # https://chartink.com/screener/nr4-daily-today
         if data.tail(1)["Volume"].iloc[0] <= 50000:
@@ -405,6 +415,8 @@ class tools:
     # previous 200 candles, starting from the previous 30th candle. At the
     # same time the current candle volume is higher than 200 SMA of volume.
     def findPotentialBreakout(self, df, screenDict, saveDict, daysToLookback):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -894,6 +906,8 @@ class tools:
         return cond5
 
     def validateBullishForTomorrow(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         # https://chartink.com/screener/bullish-for-tomorrow
         data = data.fillna(0)
