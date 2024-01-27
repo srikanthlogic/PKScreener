@@ -2044,7 +2044,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     filename = os.path.join(scanOutputDirectory(True), filename)
     try:
         os.remove(filename)
-    except Exception:
+    except Exception:# pragma: no cover
         pass
     finally:
         with open(filename, "w") as f:
@@ -2062,7 +2062,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
         )
         try:
             os.remove(onelineSummaryFile)
-        except Exception:
+        except Exception:# pragma: no cover
             pass
         finally:
             oneline_text = f"{oneline_text}<td class='w'>{PKDateUtilities.currentDateTime().strftime('%Y/%m/%d')}</td><td class='w'>{round(elapsed_time,2)}</td>"

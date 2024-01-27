@@ -603,7 +603,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 text=f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> submitted scan request <b>{optionChoices}</b> to the bot!",
                 parse_mode=ParseMode.HTML,
             )
-    except Exception:
+    except Exception:# pragma: no cover
         await start(update, context)
     if not str(optionChoices.upper()).startswith("B"):
         await sendUpdatedMenu(
@@ -632,7 +632,7 @@ async def sendUpdatedMenu(menuText, update: Update, context, reply_markup):
             text=menuText.replace("     ", "").replace("    ", "").replace("\t", ""),
             reply_markup=reply_markup,
         )
-    except Exception:
+    except Exception:# pragma: no cover
         await start(update, context)
 
 
@@ -780,7 +780,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
             await context.bot.send_message(
                 chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=ParseMode.HTML
             )
-    except Exception:
+    except Exception:# pragma: no cover
         try:
             if "telegram.error.Conflict" not in tb_string:
                 await context.bot.send_message(
@@ -788,7 +788,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
                     text=tb_string,
                     parse_mode=ParseMode.HTML,
                 )
-        except Exception:
+        except Exception:# pragma: no cover
             print(tb_string)
 
 

@@ -265,7 +265,7 @@ def test_saveStockData():
     loadCount = 2
     try:
         os.remove(os.path.join(Archiver.get_user_outputs_dir(), "stock_data_1.pkl"))
-    except Exception:
+    except Exception:# pragma: no cover
         pass
     with patch(
         "pkscreener.classes.Utility.tools.afterMarketStockDataExists"

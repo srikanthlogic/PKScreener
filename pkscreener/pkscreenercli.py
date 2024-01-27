@@ -41,7 +41,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
-except Exception:
+except Exception:# pragma: no cover
     pass
 
 from time import sleep
@@ -192,7 +192,7 @@ def logFilePath():
         f = open(filePath, "w")
         f.write("Logger file for pkscreener!")
         f.close()
-    except Exception:
+    except Exception:# pragma: no cover
         filePath = os.path.join(tempfile.gettempdir(), "pkscreener-logs.txt")
     return filePath
 
@@ -205,7 +205,7 @@ def setupLogger(shouldLog=False, trace=False):
     if os.path.exists(log_file_path):
         try:
             os.remove(log_file_path)
-        except Exception:
+        except Exception:# pragma: no cover
             pass
     print("[+] Logs will be written to:")
     print(f"[+] {log_file_path}")
@@ -260,7 +260,7 @@ def pkscreenercli():
     if sys.platform.startswith("darwin"):
         try:
             multiprocessing.set_start_method("fork")
-        except RuntimeError: #as e:
+        except RuntimeError:# pragma: no cover
             # print(
             #     "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
             # )

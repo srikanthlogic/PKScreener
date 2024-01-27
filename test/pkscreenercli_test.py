@@ -172,5 +172,5 @@ def test_pkscreenercli_prodbuild_mode():
 
         signal.signal(signal.SIGBREAK, shutdown)
         signal.signal(signal.SIGTERM, shutdown)
-    except Exception:
+    except Exception:# pragma: no cover
         pass

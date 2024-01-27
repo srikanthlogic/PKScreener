@@ -150,13 +150,13 @@ def backtest(
                 backTestedStock[f"{abs(prd)}-Pd"] = (
                     colored_pct + "%.2f%%" % pct_change + colorText.END
                 )
-            except Exception:
+            except Exception:# pragma: no cover
                 pass
         # Let's capture the portfolio data, if available
         try:
             backTestedStock[f"LTP{prd}"] = saveDict[f"LTP{prd}"]
             backTestedStock[f"Growth{prd}"] = saveDict[f"Growth{prd}"]
-        except Exception:
+        except Exception:# pragma: no cover
             pass
         # else:
         #     del backTestedStock[f"{abs(prd)}-Pd"]
@@ -168,7 +168,7 @@ def backtest(
     df = pd.DataFrame(allStockBacktestData)  # , columns=backTestedData.columns)
     try:
         backTestedData = pd.concat([backTestedData, df])
-    except Exception:
+    except Exception:# pragma: no cover
         pass
     return backTestedData
 

@@ -37,7 +37,7 @@ import pytest
 try:
     shutil.copyfile("pkscreener/.env.dev", ".env.dev")
     sys.path.append(os.path.abspath("pkscreener"))
-except Exception:
+except Exception:# pragma: no cover
     print("This test must be run from the root of the project!")
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.log import default_logger
@@ -75,7 +75,7 @@ try:
     version_components = tag.split(".")
     major_minor = ".".join([version_components[0], version_components[1]])
     last_release = float(major_minor)
-except Exception:
+except Exception:# pragma: no cover
     if r.json()["message"] == "Not Found":
         last_release = 0
 

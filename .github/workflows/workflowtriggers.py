@@ -390,7 +390,7 @@ def generateBacktestReportMainPage():
             try:
                 with open(f"Backtest-Reports/{oneline_summary_file}", "r") as sf:
                     oneline_summary = sf.read()
-            except Exception:
+            except Exception:# pragma: no cover
                 pass
         f.writelines(
             [
