@@ -34,3 +34,4 @@ pkscreener/classes/__pycache__
 *.pdf
 results/*.txt
 results/nse_cookies.pkl
+*.txt

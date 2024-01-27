@@ -1566,7 +1566,8 @@ def printNotifySaveScreenedResults(
         sendMessageToTelegramChannel(
             message=f"No scan results found for {menuChoiceHierarchy}", user=user
         )
-    Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
+    if not testing:
+        Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):

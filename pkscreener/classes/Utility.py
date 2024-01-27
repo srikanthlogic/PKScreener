@@ -924,7 +924,7 @@ class tools:
 
     def promptMenus(menu):
         m = menus()
-        m.level = menu.level
+        m.level = menu.level if menu is not None else 0
         return m.renderForMenu(menu)
 
     # Prompt for Popular stocks
