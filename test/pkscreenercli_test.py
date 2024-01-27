@@ -194,6 +194,7 @@ def test_pkscreenercli_disablesysout():
     originalStdOut = sys.stdout
     original__stdout = sys.__stdout__
     with patch("pkscreener.pkscreenercli.decorator") as mock_decorator:
+        pkscreenercli.originalStdOut = None
         pkscreenercli.disableSysOut(disable=True)
         mock_decorator.assert_called()
         assert sys.stdout != originalStdOut

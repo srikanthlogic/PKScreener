@@ -577,6 +577,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio)
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
+        saveResults['Volume'] = saveResults['Volume'].astype(str)
         screenResults.loc[:, "Volume"] = screenResults.loc[:, "Volume"].apply(
             lambda x: Utility.tools.formatRatio(float(x), volumeRatio)
         )
