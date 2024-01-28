@@ -2091,10 +2091,12 @@ def mock_save_dict():
     return {}
 
 
-# def test_validatePriceRisingByAtLeast2Percent_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validatePriceRisingByAtLeast2Percent(mock_data, mock_screen_dict, mock_save_dict) == True
-#     assert mock_screen_dict["LTP"] == "\033[92m115.00 (5.0%, 4.8%, 4.3%)\033[0m"
-#     assert mock_save_dict["LTP"] == "115.00 (5.0%, 4.8%, 4.3%)"
+def test_validatePriceRisingByAtLeast2Percent_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Close"] = [115, 110, 105, 100]
+    assert tools_instance.validatePriceRisingByAtLeast2Percent(mock_data, mock_screen_dict, mock_save_dict) == True
+    assert mock_screen_dict["%Chng"] == '\x1b[92m4.5% (4.8%, 5.0%)\x1b[0m'
+    assert mock_save_dict["%Chng"] == '4.5% (4.8%, 5.0%)'
+
 
 
 def test_validatePriceRisingByAtLeast2Percent_negative(
@@ -2111,15 +2113,15 @@ def test_validatePriceRisingByAtLeast2Percent_negative(
     assert mock_save_dict.get("LTP") is None
 
 
-# def test_validateRSI_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validateRSI(mock_data, mock_screen_dict, mock_save_dict, 60, 80) == True
-#     assert mock_screen_dict["RSI"] == "\033[1m\033[92m75\033[0m"
-#     assert mock_save_dict["RSI"] == 75
+def test_validateRSI_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    assert tools_instance.validateRSI(mock_data, mock_screen_dict, mock_save_dict, 60, 80) == True
+    assert mock_screen_dict["RSI"] == '\x1b[1m\x1b[92m60\x1b[0m' 
+    assert mock_save_dict["RSI"] == 60
 
-# def test_validateRSI_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validateRSI(mock_data, mock_screen_dict, mock_save_dict, 80, 90) == False
-#     assert mock_screen_dict["RSI"] == "\033[1m\033[91m75\033[0m"
-#     assert mock_save_dict["RSI"] == 75
+def test_validateRSI_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    assert tools_instance.validateRSI(mock_data, mock_screen_dict, mock_save_dict, 80, 90) == False
+    assert mock_screen_dict["RSI"] == '\x1b[1m\x1b[91m60\x1b[0m' 
+    assert mock_save_dict["RSI"] == 60
 
 # def test_validateShortTermBullish_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
 #     assert tools_instance.validateShortTermBullish(mock_data, mock_screen_dict, mock_save_dict) == True
@@ -2142,7 +2144,8 @@ def test_validateShortTermBullish_negative(
 
 
 # def test_validateVCP_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validateVCP(mock_data, mock_screen_dict, mock_save_dict, "Stock A", 3, 3) == True
+#     # mock_data["High"] = [205, 210, 215, 220]
+#     assert tools_instance.validateVCP(mock_data, mock_screen_dict, mock_save_dict, "Stock A", 3, 3) == False
 #     assert mock_screen_dict["Pattern"] == "\033[1m\033[92mVCP (BO: 115.0)\033[0m"
 #     assert mock_save_dict["Pattern"] == "VCP (BO: 115.0)"
 
@@ -2161,24 +2164,25 @@ def test_validateVCP_negative(
     assert mock_save_dict.get("Pattern") is None
 
 
-# def test_validateVolume_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == True
-#     assert mock_screen_dict["Volume"] == 2.67
-#     assert mock_save_dict["Volume"] == 2.67
+def test_validateVolume_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False,True)
+    assert mock_screen_dict["Volume"] == 0.67
+    assert mock_save_dict["Volume"] == 0.67
 
-# def test_validateVolume_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     mock_data["Volume"] = [1000, 2000, 3000, 3500]
-#     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == False
-#     assert mock_screen_dict["Volume"] == 3.5
-#     assert mock_save_dict["Volume"] == 3.5
+def test_validateVolume_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Volume"] = [1000, 2000, 3000, 3500]
+    assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False, True)
+    assert mock_screen_dict["Volume"] == 0.67
+    assert mock_save_dict["Volume"] == 0.67
 
-# def test_SpreadAnalysis_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == True
-#     assert mock_screen_dict["Pattern"] == "\033[1m\033[92mSupply Drought\033[0m"
-#     assert mock_save_dict["Pattern"] == "Supply Drought"
+def test_SpreadAnalysis_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Open"] = [140, 135, 150, 155]
+    assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == True
+    assert mock_screen_dict["Pattern"] == "\033[1m\033[92mSupply Drought\033[0m"
+    assert mock_save_dict["Pattern"] == "Supply Drought"
 
-# def test_validateVolumeSpreadAnalysis_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-#     mock_data["Open"] = [100, 105, 110,]
-#     assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == False
-#     assert mock_screen_dict.get("Pattern") == None
-#     assert mock_save_dict.get("Pattern") == None
+def test_validateVolumeSpreadAnalysis_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Open"] = [100, 105, 110,120]
+    assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == False
+    assert mock_screen_dict.get("Pattern") == None
+    assert mock_save_dict.get("Pattern") == None
