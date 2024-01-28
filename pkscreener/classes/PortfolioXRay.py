@@ -30,6 +30,22 @@ from pkscreener.classes import Utility
 
 
 def summariseAllStrategies():
+    reports = getSavedBacktestReportNames()
+    df_all = None
+    for report in reports:
+        df = bestStrategiesFromSummaryForReport(
+            f"PKScreener_{report}_Insights_DateSorted.html", summary=True,includeLargestDatasets=True
+        )
+        if df is not None:
+            df.insert(loc=0, column="Scanner", value=report)
+            if df_all is not None:
+                df_all = pd.concat([df_all, df], axis=0)
+            else:
+                df_all = df
+    df_all = df_all.replace(np.nan, "-", regex=True)
+    return df_all
+
+def getSavedBacktestReportNames():
     indices = [1,5,8,11,12,14]
     scanSkipIndices = [21, 22]
     indexWithSubindices = [6, 7]
@@ -57,19 +73,7 @@ def summariseAllStrategies():
                     reports.append(reportName)
             reportName = f"B_{index}_"
             scanTypeStartIndex += 1
-    df_all = None
-    for report in reports:
-        df = bestStrategiesFromSummaryForReport(
-            f"PKScreener_{report}_Insights_DateSorted.html", summary=True,includeLargestDatasets=True
-        )
-        if df is not None:
-            df.insert(loc=0, column="Scanner", value=report)
-            if df_all is not None:
-                df_all = pd.concat([df_all, df], axis=0)
-            else:
-                df_all = df
-    df_all = df_all.replace(np.nan, "-", regex=True)
-    return df_all
+    return reports
 
 
 def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
@@ -87,62 +91,72 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
         df = dfs[0]
         if len(df) > 0:
             periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
-            df = df.replace(" %", "", regex=True)
-            df = df.replace("-", np.nan, regex=True)
-            for period in periods:
-                df.rename(
-                    columns={
-                        f"{period}D-%": f"{period}Pd-%",
-                        f"{period}D-10k": f"{period}Pd-10k",
-                    },
-                    inplace=True,
-                )
-                castToFloat(df, period)
-            insights = df[df["ScanType"].astype(str).str.startswith("[SUM]")]
+            insights = cleanupInsightsSummary(df, periods)
             # insights = insights.replace('', np.nan, regex=True)
             # insights = insights.replace('-', np.nan, regex=True)
             dfs = []
             max_best_df = insights.copy()
             max_datasets_df = insights.copy()
             if includeLargestDatasets:
-                max_datasets_df[["ScanTypeSplit", "DatasetSize"]] = max_datasets_df[
-                    "ScanType"
-                ].str.split("(", n=1, expand=True)
-                max_datasets_df["DatasetSize"] = max_datasets_df["DatasetSize"].str.replace(")", "")
-                try:
-                    max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
-                except:
-                    max_datasets_df.loc[:, "DatasetSize"] = max_datasets_df.loc[:, "DatasetSize"].apply(
-                        lambda x: x.split("(")[-1]
-                    )
-                    max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
-                    pass
-                max_size = max_datasets_df["DatasetSize"].max()
-                max_datasets_df = max_datasets_df[(max_datasets_df["DatasetSize"] == max_size)].fillna(0.0)
-                for i in range(0, len(max_datasets_df)):
-                    dfs.append(max_datasets_df.iloc[i])
+                addLargeDatasetInsights(dfs, max_datasets_df)
             
             insights_list = []
             dfs.append(max_best_df)
-            for df in dfs:
-                strategy_percent = {}
-                strategy = {}
-                for prd in periods:
-                    try:
-                        max_p = df[f"{prd}Pd-%"].max()
-                        maxIndexPos = df[f"{prd}Pd-%"].idxmax()
-                        bestScanFilter = str(
-                            df["ScanType"].iloc[maxIndexPos]).replace("[SUM]", "")
-                        resultPoints = bestScanFilter.split("(")[-1]
-                        strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
-                        scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
-                        strategy[f"{prd}-Pd"] = scanType
-                    except:
-                        pass
-                insights_list.extend([strategy, strategy_percent])
+            getMaxBestInsight(summary, dfs, periods, insights_list)
             insights = pd.DataFrame(insights_list).drop_duplicates(ignore_index=True)
             insights.dropna(axis=0, how="all", inplace=True)
     return insights
+
+def cleanupInsightsSummary(df, periods):
+    df = df.replace(" %", "", regex=True)
+    df = df.replace("-", np.nan, regex=True)
+    for period in periods:
+        df.rename(
+                    columns={
+                        f"{period}D-%": f"{period}Pd-%",
+                        f"{period}D-10k": f"{period}Pd-10k",
+                    },
+                    inplace=True,
+                )
+        castToFloat(df, period)
+    insights = df[df["ScanType"].astype(str).str.startswith("[SUM]")]
+    return insights
+
+def getMaxBestInsight(summary, dfs, periods, insights_list):
+    for df in dfs:
+        strategy_percent = {}
+        strategy = {}
+        for prd in periods:
+            try:
+                max_p = df[f"{prd}Pd-%"].max()
+                maxIndexPos = df[f"{prd}Pd-%"].idxmax()
+                bestScanFilter = str(
+                            df["ScanType"].iloc[maxIndexPos]).replace("[SUM]", "")
+                resultPoints = bestScanFilter.split("(")[-1]
+                strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
+                scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
+                strategy[f"{prd}-Pd"] = scanType
+            except:
+                pass
+        insights_list.extend([strategy, strategy_percent])
+
+def addLargeDatasetInsights(dfs, max_datasets_df):
+    max_datasets_df[["ScanTypeSplit", "DatasetSize"]] = max_datasets_df[
+                    "ScanType"
+                ].str.split("(", n=1, expand=True)
+    max_datasets_df["DatasetSize"] = max_datasets_df["DatasetSize"].str.replace(")", "")
+    try:
+        max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
+    except:
+        max_datasets_df.loc[:, "DatasetSize"] = max_datasets_df.loc[:, "DatasetSize"].apply(
+                        lambda x: x.split("(")[-1]
+                    )
+        max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
+        pass
+    max_size = max_datasets_df["DatasetSize"].max()
+    max_datasets_df = max_datasets_df[(max_datasets_df["DatasetSize"] == max_size)].fillna(0.0)
+    for i in range(0, len(max_datasets_df)):
+        dfs.append(max_datasets_df.iloc[i])
 
 def castToFloat(df, prd):
     if f"{prd}Pd-%" in df.columns:
@@ -192,22 +206,105 @@ def xRaySummary(savedResults=None):
 
 def performXRay(savedResults=None, args=None, calcForDate=None):
     if savedResults is not None and len(savedResults) > 0:
-        backtestPeriods = 30  # Max backtest days
-        if args is not None and args.backtestdaysago is not None:
-            backtestPeriods = int(args.backtestdaysago)
-        saveResults = savedResults.copy()
-        for col in saveResults.columns:
-            saveResults.loc[:, col] = saveResults.loc[:, col].apply(
+        backtestPeriods = getbacktestPeriod(args)
+        saveResults = cleanupData(savedResults)
+
+        days = 0
+        df = None
+        periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+        period = periods[days]
+        backtestPeriods = getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults)
+        while periods[days] <= backtestPeriods:
+            period = periods[days]
+            df = getBacktestDataFromCleanedData(args, saveResults, df, period)
+            days += 1
+            if days >= len(periods):
+                break
+        
+        if df is None:
+            return None
+        df = cleanFormattingForStatsData(calcForDate, saveResults, df)
+        return df
+
+def getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults):
+    targetDate = (
+            calcForDate if calcForDate is not None else saveResults["Date"].iloc[0]
+        )
+    today = PKDateUtilities.currentDateTime()
+    gap = PKDateUtilities.trading_days_between(
+            PKDateUtilities.dateFromYmdString(targetDate)
+            .replace(tzinfo=today.tzinfo)
+            .date(),
+            today.date(),
+        )
+    backtestPeriods = gap if gap > backtestPeriods else backtestPeriods
+    return backtestPeriods
+
+def cleanFormattingForStatsData(calcForDate, saveResults, df):
+    df = df[
+            [
+                col
+                for col in df.columns
+                if ("ScanType" in col or "Pd-%" in col or "Pd-10k" in col)
+            ]
+        ]
+    df = df.replace(999999999, np.nan, regex=True)
+    df.dropna(axis=0, how="all", inplace=True)
+    df = formatGridOutput(df)
+    df.insert(
+            1,
+            "Date",
+            calcForDate if calcForDate is not None else saveResults["Date"].iloc[0],
+        )
+    
+    return df
+
+def getBacktestDataFromCleanedData(args, saveResults, df, period):
+    saveResults[f"LTP{period}"] = (
+                saveResults[f"LTP{period}"].astype(float).fillna(0.0)
+            )
+    saveResults[f"Growth{period}"] = (
+                saveResults[f"Growth{period}"].astype(float).fillna(0.0)
+            )
+
+    scanResults = statScanCalculations(args, saveResults, period)
+
+    df_grouped = saveResults.groupby("Pattern")
+    for pattern, df_group in df_grouped:
+        if pattern is None or len(pattern) == 0:
+            pattern = "No Pattern"
+        scanResults.append(
+                    getCalculatedValues(df_group, period, f"[P]{pattern}", args)
+                )
+
+    scanResults.append(
+                getCalculatedValues(saveResults, period, "NoFilter", args)
+            )
+
+    if df is None:
+        df = pd.DataFrame(scanResults)
+    else:
+        df1 = pd.DataFrame(scanResults)
+        df_target = df1[
+                    [col for col in df1.columns if ("Pd-%" in col or "Pd-10k" in col)]
+                ]
+        df = pd.concat([df, df_target], axis=1)
+    return df
+
+def cleanupData(savedResults):
+    saveResults = savedResults.copy()
+    for col in saveResults.columns:
+        saveResults.loc[:, col] = saveResults.loc[:, col].apply(
                 lambda x: Utility.tools.removeAllColorStyles(x)
             )
 
-        saveResults["LTP"] = saveResults["LTP"].astype(float).fillna(0.0)
-        saveResults["RSI"] = saveResults["RSI"].astype(float).fillna(0.0)
-        saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
+    saveResults["LTP"] = saveResults["LTP"].astype(float).fillna(0.0)
+    saveResults["RSI"] = saveResults["RSI"].astype(float).fillna(0.0)
+    saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: x.replace("x", "")
         )
-        if "Consol.(30Prds)" not in saveResults.columns:
-            saveResults.rename(
+    if "Consol.(30Prds)" not in saveResults.columns:
+        saveResults.rename(
                 columns={
                     "Consol.": "Consol.(30Prds)",
                     "Trend": "Trend(30Prds)",
@@ -215,154 +312,138 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                 },
                 inplace=True,
             )
-        saveResults.loc[:, "Consol.(30Prds)"] = saveResults.loc[
+    saveResults.loc[:, "Consol.(30Prds)"] = saveResults.loc[
             :, "Consol.(30Prds)"
         ].apply(lambda x: x.replace("Range:", "").replace("%", ""))
-        saveResults[["Breakout", "Resistance"]] = saveResults[
+    saveResults[["Breakout", "Resistance"]] = saveResults[
             "Breakout(30Prds)"
         ].str.split(" R: ", n=1, expand=True)
-        saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
+    saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
             lambda x: x.replace("BO: ", "").replace(" ", "")
         )
-        saveResults.loc[:, "Resistance"] = saveResults.loc[
+    saveResults.loc[:, "Resistance"] = saveResults.loc[
             :, "Resistance"
         ].apply(lambda x: x.replace("(Potential)", ""))
-        saveResults["Volume"] = saveResults["Volume"].astype(float).fillna(0.0)
-        saveResults["Consol.(30Prds)"] = (
+    saveResults["Volume"] = saveResults["Volume"].astype(float).fillna(0.0)
+    saveResults["Consol.(30Prds)"] = (
             saveResults["Consol.(30Prds)"].astype(float).fillna(0.0)
         )
-        saveResults["Breakout"] = saveResults["Breakout"].astype(float).fillna(0.0)
-        saveResults["Resistance"] = saveResults["Resistance"].astype(float).fillna(0.0)
-        saveResults["52Wk H"] = saveResults["52Wk H"].astype(float).fillna(0.0)
-        saveResults["52Wk L"] = saveResults["52Wk L"].astype(float).fillna(0.0)
-        saveResults["CCI"] = saveResults["CCI"].astype(float).fillna(0.0)
+    saveResults["Breakout"] = saveResults["Breakout"].astype(float).fillna(0.0)
+    saveResults["Resistance"] = saveResults["Resistance"].astype(float).fillna(0.0)
+    saveResults["52Wk H"] = saveResults["52Wk H"].astype(float).fillna(0.0)
+    saveResults["52Wk L"] = saveResults["52Wk L"].astype(float).fillna(0.0)
+    saveResults["CCI"] = saveResults["CCI"].astype(float).fillna(0.0)
+    return saveResults
 
-        days = 0
-        df = None
-        periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
-        period = periods[days]
-        targetDate = (
-            calcForDate if calcForDate is not None else saveResults["Date"].iloc[0]
-        )
-        today = PKDateUtilities.currentDateTime()
-        gap = PKDateUtilities.trading_days_between(
-            PKDateUtilities.dateFromYmdString(targetDate)
-            .replace(tzinfo=today.tzinfo)
-            .date(),
-            today.date(),
-        )
-        backtestPeriods = gap if gap > backtestPeriods else backtestPeriods
-        while periods[days] <= backtestPeriods:
-            period = periods[days]
-            saveResults[f"LTP{period}"] = (
-                saveResults[f"LTP{period}"].astype(float).fillna(0.0)
-            )
-            saveResults[f"Growth{period}"] = (
-                saveResults[f"Growth{period}"].astype(float).fillna(0.0)
-            )
+def getbacktestPeriod(args):
+    backtestPeriods = 30  # Max backtest days
+    if args is not None and args.backtestdaysago is not None:
+        backtestPeriods = int(args.backtestdaysago)
+    return backtestPeriods
 
-            scanResults = []
-            scanResults.append(
+def statScanCalculations(args, saveResults, period):
+    scanResults = []
+    scanResults.append(
                 getCalculatedValues(
                     filterRSIAbove50(saveResults), period, "RSI>=50", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterRSI50To67(saveResults), period, "RSI<=67", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterRSI68OrAbove(saveResults), period, "RSI>=68", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendStrongUp(saveResults), period, "[T]StrongUp", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendWeakUp(saveResults), period, "[T]WeakUp", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendUp(saveResults), period, "[T]TrendUp", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendStrongDown(saveResults), period, "[T]StrongDown", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendWeakDown(saveResults), period, "[T]WeakDown", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendSideways(saveResults), period, "[T]Sideways", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterTrendDown(saveResults), period, "[T]TrendDown", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalBullish(saveResults), period, "[MA]Bull", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalBearish(saveResults), period, "[MA]Bear", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalNeutral(saveResults), period, "[MA]Neutral", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalBullCross(saveResults), period, "[MA]BullCross", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalBearCross(saveResults), period, "[MA]BearCross", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalSupport(saveResults), period, "[MA]Support", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterMASignalResist(saveResults), period, "[MA]Resist", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterVolumeLessThan25(saveResults), period, "Vol<2.5", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterConsolidating10Percent(saveResults), period, "Cons.<=10", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterConsolidatingMore10Percent(saveResults),
                     period,
@@ -370,12 +451,12 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPLessThanBreakout(saveResults), period, "[BO]LTP<BO", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPMoreOREqualBreakout(saveResults),
                     period,
@@ -383,12 +464,12 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPLessThanResistance(saveResults), period, "[BO]LTP<R", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPMoreOREqualResistance(saveResults),
                     period,
@@ -396,12 +477,12 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPMoreOREqual52WkH(saveResults), period, "[52Wk]LTP>=H", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPWithin90Percent52WkH(saveResults),
                     period,
@@ -409,7 +490,7 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPLess90Percent52WkH(saveResults),
                     period,
@@ -417,12 +498,12 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPMore52WkL(saveResults), period, "[52Wk]LTP>L", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPWithin90Percent52WkL(saveResults),
                     period,
@@ -430,79 +511,38 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
                     args,
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterLTPLess52WkL(saveResults), period, "[52Wk]LTP<=L", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterCCIBelowMinus100(saveResults), period, "[CCI]<=-100", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterCCIBelow0(saveResults), period, "[CCI]-100<C<0", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterCCI0To100(saveResults), period, "[CCI]0<=C<=100", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterCCI100To200(saveResults), period, "[CCI]100<C<=200", args
                 )
             )
-            scanResults.append(
+    scanResults.append(
                 getCalculatedValues(
                     filterCCIAbove200(saveResults), period, "[CCI]>200", args
                 )
             )
-
-            df_grouped = saveResults.groupby("Pattern")
-            for pattern, df_group in df_grouped:
-                if pattern is None or len(pattern) == 0:
-                    pattern = "No Pattern"
-                scanResults.append(
-                    getCalculatedValues(df_group, period, f"[P]{pattern}", args)
-                )
-
-            scanResults.append(
-                getCalculatedValues(saveResults, period, "NoFilter", args)
-            )
-
-            if df is None:
-                df = pd.DataFrame(scanResults)
-            else:
-                df1 = pd.DataFrame(scanResults)
-                df_target = df1[
-                    [col for col in df1.columns if ("Pd-%" in col or "Pd-10k" in col)]
-                ]
-                df = pd.concat([df, df_target], axis=1)
-            days += 1
-            if days >= len(periods):
-                break
-        
-        if df is None:
-            return None
-        df = df[
-            [
-                col
-                for col in df.columns
-                if ("ScanType" in col or "Pd-%" in col or "Pd-10k" in col)
-            ]
-        ]
-        df = df.replace(999999999, np.nan, regex=True)
-        df.dropna(axis=0, how="all", inplace=True)
-        df = formatGridOutput(df)
-        df.insert(
-            1,
-            "Date",
-            calcForDate if calcForDate is not None else saveResults["Date"].iloc[0],
-        )
-        return df
+    
+    return scanResults
 
 
 def formatGridOutput(df):
