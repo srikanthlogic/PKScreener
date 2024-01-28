@@ -203,6 +203,7 @@ def logFilePath():
 
 def setupLogger(shouldLog=False, trace=False):
     if not shouldLog:
+        del os.environ['PKDevTools_Default_Log_Level']
         return
     log_file_path = logFilePath()
 
@@ -326,17 +327,22 @@ def pkscreenercli():
         runApplication()
         sys.exit(0)
     else:
-        runApplicationForScreening(Utility.tools)
+        runApplicationForScreening()
 
+def runLoopOnScheduleOrStdApplication(hasCronInterval):
+    if hasCronInterval:
+        scheduleNextRun()
+    else:
+        runApplication()
 
-def runApplicationForScreening(tools):
+def runApplicationForScreening():
     try:
+        shouldBreak = args.exit or args.user is not None or args.testbuild
+        hasCronInterval = args.croninterval is not None and str(args.croninterval).isnumeric()
+        runLoopOnScheduleOrStdApplication(hasCronInterval)
         while True:
-            if args.croninterval is not None and str(args.croninterval).isnumeric():
-                scheduleNextRun(tools)
-            else:
-                runApplication()
-            if tools is None or args.exit or args.user is not None or args.testbuild:
+            runLoopOnScheduleOrStdApplication(hasCronInterval)
+            if shouldBreak:
                 break
         if args.v:
             disableSysOut(disable=False)
@@ -357,7 +363,7 @@ def runApplicationForScreening(tools):
         sys.exit(0)
 
 
-def scheduleNextRun(tools):
+def scheduleNextRun():
     sleepUntilNextExecution = not PKDateUtilities.isTradingTime()
     while sleepUntilNextExecution:
         print(
