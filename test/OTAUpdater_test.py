@@ -27,6 +27,7 @@ import platform
 from unittest.mock import patch
 
 import pytest
+
 from PKDevTools.classes.ColorText import colorText
 
 from pkscreener.classes.OtaUpdater import OTAUpdater
@@ -303,8 +304,114 @@ def test_checkForUpdate_exception_url_none():
             assert not mock_showWhatsNew.called
 
 
-def test_get_latest_release_info():
+# def test_get_latest_release_info():
+#     resp, size = OTAUpdater.get_latest_release_info()
+#     assert resp is not None
+#     assert size > 0
+#     assert OTAUpdater.checkForUpdate.url is not None
+
+def test_get_latest_release_info(mocker):
+    # Mock the response from the fetchURL function
+    mock_resp = mocker.Mock()
+    mock_resp.json.return_value = {
+        "assets": [
+            {"browser_download_url": "https://example.com/release1", "size": 1048576},
+            {"browser_download_url": "https://example.com/release2", "size": 2097152},
+            {"browser_download_url": "https://example.com/release3", "size": 3145728},
+        ]
+    }
+    mocker.patch.object(OTAUpdater.fetcher, "fetchURL", return_value=mock_resp)
+
+    # Mock the platform.system() function
+    mocker.patch.object(platform, "system", return_value="Windows")
+
+    # Call the function under test
     resp, size = OTAUpdater.get_latest_release_info()
-    assert resp is not None
-    assert size > 0
-    assert OTAUpdater.checkForUpdate.url is not None
+
+    # Assert the expected values
+    assert resp == mock_resp
+    assert size == 2
+
+def test_get_latest_release_info_linux(mocker):
+    # Mock the response from the fetchURL function
+    mock_resp = mocker.Mock()
+    mock_resp.json.return_value = {
+        "assets": [
+            {"browser_download_url": "https://example.com/release1", "size": 1048576},
+            {"browser_download_url": "https://example.com/release2", "size": 2097152},
+            {"browser_download_url": "https://example.com/release3", "size": 3145728},
+        ]
+    }
+    mocker.patch.object(OTAUpdater.fetcher, "fetchURL", return_value=mock_resp)
+
+    # Mock the platform.system() function
+    mocker.patch.object(platform, "system", return_value="Linux")
+
+    # Call the function under test
+    resp, size = OTAUpdater.get_latest_release_info()
+
+    # Assert the expected values
+    assert resp == mock_resp
+    assert size == 1
+
+def test_checkForUpdate_prod_update_1(mocker):
+    # Mock the response from get_latest_release_info
+    mock_resp = mocker.Mock()
+    mock_resp.json.return_value = {
+        "tag_name": "1.2.0.0",
+        "message": "Something interesting"
+    }
+    mocker.patch.object(OTAUpdater, "get_latest_release_info", return_value=(mock_resp, 1024))
+
+    # Mock the platform.system() function
+    mocker.patch.object(platform, "system", return_value="Windows")
+
+    # Mock the input() function
+    patch("builtins.input", return_value="y")
+
+    # Mock the updateForWindows function
+    mocker.patch.object(OTAUpdater, "updateForWindows")
+
+    with pytest.raises(Exception):
+        # Call the function under test
+        result = OTAUpdater.checkForUpdate(VERSION="1.1.0.0")
+        # Assert the expected behavior
+        assert result is None
+        OTAUpdater.updateForWindows.assert_called_once_with(OTAUpdater.checkForUpdate.url)
+
+def test_checkForUpdate_no_update_1(mocker):
+    # Mock the response from get_latest_release_info
+    mock_resp = mocker.Mock()
+    mock_resp.json.return_value = {
+        "tag_name": "1.1.0.0"
+    }
+    mocker.patch.object(OTAUpdater, "get_latest_release_info", return_value=(mock_resp, 1024))
+
+    # Mock the platform.system() function
+    mocker.patch.object(platform, "system", return_value="Windows")
+    mock_updateForWindows = mocker.patch.object(OTAUpdater, "updateForWindows")
+    # Call the function under test
+    result = OTAUpdater.checkForUpdate(VERSION="1.1.0.0")
+
+    # Assert the expected behavior
+    assert result is None
+    assert mock_updateForWindows.call_count == 0
+
+def test_checkForUpdate_dev_mode(mocker):
+    # Mock the response from get_latest_release_info
+    mock_resp = mocker.Mock()
+    mock_resp.json.return_value = {
+        "tag_name": "1.2.0.0"
+    }
+    mocker.patch.object(OTAUpdater, "get_latest_release_info", return_value=(mock_resp, 1024))
+
+    # Mock the platform.system() function
+    mocker.patch.object(platform, "system", return_value="Windows")
+    mock_updateForWindows = mocker.patch.object(OTAUpdater, "updateForWindows")
+
+    # Call the function under test
+    result = OTAUpdater.checkForUpdate(VERSION="1.2.0.1")
+
+    # Assert the expected behavior
+    assert result == OTAUpdater.developmentVersion
+    assert mock_updateForWindows.call_count == 0

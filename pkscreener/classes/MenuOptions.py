@@ -242,7 +242,7 @@ class menus:
         tabLevel = 0
         self.menuDict = {}
         for key in rawDictionary:
-            if key in skip:
+            if skip is not None and key in skip:
                 continue
             m = menu()
             m.create(

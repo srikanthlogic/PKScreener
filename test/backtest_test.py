@@ -33,7 +33,7 @@ import pytest
 from pkscreener.classes import Utility
 from pkscreener.classes.Backtest import backtest, backtestSummary
 
-
+@pytest.fixture
 def sample_data():
     data = pd.DataFrame(
         {
@@ -78,17 +78,18 @@ def test_backtest_no_data():
     assert result is None
 
 
-def test_backtest_no_strategy():
-    result = backtest("AAPL", sample_data(), saveDict=None, screenedDict=None)
+def test_backtest_no_strategy(sample_data):
+    result = backtest("AAPL", sample_data, saveDict=None, screenedDict=None)
     assert result is None
 
 
-def test_backtest_with_data_and_strategy(sample_screened_dict):
+def test_backtest_with_data_and_strategy(sample_screened_dict,sample_data):
     result = backtest(
         "AAPL",
-        sample_data(),
+        sample_data,
         saveDict=sample_screened_dict,
         screenedDict=sample_screened_dict,
+        sellSignal=True
     )
     assert isinstance(result, pd.DataFrame)
     assert len(result) == 1
@@ -302,3 +303,68 @@ def test_formattedOutput():
     assert Utility.tools.formattedBacktestOutput(85) == "\x1b[92m85.00%\x1b[0m"
     assert Utility.tools.formattedBacktestOutput(70) == "\x1b[93m70.00%\x1b[0m"
     assert Utility.tools.formattedBacktestOutput(40) == "\x1b[91m40.00%\x1b[0m"
+
+
+def test_backtest(sample_data):
+    stock = "AAPL"
+    saveDict = None
+    screenedDict = {
+        "Consol.": True,
+        "Breakout": False,
+        "MA-Signal": True,
+        "Volume": False,
+        "LTP": True,
+        "52Wk H": False,
+        "52Wk L": True,
+        "RSI": True,
+        "Trend": False,
+        "Pattern": True,
+        "CCI": False
+    }
+    periods = 30
+    backTestedData = None
+    sellSignal = False
+
+    result = backtest(stock, sample_data, saveDict, screenedDict, periods, backTestedData, sellSignal)
+
+    assert result is not None
+
+def test_backtest_no_data_empty():
+    stock = "AAPL"
+    data = None
+    saveDict = None
+    screenedDict = {
+        "Consol.": True,
+        "Breakout": False,
+        "MA-Signal": True,
+        "Volume": False,
+        "LTP": True,
+        "52Wk H": False,
+        "52Wk L": True,
+        "RSI": True,
+        "Trend": False,
+        "Pattern": True,
+        "CCI": False
+    }
+    periods = 30
+    backTestedData = None
+    sellSignal = False
+
+    result = backtest(stock, data, saveDict, screenedDict, periods, 30, backTestedData, sellSignal)
+    assert result is None
+    backTestedData = pd.DataFrame([{}])
+    result = backtest(stock, pd.DataFrame(), saveDict, screenedDict, periods, 1, backTestedData, sellSignal)
+    pd.testing.assert_frame_equal(result,backTestedData)
+
+def test_backtestSummary_2row_summary():
+    df = pd.DataFrame({
+        "Stock": ["AAPL", "AAPL", "AAPL"],
+        "1-Pd": [1, 0, 1],
+        "2-Pd": [0, 1, 0],
+        "Overall": [50.0, 50.0, 50.0]
+    })
+
+    result = backtestSummary(df)
+
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 2

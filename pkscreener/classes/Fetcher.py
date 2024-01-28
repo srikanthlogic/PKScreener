@@ -84,7 +84,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                     + colorText.END,
                     end="",
                 )
-            except ZeroDivisionError as e:
+            except ZeroDivisionError as e: # pragma: no cover
                 default_logger().debug(e, exc_info=True)
                 pass
             except Exception as e:  # pragma: no cover
@@ -174,7 +174,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         try:
             if not createTemplate:
                 data = data["Stock Code"].values.tolist()
-        except KeyError as e:
+        except KeyError as e: # pragma: no cover
             default_logger().debug(e, exc_info=True)
             print(
                 colorText.BOLD

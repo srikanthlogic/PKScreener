@@ -48,7 +48,7 @@ def backtest(
     sellSignal=False,
 ):
     if stock == "" or data is None:
-        print(f"No data/stock{(stock)} received for backtesting!")
+        print(f"No data/stock {(stock)} received for backtesting!")
         return
     if screenedDict is None or len(screenedDict) == 0:
         print(f"{(stock)}No backtesting strategy or screened dictionary received!")
@@ -67,9 +67,9 @@ def backtest(
     previous_recent = data.head(
         1
     )  # This is the row which has the date for which the recommendation is valid
-    previous_recent.reset_index(inplace=True)
     if len(previous_recent) <= 0:
         return backTestedData
+    previous_recent.reset_index(inplace=True)
     data = data.head(periods + 1)
     # Let's check the returns for the given strategy over a period ranging from 1 period to 30 periods.
     if backTestedData is None:

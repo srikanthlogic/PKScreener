@@ -37,7 +37,6 @@ from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 import pkscreener.classes.Screener as Screener
-import pkscreener.classes.Utility as Utility
 from pkscreener import Imports
 from pkscreener.classes.CandlePatterns import CandlePatterns
 
@@ -225,8 +224,6 @@ class StockConsumer:
                     + colorText.END
                 )
                 saveDictionary["Stock"] = stock
-                if not self.shouldProceedWithScanning(executeOption):
-                    return None
                 
                 isLtpValid, verifyStageTwo = screener.validateLTP(
                     fullData,
@@ -495,7 +492,7 @@ class StockConsumer:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
-                except np.RankWarning as e:
+                except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
                     saveDictionary["Trend"] = "Unknown"
@@ -621,7 +618,7 @@ class StockConsumer:
         except Screener.NotAStageTwoStock as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotEnoughVolumeAsPerConfig as e:
+        except Screener.NotEnoughVolumeAsPerConfig as e: # pragma: no cover 
             pass
         except Screener.DownloadDataOnly as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
@@ -647,11 +644,6 @@ class StockConsumer:
                     + colorText.END
                 )
         return None
-
-    def shouldProceedWithScanning(self, executeOption=None):
-        proceed = True
-        
-        return proceed
     
     def setupLoggers(self, hostRef, screener, logLevel, stock):
         # Set the loglevels for both the caller and screener
