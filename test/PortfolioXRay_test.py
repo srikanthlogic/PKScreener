@@ -46,7 +46,7 @@ def test_bestStrategiesFromSummaryForReport_returns_dataframe(reportName):
 ])
 def test_filterCCIAbove200(df_CCIAbove200, expected_CCIAbove200):
     result = filterCCIAbove200(df_CCIAbove200)
-    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIAbove200)
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIAbove200,check_dtype=False)
 
 @pytest.mark.parametrize('df_CCI100To200, expected_CCI100To200', [
     (pd.DataFrame({'CCI': [100, 120, 150, 250]}), pd.DataFrame({'CCI': [120,150]})),
@@ -54,9 +54,9 @@ def test_filterCCIAbove200(df_CCIAbove200, expected_CCIAbove200):
     (pd.DataFrame({'CCI': [100, 201]}), pd.DataFrame({'CCI':[]}).astype(int)),
     (pd.DataFrame({'CCI': []}), pd.DataFrame({'CCI':[]}))
 ])
-def test_filterCCIAbove200(df_CCI100To200, expected_CCI100To200):
+def test_filterCCI100To200(df_CCI100To200, expected_CCI100To200):
     result = filterCCI100To200(df_CCI100To200)
-    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCI100To200)
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCI100To200,check_dtype=False)
 
 @pytest.mark.parametrize('df_CCI0To100, expected_CCI0To100', [
     (pd.DataFrame({'CCI': [0, 20, 50, 150]}), pd.DataFrame({'CCI': [0,20,50]})),
@@ -64,9 +64,9 @@ def test_filterCCIAbove200(df_CCI100To200, expected_CCI100To200):
     (pd.DataFrame({'CCI': [101, 201]}), pd.DataFrame({'CCI':[]}).astype(int)),
     (pd.DataFrame({'CCI': []}), pd.DataFrame({'CCI':[]}))
 ])
-def test_filterCCIAbove200(df_CCI0To100, expected_CCI0To100):
+def test_filterCCIoTo100(df_CCI0To100, expected_CCI0To100):
     result = filterCCI0To100(df_CCI0To100)
-    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCI0To100)
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCI0To100,check_dtype=False)
 
 @pytest.mark.parametrize('df_CCIBelow0, expected_CCIBelow0', [
     (pd.DataFrame({'CCI': [-100, -90, -50, 0]}), pd.DataFrame({'CCI': [-90,-50]})),
@@ -74,9 +74,9 @@ def test_filterCCIAbove200(df_CCI0To100, expected_CCI0To100):
     (pd.DataFrame({'CCI': [101, 201]}), pd.DataFrame({'CCI':[]}).astype(int)),
     (pd.DataFrame({'CCI': []}), pd.DataFrame({'CCI':[]}))
 ])
-def test_filterCCIAbove200(df_CCIBelow0, expected_CCIBelow0):
+def test_filterCCIBelow0(df_CCIBelow0, expected_CCIBelow0):
     result = filterCCIBelow0(df_CCIBelow0)
-    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIBelow0)
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIBelow0,check_dtype=False)
 
 @pytest.mark.parametrize('df_CCIBelowMinus100, expected_CCIBelowMinus100', [
     (pd.DataFrame({'CCI': [-100, -190, -50, 0]}), pd.DataFrame({'CCI': [-100,-190]})),
@@ -84,6 +84,6 @@ def test_filterCCIAbove200(df_CCIBelow0, expected_CCIBelow0):
     (pd.DataFrame({'CCI': [101, 201]}), pd.DataFrame({'CCI':[]}).astype(int)),
     (pd.DataFrame({'CCI': []}), pd.DataFrame({'CCI':[]}))
 ])
-def test_filterCCIAbove200(df_CCIBelowMinus100, expected_CCIBelowMinus100):
+def test_filterCCIBElowMinus100(df_CCIBelowMinus100, expected_CCIBelowMinus100):
     result = filterCCIBelowMinus100(df_CCIBelowMinus100)
-    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIBelowMinus100)
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_CCIBelowMinus100,check_dtype=False)

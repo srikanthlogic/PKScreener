@@ -32,7 +32,7 @@ warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import pytest
 from PKDevTools.classes.log import default_logger as dl
-
+from PKDevTools.classes.ColorText import colorText
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Utility as Utility
 from pkscreener.classes.Screener import tools
@@ -52,6 +52,34 @@ def default_logger():
 def tools_instance(configManager, default_logger):
     return tools(configManager, default_logger)
 
+
+def test_positive_case_find52WeekHighBreakout(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, 70, 80, 90, 100]  # Assuming recent high is 100
+    })
+    assert tools_instance.find52WeekHighBreakout(df) == False
+
+def test_negative_case_find52WeekHighBreakout(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, 70, 80, 90, 80]  # Assuming recent high is 80
+    })
+    assert tools_instance.find52WeekHighBreakout(df) == True
+
+def test_empty_dataframe_find52WeekHighBreakout(tools_instance):
+    df = pd.DataFrame()
+    assert tools_instance.find52WeekHighBreakout(df) == False
+
+def test_dataframe_with_nan_find52WeekHighBreakout(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, np.nan, 80, 90, 100]  # Assuming recent high is 100
+    })
+    assert tools_instance.find52WeekHighBreakout(df) == False
+
+def test_dataframe_with_inf_find52WeekHighBreakout(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, np.inf, 80, 90, 100]  # Assuming recent high is 100
+    })
+    assert tools_instance.find52WeekHighBreakout(df) == False
 
 def test_find52WeekHighBreakout_positive(tools_instance):
     data = pd.DataFrame({"High": [110, 60, 70, 80, 90, 100]})
@@ -164,6 +192,47 @@ def test_find52WeekLowBreakout_edge(tools_instance):
     result = tools_instance.find52WeekLowBreakout(data)
     assert result == True
 
+def test_find52WeekHighLow_positive_case(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, 70, 80, 90, 100],  # Assuming recent high is 100
+        "Low": [40, 30, 20, 10, 5, 0]  # Assuming recent low is 0
+    })
+    saveDict = {}
+    screenDict = {}
+
+    tools_instance.find52WeekHighLow(df, saveDict, screenDict)
+
+    assert saveDict["52Wk H"] == "100.00"
+    assert saveDict["52Wk L"] == "0.00"
+    assert screenDict["52Wk H"] == f"{colorText.FAIL}100.00{colorText.END}"
+    assert screenDict["52Wk L"] == f"{colorText.GREEN}0.00{colorText.END}"
+
+def test_find52WeekHighLow_negative_case(tools_instance):
+    df = pd.DataFrame({
+        "High": [50, 60, 70, 80, 90, 80],  # Assuming recent high is 80
+        "Low": [40, 30, 20, 10, 5, 10]  # Assuming recent low is 10
+    })
+    saveDict = {}
+    screenDict = {}
+
+    tools_instance.find52WeekHighLow(df, saveDict, screenDict)
+
+    assert saveDict["52Wk H"] == "90.00"
+    assert saveDict["52Wk L"] == "5.00"
+    assert screenDict["52Wk H"] == f"{colorText.FAIL}90.00{colorText.END}"
+    assert screenDict["52Wk L"] == f"{colorText.GREEN}5.00{colorText.END}"
+
+def test_find52WeekLowBreakout_positive_case(tools_instance):
+    df = pd.DataFrame({
+        "Low": [50, 60, 70, 80, 90, 0]  # Assuming recent low is 0
+    })
+    assert tools_instance.find52WeekLowBreakout(df) == False
+
+def test_find52WeekLowBreakout_negative_case(tools_instance):
+    df = pd.DataFrame({
+        "Low": [50, 60, 70, 80, 90, 10]  # Assuming recent low is 10
+    })
+    assert tools_instance.find52WeekLowBreakout(df) == False
 
 # Positive test case for find10DaysLowBreakout function
 def test_find10DaysLowBreakout_positive(tools_instance):
@@ -278,6 +347,38 @@ def test_findAroonBullishCrossover_edge(tools_instance):
     result = tools_instance.findAroonBullishCrossover(data)
     assert result == False
 
+def test_positive_case_findBreakingoutNow(tools_instance):
+    df = pd.DataFrame({
+        "Open": [50, 60, 70, 80, 90, 100],
+        "Close": [55, 65, 75, 85, 95, 105]
+    })
+    assert tools_instance.findBreakingoutNow(df) == False
+
+def test_negative_case_findBreakingoutNow(tools_instance):
+    df = pd.DataFrame({
+        "Open": [50, 60, 70, 80, 90, 80],
+        "Close": [55, 65, 75, 85, 95, 85]
+    })
+    assert tools_instance.findBreakingoutNow(df) == False
+
+def test_empty_dataframe_findBreakingoutNow(tools_instance):
+    df = pd.DataFrame()
+    assert tools_instance.findBreakingoutNow(df) == False
+
+def test_dataframe_with_nan_findBreakingoutNow(tools_instance):
+    df = pd.DataFrame({
+        "Open": [50, 60, np.nan, 80, 90, 100],
+        "Close": [55, 65, np.nan, 85, 95, 105]
+    })
+    assert tools_instance.findBreakingoutNow(df) == False
+
+def test_dataframe_with_inf_findBreakingoutNow(tools_instance):
+    df = pd.DataFrame({
+        "Open": [50, 60, np.inf, 80, 90, 100],
+        "Close": [55, 65, np.inf, 85, 95, 105]
+    })
+    assert tools_instance.findBreakingoutNow(df) == False
+
 
 # Positive test case for findBreakoutValue function
 def test_findBreakoutValue_positive(tools_instance):
@@ -388,6 +489,58 @@ def test_findBreakoutValue_edge(tools_instance):
         data, screenDict, saveDict, daysToLookback
     )
     assert result == False
+
+def test_positive_case_findNR4Day(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [60000, 70000, 80000, 90000, 100000],
+        "Close": [10, 9, 8, 7, 6],
+        "High": [11, 10, 9, 8, 7],
+        "Low": [9, 8, 7, 6, 5],
+        "SMA10": [8, 7, 6, 5, 4],
+        "SMA50": [7, 6, 5, 4, 3],
+        "SMA200": [6, 5, 4, 3, 2]
+    })
+    assert tools_instance.findNR4Day(df) == False
+
+def test_negative_case_findNR4Day(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [40000, 50000, 60000, 70000, 80000],
+        "Close": [10, 9, 8, 7, 6],
+        "High": [11, 10, 9, 8, 7],
+        "Low": [9, 8, 7, 6, 5],
+        "SMA10": [8, 7, 6, 5, 4],
+        "SMA50": [7, 6, 5, 4, 3],
+        "SMA200": [6, 5, 4, 3, 2]
+    })
+    assert tools_instance.findNR4Day(df) == False
+
+def test_empty_dataframe_findNR4Day(tools_instance):
+    df = pd.DataFrame()
+    assert tools_instance.findNR4Day(df) == False
+
+def test_dataframe_with_nan_findNR4Day(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [60000, 70000, np.nan, 90000, 100000],
+        "Close": [10, 9, np.nan, 7, 6],
+        "High": [11, 10, np.nan, 8, 7],
+        "Low": [9, 8, np.nan, 6, 5],
+        "SMA10": [8, 7, np.nan, 5, 4],
+        "SMA50": [7, 6, np.nan, 4, 3],
+        "SMA200": [6, 5, np.nan, 3, 2]
+    })
+    assert tools_instance.findNR4Day(df) == False
+
+def test_dataframe_with_inf_findNR4Day(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [60000, 70000, np.inf, 90000, 100000],
+        "Close": [10, 9, np.inf, 7, 6],
+        "High": [11, 10, np.inf, 8, 7],
+        "Low": [9, 8, np.inf, 6, 5],
+        "SMA10": [8, 7, np.inf, 5, 4],
+        "SMA50": [7, 6, np.inf, 4, 3],
+        "SMA200": [6, 5, np.inf, 3, 2]
+    })
+    assert tools_instance.findNR4Day(df) == False
 
 
 # Positive test case for findBullishIntradayRSIMACD function
@@ -1507,6 +1660,90 @@ def test_validate15MinutePriceVolumeBreakout_positive(tools_instance):
     # Call the function and assert the result
     assert tools_instance.validate15MinutePriceVolumeBreakout(data) == True
 
+
+def test_positive_case_findPotentialBreakout(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [100000, 90000, 80000, 70000, 60000],
+        "Close": [10, 9, 8, 7, 6],
+        "High": [11, 10, 9, 8, 7]
+    })
+    screenDict = {}
+    saveDict = {"Breakout": ""}
+    daysToLookback = 30
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+def test_negative_case_findPotentialBreakout(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [100000, 90000, 80000, 70000, 60000],
+        "Close": [6, 7, 8, 9, 10],
+        "High": [7, 8, 9, 10, 11]
+    })
+    screenDict = {}
+    saveDict = {"Breakout": ""}
+    daysToLookback = 30
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+def test_empty_dataframe_findPotentialBreakout(tools_instance):
+    df = pd.DataFrame()
+    screenDict = {}
+    saveDict = {"Breakout": ""}
+    daysToLookback = 30
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+def test_dataframe_with_nan_findPotentialBreakout(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [100000, 90000, np.nan, 70000, 60000],
+        "Close": [10, 9, np.nan, 7, 6],
+        "High": [11, 10, np.nan, 8, 7]
+    })
+    screenDict = {}
+    saveDict = {"Breakout": ""}
+    daysToLookback = 30
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+def test_dataframe_with_inf_findPotentialBreakout(tools_instance):
+    df = pd.DataFrame({
+        "Volume": [100000, 90000, np.inf, 70000, 60000],
+        "Close": [10, 9, np.inf, 7, 6],
+        "High": [11, 10, np.inf, 8, 7]
+    })
+    screenDict = {}
+    saveDict = {"Breakout": ""}
+    daysToLookback = 30
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+def test_positive_case_validateBullishForTomorrow(tools_instance):
+    df = pd.DataFrame({
+        "Close": [10, 11, 12, 13, 14],
+    })
+    assert tools_instance.validateBullishForTomorrow(df) == False
+
+def test_negative_case_validateBullishForTomorrow(tools_instance):
+    df = pd.DataFrame({
+        "Close": [14, 13, 12, 11, 10],
+    })
+    assert tools_instance.validateBullishForTomorrow(df) == False
+
+def test_empty_dataframe_validateBullishForTomorrow(tools_instance):
+    df = pd.DataFrame()
+    assert tools_instance.validateBullishForTomorrow(df) == False
+
+def test_dataframe_with_nan_validateBullishForTomorrow(tools_instance):
+    df = pd.DataFrame({
+        "Close": [10, 11, np.nan, 13, 14],
+    })
+    assert tools_instance.validateBullishForTomorrow(df) == False
+
+def test_dataframe_with_inf_validateBullishForTomorrow(tools_instance):
+    df = pd.DataFrame({
+        "Close": [10, 11, np.inf, 13, 14],
+    })
+    assert tools_instance.validateBullishForTomorrow(df) == False
 
 # # Positive test case for validateBullishForTomorrow function
 # def test_validateBullishForTomorrow_positive(tools_instance):

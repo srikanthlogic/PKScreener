@@ -30,35 +30,37 @@ from pkscreener.classes import Utility
 
 
 def summariseAllStrategies():
-    scanTypeStartIndex = 1
-    scanTypeEndIndex = 25
+    indices = [1,5,8,11,12,14]
     scanSkipIndices = [21, 22]
     indexWithSubindices = [6, 7]
     subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]}
     indexWithSubLevelindices = [7]
     subLevelIndices = {7: [1, 2, 3]}
-    reportName = "B_12_"
     reports = []
-    while scanTypeStartIndex <= scanTypeEndIndex:
-        if scanTypeStartIndex not in scanSkipIndices:
-            reportName = f"{reportName}{scanTypeStartIndex}"
-            if scanTypeStartIndex in indexWithSubindices:
-                for subIndex in subIndices[scanTypeStartIndex]:
-                    subReportName = f"{reportName}_{subIndex}"
-                    if subIndex in indexWithSubLevelindices:
-                        for subLevelIndex in subLevelIndices[subIndex]:
-                            subLevelReportName = f"{subReportName}_{subLevelIndex}"
-                            reports.append(subLevelReportName)
-                    else:
-                        reports.append(subReportName)
-            else:
-                reports.append(reportName)
-        reportName = "B_12_"
-        scanTypeStartIndex += 1
+    for index in indices:
+        scanTypeStartIndex = 1
+        scanTypeEndIndex = 25
+        reportName = f"B_{index}_"
+        while scanTypeStartIndex <= scanTypeEndIndex:
+            if scanTypeStartIndex not in scanSkipIndices:
+                reportName = f"{reportName}{scanTypeStartIndex}"
+                if scanTypeStartIndex in indexWithSubindices:
+                    for subIndex in subIndices[scanTypeStartIndex]:
+                        subReportName = f"{reportName}_{subIndex}"
+                        if subIndex in indexWithSubLevelindices:
+                            for subLevelIndex in subLevelIndices[subIndex]:
+                                subLevelReportName = f"{subReportName}_{subLevelIndex}"
+                                reports.append(subLevelReportName)
+                        else:
+                            reports.append(subReportName)
+                else:
+                    reports.append(reportName)
+            reportName = f"B_{index}_"
+            scanTypeStartIndex += 1
     df_all = None
     for report in reports:
         df = bestStrategiesFromSummaryForReport(
-            f"PKScreener_{report}_Insights_DateSorted.html", summary=True
+            f"PKScreener_{report}_Insights_DateSorted.html", summary=True,includeLargestDatasets=True
         )
         if df is not None:
             df.insert(loc=0, column="Scanner", value=report)
@@ -70,7 +72,7 @@ def summariseAllStrategies():
     return df_all
 
 
-def bestStrategiesFromSummaryForReport(reportName: None, summary=False):
+def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
     dfs = []
     try:
         dfs = pd.read_html(
@@ -81,12 +83,12 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False):
     except:
         pass
     insights = None
-    strategy_percent = {}
-    strategy = {}
     if len(dfs) > 0:
         df = dfs[0]
         if len(df) > 0:
             periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+            df = df.replace(" %", "", regex=True)
+            df = df.replace("-", np.nan, regex=True)
             for period in periods:
                 df.rename(
                     columns={
@@ -95,32 +97,56 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False):
                     },
                     inplace=True,
                 )
+                castToFloat(df, period)
             insights = df[df["ScanType"].astype(str).str.startswith("[SUM]")]
-            insights = insights.replace(" %", "", regex=True)
             # insights = insights.replace('', np.nan, regex=True)
             # insights = insights.replace('-', np.nan, regex=True)
-            for prd in periods:
+            dfs = []
+            max_best_df = insights.copy()
+            max_datasets_df = insights.copy()
+            if includeLargestDatasets:
+                max_datasets_df[["ScanTypeSplit", "DatasetSize"]] = max_datasets_df[
+                    "ScanType"
+                ].str.split("(", n=1, expand=True)
+                max_datasets_df["DatasetSize"] = max_datasets_df["DatasetSize"].str.replace(")", "")
                 try:
-                    insights[f"{prd}Pd-%"] = (
-                        insights[f"{prd}Pd-%"].astype(float).fillna(0.0)
-                    )
-                    max_p = insights[f"{prd}Pd-%"].max()
-                    bestScanFilter = str(
-                        insights["ScanType"].iloc[insights[f"{prd}Pd-%"].idxmax()]
-                    ).replace("[SUM]", "")
-                    resultPoints = bestScanFilter.split("(")[1]
-                    strategy_percent[
-                        f"{prd}-Pd"
-                    ] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
-                    scanType = (
-                        bestScanFilter.split("(")[0] if not summary else bestScanFilter
-                    )
-                    strategy[f"{prd}-Pd"] = scanType
+                    max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
                 except:
+                    max_datasets_df.loc[:, "DatasetSize"] = max_datasets_df.loc[:, "DatasetSize"].apply(
+                        lambda x: x.split("(")[-1]
+                    )
+                    max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
                     pass
-            insights_list = [strategy, strategy_percent]
-            insights = pd.DataFrame(insights_list)
+                max_size = max_datasets_df["DatasetSize"].max()
+                max_datasets_df = max_datasets_df[(max_datasets_df["DatasetSize"] == max_size)].fillna(0.0)
+                for i in range(0, len(max_datasets_df)):
+                    dfs.append(max_datasets_df.iloc[i])
+            
+            insights_list = []
+            dfs.append(max_best_df)
+            for df in dfs:
+                strategy_percent = {}
+                strategy = {}
+                for prd in periods:
+                    try:
+                        max_p = df[f"{prd}Pd-%"].max()
+                        maxIndexPos = df[f"{prd}Pd-%"].idxmax()
+                        bestScanFilter = str(
+                            df["ScanType"].iloc[maxIndexPos]).replace("[SUM]", "")
+                        resultPoints = bestScanFilter.split("(")[-1]
+                        strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
+                        scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
+                        strategy[f"{prd}-Pd"] = scanType
+                    except:
+                        pass
+                insights_list.extend([strategy, strategy_percent])
+            insights = pd.DataFrame(insights_list).drop_duplicates(ignore_index=True)
+            insights.dropna(axis=0, how="all", inplace=True)
     return insights
+
+def castToFloat(df, prd):
+    if f"{prd}Pd-%" in df.columns:
+        df[f"{prd}Pd-%"] = (df[f"{prd}Pd-%"].astype(float).fillna(0.0))
 
 
 def xRaySummary(savedResults=None):
@@ -133,7 +159,7 @@ def xRaySummary(savedResults=None):
     for scanType, df_group in df_grouped:
         groupItems = len(df_group)
         sum_dict = {}
-        sum_dict["ScanType"] = f"[SUM]{scanType}({groupItems})"
+        sum_dict["ScanType"] = f"[SUM]{scanType.replace('(','[').replace(')',']')}  ({groupItems})"
         sum_dict["Date"] = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         for prd in periods:
             if not f"{prd}Pd-%" in df_group.columns:
