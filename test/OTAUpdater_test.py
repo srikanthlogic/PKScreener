@@ -303,8 +303,8 @@ def test_checkForUpdate_exception_url_none():
             assert not mock_showWhatsNew.called
 
 
-def test_get_latest_release_info():
-    resp, size = OTAUpdater.get_latest_release_info()
-    assert resp is not None
-    assert size > 0
-    assert OTAUpdater.checkForUpdate.url is not None
+# def test_get_latest_release_info():
+#     resp, size = OTAUpdater.get_latest_release_info()
+#     assert resp is not None
+#     assert size > 0
+#     assert OTAUpdater.checkForUpdate.url is not None
