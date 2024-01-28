@@ -104,6 +104,15 @@ def test_findPattern_doji(candle_patterns):
         assert dict["Pattern"] == "\033[1mDoji\033[0m"
         assert saveDict["Pattern"] == "Doji"
 
+def test_findPattern_doji_with_existing_pattern(candle_patterns):
+    dict = {}
+    saveDict = {"Pattern":"Existing"}
+    df = prepData()
+    with prepPatch("CDLDOJI") as cdl_obj:
+        cdl_obj.return_value = df.tail(1).squeeze()
+        assert candle_patterns.findPattern(df, dict, saveDict) is True
+        assert dict["Pattern"] == "\033[1mDoji, Existing\033[0m"
+        assert saveDict["Pattern"] == "Doji, Existing"
 
 def test_findPattern_morning_star(candle_patterns):
     dict = {}
@@ -137,6 +146,15 @@ def test_findPattern_evening_star(candle_patterns):
     assert dict["Pattern"] == "\033[1m\033[91mEvening Star\033[0m"
     assert saveDict["Pattern"] == "Evening Star"
 
+def test_findPattern_evening_doji_star(candle_patterns):
+    dict = {}
+    saveDict = {}
+    df = prepData()
+    with prepPatch("CDLEVENINGDOJISTAR") as cdl_obj:
+        cdl_obj.return_value = df.tail(1).squeeze()
+        assert candle_patterns.findPattern(df, dict, saveDict) is True
+    assert dict["Pattern"] == "\033[1m\033[91mEvening Doji Star\033[0m"
+    assert saveDict["Pattern"] == "Evening Doji Star"
 
 def test_findPattern_ladder_bottom_bullish(candle_patterns):
     dict = {}
