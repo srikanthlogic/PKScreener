@@ -211,11 +211,9 @@ def setupLogger(shouldLog=False, trace=False):
             os.remove(log_file_path)
         except Exception:# pragma: no cover
             pass
-    print("[+] Logs will be written to:")
-    print(f"[+] {log_file_path}")
-    print(
-        "[+] If you need to share, open this folder, copy and zip the log file to share."
-    )
+    print(colorText.FAIL + "\n[+] Logs will be written to:"+colorText.END)
+    print(colorText.GREEN + f"[+] {log_file_path}"+colorText.END)
+    print(colorText.FAIL + "[+] If you need to share, open this folder, copy and zip the log file to share.\n" + colorText.END)
     # logger = multiprocessing.log_to_stderr(log.logging.DEBUG)
     log.setup_custom_logger(
         "pkscreener",
