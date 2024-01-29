@@ -626,6 +626,8 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     for key in objectDictionary.keys():
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'
+        if not shouldRunBacktests(scanOptions,existing_df):
+            continue
         if launchLocal:
             from pkscreener import pkscreenercli
             from pkscreener.pkscreenercli import argParser as agp
@@ -639,8 +641,6 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             if args.branchname is not None:
                 Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
         else:
-            if not shouldRunBacktests(scanOptions,existing_df):
-                continue
             branch = "main"
             postdata = (
                 '{"ref":"'
