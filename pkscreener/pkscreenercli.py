@@ -341,9 +341,9 @@ def runApplicationForScreening():
         hasCronInterval = args.croninterval is not None and str(args.croninterval).isnumeric()
         runLoopOnScheduleOrStdApplication(hasCronInterval)
         while True:
-            runLoopOnScheduleOrStdApplication(hasCronInterval)
             if shouldBreak:
                 break
+            runLoopOnScheduleOrStdApplication(hasCronInterval)
         if args.v:
             disableSysOut(disable=False)
             return
