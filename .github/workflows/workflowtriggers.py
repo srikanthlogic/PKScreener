@@ -149,7 +149,8 @@ argParser.add_argument(
 
 argsv = argParser.parse_known_args()
 args = argsv[0]
-
+originalStdOut = sys.stdout
+original__stdout = sys.__stdout__
 # args.force = True
 # args.scans = True
 # args.report = True
@@ -478,8 +479,9 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             from pkscreener.pkscreenercli import argParser as agp
             daysInPast = scanDaysInPast
             while daysInPast >=0:
-                # sys.stdout = original_stdout
-                # sys.__stdout__ = original__stdout
+                if sys.stdout is None:
+                    sys.stdout = originalStdOut
+                    sys.__stdout__ = original__stdout
                 if not scanResultExists(options,daysInPast,args.reScanForZeroSize)[0]:
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
@@ -626,6 +628,8 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     for key in objectDictionary.keys():
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'
+        if not shouldRunBacktests(scanOptions,existing_df):
+            continue
         if launchLocal:
             from pkscreener import pkscreenercli
             from pkscreener.pkscreenercli import argParser as agp
@@ -634,13 +638,14 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             ag = agp.parse_known_args(args=["-e", "-a", "Y", "-o", options, "-v"])[0]
             pkscreenercli.args = ag
             pkscreenercli.pkscreenercli()
+            if sys.stdout is None:
+                sys.stdout = originalStdOut
+                sys.__stdout__ = original__stdout
             choices = f'PKScreener_{scanChoices(options, True).replace("X","B")}'
             scanResultFilesPath = f"{os.path.join(scanOutputDirectory(backtest=True),choices)}_*.html"
             if args.branchname is not None:
                 Committer.commitTempOutcomes(addPath=scanResultFilesPath,commitMessage=f"[Temp-Commit] WorkflowTrigger{choices}",branchName=args.branchname)
         else:
-            if not shouldRunBacktests(scanOptions,existing_df):
-                continue
             branch = "main"
             postdata = (
                 '{"ref":"'

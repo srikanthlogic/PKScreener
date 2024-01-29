@@ -97,6 +97,8 @@ PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc 
 """
 artText = f"{artText}\nv{VERSION}"
 
+STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
+
 def marketStatus():
     lngStatus = None
     try:
@@ -121,7 +123,7 @@ class tools:
             os.system("cls")
         else:
             os.system("clear")
-        print(art.encode('utf-8').decode(sys.stdout.encoding))
+        print(art.encode('utf-8').decode(STD_ENCODING))
 
     # Print about developers and repository
     def showDevInfo(defaultAnswer=None):
