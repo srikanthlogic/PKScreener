@@ -325,7 +325,7 @@ class tools:
                 )
                 self.backtestPeriod = int(parser.get("config", "backtestPeriod"))
                 self.minVolume = int(parser.get("config", "minimumVolume"))
-            except configparser.NoOptionError as e:
+            except configparser.NoOptionError as e:# pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # input(colorText.BOLD + colorText.FAIL +
                 #       '[+] pkscreener requires user configuration again. Press enter to continue..' + colorText.END)

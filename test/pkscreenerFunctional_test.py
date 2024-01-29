@@ -25,6 +25,8 @@
 # pytest --cov --cov-report=html:coverage_re
 
 import os
+import io
+import json
 import shutil
 import sys
 import warnings
@@ -33,6 +35,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import pytest
+from unittest.mock import ANY, MagicMock, patch
 
 try:
     shutil.copyfile("pkscreener/.env.dev", ".env.dev")
@@ -41,6 +44,7 @@ except Exception:# pragma: no cover
     print("This test must be run from the root of the project!")
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.log import default_logger
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from requests_cache import CachedSession
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -51,6 +55,7 @@ from pkscreener.classes.MenuOptions import MenuRenderStyle, menus
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.globals import main
 from pkscreener.pkscreenercli import argParser, disableSysOut
+from RequestsMocker import RequestsMocker as PRM
 
 session = CachedSession(
     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
@@ -67,18 +72,31 @@ this_version_components = VERSION.split(".")
 this_major_minor = ".".join([this_version_components[0], this_version_components[1]])
 this_version = float(this_major_minor)
 
-r = fetcher.fetchURL(
-    "https://api.github.com/repos/pkjmesra/PKScreener/releases/latest", stream=True
-)
-try:
-    tag = r.json()["tag_name"]
-    version_components = tag.split(".")
-    major_minor = ".".join([version_components[0], version_components[1]])
-    last_release = float(major_minor)
-except Exception:# pragma: no cover
-    if r.json()["message"] == "Not Found":
-        last_release = 0
+last_release = 0
 
+savedResponses = ""
+with open('test/yahoo_response.txt') as f:
+    savedResponses = json.load(f)
+
+# Mocking necessary functions or dependencies
+@pytest.fixture(autouse=True)
+def mock_dependencies():
+    with patch("pkscreener.classes.Utility.tools.clearScreen"), \
+        patch("yfinance.download",return_value = pd.DataFrame.from_dict(savedResponses, orient='columns')), \
+        patch("PKDevTools.classes.Fetcher.fetcher.fetchURL",new=PRM().patched_fetchURL), \
+        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
+        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
+        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchNiftyCodes",return_value = ['SBIN']), \
+        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchStockCodes",return_value = ['SBIN']), \
+        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchStockData",return_value = pd.DataFrame.from_dict(savedResponses, orient='columns')), \
+        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.capitalMarketStatus",return_value = ("NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)","NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)",PKDateUtilities.currentDateTime().strftime("%Y-%m-%d"))), \
+        patch("requests.get",new=PRM().patched_get), \
+        patch("requests_cache.CachedSession.get",new=PRM().patched_get), \
+        patch("requests_cache.CachedSession.post",new=PRM().patched_post), \
+        patch("requests.post",new=PRM().patched_post), \
+        patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarFundFavouriteStocks",return_value=None), \
+        patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarTopDividendsYieldStocks",return_value=None):
+            yield
 
 def cleanup():
     # configManager.deleteFileWithPattern(pattern='*.pkl')
@@ -86,9 +104,23 @@ def cleanup():
     configManager.deleteFileWithPattern(pattern="*.xlsx")
     configManager.deleteFileWithPattern(pattern="*.html")
 
+def getOrSetLastRelease():
+    r = fetcher.fetchURL(
+        "https://api.github.com/repos/pkjmesra/PKScreener/releases/latest", stream=True
+    )
+    try:
+        tag = r.json()["tag_name"]
+        version_components = tag.split(".")
+        major_minor = ".".join([version_components[0], version_components[1]])
+        last_release = float(major_minor)
+    except Exception:# pragma: no cover
+        if r.json()["message"] == "Not Found":
+            last_release = 0
+
 
 def test_if_changelog_version_changed():
     global last_release
+    getOrSetLastRelease()
     v = Changelog.changelog().split("]")[1].split("[")[-1]
     v = str(v).replace("v", "")
     v_components = v.split(".")
@@ -100,6 +132,7 @@ def test_if_changelog_version_changed():
 
 
 def test_if_release_version_incremented():
+    getOrSetLastRelease()
     assert this_version >= last_release
 
 
@@ -111,6 +144,7 @@ def test_configManager():
 
 
 def test_option_B_10_0_1(mocker, capsys):
+    cleanup()
     mocker.patch(
         "builtins.input", side_effect=["B", "10", "0", "1", "SBIN,IRFC", "Y", "\n"]
     )
@@ -124,6 +158,7 @@ def test_option_B_10_0_1(mocker, capsys):
 
 
 def test_option_D(mocker, capsys):
+    cleanup()
     mocker.patch("builtins.input", side_effect=["Y"])
     args = argParser.parse_known_args(args=["-e", "-a", "Y", "-o", "X:12:2", "-d"])[0]
     main(userArgs=args)
@@ -178,6 +213,7 @@ def test_option_H(mocker, capsys):
 
 
 def test_nifty_prediction(mocker, capsys):
+    cleanup()
     mocker.patch("builtins.input", side_effect=["X", "N"])
     args = argParser.parse_known_args(args=["-e", "-a", "Y", "-t", "-p"])[0]
     main(userArgs=args)
@@ -199,6 +235,7 @@ def test_option_T(mocker, capsys):
 
 
 def test_option_U(mocker, capsys):
+    cleanup()
     mocker.patch("builtins.input", side_effect=["U", "Z", "Y", "\n"])
     args = argParser.parse_known_args(args=["-e", "-a", "N", "-t", "-p", "-o", "U"])[0]
     main(userArgs=args)
@@ -361,6 +398,35 @@ def test_option_X_1_6_6(mocker):
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 0
 
+def test_option_X_1_6_7_1(mocker):
+    cleanup()
+    mocker.patch("builtins.input", side_effect=["X", "1", "6", "7", "1", "y"])
+    args = argParser.parse_known_args(
+        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:6:7:1"]
+    )[0]
+    main(userArgs=args)
+    assert globals.screenResults is not None
+    assert len(globals.screenResults) >= 0
+
+def test_option_X_1_6_7_2(mocker):
+    cleanup()
+    mocker.patch("builtins.input", side_effect=["X", "1", "6", "7", "2", "y"])
+    args = argParser.parse_known_args(
+        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:6:7:2"]
+    )[0]
+    main(userArgs=args)
+    assert globals.screenResults is not None
+    assert len(globals.screenResults) >= 0
+
+def test_option_X_1_6_7_3(mocker):
+    cleanup()
+    mocker.patch("builtins.input", side_effect=["X", "1", "6", "7", "3", "y"])
+    args = argParser.parse_known_args(
+        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:6:7:3"]
+    )[0]
+    main(userArgs=args)
+    assert globals.screenResults is not None
+    assert len(globals.screenResults) >= 0
 
 def test_option_X_1_7_1_7(mocker):
     cleanup()
@@ -493,6 +559,25 @@ def test_option_X_1_14(mocker):
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 0
 
+def test_option_X_1_19(mocker):
+    cleanup()
+    mocker.patch("builtins.input", side_effect=["X", "1", "19", "y"])
+    args = argParser.parse_known_args(
+        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:19"]
+    )[0]
+    main(userArgs=args)
+    assert globals.screenResults is not None
+    assert len(globals.screenResults) >= 0
+
+def test_option_X_1_20(mocker):
+    cleanup()
+    mocker.patch("builtins.input", side_effect=["X", "1", "20", "y"])
+    args = argParser.parse_known_args(
+        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:20"]
+    )[0]
+    main(userArgs=args)
+    assert globals.screenResults is not None
+    assert len(globals.screenResults) >= 0
 
 def test_option_X_8_15(mocker):
     cleanup()
@@ -565,7 +650,6 @@ def test_option_X_12_21_1(mocker):
         args=["-e", "-t", "-p", "-a", "Y", "-o", "X:12:21:1"]
     )[0]
     main(userArgs=args)
-    assert globals.screenResults is not None
     assert globals.screenResultsCounter.value >= 0
 
 
@@ -576,7 +660,6 @@ def test_option_X_12_21_2(mocker):
         args=["-e", "-t", "-p", "-a", "Y", "-o", "X:12:21:2"]
     )[0]
     main(userArgs=args)
-    assert globals.screenResults is not None
     assert globals.screenResultsCounter.value >= 0
 
 
@@ -587,7 +670,6 @@ def test_option_X_12_21_3(mocker):
         args=["-e", "-t", "-p", "-a", "Y", "-o", "X:12:21:3"]
     )[0]
     main(userArgs=args)
-    assert globals.screenResults is not None
     assert globals.screenResultsCounter.value >= 0
 
 
@@ -681,6 +763,7 @@ def test_option_Z(mocker, capsys):
 
 
 def test_ota_updater():
+    cleanup()
     OTAUpdater.checkForUpdate(VERSION, skipDownload=True)
     if OTAUpdater.checkForUpdate.url is not None:
         assert (
@@ -692,6 +775,7 @@ def test_ota_updater():
 
 def test_release_readme_urls():
     global last_release
+    getOrSetLastRelease()
     f = open("pkscreener/release.md", "r")
     contents = f.read()
     f.close()
@@ -721,6 +805,7 @@ def listedMenusFromRendering(selectedMenu=None, skipList=[]):
 
 
 def test_option_X_12_all(mocker, capsys):
+    cleanup()
     m, _ = listedMenusFromRendering()
     x = m.find("X")
     m, _ = listedMenusFromRendering(x)

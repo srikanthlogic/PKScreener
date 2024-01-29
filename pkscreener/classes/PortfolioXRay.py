@@ -24,13 +24,14 @@
 """
 import numpy as np
 import pandas as pd
+from argparse import Namespace
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 
 
-def summariseAllStrategies():
-    reports = getSavedBacktestReportNames()
+def summariseAllStrategies(testing=False):
+    reports = getSavedBacktestReportNames(testing=testing)
     df_all = None
     for report in reports:
         df = bestStrategiesFromSummaryForReport(
@@ -45,13 +46,13 @@ def summariseAllStrategies():
     df_all = df_all.replace(np.nan, "-", regex=True)
     return df_all
 
-def getSavedBacktestReportNames():
-    indices = [1,5,8,11,12,14]
-    scanSkipIndices = [21, 22]
-    indexWithSubindices = [6, 7]
-    subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]}
+def getSavedBacktestReportNames(testing=False):
+    indices = [1,5,8,11,12,14] if not testing else [1]
+    scanSkipIndices = [21, 22] if not testing else [1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+    indexWithSubindices = [6, 7] if not testing else [6]
+    subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]} if not testing else {6: [7]}
     indexWithSubLevelindices = [7]
-    subLevelIndices = {7: [1, 2, 3]}
+    subLevelIndices = {7: [1, 2, 3]} if not testing else {7: [1]}
     reports = []
     for index in indices:
         scanTypeStartIndex = 1
@@ -84,7 +85,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
                 reportName.replace("_X_", "_B_").replace("_G_", "_B_")
             )
         )
-    except:
+    except: # pragma: no cover
         pass
     insights = None
     if len(dfs) > 0:
@@ -136,7 +137,7 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
                 strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
                 scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
                 strategy[f"{prd}-Pd"] = scanType
-            except:
+            except: # pragma: no cover
                 pass
         insights_list.extend([strategy, strategy_percent])
 
@@ -147,7 +148,7 @@ def addLargeDatasetInsights(dfs, max_datasets_df):
     max_datasets_df["DatasetSize"] = max_datasets_df["DatasetSize"].str.replace(")", "")
     try:
         max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
-    except:
+    except: # pragma: no cover
         max_datasets_df.loc[:, "DatasetSize"] = max_datasets_df.loc[:, "DatasetSize"].apply(
                         lambda x: x.split("(")[-1]
                     )
@@ -164,6 +165,8 @@ def castToFloat(df, prd):
 
 
 def xRaySummary(savedResults=None):
+    if savedResults is None or not isinstance(savedResults, pd.DataFrame) or savedResults.empty:
+        return savedResults
     saveResults = savedResults.copy()
     df_grouped = saveResults.groupby("ScanType")
     periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
@@ -241,6 +244,9 @@ def getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults):
     return backtestPeriods
 
 def cleanFormattingForStatsData(calcForDate, saveResults, df):
+    if df is None or not isinstance(df, pd.DataFrame) or df.empty \
+        or saveResults is None or not isinstance(saveResults, pd.DataFrame) or saveResults.empty:
+        return df
     df = df[
             [
                 col
@@ -337,146 +343,57 @@ def cleanupData(savedResults):
 
 def getbacktestPeriod(args):
     backtestPeriods = 30  # Max backtest days
+    if args is None or ((not isinstance(args,int)) and (not isinstance(args,Namespace))):
+        return backtestPeriods
     if args is not None and args.backtestdaysago is not None:
-        backtestPeriods = int(args.backtestdaysago)
+        try:
+            backtestPeriods = int(args.backtestdaysago)
+        except: # pragma: no cover
+            pass
     return backtestPeriods
 
 def statScanCalculations(args, saveResults, period):
     scanResults = []
+    statScanCalculationForRSI(args, saveResults, period, scanResults)
+    statScanCalculationForTrend(args, saveResults, period, scanResults)
+    statScanCalculationForMA(args, saveResults, period, scanResults)
+    statScanCalculationForVol(args, saveResults, period, scanResults)
+    statScanCalculationForConsol(args, saveResults, period, scanResults)
+    statScanCalculationForBO(args, saveResults, period, scanResults)
+    statScanCalculationFor52Wk(args, saveResults, period, scanResults)
+    statScanCalculationForCCI(args, saveResults, period, scanResults)
+    
+    return scanResults
+
+def statScanCalculationForCCI(args, saveResults, period, scanResults):
     scanResults.append(
                 getCalculatedValues(
-                    filterRSIAbove50(saveResults), period, "RSI>=50", args
+                    filterCCIBelowMinus100(saveResults), period, "[CCI]<=-100", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterRSI50To67(saveResults), period, "RSI<=67", args
+                    filterCCIBelow0(saveResults), period, "[CCI]-100<C<0", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterRSI68OrAbove(saveResults), period, "RSI>=68", args
+                    filterCCI0To100(saveResults), period, "[CCI]0<=C<=100", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendStrongUp(saveResults), period, "[T]StrongUp", args
+                    filterCCI100To200(saveResults), period, "[CCI]100<C<=200", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendWeakUp(saveResults), period, "[T]WeakUp", args
+                    filterCCIAbove200(saveResults), period, "[CCI]>200", args
                 )
             )
-    scanResults.append(
-                getCalculatedValues(
-                    filterTrendUp(saveResults), period, "[T]TrendUp", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterTrendStrongDown(saveResults), period, "[T]StrongDown", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterTrendWeakDown(saveResults), period, "[T]WeakDown", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterTrendSideways(saveResults), period, "[T]Sideways", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterTrendDown(saveResults), period, "[T]TrendDown", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalBullish(saveResults), period, "[MA]Bull", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalBearish(saveResults), period, "[MA]Bear", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalNeutral(saveResults), period, "[MA]Neutral", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalBullCross(saveResults), period, "[MA]BullCross", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalBearCross(saveResults), period, "[MA]BearCross", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalSupport(saveResults), period, "[MA]Support", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterMASignalResist(saveResults), period, "[MA]Resist", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterVolumeLessThan25(saveResults), period, "Vol<2.5", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterConsolidating10Percent(saveResults), period, "Cons.<=10", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterConsolidatingMore10Percent(saveResults),
-                    period,
-                    "Cons.>10",
-                    args,
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterLTPLessThanBreakout(saveResults), period, "[BO]LTP<BO", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterLTPMoreOREqualBreakout(saveResults),
-                    period,
-                    "[BO]LTP>=BO",
-                    args,
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterLTPLessThanResistance(saveResults), period, "[BO]LTP<R", args
-                )
-            )
-    scanResults.append(
-                getCalculatedValues(
-                    filterLTPMoreOREqualResistance(saveResults),
-                    period,
-                    "[BO]LTP>=R",
-                    args,
-                )
-            )
+    return scanResults
+
+def statScanCalculationFor52Wk(args, saveResults, period, scanResults):
     scanResults.append(
                 getCalculatedValues(
                     filterLTPMoreOREqual52WkH(saveResults), period, "[52Wk]LTP>=H", args
@@ -516,32 +433,158 @@ def statScanCalculations(args, saveResults, period):
                     filterLTPLess52WkL(saveResults), period, "[52Wk]LTP<=L", args
                 )
             )
+    return scanResults
+
+def statScanCalculationForBO(args, saveResults, period, scanResults):
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIBelowMinus100(saveResults), period, "[CCI]<=-100", args
+                    filterLTPLessThanBreakout(saveResults), period, "[BO]LTP<BO", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIBelow0(saveResults), period, "[CCI]-100<C<0", args
+                    filterLTPMoreOREqualBreakout(saveResults),
+                    period,
+                    "[BO]LTP>=BO",
+                    args,
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCI0To100(saveResults), period, "[CCI]0<=C<=100", args
+                    filterLTPLessThanResistance(saveResults), period, "[BO]LTP<R", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCI100To200(saveResults), period, "[CCI]100<C<=200", args
+                    filterLTPMoreOREqualResistance(saveResults),
+                    period,
+                    "[BO]LTP>=R",
+                    args,
+                )
+            )
+    return scanResults
+
+def statScanCalculationForConsol(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(
+                    filterConsolidating10Percent(saveResults), period, "Cons.<=10", args
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIAbove200(saveResults), period, "[CCI]>200", args
+                    filterConsolidatingMore10Percent(saveResults),
+                    period,
+                    "Cons.>10",
+                    args,
                 )
             )
-    
+    return scanResults
+
+def statScanCalculationForVol(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(
+                    filterVolumeLessThan25(saveResults), period, "Vol<2.5", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", args
+                )
+            )
+    return scanResults
+
+def statScanCalculationForMA(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalBullish(saveResults), period, "[MA]Bull", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalBearish(saveResults), period, "[MA]Bear", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalNeutral(saveResults), period, "[MA]Neutral", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalBullCross(saveResults), period, "[MA]BullCross", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalBearCross(saveResults), period, "[MA]BearCross", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalSupport(saveResults), period, "[MA]Support", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterMASignalResist(saveResults), period, "[MA]Resist", args
+                )
+            )
+    return scanResults
+
+def statScanCalculationForTrend(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendStrongUp(saveResults), period, "[T]StrongUp", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendWeakUp(saveResults), period, "[T]WeakUp", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendUp(saveResults), period, "[T]TrendUp", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendStrongDown(saveResults), period, "[T]StrongDown", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendWeakDown(saveResults), period, "[T]WeakDown", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendSideways(saveResults), period, "[T]Sideways", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterTrendDown(saveResults), period, "[T]TrendDown", args
+                )
+            )
+    return scanResults
+
+def statScanCalculationForRSI(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(
+                    filterRSIAbove50(saveResults), period, "RSI>=50", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterRSI50To67(saveResults), period, "RSI<=67", args
+                )
+            )
+    scanResults.append(
+                getCalculatedValues(
+                    filterRSI68OrAbove(saveResults), period, "RSI>=68", args
+                )
+            )
     return scanResults
 
 
@@ -550,7 +593,7 @@ def formatGridOutput(df):
     for col in df.columns:
         try:
             df[col] = df[col].astype(float).fillna(0.0)
-        except:
+        except: # pragma: no cover
             continue
         maxGrowth = df[col].max()
         if "Pd-%" in col:
@@ -804,7 +847,7 @@ def filterLTPMore52WkL(df):
 def filterLTPWithin90Percent52WkL(df):
     if df is None:
         return None
-    return df[(df["LTP"] >= 1.1 * df["52Wk L"]) & (df["LTP"] > df["52Wk L"])].fillna(
+    return df[(df["LTP"] >= (1.1 * df["52Wk L"])) & (df["LTP"] > df["52Wk L"])].fillna(
         0.0
     )
 
