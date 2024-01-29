@@ -29,8 +29,8 @@ from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 
 
-def summariseAllStrategies():
-    reports = getSavedBacktestReportNames()
+def summariseAllStrategies(testing=False):
+    reports = getSavedBacktestReportNames(testing=testing)
     df_all = None
     for report in reports:
         df = bestStrategiesFromSummaryForReport(
@@ -45,13 +45,13 @@ def summariseAllStrategies():
     df_all = df_all.replace(np.nan, "-", regex=True)
     return df_all
 
-def getSavedBacktestReportNames():
-    indices = [1,5,8,11,12,14]
-    scanSkipIndices = [21, 22]
-    indexWithSubindices = [6, 7]
-    subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]}
-    indexWithSubLevelindices = [7]
-    subLevelIndices = {7: [1, 2, 3]}
+def getSavedBacktestReportNames(testing=False):
+    indices = [1,5,8,11,12,14] if not testing else [1]
+    scanSkipIndices = [21, 22] if not testing else [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+    indexWithSubindices = [6, 7] if not testing else []
+    subIndices = {6: [1, 2, 3, 4, 5, 6, 7], 7: [1, 2, 3, 4, 5]} if not testing else {}
+    indexWithSubLevelindices = [7] if not testing else []
+    subLevelIndices = {7: [1, 2, 3]} if not testing else {}
     reports = []
     for index in indices:
         scanTypeStartIndex = 1

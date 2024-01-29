@@ -28,7 +28,7 @@ import pandas as pd
 from  pkscreener.classes.PortfolioXRay import * 
 
 def test_summariseAllStrategies_returns_dataframe():
-    result = summariseAllStrategies()
+    result = summariseAllStrategies(testing=True)
     assert isinstance(result, pd.DataFrame)
 
 
