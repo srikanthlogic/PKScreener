@@ -635,186 +635,217 @@ def test_filterRSIAbove50(df):
     result = filterRSIAbove50(df)
     expected_result = pd.DataFrame({"RSI": [60, 70]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True),check_dtype=False)
+    assert filterRSIAbove50(None) is None
 
 def test_filterRSI50To67(df):
     df = pd.DataFrame({"RSI": [60, 40, 70, 30]})
     result = filterRSI50To67(df)
     expected_result = pd.DataFrame({"RSI": [60]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterRSI50To67(None) is None
 
 def test_filterRSI68OrAbove(df):
     df = pd.DataFrame({"RSI": [60, 40, 70, 30]})
     result = filterRSI68OrAbove(df)
     expected_result = pd.DataFrame({"RSI": [70]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterRSI68OrAbove(None) is None
 
 def test_filterTrendStrongUp(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Strong Up", "Weak Up", "Strong Up", "Weak Down"]})
     result = filterTrendStrongUp(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Up", "Strong Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendStrongUp(None) is None
 
 def test_filterTrendWeakUp(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Weak Up", "Strong Up", "Weak Up", "Weak Down"]})
     result = filterTrendWeakUp(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Up", "Weak Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendWeakUp(None) is None
 
 def test_filterTrendWeakDown(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Weak Down", "Strong Down", "Weak Down", "Weak Up"]})
     result = filterTrendWeakDown(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Down", "Weak Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendWeakDown(None) is None
 
 def test_filterTrendStrongDown(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendStrongDown(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Strong Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendStrongDown(None) is None
 
 def test_filterTrendUp(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendUp(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendUp(None) is None
 
 def test_filterSideways(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Sideways", "Weak Up"]})
     result = filterTrendSideways(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Sideways"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendSideways(None) is None
 
 def test_filterTrendDown(df):
     df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendDown(df)
     expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterTrendDown(None) is None
 
 def test_filterMASignalBullish(df):
     df = pd.DataFrame({"MA-Signal": ["Bullish", "Bearish", "Bearish", "Bullish"]})
     result = filterMASignalBullish(df)
     expected_result = pd.DataFrame({"MA-Signal": ["Bullish", "Bullish"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalBullish(None) is None
 
 def test_filterMASignalBearish(df):
     df = pd.DataFrame({"MA-Signal": ["Bullish", "Bearish", "Bearish", "Bullish"]})
     result = filterMASignalBearish(df)
     expected_result = pd.DataFrame({"MA-Signal": ["Bearish", "Bearish"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalBearish(None) is None
 
 def test_filterMASignalNeutral(df):
     df = pd.DataFrame({"MA-Signal": ["Bullish", "Bearish", "Neutral", "Bullish"]})
     result = filterMASignalNeutral(df)
     expected_result = pd.DataFrame({"MA-Signal": ["Neutral"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalNeutral(None) is None
 
 def test_filterMASignalBullCross(df):
     df = pd.DataFrame({"MA-Signal": ["BullCross-50MA", "Bearish", "Neutral", "BearCross-10MA"]})
     result = filterMASignalBullCross(df)
     expected_result = pd.DataFrame({"MA-Signal": ["BullCross-50MA"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalBullCross(None) is None
 
 def test_filterMASignalBearCross(df):
     df = pd.DataFrame({"MA-Signal": ["BullCross-50MA", "Bearish", "Neutral", "BearCross-10MA"]})
     result = filterMASignalBearCross(df)
     expected_result = pd.DataFrame({"MA-Signal": ["BearCross-10MA"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalBearCross(None) is None
 
 def test_filterMASignalSupport(df):
     df = pd.DataFrame({"MA-Signal": ["BullCross-50MA", "50MA-Support", "10MA-Resist", "BearCross-10MA"]})
     result = filterMASignalSupport(df)
     expected_result = pd.DataFrame({"MA-Signal": ["50MA-Support"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalSupport(None) is None
 
 def test_filterMASignalResist(df):
     df = pd.DataFrame({"MA-Signal": ["BullCross-50MA", "50MA-Support", "10MA-Resist", "BearCross-10MA"]})
     result = filterMASignalResist(df)
     expected_result = pd.DataFrame({"MA-Signal": ["10MA-Resist"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterMASignalResist(None) is None
 
 def test_filterVolumeLessThan25(df):
     df = pd.DataFrame({"Volume": [1,0.3,1.5,2.5,3,4]})
     result = filterVolumeLessThan25(df)
     expected_result = pd.DataFrame({"Volume": [1,0.3,1.5]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterVolumeLessThan25(None) is None
 
 def test_filterVolumeMoreThan25(df):
     df = pd.DataFrame({"Volume": [1,0.3,1.5,2.5,3,4]})
     result = filterVolumeMoreThan25(df)
     expected_result = pd.DataFrame({"Volume": [2.5,3,4]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterVolumeMoreThan25(None) is None
 
 def test_filterConsolidating10Percent(df):
     df = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10,11,19,18]})
     result = filterConsolidating10Percent(df)
     expected_result = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterConsolidating10Percent(None) is None
 
 def test_filterConsolidatingMore10Percent(df):
     df = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10,11.5,19,18]})
     result = filterConsolidatingMore10Percent(df)
     expected_result = pd.DataFrame({"Consol.(30Prds)": [11.5,19,18]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterConsolidatingMore10Percent(None) is None
 
 def test_filterLTPLessThanBreakout(df):
     df = pd.DataFrame({"LTP": [1000,2000,3000,4000,5000],"Breakout":[990,1900,3050,4100,5400]})
     result = filterLTPLessThanBreakout(df)
     expected_result = pd.DataFrame({"LTP": [3000,4000,5000],"Breakout":[3050,4100,5400]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPLessThanBreakout(None) is None
 
 def test_filterLTPMoreOREqualBreakout(df):
     df = pd.DataFrame({"LTP": [1000,2000,3052,4100,5400],"Breakout":[990,2000,3050,4100,5500]})
     result = filterLTPMoreOREqualBreakout(df)
     expected_result = pd.DataFrame({"LTP": [1000,2000,3052,4100],"Breakout":[990,2000,3050,4100]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPMoreOREqualBreakout(None) is None
 
 def test_filterLTPLessThanResistance(df):
     df = pd.DataFrame({"LTP": [1000,2000,3000,4000,5000],"Resistance":[990,1900,3050,4100,5400]})
     result = filterLTPLessThanResistance(df)
     expected_result = pd.DataFrame({"LTP": [3000,4000,5000],"Resistance":[3050,4100,5400]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPLessThanResistance(None) is None
 
 def test_filterLTPMoreOREqualResistance(df):
     df = pd.DataFrame({"LTP": [1000,2000,3052,4100,5400],"Resistance":[990,2000,3050,4100,5500]})
     result = filterLTPMoreOREqualResistance(df)
     expected_result = pd.DataFrame({"LTP": [1000,2000,3052,4100],"Resistance":[990,2000,3050,4100]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPMoreOREqualResistance(None) is None
 
 def test_filterLTPMoreOREqual52WkH(df):
     df = pd.DataFrame({"LTP": [1000,2000,3052,4100,5400],"52Wk H":[990,2000,3050,4100,5500]})
     result = filterLTPMoreOREqual52WkH(df)
     expected_result = pd.DataFrame({"LTP": [1000,2000,3052,4100],"52Wk H":[990,2000,3050,4100]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPMoreOREqual52WkH(None) is None
 
 def test_filterLTPWithin90Percent52WkH(df):
     df = pd.DataFrame({"LTP": [1000,2000,3052,4100,4951],"52Wk H":[990,2000,3050,4100,5500]})
     result = filterLTPWithin90Percent52WkH(df)
     expected_result = pd.DataFrame({"LTP": [4951],"52Wk H":[5500]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPWithin90Percent52WkH(None) is None
 
 def test_filterLTPLess90Percent52WkH(df):
     df = pd.DataFrame({"LTP": [1000,2000,3052,3500,5400],"52Wk H":[990,2000,3050,4000,5500]})
     result = filterLTPLess90Percent52WkH(df)
     expected_result = pd.DataFrame({"LTP": [3500],"52Wk H":[4000]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPLess90Percent52WkH(None) is None
 
 def test_filterLTPWithin90Percent52WkL(df):
     df = pd.DataFrame({"LTP": [110.2,220.4,310.4,410.0,452.1],"52Wk L":[100.1,200.2,300.3,400.0,500.4]})
     result = filterLTPWithin90Percent52WkL(df)
     expected_result = pd.DataFrame({"LTP": [110.2,220.4],"52Wk L":[100.1,200.2]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPWithin90Percent52WkL(None) is None
 
 def test_filterLTPLess52WkL(df):
     df = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0,500.4],"52Wk L":[110.2,220.4,310.4,410.0,452.1]})
     result = filterLTPLess52WkL(df)
     expected_result = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0],"52Wk L":[110.2,220.4,310.4,410.0]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPLess52WkL(None) is None
 
 def test_filterLTPMore52WkL(df):
     df = pd.DataFrame({"52Wk L": [100.1,200.2,300.3,400.0,500.4],"LTP":[110.2,220.4,310.4,410.0,452.1]})
     result = filterLTPMore52WkL(df)
     expected_result = pd.DataFrame({"52Wk L": [300.3,400.0],"LTP":[310.4,410.0]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
+    assert filterLTPMore52WkL(None) is None
 
 @pytest.fixture
 def df():
