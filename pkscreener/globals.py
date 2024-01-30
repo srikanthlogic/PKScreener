@@ -132,11 +132,6 @@ def finishScreening(
         saveNotifyResultsFile(
             screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=user
         )
-    # if not userPassedArgs.exit:
-    #     userPassedArgs.options = "{0}:{1}:".format(selectedChoice["0"],selectedChoice["1"])
-    #     main(userArgs=userPassedArgs)
-    # elif testing:
-    #     sendTestStatus(screenResults, menuChoiceHierarchy,user=user)
 
 
 def getDownloadChoices(defaultAnswer=None):
@@ -698,29 +693,12 @@ def main(userArgs=None):
         sleep(3)
         return
 
-    if menuOption in ["X", "B", "G"]:
-        selMenu = m0.find(menuOption)
-        m1.renderForMenu(selMenu, asList=True)
-        if tickerOption is not None:
-            selMenu = m1.find(tickerOption)
-            m2.renderForMenu(selMenu, asList=True)
-            if executeOption is not None:
-                selMenu = m2.find(executeOption)
-                m3.renderForMenu(selMenu, asList=True)
+    handleMenu_XBG(menuOption, tickerOption, executeOption)
     if tickerOption == "M" or executeOption == "M":
         # Go back to the caller. It will show the console menu again.
         return
-    if tickerOption == 0:
-        if len(options) >= 4:
-            listStockCodes = str(options[3]).split(",")
-    if executeOption == "Z":
-        input(
-            colorText.BOLD
-            + colorText.FAIL
-            + "[+] Press <Enter> to Exit!"
-            + colorText.END
-        )
-        sys.exit(0)
+    handleRequestForSpecificStocks(options, tickerOption)
+    handleExitRequest(executeOption)
     if executeOption is None:
         executeOption = 0
     executeOption = int(executeOption)
@@ -962,80 +940,9 @@ def main(userArgs=None):
                 )
                 sys.exit(0)
             elif tickerOption == "E":
-                result_df = pd.DataFrame(
-                    columns=["Time", "Stock/Index", "Action", "SL", "Target", "R:R"]
-                )
-                last_signal = {}
-                first_scan = True
-                result_df = screener.monitorFiveEma(  # Dummy scan to avoid blank table on 1st scan
-                    fetcher=fetcher,
-                    result_df=result_df,
-                    last_signal=last_signal,
-                )
-                try:
-                    while True:
-                        Utility.tools.clearScreen()
-                        last_result_len = len(result_df)
-                        try:
-                            result_df = screener.monitorFiveEma(
-                                fetcher=fetcher,
-                                result_df=result_df,
-                                last_signal=last_signal,
-                            )
-                        except Exception as e:  # pragma: no cover
-                            default_logger().debug(e, exc_info=True)
-                            print(
-                                colorText.BOLD
-                                + colorText.FAIL
-                                + "[+] There was an exception while monitoring 5-EMA"
-                                + "\n[+] If this continues to happen, please try and run with -l"
-                                + "\n[+] and collect all the logs, zip it and submit it to the developer."
-                                + "\n[+] For example:"
-                                + colorText.END
-                                + colorText.WARN
-                                + "pkscreener -l\n"
-                                + colorText.END
-                            )
-                        print(
-                            colorText.BOLD
-                            + colorText.WARN
-                            + "[+] 5-EMA : Live Intraday Scanner \t"
-                            + colorText.END
-                            + colorText.FAIL
-                            + f'Last Scanned: {datetime.now().strftime("%H:%M:%S")}\n'
-                            + colorText.END
-                        )
-                        if result_df is not None and len(result_df) > 0:
-                            print(
-                                colorText.miniTabulator().tabulate(
-                                    result_df,
-                                    headers="keys",
-                                    tablefmt=colorText.No_Pad_GridFormat,
-                                    maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
-                                )
-                            )
-                        print("\nPress Ctrl+C to exit.")
-                        if len(result_df) != last_result_len and not first_scan:
-                            Utility.tools.alertSound(beeps=5)
-                        sleep(60)
-                        first_scan = False
-                except KeyboardInterrupt:
-                    input("\nPress <Enter> to Continue...\n")
-                    return
+                return handleMonitorFiveEMA()
             else:
-                if not downloadOnly:
-                    updateMenuChoiceHierarchy()
-                if listStockCodes is None or len(listStockCodes) == 0:
-                    listStockCodes = fetcher.fetchStockCodes(
-                        tickerOption, stockCode=None
-                    )
-                    if (listStockCodes is None or len(listStockCodes) == 0) and testing:
-                        listStockCodes = [TEST_STKCODE]
-                if tickerOption == 0:
-                    selectedChoice["3"] = ".".join(listStockCodes)
-                if testing:
-                    import random
-                    listStockCodes = [random.choice(listStockCodes)]
+                listStockCodes = prepareStocksForScreening(testing, downloadOnly, listStockCodes, tickerOption)
         except urllib.error.URLError as e:
             default_logger().debug(e, exc_info=True)
             print(
@@ -1261,35 +1168,32 @@ def main(userArgs=None):
         if menuOption == "B" and backtest_df is not None and len(backtest_df) > 0:
             Utility.tools.clearScreen()
             # Let's do the portfolio calculation first
-            df_grouped = backtest_df.groupby("Date")
-            userPassedArgs.backtestdaysago = backtestPeriod
-            df_xray = None
-            for calcForDate, df_group in df_grouped:
-                p_df = PortfolioXRay.performXRay(
-                    df_group, userPassedArgs, calcForDate=calcForDate
-                )
-                if df_xray is not None:
-                    df_xray = pd.concat([df_xray, p_df], axis=0)
-                else:
-                    df_xray = p_df
-            # Let's drop the columns no longer required for backtest report
-            removedUnusedColumns(
-                None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"]
-            )
-            df_xray = df_xray.replace(np.nan, "", regex=True)
-            df_xray = PortfolioXRay.xRaySummary(df_xray)
-            df_xray.loc[:, "Date"] = df_xray.loc[:, "Date"].apply(
+            df_xray = prepareGroupedXRay(backtestPeriod, backtest_df)
+            summary_df, sorting, sortKeys = FinishBacktestDataCleanup(backtest_df, df_xray)
+            while sorting:
+                sorting = showSortedBacktestData(backtest_df, summary_df, sortKeys)
+            if defaultAnswer is None:
+                input("Press <Enter> to continue...")
+        elif menuOption == "B":
+            print("Finished backtesting with no results to show!")
+        elif menuOption == "G":
+            if defaultAnswer is None:
+                input("Press <Enter> to continue...")
+        newlyListedOnly = False
+    
+    # Change the config back to usual
+    resetConfigToDefault()
+
+def FinishBacktestDataCleanup(backtest_df, df_xray):
+    showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
+    summary_df = backtestSummary(backtest_df)
+    backtest_df.loc[:, "Date"] = backtest_df.loc[:, "Date"].apply(
                 lambda x: x.replace("-", "/")
             )
-            showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
-            summary_df = backtestSummary(backtest_df)
-            backtest_df.loc[:, "Date"] = backtest_df.loc[:, "Date"].apply(
-                lambda x: x.replace("-", "/")
-            )
-            showBacktestResults(backtest_df)
-            showBacktestResults(summary_df, optionalName="Summary")
-            sorting = False if defaultAnswer is not None else True
-            sortKeys = {
+    showBacktestResults(backtest_df)
+    showBacktestResults(summary_df, optionalName="Summary")
+    sorting = False if defaultAnswer is not None else True
+    sortKeys = {
                 "S": "Stock",
                 "D": "Date",
                 "1": "1-Pd",
@@ -1305,46 +1209,170 @@ def main(userArgs=None):
                 "V": "Volume",
                 "M": "MA-Signal",
             }
-            while sorting:
-                print(
+    
+    return summary_df,sorting,sortKeys
+
+def prepareGroupedXRay(backtestPeriod, backtest_df):
+    df_grouped = backtest_df.groupby("Date")
+    userPassedArgs.backtestdaysago = backtestPeriod
+    df_xray = None
+    for calcForDate, df_group in df_grouped:
+        p_df = PortfolioXRay.performXRay(
+                    df_group, userPassedArgs, calcForDate=calcForDate
+                )
+        if df_xray is not None:
+            df_xray = pd.concat([df_xray, p_df], axis=0)
+        else:
+            df_xray = p_df
+            # Let's drop the columns no longer required for backtest report
+    removedUnusedColumns(
+                None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"]
+            )
+    df_xray = df_xray.replace(np.nan, "", regex=True)
+    df_xray = PortfolioXRay.xRaySummary(df_xray)
+    df_xray.loc[:, "Date"] = df_xray.loc[:, "Date"].apply(
+                lambda x: x.replace("-", "/")
+            )
+    
+    return df_xray
+
+def showSortedBacktestData(backtest_df, summary_df, sortKeys):
+    print(
                     colorText.BOLD
                     + colorText.FAIL
                     + "[+] Would you like to sort the results?"
                     + colorText.END
                 )
-                print(
+    print(
                     colorText.BOLD
                     + colorText.GREEN
                     + "[+] Press :\n [+] s, v, t, m : sort by Stocks, Volume, Trend, MA-Signal\n [+] d : sort by date\n [+] 1,2,3...30 : sort by period\n [+] n : Exit sorting\n"
                     + colorText.END
                 )
-                if defaultAnswer is None:
-                    choice = input(
+    if defaultAnswer is None:
+        choice = input(
                         colorText.BOLD + colorText.FAIL + "[+] Select option:"
                     )
-                    print(colorText.END, end="")
-                    if choice.upper() in sortKeys.keys():
-                        Utility.tools.clearScreen()
-                        showBacktestResults(backtest_df, sortKeys[choice.upper()])
-                        showBacktestResults(summary_df, optionalName="Summary")
-                    else:
-                        sorting = False
-                else:
-                    print("Finished backtesting!")
-                    sorting = False
-            if defaultAnswer is None:
-                input("Press <Enter> to continue...")
-        elif menuOption == "B":
-            print("Finished backtesting with no results to show!")
-        elif menuOption == "G":
-            if defaultAnswer is None:
-                input("Press <Enter> to continue...")
-        newlyListedOnly = False
-    
-    # Change it back to usual
+        print(colorText.END, end="")
+        if choice.upper() in sortKeys.keys():
+            Utility.tools.clearScreen()
+            showBacktestResults(backtest_df, sortKeys[choice.upper()])
+            showBacktestResults(summary_df, optionalName="Summary")
+        else:
+            sorting = False
+    else:
+        print("Finished backtesting!")
+        sorting = False
+    return sorting
+
+def resetConfigToDefault():
     isIntraday = userPassedArgs.intraday is not None
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
+
+def prepareStocksForScreening(testing, downloadOnly, listStockCodes, tickerOption):
+    if not downloadOnly:
+        updateMenuChoiceHierarchy()
+    if listStockCodes is None or len(listStockCodes) == 0:
+        listStockCodes = fetcher.fetchStockCodes(
+                        tickerOption, stockCode=None
+                    )
+        if (listStockCodes is None or len(listStockCodes) == 0) and testing:
+            listStockCodes = [TEST_STKCODE]
+    if tickerOption == 0:
+        selectedChoice["3"] = ".".join(listStockCodes)
+    if testing:
+        import random
+        listStockCodes = [random.choice(listStockCodes)]
+    return listStockCodes
+
+def handleMonitorFiveEMA():
+    result_df = pd.DataFrame(
+                    columns=["Time", "Stock/Index", "Action", "SL", "Target", "R:R"]
+                )
+    last_signal = {}
+    first_scan = True
+    result_df = screener.monitorFiveEma(  # Dummy scan to avoid blank table on 1st scan
+                    fetcher=fetcher,
+                    result_df=result_df,
+                    last_signal=last_signal,
+                )
+    try:
+        while True:
+            Utility.tools.clearScreen()
+            last_result_len = len(result_df)
+            try:
+                result_df = screener.monitorFiveEma(
+                                fetcher=fetcher,
+                                result_df=result_df,
+                                last_signal=last_signal,
+                            )
+            except Exception as e:  # pragma: no cover
+                default_logger().debug(e, exc_info=True)
+                print(
+                                colorText.BOLD
+                                + colorText.FAIL
+                                + "[+] There was an exception while monitoring 5-EMA"
+                                + "\n[+] If this continues to happen, please try and run with -l"
+                                + "\n[+] and collect all the logs, zip it and submit it to the developer."
+                                + "\n[+] For example:"
+                                + colorText.END
+                                + colorText.WARN
+                                + "pkscreener -l\n"
+                                + colorText.END
+                            )
+            print(
+                            colorText.BOLD
+                            + colorText.WARN
+                            + "[+] 5-EMA : Live Intraday Scanner \t"
+                            + colorText.END
+                            + colorText.FAIL
+                            + f'Last Scanned: {datetime.now().strftime("%H:%M:%S")}\n'
+                            + colorText.END
+                        )
+            if result_df is not None and len(result_df) > 0:
+                print(
+                                colorText.miniTabulator().tabulate(
+                                    result_df,
+                                    headers="keys",
+                                    tablefmt=colorText.No_Pad_GridFormat,
+                                    maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
+                                )
+                            )
+            print("\nPress Ctrl+C to exit.")
+            if len(result_df) != last_result_len and not first_scan:
+                Utility.tools.alertSound(beeps=5)
+            sleep(60)
+            first_scan = False
+    except KeyboardInterrupt:
+        input("\nPress <Enter> to Continue...\n")
+        return
+
+def handleRequestForSpecificStocks(options, tickerOption):
+    if tickerOption == 0:
+        if len(options) >= 4:
+            listStockCodes = str(options[3]).split(",")
+
+def handleExitRequest(executeOption):
+    if executeOption == "Z":
+        input(
+            colorText.BOLD
+            + colorText.FAIL
+            + "[+] Press <Enter> to Exit!"
+            + colorText.END
+        )
+        sys.exit(0)
+
+def handleMenu_XBG(menuOption, tickerOption, executeOption):
+    if menuOption in ["X", "B", "G"]:
+        selMenu = m0.find(menuOption)
+        m1.renderForMenu(selMenu, asList=True)
+        if tickerOption is not None:
+            selMenu = m1.find(tickerOption)
+            m2.renderForMenu(selMenu, asList=True)
+            if executeOption is not None:
+                selMenu = m2.find(executeOption)
+                m3.renderForMenu(selMenu, asList=True)
 
 
 def updateMenuChoiceHierarchy():

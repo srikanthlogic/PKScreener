@@ -303,6 +303,8 @@ def pkscreenercli():
         sys.exit(0)
     if args.intraday:
         configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
+    else:
+        configManager.toggleConfig(candleDuration='1d', clearCache=False)
     if args.options is not None and str(args.options) == "0":
         # Must be from unit tests to be able to break out of loops via eventing
         args.options = None
