@@ -8,7 +8,7 @@ omit =
     test/*
     pkscreener/classes/Committer.py
     pkscreener/classes/WorkflowManager.py
-    pkscreenerbot.py
+    pkscreener/pkscreenerbot.py
 
 [report]
 show_missing = True
