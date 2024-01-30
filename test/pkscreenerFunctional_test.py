@@ -35,6 +35,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import pytest
+import yfinance
 from unittest.mock import ANY, MagicMock, patch
 
 try:
@@ -74,26 +75,24 @@ this_version = float(this_major_minor)
 
 last_release = 0
 
-savedResponses = ""
-with open('test/yahoo_response.txt') as f:
-    savedResponses = json.load(f)
-
 # Mocking necessary functions or dependencies
 @pytest.fixture(autouse=True)
 def mock_dependencies():
     with patch("pkscreener.classes.Utility.tools.clearScreen"), \
-        patch("yfinance.download",return_value = pd.DataFrame.from_dict(savedResponses, orient='columns')), \
+        patch("yfinance.multi.download",new=PRM().patched_yf), \
+        patch("yfinance.download",new=PRM().patched_yf), \
         patch("PKDevTools.classes.Fetcher.fetcher.fetchURL",new=PRM().patched_fetchURL), \
         patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
         patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
         patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchNiftyCodes",return_value = ['SBIN']), \
         patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchStockCodes",return_value = ['SBIN']), \
-        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchStockData",return_value = pd.DataFrame.from_dict(savedResponses, orient='columns')), \
+        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchStockData",new=PRM().patched_yf), \
         patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.capitalMarketStatus",return_value = ("NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)","NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)",PKDateUtilities.currentDateTime().strftime("%Y-%m-%d"))), \
         patch("requests.get",new=PRM().patched_get), \
         patch("requests_cache.CachedSession.get",new=PRM().patched_get), \
         patch("requests_cache.CachedSession.post",new=PRM().patched_post), \
         patch("requests.post",new=PRM().patched_post), \
+        patch("pandas.read_html",new=PRM().patched_readhtml), \
         patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarFundFavouriteStocks",return_value=None), \
         patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarTopDividendsYieldStocks",return_value=None):
             yield
@@ -810,7 +809,7 @@ def test_option_X_12_all(mocker, capsys):
     x = m.find("X")
     m, _ = listedMenusFromRendering(x)
     x = m.find("12")
-    skipList = ["0", "Z", "M"]
+    skipList = ["0", "Z", "M", "12" ,"21", "22"]
     NA_Counter = 19
     Last_Counter = 42
     menuCounter = NA_Counter

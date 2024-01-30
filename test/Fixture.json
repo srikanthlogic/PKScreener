@@ -39,6 +39,8 @@
   },
   "https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/X_":"SBIN",
   "https://api.telegram.org/":"",
+  "DateSorted.html": "test/DateSorted.html",
+  "StockSorted.html": "test/StockSorted.html",
   "https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/nse-holidays.json":{
     "CM": [
         {
