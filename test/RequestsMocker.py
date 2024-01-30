@@ -3,6 +3,7 @@ from requests.exceptions import HTTPError
 from requests import Response
 import pytest
 import io
+import pandas as pd
 from unittest.mock import ANY, MagicMock, patch
 from unittest import mock
 import json
@@ -25,7 +26,23 @@ class RequestsMocker:
         with open('test/Fixture.json') as f:
             d = json.load(f)
             self.savedResponses = d
+        self.stockSortedDF = pd.read_html("test/StockSorted.html")
+        self.dateSortedDF = pd.read_html("test/DateSorted.html")
 
+    def patched_readhtml(self, *args, **kwargs) -> list[pd.DataFrame]:
+        if args[0].endswith("StockSorted.html"):
+            return self.stockSortedDF
+        elif args[0].endswith("DateSorted.html"):
+            return self.dateSortedDF
+
+    def patched_yf(self, *args, **kwargs) -> pd.DataFrame:
+        savedResponses = ""
+        with open('test/yahoo_response.txt') as f:
+            savedResponses = json.load(f)
+        df = pd.DataFrame.from_dict(savedResponses, orient='columns')
+        return df
+
+        
     def patched_get(self, *args, **kwargs) -> AnyResponse:
         return self.patched_fetchURL()
 

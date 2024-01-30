@@ -35,20 +35,23 @@ import numpy as np
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
+from RequestsMocker import RequestsMocker as PRM
 
 @pytest.fixture
 def args():
     return None
 
 def test_summariseAllStrategies_returns_dataframe():
-    result = summariseAllStrategies(testing=True)
-    assert isinstance(result, pd.DataFrame)
+    with patch("pandas.read_html",new=PRM().patched_readhtml):
+        result = summariseAllStrategies(testing=True)
+        assert isinstance(result, pd.DataFrame)
 
 
 @pytest.mark.parametrize('reportName', ['PKScreener_B_12_1_Insights_DateSorted.html'])
 def test_bestStrategiesFromSummaryForReport_returns_dataframe(reportName):
-    df = bestStrategiesFromSummaryForReport(reportName)
-    assert isinstance(df, pd.DataFrame) 
+    with patch("pandas.read_html",new=PRM().patched_readhtml):
+        df = bestStrategiesFromSummaryForReport(reportName)
+        assert isinstance(df, pd.DataFrame) 
 
 
 @pytest.mark.parametrize('df_CCIAbove200, expected_CCIAbove200', [
