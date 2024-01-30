@@ -82,127 +82,15 @@ class StockConsumer:
         candlePatterns = hostRef.candlePatterns
         userArgsLog = printCounter
         try:
-            if userArgsLog:
-                self.setupLoggers(hostRef, screener, logLevel, stock)
-            period = configManager.period
-            if volumeRatio <= 0:
-                volumeRatio = configManager.volumeRatio
-            # Data download adjustment for Newly Listed only feature
-            if newlyListedOnly:
-                if int(configManager.period[:-1]) > 250:
-                    period = "250d"
-                else:
-                    period = configManager.period
+            volumeRatio, period = self.determineBasicConfigs(stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog)
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            hostData = hostRef.objectDictionary.get(stock)
-            if (
-                not shouldCache
-                or downloadOnly
-                or self.isTradingTime
-                or hostData is None
-            ) and (
-                hostData is None and backtestDuration >= 0
-            ):  # Fetch only if we are NOT backtesting
-                start = None
-                if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
-                    start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
-                    end = start
-                data = fetcher.fetchStockData(
-                    stock,
-                    period,
-                    configManager.duration,
-                    hostRef.proxyServer,
-                    hostRef.processingResultsCounter,
-                    hostRef.processingCounter,
-                    totalSymbols,
-                    start=start,
-                    end=start
-                )
-                # hostRef.default_logger.info(f"Fetcher fetched stock data:\n{data}")
-                if (
-                    (shouldCache and not self.isTradingTime and (hostData is None))
-                    or downloadOnly
-                ) or (
-                    shouldCache and hostData is None
-                ):  # and backtestDuration == 0 # save only if we're NOT backtesting
-                    if start is None and data is not None:
-                        # Don't need to save if it's not for today. Save only for today
-                        hostRef.objectDictionary[stock] = data.to_dict("split")
-                    # hostRef.default_logger.info(
-                    #     f"Stock data saved:\n{hostRef.objectDictionary[stock]}"
-                    # )
-                    if downloadOnly:
-                        with hostRef.processingResultsCounter.get_lock():
-                            hostRef.processingResultsCounter.value += 1
-                        raise Screener.DownloadDataOnly
-                    else:
-                        hostData = hostRef.objectDictionary.get(stock)
-            else:
-                if printCounter:
-                    try:
-                        print(
-                            colorText.BOLD
-                            + colorText.GREEN
-                            + (
-                                "[%d%%] Screened %d, Found %d. Fetching data & Analyzing %s..."
-                                % (
-                                    int(
-                                        (hostRef.processingCounter.value / totalSymbols)
-                                        * 100
-                                    ),
-                                    hostRef.processingCounter.value,
-                                    hostRef.processingResultsCounter.value,
-                                    stock,
-                                )
-                            )
-                            + colorText.END,
-                            end="",
-                        )
-                        print(
-                            colorText.BOLD
-                            + colorText.GREEN
-                            + "=> Done!"
-                            + colorText.END,
-                            end="\r",
-                            flush=True,
-                        )
-                    except ZeroDivisionError as e:
-                        hostRef.default_logger.debug(e, exc_info=True)
-                        pass
-                    sys.stdout.write("\r\033[K")
-                data = hostData
-                data = pd.DataFrame(
-                    data["data"], columns=data["columns"], index=data["index"]
-                )
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period)
             if len(data) == 0 or len(data) < backtestDuration:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
-            if backtestDuration == 0:
-                fullData, processedData = screener.preprocessData(
-                    data, daysToLookback=configManager.daysToLookback
-                )
-            else:
-                if data is None or fullData is None or processedData is None:
-                    # data will have the oldest date at the top and the most recent
-                    # date will be at the bottom
-                    # We want to have the nth day treated as today when pre-processing where n = backtestDuration row from the bottom
-                    inputData = data.head(len(data) - backtestDuration)
-                    # imputData will have the last row as the date for which the entire calculation
-                    # and prediction is being done
-                    data = data.tail(
-                        backtestDuration + 1
-                    )  # .head(backtestPeriodToLookback+1)
-                    # Let's get today's data
-                    if portfolio:
-                        screener.validateLTPForPortfolioCalc(
-                            data, screeningDictionary, saveDictionary
-                        )
-                    # data has the last row from inputData at the top.
-                    fullData, processedData = screener.preprocessData(
-                        inputData, daysToLookback=configManager.daysToLookback
-                    )
+            fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
             # hostRef.default_logger.info(
             #     f"Finished pre-processing. processedData:\n{data}\nfullData:{fullData}\n"
             # )
@@ -216,112 +104,26 @@ class StockConsumer:
                 #     f"Processing {stock} in {hostRef.processingCounter.value}th counter"
                 # )
             if not processedData.empty:
-                screeningDictionary["Stock"] = (
-                    colorText.WHITE
-                    + (
-                        f"\x1B]8;;https://in.tradingview.com/chart?symbol=NSE%3A{stock}\x1B\\{stock}\x1B]8;;\x1B\\"
-                    )
-                    + colorText.END
-                )
-                saveDictionary["Stock"] = stock
+                self.updateStock(stock, screeningDictionary, saveDictionary)
                 
-                isLtpValid, verifyStageTwo = screener.validateLTP(
-                    fullData,
-                    screeningDictionary,
-                    saveDictionary,
-                    minLTP=configManager.minLTP,
-                    maxLTP=configManager.maxLTP,
-                )
-                if not isLtpValid:
-                    raise Screener.LTPNotInConfiguredRange
-                if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
-                    raise Screener.NotAStageTwoStock
-                minVolume = configManager.minVolume / (
-                    100 if configManager.isIntradayConfig() else 1
-                )
-                hasMinVolumeRatio, hasMinVolQty = screener.validateVolume(
-                    processedData,
-                    screeningDictionary,
-                    saveDictionary,
-                    volumeRatio=volumeRatio,
-                    minVolume=minVolume,
-                )
-                if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
-                    raise Screener.NotEnoughVolumeAsPerConfig
+                self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener)
+                hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
                 
                 isConfluence = False
                 isInsideBar = 0
                 isMaReversal = 0
                 isIpoBase = False
                 isMaSupport = False
-                isShortTermBullish = False
                 isLorentzian = False
                 isVCP = False
                 isVSA = False
                 isNR = False
                 isBuyingTrendline = False
 
-                if executeOption == 11:
-                    isShortTermBullish = screener.validateShortTermBullish(
-                        fullData, screeningDictionary, saveDictionary
-                    )
-                    if not isShortTermBullish:
-                        return None
-                if executeOption == 12:
-                    is15MinutePriceVolumeBreakout = (
-                        screener.validate15MinutePriceVolumeBreakout(fullData)
-                    )
-                    if not is15MinutePriceVolumeBreakout:
-                        return None
-                if executeOption == 13:
-                    isBullishIntradayRSIMACD = screener.findBullishIntradayRSIMACD(
-                        fullData
-                    )
-                    if not isBullishIntradayRSIMACD:
-                        return None
-                if executeOption == 14:
-                    isNR4Day = screener.findNR4Day(fullData)
-                    if not isNR4Day:
-                        return None
-                if executeOption == 15:
-                    is52WeekLowBreakout = screener.find52WeekLowBreakout(fullData)
-                    if not is52WeekLowBreakout:
-                        return None
-                if executeOption == 16:
-                    is10DaysLowBreakout = screener.find10DaysLowBreakout(fullData)
-                    if not is10DaysLowBreakout:
-                        return None
-                if executeOption == 17:
-                    is52WeekHighBreakout = screener.find52WeekHighBreakout(fullData)
-                    if not is52WeekHighBreakout:
-                        return None
-                if executeOption == 18:
-                    isAroonCrossover = screener.findAroonBullishCrossover(fullData)
-                    if not isAroonCrossover:
-                        return None
-                if executeOption == 19:
-                    macdHistBelow0 = screener.validateMACDHistogramBelow0(fullData)
-                    if not macdHistBelow0:
-                        return None
-                if executeOption == 20:
-                    bullishForTomorrow = screener.validateBullishForTomorrow(fullData)
-                    if not bullishForTomorrow:
-                        return None
-                if executeOption == 23:
-                    isBreakingOutNow = screener.findBreakingoutNow(processedData)
-                    if not isBreakingOutNow:
-                        return None
-                if executeOption == 24:
-                    higherHighsLowsClose = (
-                        screener.validateHigherHighsHigherLowsHigherClose(fullData)
-                    )
-                    if not higherHighsLowsClose:
-                        return None
-                if executeOption == 25:
-                    hasLowerLows = screener.validateLowerHighsLowerLows(processedData)
-                    if not hasLowerLows:
-                        return None
-                
+                isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
+                if not isValidityCheckMet:
+                    return None
+                isShortTermBullish = (executeOption == 11 and isValidityCheckMet)
                 if executeOption == 4:
                     isLowestVolume = screener.validateLowestVolume(
                         processedData, daysForLowestVolume
@@ -584,18 +386,7 @@ class StockConsumer:
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
-                        or (executeOption == 12 and is15MinutePriceVolumeBreakout)
-                        or (executeOption == 13 and isBullishIntradayRSIMACD)
-                        or (executeOption == 14 and isNR4Day)
-                        or (executeOption == 15 and is52WeekLowBreakout)
-                        or (executeOption == 16 and is10DaysLowBreakout)
-                        or (executeOption == 17 and is52WeekHighBreakout)
-                        or (executeOption == 18 and isAroonCrossover)
-                        or (executeOption == 19 and macdHistBelow0)
-                        or (executeOption == 20 and bullishForTomorrow)
-                        or (executeOption == 23 and isBreakingOutNow)
-                        or (executeOption == 24 and higherHighsLowsClose)
-                        or (executeOption == 25 and hasLowerLows)
+                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25] and isValidityCheckMet)
                     ):
                         hostRef.processingResultsCounter.value += 1
                         return (
@@ -644,6 +435,211 @@ class StockConsumer:
                     + colorText.END
                 )
         return None
+
+    def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
+        isValid = True
+        if executeOption == 11:
+            isValid = screener.validateShortTermBullish(
+                fullData, screeningDictionary, saveDictionary
+            )
+        if executeOption == 12:
+            isValid = (
+                screener.validate15MinutePriceVolumeBreakout(fullData)
+            )
+        if executeOption == 13:
+            isValid = screener.findBullishIntradayRSIMACD(
+                fullData
+            )
+        if executeOption == 14:
+            isValid = screener.findNR4Day(fullData)
+        if executeOption == 15:
+            isValid = screener.find52WeekLowBreakout(fullData)
+        if executeOption == 16:
+            isValid = screener.find10DaysLowBreakout(fullData)
+        if executeOption == 17:
+            isValid = screener.find52WeekHighBreakout(fullData)
+        if executeOption == 18:
+            isValid = screener.findAroonBullishCrossover(fullData)
+        if executeOption == 19:
+            isValid = screener.validateMACDHistogramBelow0(fullData)
+        if executeOption == 20:
+            isValid = screener.validateBullishForTomorrow(fullData)
+        if executeOption == 23:
+            isValid = screener.findBreakingoutNow(processedData)
+        if executeOption == 24:
+            isValid = (
+                screener.validateHigherHighsHigherLowsHigherClose(fullData)
+            )
+        if executeOption == 25:
+            isValid = screener.validateLowerHighsLowerLows(processedData)
+        return isValid        
+                    
+    def performBasicVolumeChecks(self, executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener):
+        minVolume = configManager.minVolume / (
+                    100 if configManager.isIntradayConfig() else 1
+                )
+        hasMinVolumeRatio, hasMinVolQty = screener.validateVolume(
+                    processedData,
+                    screeningDictionary,
+                    saveDictionary,
+                    volumeRatio=volumeRatio,
+                    minVolume=minVolume,
+                )
+        if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
+            raise Screener.NotEnoughVolumeAsPerConfig
+        return hasMinVolumeRatio
+
+    def performBasicLTPChecks(self, executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener):
+        isLtpValid, verifyStageTwo = screener.validateLTP(
+                    fullData,
+                    screeningDictionary,
+                    saveDictionary,
+                    minLTP=configManager.minLTP,
+                    maxLTP=configManager.maxLTP,
+                )
+        if not isLtpValid:
+            raise Screener.LTPNotInConfiguredRange
+        if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
+            raise Screener.NotAStageTwoStock
+
+    def updateStock(self, stock, screeningDictionary, saveDictionary):
+        screeningDictionary["Stock"] = (
+                    colorText.WHITE
+                    + (
+                        f"\x1B]8;;https://in.tradingview.com/chart?symbol=NSE%3A{stock}\x1B\\{stock}\x1B]8;;\x1B\\"
+                    )
+                    + colorText.END
+                )
+        saveDictionary["Stock"] = stock
+
+    def getCleanedDataForDuration(self, backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data):
+        if backtestDuration == 0:
+            fullData, processedData = screener.preprocessData(
+                    data, daysToLookback=configManager.daysToLookback
+                )
+        else:
+            if data is None or fullData is None or processedData is None:
+                    # data will have the oldest date at the top and the most recent
+                    # date will be at the bottom
+                    # We want to have the nth day treated as today when pre-processing where n = backtestDuration row from the bottom
+                inputData = data.head(len(data) - backtestDuration)
+                    # imputData will have the last row as the date for which the entire calculation
+                    # and prediction is being done
+                data = data.tail(
+                        backtestDuration + 1
+                    )  # .head(backtestPeriodToLookback+1)
+                    # Let's get today's data
+                if portfolio:
+                    screener.validateLTPForPortfolioCalc(
+                            data, screeningDictionary, saveDictionary
+                        )
+                    # data has the last row from inputData at the top.
+                fullData, processedData = screener.preprocessData(
+                        inputData, daysToLookback=configManager.daysToLookback
+                    )
+                
+        return fullData,processedData,data
+
+    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period):
+        hostData = hostRef.objectDictionary.get(stock)
+        if (
+                not shouldCache
+                or downloadOnly
+                or self.isTradingTime
+                or hostData is None
+            ) and (
+                hostData is None and backtestDuration >= 0
+            ):  # Fetch only if we are NOT backtesting
+            start = None
+            if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
+                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
+                end = start
+            data = fetcher.fetchStockData(
+                    stock,
+                    period,
+                    configManager.duration,
+                    hostRef.proxyServer,
+                    hostRef.processingResultsCounter,
+                    hostRef.processingCounter,
+                    totalSymbols,
+                    start=start,
+                    end=start
+                )
+                # hostRef.default_logger.info(f"Fetcher fetched stock data:\n{data}")
+            if (
+                    (shouldCache and not self.isTradingTime and (hostData is None))
+                    or downloadOnly
+                ) or (
+                    shouldCache and hostData is None
+                ):  # and backtestDuration == 0 # save only if we're NOT backtesting
+                if start is None and data is not None:
+                        # Don't need to save if it's not for today. Save only for today
+                    hostRef.objectDictionary[stock] = data.to_dict("split")
+                    # hostRef.default_logger.info(
+                    #     f"Stock data saved:\n{hostRef.objectDictionary[stock]}"
+                    # )
+                if downloadOnly:
+                    with hostRef.processingResultsCounter.get_lock():
+                        hostRef.processingResultsCounter.value += 1
+                    raise Screener.DownloadDataOnly
+                else:
+                    hostData = hostRef.objectDictionary.get(stock)
+        else:
+            self.printProcessingCounter(totalSymbols, stock, printCounter, hostRef)
+            data = hostData
+            data = pd.DataFrame(
+                    data["data"], columns=data["columns"], index=data["index"]
+                )
+            
+        return data
+
+    def determineBasicConfigs(self, stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog):
+        if userArgsLog:
+            self.setupLoggers(hostRef, screener, logLevel, stock)
+        period = configManager.period
+        if volumeRatio <= 0:
+            volumeRatio = configManager.volumeRatio
+            # Data download adjustment for Newly Listed only feature
+        if newlyListedOnly:
+            if int(configManager.period[:-1]) > 250:
+                period = "250d"
+            else:
+                period = configManager.period
+        return volumeRatio,period
+
+    def printProcessingCounter(self, totalSymbols, stock, printCounter, hostRef):
+        if printCounter:
+            try:
+                print(
+                            colorText.BOLD
+                            + colorText.GREEN
+                            + (
+                                "[%d%%] Screened %d, Found %d. Fetching data & Analyzing %s..."
+                                % (
+                                    int(
+                                        (hostRef.processingCounter.value / totalSymbols)
+                                        * 100
+                                    ),
+                                    hostRef.processingCounter.value,
+                                    hostRef.processingResultsCounter.value,
+                                    stock,
+                                )
+                            )
+                            + colorText.END,
+                            end="",
+                        )
+                print(
+                            colorText.BOLD
+                            + colorText.GREEN
+                            + "=> Done!"
+                            + colorText.END,
+                            end="\r",
+                            flush=True,
+                        )
+            except ZeroDivisionError as e:
+                hostRef.default_logger.debug(e, exc_info=True)
+                pass
+            sys.stdout.write("\r\033[K")
     
     def setupLoggers(self, hostRef, screener, logLevel, stock):
         # Set the loglevels for both the caller and screener
