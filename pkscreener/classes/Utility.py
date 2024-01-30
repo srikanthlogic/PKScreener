@@ -103,7 +103,7 @@ def marketStatus():
     lngStatus = None
     try:
         _,lngStatus,_ = nseFetcher.capitalMarketStatus()
-    except:
+    except:# pragma: no cover
         pass
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
@@ -123,7 +123,10 @@ class tools:
             os.system("cls")
         else:
             os.system("clear")
-        print(art.encode('utf-8').decode(STD_ENCODING))
+        try:
+            print(art.encode('utf-8').decode(STD_ENCODING))
+        except:# pragma: no cover
+            pass
 
     # Print about developers and repository
     def showDevInfo(defaultAnswer=None):
