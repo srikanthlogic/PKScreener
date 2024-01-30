@@ -1171,7 +1171,7 @@ def main(userArgs=None):
             df_xray = prepareGroupedXRay(backtestPeriod, backtest_df)
             summary_df, sorting, sortKeys = FinishBacktestDataCleanup(backtest_df, df_xray)
             while sorting:
-                showSortedBacktestData(backtest_df, summary_df, sortKeys)
+                sorting = showSortedBacktestData(backtest_df, summary_df, sortKeys)
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
         elif menuOption == "B":
@@ -1263,6 +1263,7 @@ def showSortedBacktestData(backtest_df, summary_df, sortKeys):
     else:
         print("Finished backtesting!")
         sorting = False
+    return sorting
 
 def resetConfigToDefault():
     isIntraday = userPassedArgs.intraday is not None
