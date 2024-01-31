@@ -60,7 +60,7 @@ class tools:
         self.generalTimeout = 2
         self.longTimeout = 4
         self.maxNetworkRetryCount = 10
-        self.backtestPeriod = 30
+        self.backtestPeriod = 120
         self.minVolume = 10000
         self.logger = None
 
