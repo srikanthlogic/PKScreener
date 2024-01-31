@@ -2040,7 +2040,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     backtest_df.drop_duplicates(inplace=True)
     summaryText = f"Auto-generated in {round(elapsed_time,2)} sec. as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
     lastSummaryRow = None
-    if "Summary" in optionalName:
+    if "Summary" not in optionalName:
         backtest_df.sort_values(by=[sortKey], ascending=False, inplace=True)
     else:
         lastRow = backtest_df.iloc[-1, :]
@@ -2070,7 +2070,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
 
     colored_text = backtest_df.to_html(index=False)
     summaryText = summaryText.replace("\n", "<br />")
-    if "Summary" in  optionalName:
+    if "Summary" in optionalName:
        summaryText = f"{summaryText}<br /><input type='checkbox' id='chkActualNumbers' name='chkActualNumbers' value='0'><label for='chkActualNumbers'>Sort by actual numbers (Stocks + Date combinations of results. Higher the count, better the prediction reliability)</label><br>"
     colored_text = reformatTable(summaryText, headerDict, colored_text, sorting=True)
     # Delete any pre-existing backtesting report for the same parameters
