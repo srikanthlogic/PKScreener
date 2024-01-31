@@ -68,6 +68,7 @@ class StockConsumer:
         backtestPeriodToLookback=30,
         logLevel=logging.NOTSET,
         portfolio=False,
+        testData = None,
         hostRef=None,
     ):
         assert (
@@ -86,7 +87,7 @@ class StockConsumer:
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period)
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData)
             if len(data) == 0 or len(data) < backtestDuration:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
@@ -542,8 +543,9 @@ class StockConsumer:
                 
         return fullData,processedData,data
 
-    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period):
+    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData=None):
         hostData = hostRef.objectDictionary.get(stock)
+        data = None
         if (
                 not shouldCache
                 or downloadOnly
@@ -556,17 +558,20 @@ class StockConsumer:
             if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
                 end = start
-            data = fetcher.fetchStockData(
-                    stock,
-                    period,
-                    configManager.duration,
-                    hostRef.proxyServer,
-                    hostRef.processingResultsCounter,
-                    hostRef.processingCounter,
-                    totalSymbols,
-                    start=start,
-                    end=start
-                )
+            if testData is not None:
+                data = testData
+            else:
+                data = fetcher.fetchStockData(
+                        stock,
+                        period,
+                        configManager.duration,
+                        hostRef.proxyServer,
+                        hostRef.processingResultsCounter,
+                        hostRef.processingCounter,
+                        totalSymbols,
+                        start=start,
+                        end=start
+                    )
                 # hostRef.default_logger.info(f"Fetcher fetched stock data:\n{data}")
             if (
                     (shouldCache and not self.isTradingTime and (hostData is None))

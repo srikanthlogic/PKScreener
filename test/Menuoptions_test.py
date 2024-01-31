@@ -46,12 +46,20 @@ class TestMenu:
         m.menuKey = "1"
         m.parent = None
         assert m.commandTextKey() == "/1"
+        p = menu()
+        p.menuKey = "P"
+        m.parent = p
+        assert m.commandTextKey() == "/P_1"
 
     def test_commandTextLabel(self):
         m = menu()
-        m.menuText = "Test Menu"
+        m.menuText = "Child Menu"
         m.parent = None
-        assert m.commandTextLabel() == "Test Menu"
+        assert m.commandTextLabel() == "Child Menu"
+        p = menu()
+        p.menuText = "P"
+        m.parent = p
+        assert m.commandTextLabel() == "P > Child Menu"
 
     def test_render(self):
         m = menu()
@@ -66,6 +74,12 @@ class TestMenu:
         m.menuKey = "T"
         m.level = 0
         assert "Toggle between long-term (Default)" in m.renderSpecial("T")
+        m.menuText = "Random"
+        m.level = 1
+        assert m.renderSpecial("T") == "~"
+        assert m.renderSpecial("Whatever") == "~"
+        m.level = 0
+        assert m.renderSpecial("AnythingOtherThanT") == "~"
 
 class TestMenus:
     def test_fromDictionary(self):
@@ -110,6 +124,7 @@ class TestMenus:
         }
         m.fromDictionary(rawDictionary)
         assert m.find("4") is None
+        assert m.find() is None
 
     def test_renderLevel0Menus(self):
         m = menus()
@@ -120,3 +135,25 @@ class TestMenus:
         }
         m.fromDictionary(rawDictionary)
         assert m.renderLevel0Menus() == '\n     X > Scanners\n     S > Strategies\n     B > Backtests\n     G > Growth of 10k\n\n     T > Toggle between long-term (Default)\x1b[93m [Current]\x1b[0m and Intraday user configuration\n\n\n     E > Edit user configuration\n     Y > View your user configuration\n\n     U > Check for software update\n     H > Help / About Developer\n     Z > Exit (Ctrl + C)'
+
+    def test_renderForMenu_Lorenzian(self):
+        m = menus()
+        assert m.renderForMenu() == '\n     X > Scanners\n     S > Strategies\n     B > Backtests\n     G > Growth of 10k\n\n     T > Toggle between long-term (Default)\x1b[93m [Current]\x1b[0m and Intraday user configuration\n\n\n     E > Edit user configuration\n     Y > View your user configuration\n\n     U > Check for software update\n     H > Help / About Developer\n     Z > Exit (Ctrl + C)'
+        m1 = m.find("X")
+        m1.level = 3
+        m1.menuKey = "7"
+        list_menus = m.renderForMenu(selectedMenu=m1, asList=True)
+        assert len(list_menus) == 4
+        assert list_menus[0].menuText == "Buy"
+        assert list_menus[1].menuText == "Sell"
+        assert list_menus[2].menuText == "Any/All"
+    
+    def test_renderLevel_X(self):
+        m = menus()
+        assert m.renderLevel1_X_Menus() is not None
+        assert m.renderLevel2_X_Menus() is not None
+        assert m.renderLevel3_X_Reversal_Menus() is not None
+        assert m.renderLevel3_X_ChartPattern_Menus() is not None
+        assert m.renderLevel3_X_PopularStocks_Menus() is not None
+        assert m.renderLevel3_X_StockPerformance_Menus() is not None
+        assert m.renderLevel4_X_Lorenzian_Menus() is not None

@@ -1,3 +1,26 @@
+"""
+    The MIT License (MIT)
+
+    Copyright (c) 2023 pkjmesra
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+"""
 import requests
 from requests.exceptions import HTTPError
 from requests import Response
@@ -28,6 +51,9 @@ class RequestsMocker:
             self.savedResponses = d
         self.stockSortedDF = pd.read_html("test/StockSorted.html")
         self.dateSortedDF = pd.read_html("test/DateSorted.html")
+        with open('pkscreener/release.md') as r:
+            self.savedResponses["release.md"] = r.read()
+        self.savedResponses["/finance/chart/"] = self.get_saved_yf_response()
 
     def patched_readhtml(self, *args, **kwargs) -> list[pd.DataFrame]:
         if args[0].endswith("StockSorted.html"):
@@ -36,12 +62,22 @@ class RequestsMocker:
             return self.dateSortedDF
 
     def patched_yf(self, *args, **kwargs) -> pd.DataFrame:
-        savedResponses = ""
-        with open('test/yahoo_response.txt') as f:
-            savedResponses = json.load(f)
+        savedResponses = self.get_saved_yf_response()
         df = pd.DataFrame.from_dict(savedResponses, orient='columns')
         return df
 
+    def get_saved_yf_response(self):
+        savedResponses = ""
+        with open('test/yahoo_response.txt') as f:
+            savedResponses = json.load(f)
+        return savedResponses
+    
+    def get_saved_yf_response_object(self):
+        user_encode_data = json.dumps(self.get_saved_yf_response(), indent=2).encode('utf-8')
+        r = CachedResponse(status_code=200)
+        r._content = user_encode_data
+        r.raw = CachedHTTPResponse(body=user_encode_data,status=200,reason="OK")
+        return r
         
     def patched_get(self, *args, **kwargs) -> AnyResponse:
         return self.patched_fetchURL()
@@ -55,13 +91,23 @@ class RequestsMocker:
             return r
 
     def patched_fetchURL(self, *args, **kwargs) -> AnyResponse:
-        r = self.returnFromFixture(*args, **kwargs)
+        r = None
+        if args is not None and len(args) > 0:
+            r = self.returnFromFixture(*args, **kwargs)
         if r is None:
+            # return self.defaultEmptyResponse()
             s = requests.Session()
             return s.get(args[0],**kwargs)
         else:
             return r
 
+    def defaultEmptyResponse(self):
+        user_encode_data = json.dumps("Empty mock up response! You need to define a fixture to capture this request!", indent=2).encode('utf-8')
+        r = CachedResponse(status_code=200)
+        r._content = user_encode_data
+        r.raw = CachedHTTPResponse(body=user_encode_data,status=200,reason="OK")
+        return r
+    
     def returnFromFixture(self, *args, **kwargs) -> AnyResponse:
         if args[0] in self.savedResponses.keys():
             user_encode_data = json.dumps(self.savedResponses[args[0]], indent=2).encode('utf-8')

@@ -64,8 +64,11 @@ def test_setConfig_default(config_parser):
     assert config_parser.get('config', 'generalTimeout') == '2'
     assert config_parser.get('config', 'longTimeout') == '4'
     assert config_parser.get('config', 'maxNetworkRetryCount') == '10'
-    assert config_parser.get('config', 'backtestPeriod') == '30'
+    assert config_parser.get('config', 'backtestPeriod') == '120'
     assert config_parser.get('config', 'minimumVolume') == '10000'
+    with patch('builtins.input') as mock_input:
+        tool.setConfig(config_parser, default=True, showFileCreatedText=True)
+        mock_input.assert_called_once()
 
 def test_setConfig_non_default(config_parser):
     tool = tools()
@@ -97,7 +100,7 @@ def test_getConfig(config_parser):
     config_parser.set('config', 'generalTimeout', '2')
     config_parser.set('config', 'longTimeout', '4')
     config_parser.set('config', 'maxNetworkRetryCount', '10')
-    config_parser.set('config', 'backtestPeriod', '30')
+    config_parser.set('config', 'backtestPeriod', '120')
     config_parser.set('config', 'minimumVolume', '10000')
     tool.getConfig(config_parser)
     assert tool.period == '450d'
@@ -116,8 +119,12 @@ def test_getConfig(config_parser):
     assert tool.generalTimeout == 2
     assert tool.longTimeout == 4
     assert tool.maxNetworkRetryCount == 10
-    assert tool.backtestPeriod == 30
+    assert tool.backtestPeriod == 120
     assert tool.minVolume == 10000
+    with patch('configparser.ConfigParser.read', return_value = ""):
+        with patch('pkscreener.classes.ConfigManager.tools.setConfig') as mock_setconfig:
+            tool.getConfig(config_parser)
+            mock_setconfig.assert_called_once()
 
 def test_toggleConfig_intraday(config_parser):
     tool = tools()
@@ -140,6 +147,9 @@ def test_toggleConfig_swing(config_parser):
     assert tool.duration == '1d'
     assert tool.daysToLookback == 30
     assert tool.cacheEnabled == True
+    tool.toggleConfig(None, clearCache=False)
+    assert tool.duration == '1d'
+
 
 def test_isIntradayConfig(config_parser):
     tool = tools()

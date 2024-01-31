@@ -57,6 +57,7 @@ from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.globals import main
 from pkscreener.pkscreenercli import argParser, disableSysOut
 from RequestsMocker import RequestsMocker as PRM
+from sharedmock import SharedMock
 
 session = CachedSession(
     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
@@ -78,24 +79,30 @@ last_release = 0
 # Mocking necessary functions or dependencies
 @pytest.fixture(autouse=True)
 def mock_dependencies():
-    with patch("pkscreener.classes.Utility.tools.clearScreen"), \
-        patch("yfinance.multi.download",new=PRM().patched_yf), \
-        patch("yfinance.download",new=PRM().patched_yf), \
-        patch("PKDevTools.classes.Fetcher.fetcher.fetchURL",new=PRM().patched_fetchURL), \
-        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
-        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchURL",new=PRM().patched_fetchURL), \
-        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchNiftyCodes",return_value = ['SBIN']), \
-        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchStockCodes",return_value = ['SBIN']), \
-        patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchStockData",new=PRM().patched_yf), \
-        patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.capitalMarketStatus",return_value = ("NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)","NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)",PKDateUtilities.currentDateTime().strftime("%Y-%m-%d"))), \
-        patch("requests.get",new=PRM().patched_get), \
-        patch("requests_cache.CachedSession.get",new=PRM().patched_get), \
-        patch("requests_cache.CachedSession.post",new=PRM().patched_post), \
-        patch("requests.post",new=PRM().patched_post), \
-        patch("pandas.read_html",new=PRM().patched_readhtml), \
-        patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarFundFavouriteStocks",return_value=None), \
-        patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarTopDividendsYieldStocks",return_value=None):
-            yield
+    sm_yf = SharedMock()
+    sm_yf.return_value=PRM().patched_yf()
+    with patch("pkscreener.classes.Utility.tools.clearScreen"):
+        with patch("yfinance.download",new=PRM().patched_yf):
+            with patch("pkscreener.classes.Fetcher.yf.download",new=PRM().patched_yf):
+                with patch("PKDevTools.classes.Fetcher.fetcher.fetchURL",new=PRM().patched_fetchURL):
+                    with patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchURL",new=PRM().patched_fetchURL):
+                        with patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchURL",new=PRM().patched_fetchURL):
+                            with patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchNiftyCodes",return_value = ['SBIN']):
+                                with patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.fetchStockCodes",return_value = ['SBIN']):
+                                    with patch("pkscreener.classes.Fetcher.screenerStockDataFetcher.fetchStockData",sm_yf):
+                                        with patch("PKNSETools.PKNSEStockDataFetcher.nseStockDataFetcher.capitalMarketStatus",return_value = ("NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)","NIFTY 50 | Closed | 29-Jan-2024 15:30 | 21737.6 | ↑385 (1.8%)",PKDateUtilities.currentDateTime().strftime("%Y-%m-%d"))):
+                                            with patch("requests.get",new=PRM().patched_get):
+                                                # with patch("requests.Session.get",new=PRM().patched_get):
+                                                #     with patch("requests.sessions.Session.get",new=PRM().patched_get):
+                                                with patch("requests_cache.CachedSession.get",new=PRM().patched_get):
+                                                    with patch("requests_cache.CachedSession.post",new=PRM().patched_post):
+                                                        with patch("requests.post",new=PRM().patched_post):
+                                                            with patch("pandas.read_html",new=PRM().patched_readhtml):
+                                                                with patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarFundFavouriteStocks",return_value=None):
+                                                                    with patch("PKNSETools.morningstartools.PKMorningstarDataFetcher.morningstarDataFetcher.fetchMorningstarTopDividendsYieldStocks",return_value=None):
+                                                                        with patch('yfinance.download', sm_yf):
+                                                                            yield
+    
 
 def cleanup():
     # configManager.deleteFileWithPattern(pattern='*.pkl')

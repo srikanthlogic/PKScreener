@@ -1078,6 +1078,9 @@ def main(userArgs=None):
                         default_logger().level,
                         (menuOption in ["B", "G"])
                         or (userPassedArgs.backtestdaysago is not None),
+                        # assumption is that fetcher.fetchStockData would be
+                        # mocked to avoid calling yf.download again and again
+                        fetcher.fetchStockData() if testing else None,
                     )
                     for stock in listStockCodes
                 ]
@@ -1097,7 +1100,7 @@ def main(userArgs=None):
         tasks_queue, results_queue, totalConsumers = initQueues(len(items))
         cp = CandlePatterns()
         cm = configManager
-        f = Fetcher.screenerStockDataFetcher(configManager)
+        # f = Fetcher.screenerStockDataFetcher(configManager)
         scr = Screener.tools(configManager, default_logger())
         consumers = [
             PKMultiProcessorClient(
@@ -1110,7 +1113,7 @@ def main(userArgs=None):
                 fetcher.proxyServer,
                 keyboardInterruptEvent,
                 default_logger(),
-                f,
+                fetcher,
                 cm,
                 cp,
                 scr,
