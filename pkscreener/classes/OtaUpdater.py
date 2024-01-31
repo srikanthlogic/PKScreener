@@ -55,6 +55,8 @@ class OTAUpdater:
 
     # Download and replace exe through other process for Windows
     def updateForWindows(url):
+        if url is None or len(url) == 0:
+            return
         batFile = (
             """@echo off
 color a
@@ -78,6 +80,8 @@ del updater.bat & exit
 
     # Download and replace bin through other process for Linux
     def updateForLinux(url):
+        if url is None or len(url) == 0:
+            return
         bashFile = (
             """#!/bin/bash
 echo ""
@@ -104,6 +108,8 @@ rm updater.sh
         # Download and replace run through other process for Mac
 
     def updateForMac(url):
+        if url is None or len(url) == 0:
+            return
         bashFile = (
             """#!/bin/bash
 echo ""
@@ -197,17 +203,19 @@ rm updater.sh
                 )
                 if skipDownload:
                     return
-                action = str(
-                    input(
-                        colorText.BOLD
-                        + colorText.GREEN
-                        + (
-                            "\n[+] New Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
-                            % (str(resp.json()["tag_name"]), size)
+                try:
+                    action = input(
+                            colorText.BOLD
+                            + colorText.GREEN
+                            + (
+                                "\n[+] New Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
+                                % (str(resp.json()["tag_name"]), size)
+                            )
                         )
-                    )
-                ).lower()
-                if action == "y":
+                except EOFError: # user pressed enter
+                    action = "y"
+                    pass
+                if action is not None and action.lower() == "y":
                     try:
                         if "Windows" in platform.system():
                             OTAUpdater.updateForWindows(OTAUpdater.checkForUpdate.url)
@@ -249,6 +257,7 @@ rm updater.sh
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             if OTAUpdater.checkForUpdate.url is not None:
+                print(e)
                 print(
                     colorText.BOLD
                     + colorText.BLUE
