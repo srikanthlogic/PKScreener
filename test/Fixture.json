@@ -41,6 +41,19 @@
   "https://api.telegram.org/":"",
   "DateSorted.html": "test/DateSorted.html",
   "StockSorted.html": "test/StockSorted.html",
+  "release.md": "release.md",
+  "https://www.nseindia.com/api/marketStatus": [
+    {
+      "market": "Capital Market",
+      "marketStatus": "Closed",
+      "tradeDate": "16-Oct-2023",
+      "index": "NIFTY 50",
+      "last": 19731.75,
+      "variation": -19.299999999999272,
+      "percentChange": -0.1,
+      "marketStatusMessage": "Normal Market has Closed"
+    }],
+    "/finance/chart/":"yfinance",
   "https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/nse-holidays.json":{
     "CM": [
         {

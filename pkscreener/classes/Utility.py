@@ -1086,6 +1086,7 @@ class tools:
             os.path.join(Archiver.get_user_outputs_dir(), "nifty_model_v2.pkl"),
         ]
         model = None
+        pkl = None
         urls = [
             "https://raw.github.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.h5",
             "https://raw.github.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.pkl",
