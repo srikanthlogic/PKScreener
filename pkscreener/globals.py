@@ -2032,7 +2032,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     global menuChoiceHierarchy, selectedChoice, userPassedArgs, elapsed_time
     pd.set_option("display.max_rows", 800)
     # pd.set_option("display.max_columns", 20)
-    if backtest_df is None:
+    if backtest_df is None or backtest_df.empty or len(backtest_df) < 1:
         return
     backtest_df.drop_duplicates(inplace=True)
     summaryText = f"Auto-generated in {round(elapsed_time,2)} sec. as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"

@@ -513,6 +513,8 @@ class StockConsumer:
         saveDictionary["Stock"] = stock
 
     def getCleanedDataForDuration(self, backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data):
+        fullData = None
+        processedData = None
         if backtestDuration == 0:
             fullData, processedData = screener.preprocessData(
                     data, daysToLookback=configManager.daysToLookback
