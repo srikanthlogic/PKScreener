@@ -31,7 +31,7 @@ import pytest
 from PKDevTools.classes.ColorText import colorText
 
 from pkscreener.classes.OtaUpdater import OTAUpdater
-
+from pkscreener.classes import VERSION
 
 def getPlatformSpecificDetails(jsonDict):
     url = ""
@@ -340,7 +340,8 @@ def test_get_latest_release_info_linux(mocker):
             {"browser_download_url": "https://example.com/release1", "size": 1048576},
             {"browser_download_url": "https://example.com/release2", "size": 2097152},
             {"browser_download_url": "https://example.com/release3", "size": 3145728},
-        ]
+        ],
+        "tag_name": ".".join(VERSION.split(".")[:-1]) + "." +str(int(VERSION.split(".")[-1]) +1)
     }
     mocker.patch.object(OTAUpdater.fetcher, "fetchURL", return_value=mock_resp)
 
@@ -353,6 +354,14 @@ def test_get_latest_release_info_linux(mocker):
     # Assert the expected values
     assert resp == mock_resp
     assert size == 1
+    with patch("pkscreener.classes.OtaUpdater.OTAUpdater.showWhatsNew") as mock_showWhatsNew:
+        OTAUpdater.checkForUpdate(skipDownload=True)
+        assert mock_showWhatsNew.called
+        mock_resp.json.return_value["tag_name"] = ".".join(VERSION.split(".")[:-2]) + "." +str(int(VERSION.split(".")[-2]) +1)
+        OTAUpdater.checkForUpdate(skipDownload=True)
+        assert mock_showWhatsNew.called
+        OTAUpdater.checkForUpdate(VERSION=".".join(VERSION.split(".")[:-1]),skipDownload=True)
+        assert mock_showWhatsNew.called
 
 def test_checkForUpdate_prod_update_1(mocker):
     # Mock the response from get_latest_release_info
