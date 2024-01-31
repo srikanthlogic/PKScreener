@@ -276,7 +276,12 @@ def test_fetchStockData_negative(configManager, tools_instance):
             start=None,
             end=None,
         )
-
+        yfd_df = pd.DataFrame({"A":[1,2,3]})
+        mock_download.return_value = yfd_df
+        result = tools_instance.fetchStockData(
+                "AAPL", "1d", "1m", None, 0, 0, 1, printCounter=True
+            )
+        pd.testing.assert_frame_equal(result.reset_index(drop=True),yfd_df.reset_index(drop=True))
 
 def test_fetchLatestNiftyDaily_positive(configManager, tools_instance):
     with patch("yfinance.download") as mock_download:
