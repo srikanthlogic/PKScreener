@@ -175,6 +175,7 @@ jobs:
     - name: Run backtest on Windows
       shell: cmd
       continue-on-error: true
+      timeout-minutes: 60
       if: startsWith(runner.os, 'Windows')
       env:
         RUNNER : "GitHub_Actions"
@@ -186,6 +187,7 @@ jobs:
     - name: Run backtest on Linux
       shell: bash
       continue-on-error: true
+      timeout-minutes: 60
       if: startsWith(runner.os, 'Linux')
       env:
         RUNNER : "GitHub_Actions"
