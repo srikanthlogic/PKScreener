@@ -194,14 +194,36 @@ def test_find52WeekLowBreakout_edge(tools_instance):
 
 def test_find52WeekHighLow_positive_case(tools_instance):
     df = pd.DataFrame({
-        "High": [50, 60, 70, 80, 90, 100],  # Assuming recent high is 100
-        "Low": [40, 30, 20, 10, 5, 0]  # Assuming recent low is 0
+        "High": [100, 60, 70, 80, 90, 100],  # Assuming recent high is 100
+        "Low": [5, 30, 20, 10, 5, 5]  # Assuming recent low is 40
     })
     saveDict = {}
     screenDict = {}
-
     tools_instance.find52WeekHighLow(df, saveDict, screenDict)
+    assert saveDict["52Wk H"] == "100.00"
+    assert saveDict["52Wk L"] == "5.00"
+    assert screenDict["52Wk H"] == f"{colorText.GREEN}100.00{colorText.END}"
+    assert screenDict["52Wk L"] == f"{colorText.FAIL}5.00{colorText.END}"
 
+    df = pd.DataFrame({
+        "High": [90, 60, 70, 80, 90, 100],  # Assuming recent high is 90
+        "Low": [110, 130, 120, 110, 115, 100]  # Assuming recent low is 110
+    })
+    saveDict = {}
+    screenDict = {}
+    tools_instance.find52WeekHighLow(df, saveDict, screenDict)
+    assert saveDict["52Wk H"] == "100.00"
+    assert saveDict["52Wk L"] == "100.00"
+    assert screenDict["52Wk H"] == f"{colorText.WARN}100.00{colorText.END}"
+    assert screenDict["52Wk L"] == f"{colorText.WARN}100.00{colorText.END}"
+
+    df = pd.DataFrame({
+        "High": [50, 60, 70, 80, 90, 100],  # Assuming recent high is 50
+        "Low": [40, 30, 20, 10, 5, 0]  # Assuming recent low is 40
+    })
+    saveDict = {}
+    screenDict = {}
+    tools_instance.find52WeekHighLow(df, saveDict, screenDict)
     assert saveDict["52Wk H"] == "100.00"
     assert saveDict["52Wk L"] == "0.00"
     assert screenDict["52Wk H"] == f"{colorText.FAIL}100.00{colorText.END}"
@@ -221,6 +243,8 @@ def test_find52WeekHighLow_negative_case(tools_instance):
     assert saveDict["52Wk L"] == "5.00"
     assert screenDict["52Wk H"] == f"{colorText.FAIL}90.00{colorText.END}"
     assert screenDict["52Wk L"] == f"{colorText.GREEN}5.00{colorText.END}"
+    assert tools_instance.find52WeekHighLow(None,saveDict, screenDict) is False
+    assert tools_instance.find52WeekHighLow(pd.DataFrame(),saveDict, screenDict) is False
 
 def test_find52WeekLowBreakout_positive_case(tools_instance):
     df = pd.DataFrame({
@@ -353,6 +377,12 @@ def test_positive_case_findBreakingoutNow(tools_instance):
         "Close": [55, 65, 75, 85, 95, 105]
     })
     assert tools_instance.findBreakingoutNow(df) == False
+
+    df = pd.DataFrame({
+        "Open": [100,100,100,100,100,100,100,100,100,100,100,100],
+        "Close": [130,110,110,110,110,110,110,110,110,110,110,110,]
+    })
+    assert tools_instance.findBreakingoutNow(df) == True
 
 def test_negative_case_findBreakingoutNow(tools_instance):
     df = pd.DataFrame({
@@ -1757,101 +1787,110 @@ def test_dataframe_with_inf_validateBullishForTomorrow(tools_instance):
 #     # Call the function and assert the result
 #     assert tools_instance.validateBullishForTomorrow(data) == True
 
-# # Positive test case for validateCCI function
-# def test_validateCCI_positive():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.fillna.return_value = data
-#     data.replace.return_value = data
-#     data.head().iloc[0].return_value = 100
+def test_validateCCI():
+    tool = tools(None, None)
+    # Test case 1: CCI within specified range and trend is Up
+    df = pd.DataFrame({'CCI': [50]})
+    screenDict = {}
+    saveDict = {}
+    minCCI = 40
+    maxCCI = 60
+    assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == False
+    assert screenDict['CCI'] == colorText.BOLD + colorText.FAIL + '50' + colorText.END
 
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
+    # Test case 2: CCI below minCCI and trend is Up
+    df = pd.DataFrame({'CCI': [30]})
+    screenDict = {}
+    saveDict = {"Trend":"Weak Up"}
+    minCCI = 40
+    maxCCI = 60
+    assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == True
+    assert screenDict['CCI'] == colorText.BOLD + colorText.GREEN + '30' + colorText.END
 
-#     # Call the function and assert the result
-#     assert tool.validateCCI(data, {}, {}, 0, 100) == True
+    # Test case 3: CCI above maxCCI and trend is Up
+    df = pd.DataFrame({'CCI': [70]})
+    screenDict = {}
+    saveDict = {"Trend":"Weak Up"}
+    minCCI = 40
+    maxCCI = 60
+    assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == True
+    assert screenDict['CCI'] == colorText.BOLD + colorText.GREEN + '70' + colorText.END
 
-# # Negative test case for validateCCI function
-# def test_validateCCI_negative():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.fillna.return_value = data
-#     data.replace.return_value = data
-#     data.head().iloc[0].return_value = 100
+    # Test case 4: CCI within specified range and trend is not Up
+    df = pd.DataFrame({'CCI': [50]})
+    screenDict = {}
+    saveDict = {}
+    minCCI = 40
+    maxCCI = 60
+    saveDict['Trend'] = 'Down'
+    assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == False
+    assert screenDict['CCI'] == colorText.BOLD + colorText.FAIL + '50' + colorText.END
 
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
+def test_validateConfluence():
+    tool = tools(None, None)
+    # Test case 1: SMA and LMA are within specified percentage and SMA is greater than LMA
+    df = pd.DataFrame({'SMA': [50], 'LMA': [45], 'Close': [100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 0.1
+    assert tool.validateConfluence(None, df, screenDict, saveDict, percentage) == True
+    assert screenDict['MA-Signal'] == colorText.BOLD + colorText.GREEN + 'Confluence (5.0%)' + colorText.END
 
-#     # Call the function and assert the result
-#     assert tool.validateCCI(data, {}, {}, 200, 300) == False
+    # Test case 2: SMA and LMA are within specified percentage and SMA is less than LMA
+    df = pd.DataFrame({'SMA': [50], 'LMA': [45], 'Close': [100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 0.1
+    assert tool.validateConfluence(None, df, screenDict, saveDict, percentage) == True
+    assert screenDict['MA-Signal'] == colorText.BOLD + colorText.GREEN + 'Confluence (5.0%)' + colorText.END
 
-# # Positive test case for validateConfluence function
-# def test_validateConfluence_positive():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.head().iloc[0].return_value = 100
-#     data.head().iloc[1].return_value = 90
-#     data.head().iloc[2].return_value = 80
-#     data.head().iloc[3].return_value = 70
-#     data.head().iloc[4].return_value = 60
-#     data.head().iloc[5].return_value = 50
-#     data.head().iloc[6].return_value = 40
-#     data.head().iloc[7].return_value = 30
-#     data.head().iloc[8].return_value = 20
-#     data.head().iloc[9].return_value = 10
+    # Test case 3: SMA and LMA are not within specified percentage
+    df = pd.DataFrame({'SMA': [50], 'LMA': [60], 'Close': [100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 0.1
+    assert tool.validateConfluence(None, df, screenDict, saveDict, percentage) == False
 
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
+    # Test case 4: SMA and LMA are equal
+    df = pd.DataFrame({'SMA': [50], 'LMA': [50], 'Close': [100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 0.1
+    assert tool.validateConfluence(None, df, screenDict, saveDict, percentage) == True
+    assert screenDict['MA-Signal'] == colorText.BOLD + colorText.GREEN + 'Confluence (0.0%)' + colorText.END
 
-#     # Call the function and assert the result
-#     assert tool.validateConfluence(None, data, {}, {}, 0.1) == True
+    df = pd.DataFrame({'SMA': [45], 'LMA': [49], 'Close': [100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 0.1
+    assert tool.validateConfluence(None, df, screenDict, saveDict, percentage) == True
+    assert screenDict['MA-Signal'] == colorText.BOLD + colorText.FAIL + 'Confluence (4.0%)' + colorText.END
 
-# # Negative test case for validateConfluence function
-# def test_validateConfluence_negative():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.head().iloc[0].return_value = 100
-#     data.head().iloc[1].return_value = 90
-#     data.head().iloc[2].return_value = 80
-#     data.head().iloc[3].return_value = 70
-#     data.head().iloc[4].return_value = 60
-#     data.head().iloc[5].return_value = 50
-#     data.head().iloc[6].return_value = 40
-#     data.head().iloc[7].return_value = 30
-#     data.head().iloc[8].return_value = 20
-#     data.head().iloc[9].return_value = 5
+def test_validateConsolidation():
+    tool = tools(None, None)
+    # Test case 1: High and low close prices within specified percentage
+    df = pd.DataFrame({'Close': [100, 95]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 10
+    assert tool.validateConsolidation(df, screenDict, saveDict, percentage) == 5.0
+    assert screenDict['Consol.'] == colorText.BOLD + colorText.GREEN + 'Range:5.0%' + colorText.END
 
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
+    # Test case 2: High and low close prices not within specified percentage
+    df = pd.DataFrame({'Close': [100, 80]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 10
+    assert tool.validateConsolidation(df, screenDict, saveDict, percentage) == 20.0
+    assert screenDict['Consol.'] == colorText.BOLD + colorText.FAIL + 'Range:20.0%' + colorText.END
 
-#     # Call the function and assert the result
-#     assert tool.validateConfluence(None, data, {}, {}, 0.1) == False
-
-# # Positive test case for validateConsolidation function
-# def test_validateConsolidation_positive():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.describe()["Close"]["max"].return_value = 100
-#     data.describe()["Close"]["min"].return_value = 90
-
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
-
-#     # Call the function and assert the result
-#     assert tool.validateConsolidation(data, {}, {}, 10) == 10.0
-
-# # Negative test case for validateConsolidation function
-# def test_validateConsolidation_negative():
-#     # Mocking the data
-#     data = MagicMock()
-#     data.describe()["Close"]["max"].return_value = 100
-#     data.describe()["Close"]["min"].return_value = 80
-
-#     # Create an instance of the tools class
-#     tool = tools(None, None)
-
-#     # Call the function and assert the result
-#     assert tool.validateConsolidation(data, {}, {}, 10) == 20.0
+    # Test case 3: High and low close prices are equal
+    df = pd.DataFrame({'Close': [100, 100]})
+    screenDict = {}
+    saveDict = {}
+    percentage = 10
+    assert tool.validateConsolidation(df, screenDict, saveDict, percentage) == 0.0
+    assert screenDict['Consol.'] == colorText.BOLD + colorText.FAIL + 'Range:0.0%' + colorText.END
 
 # # Positive test case for validateInsideBar function
 # def test_validateInsideBar_positive():
