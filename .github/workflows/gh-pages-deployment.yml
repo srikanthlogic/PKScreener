@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '0 17,20,22 * * 0-6'
+    - cron: '0 15,16,17,19,20 * * 0-6'
 
 jobs:
   # Single deploy job no building
