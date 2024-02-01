@@ -158,7 +158,7 @@ class pktalib:
         )
         # trend, direction, long, short
         # SUPERT_7_3.0  SUPERTd_7_3.0  SUPERTl_7_3.0  SUPERTs_7_3.0
-        return sti
+        return sti if sti is not None else {'SUPERT_7_3.0':np.nan}
 
     @classmethod
     def psar(self, high, low, acceleration=0.02, maximum=0.2):

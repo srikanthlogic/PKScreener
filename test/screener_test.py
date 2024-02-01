@@ -23,7 +23,7 @@
 
 """
 import warnings
-from unittest.mock import ANY, MagicMock
+from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 
@@ -36,7 +36,6 @@ from PKDevTools.classes.ColorText import colorText
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Utility as Utility
 from pkscreener.classes.Screener import tools
-
 
 @pytest.fixture
 def configManager():
@@ -650,6 +649,8 @@ def test_findBullishIntradayRSIMACD_positive():
     tool = tools(None, None)
     # Call the function and assert the result
     assert tool.findBullishIntradayRSIMACD(data) == False
+    assert tool.findBullishIntradayRSIMACD(None) == False
+    assert tool.findBullishIntradayRSIMACD(pd.DataFrame()) == False
 
 
 # # Positive test case for findNR4Day function
@@ -1016,6 +1017,72 @@ def test_findTrend_positive(tools_instance):
     # Call the function and assert the result
     assert tools_instance.findTrend(data, {}, {}, 10) == "Unknown"
 
+def test_findTrend_valid_input(tools_instance):
+    # Create a sample DataFrame for testing
+    df = pd.DataFrame({'Close': [10, 15, 20, 25, 30, 35, 40, 45, 50]})
+
+    # Define the expected trend for the given DataFrame
+    expected_trend = 'Unknown'
+
+    # Call the findTrend function with the sample DataFrame and expected trend
+    result = tools_instance.findTrend(df, {}, {}, daysToLookback=9, stockName='')
+
+    # Assert that the returned trend matches the expected trend
+    assert result == expected_trend
+
+def test_findTrend_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the findTrend function with the empty DataFrame
+    result = tools_instance.findTrend(df, {}, {})
+
+    # Assert that the returned trend is 'Unknown'
+    assert result == 'Unknown'
+
+def test_findTrend_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'Close': [10, 15, 20]})
+
+    # Call the findTrend function with the insufficient DataFrame
+    result = tools_instance.findTrend(df, {}, {})
+
+    # Assert that the returned trend is 'Unknown'
+    assert result == 'Unknown'
+
+def test_findTrend_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'Close': ['a', 'b', 'c']})
+    # Call the findTrend function with the invalid DataFrame
+    tools_instance.findTrend(df, {}, {}) == 'Unknown'
+
+def test_findTrend_tops_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'Close': [10, 15, 20]})
+    with patch("numpy.rad2deg",return_value=0):
+        assert tools_instance.findTrend(df, {}, {}) == 'Unknown'
+    with patch("numpy.rad2deg",return_value=30):
+        assert tools_instance.findTrend(df, {}, {}) == 'Sideways'
+    with patch("numpy.rad2deg",return_value=-30):
+        assert tools_instance.findTrend(df, {}, {}) == 'Sideways'
+    with patch("numpy.rad2deg",return_value=10):
+        assert tools_instance.findTrend(df, {}, {}) == 'Sideways'
+    with patch("numpy.rad2deg",return_value=-20):
+        assert tools_instance.findTrend(df, {}, {}) == 'Sideways'
+    with patch("numpy.rad2deg",return_value=60):
+        assert tools_instance.findTrend(df, {}, {}) == 'Weak Up'
+    with patch("numpy.rad2deg",return_value=61):
+        assert tools_instance.findTrend(df, {}, {}) == 'Strong Up'
+    with patch("numpy.rad2deg",return_value=-40):
+        assert tools_instance.findTrend(df, {}, {}) == 'Weak Down'
+    with patch("numpy.rad2deg",return_value=-60):
+        assert tools_instance.findTrend(df, {}, {}) == 'Weak Down'
+    with patch("numpy.rad2deg",return_value=-61):
+        assert tools_instance.findTrend(df, {}, {}) == 'Strong Down'
+    with patch("pkscreener.classes.Pktalib.pktalib.argrelextrema",side_effect=[np.linalg.LinAlgError]):
+        tools_instance.findTrend(df, {}, {}) == 'Unknown'
+    with patch("pkscreener.classes.Pktalib.pktalib.argrelextrema",side_effect=[([0,1,2],)]):
+        tools_instance.findTrend(df, {}, {}) == 'Unknown'
 
 # Positive test case for findTrendlines function
 def test_findTrendlines_positive(tools_instance):
@@ -1570,6 +1637,45 @@ def test_preprocessData_positive(tools_instance):
     assert tools_instance.preprocessData(data, 10) is not None
 
 
+def test_preprocessData_valid_input(tools_instance):
+    # Create a sample DataFrame for testing
+    df = pd.DataFrame({'Close': [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45, 50],
+                       'Volume': [100, 200, 300, 400, 500, 600, 700, 800, 900],
+                       'High': [12.0, 18, 22, 28, 32, 38, 42, 48, 52],
+                       'Low': [8.0, 12, 16, 20, 24, 28, 32, 36, 40],
+                       'Open': [8.0, 12, 16, 20, 24, 28, 32, 36, 40]})
+    df = pd.concat([df]*23, ignore_index=True)
+    # Call the preprocessData function with the sample DataFrame
+    fullData, trimmedData = tools_instance.preprocessData(df, daysToLookback=9)
+    # Assert that the returned dataframes have the expected shape and columns
+    assert fullData.shape == (207, 13)
+    assert trimmedData.shape == (9, 13)
+    assert list(fullData.columns) == ['Close', 'Volume', 'High', 'Low', 'Open', 'SMA', 'LMA', 'SSMA', 'VolMA', 'RSI', 'CCI', 'FASTK', 'FASTD']
+
+    tools_instance.configManager.useEMA = True
+    # Call the preprocessData function with the sample DataFrame
+    fullData, trimmedData = tools_instance.preprocessData(df, daysToLookback=9)
+    # Assert that the returned dataframes have the expected shape and columns
+    assert fullData.shape == (207, 13)
+    assert trimmedData.shape == (9, 13)
+    assert list(fullData.columns) == ['Close', 'Volume', 'High', 'Low', 'Open', 'SMA', 'LMA', 'SSMA', 'VolMA', 'RSI', 'CCI', 'FASTK', 'FASTD']
+
+def test_preprocessData_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the preprocessData function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.preprocessData(df)
+
+def test_preprocessData_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'Close': [10, 15, 20]})
+
+    # Call the preprocessData function with the insufficient DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.preprocessData(df)
+
 # Positive test case for validate15MinutePriceVolumeBreakout function
 def test_validate15MinutePriceVolumeBreakout_positive(tools_instance):
     # Mocking the data
@@ -1703,6 +1809,30 @@ def test_positive_case_findPotentialBreakout(tools_instance):
     assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
     assert saveDict["Breakout"] == ""
 
+    daysToLookback = 30
+    df = pd.DataFrame({
+        "Volume": [100000, 90000, 80000, 70000, 60000],
+        "Close": [120, 9, 8, 7, 6],
+        "High": [110, 10, 9, 8, 7]
+    })
+    df_lastrow = pd.DataFrame({
+        "Volume": [80000],
+        "Close": [120],
+        "High": [111]
+    })
+    df = pd.concat([df]*46, ignore_index=True)
+    screenDict = {"Breakout":""}
+    saveDict = {"Breakout": ""}
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == False
+    assert saveDict["Breakout"] == ""
+
+    df = pd.concat([df, df_lastrow], axis=0)
+    screenDict = {"Breakout":""}
+    saveDict = {"Breakout": "125.0"}
+    assert tools_instance.findPotentialBreakout(df, screenDict, saveDict, daysToLookback) == True
+    assert saveDict["Breakout"] == "125.0(Potential)"
+    assert screenDict["Breakout"] == colorText.BOLD + colorText.GREEN + " (Potential)" + colorText.END
+
 def test_negative_case_findPotentialBreakout(tools_instance):
     df = pd.DataFrame({
         "Volume": [100000, 90000, 80000, 70000, 60000],
@@ -1775,6 +1905,178 @@ def test_dataframe_with_inf_validateBullishForTomorrow(tools_instance):
     })
     assert tools_instance.validateBullishForTomorrow(df) == False
 
+def test_validateHigherHighsHigherLowsHigherClose_invalid_input(tools_instance):
+    # Create a sample DataFrame for testing
+    df = pd.DataFrame({'High': [10, 15, 20, 25,10, 15, 20, 25],
+                       'Low': [5, 10, 15, 20,5, 10, 15, 20],
+                       'Close': [12, 18, 22, 28,12, 18, 22, 28]})
+
+    # Call the validateHigherHighsHigherLowsHigherClose function with the sample DataFrame
+    assert tools_instance.validateHigherHighsHigherLowsHigherClose(df) == False
+
+def test_validateHigherHighsHigherLowsHigherClose_valid_input(tools_instance):
+    # Create a sample DataFrame with invalid data
+    df = pd.DataFrame({'High': [25, 20, 15, 10,5, 15, 20, 25],
+                       'Low': [25, 20, 15, 10,5, 10, 15, 20],
+                       'Close': [25, 20, 15, 10,5, 18, 22, 28]})
+    df = pd.concat([df]*20, ignore_index=True)
+    # Call the validateHigherHighsHigherLowsHigherClose function with the invalid DataFrame
+    assert tools_instance.validateHigherHighsHigherLowsHigherClose(df) == True
+
+
+def test_validateHigherHighsHigherLowsHigherClose_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateHigherHighsHigherLowsHigherClose function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateHigherHighsHigherLowsHigherClose(df)
+
+def test_validateHigherHighsHigherLowsHigherClose_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'High': [10, 15],
+                       'Low': [5, 10],
+                       'Close': [12, 18]})
+
+    # Call the validateHigherHighsHigherLowsHigherClose function with the insufficient DataFrame
+    assert tools_instance.validateHigherHighsHigherLowsHigherClose(df) == False
+
+def test_validateHigherHighsHigherLowsHigherClose_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'High': ['a', 'b', 'c'],
+                       'Low': ['d', 'e', 'f'],
+                       'Close': ['g', 'h', 'i']})
+
+    # Call the validateHigherHighsHigherLowsHigherClose function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateHigherHighsHigherLowsHigherClose(df)
+
+
+def test_validateInsideBar_valid_input(tools_instance):
+    # Create a sample DataFrame for testing
+    df = pd.DataFrame({'High': [10, 15, 20, 25, 50, 35, 40, 45, 50],
+                       'Low': [45, 40, 35, 30, 25, 30, 35, 40, 45],
+                       'Open': [12, 18, 22, 28, 32, 44, 42, 43, 44],
+                       'Close': [32, 38, 32, 28, 32, 38, 42, 48, 52]})
+    saveDict = {"Trend":"Weak Up","MA-Signal":"50MA-Support"}
+    # Define the expected pattern
+    expected_pattern = 'Inside Bar (5)'
+
+    # Call the validateInsideBar function with the sample DataFrame and expected pattern
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=1, daysToLookback=5)
+
+    # Assert that the returned pattern matches the expected pattern
+    assert result == 5
+    assert saveDict["Pattern"] == expected_pattern
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=2, daysToLookback=5)
+    assert result == 0
+    saveDict = {"Trend":"Weak Up","MA-Signal":"50MA-Resist"}
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=1, daysToLookback=5)
+    assert result == 0
+    saveDict = {"Trend":"Weak Down","MA-Signal":"50MA-Resist"}
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=2, daysToLookback=5)
+
+    # Assert that the returned pattern matches the expected pattern
+    assert result == 5
+    assert saveDict["Pattern"] == expected_pattern
+    
+    saveDict = {"Trend":"Weak Down","MA-Signal":"50MA-Support"}
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=2, daysToLookback=5)
+    assert result == 0
+    assert tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=2, daysToLookback=-1) == 0
+
+def test_validateInsideBar_invalid_input(tools_instance):
+    # Create a sample DataFrame with invalid data
+    df = pd.DataFrame({'High': [10, 15, 20, 25, 30, 35, 40, 45, 50],
+                       'Low': [45, 40, 35, 30, 25, 30, 35, 40, 45],
+                       'Open': [12, 18, 22, 28, 32, 38, 42, 48, 52],
+                       'Close': [32, 38, 32, 28, 32, 38, 42, 48, 52]})
+    saveDict = {"Trend":"Weak Up","MA-Signal":"50MA-Support"}
+    # Call the validateInsideBar function with the invalid DataFrame
+    result = tools_instance.validateInsideBar(df, {}, saveDict, chartPattern=1, daysToLookback=5)
+
+    # Assert that the returned pattern is not the expected pattern
+    assert result != 5
+
+def test_validateInsideBar_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateInsideBar function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateInsideBar(df, {}, {}, chartPattern=1, daysToLookback=5)
+
+def test_validateInsideBar_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'High': [10, 15, 20],
+                       'Low': [5, 10, 15],
+                       'Open': [12, 18, 22],
+                       'Close': [12, 18, 22]})
+
+    # Call the validateInsideBar function with the insufficient DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateInsideBar(df, {}, {}, chartPattern=1, daysToLookback=5)
+
+def test_validateInsideBar_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'High': ['a', 'b', 'c'],
+                       'Low': ['d', 'e', 'f'],
+                       'Open': ['g', 'h', 'i'],
+                       'Close': ['j', 'k', 'l']})
+
+    # Call the validateInsideBar function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateInsideBar(df, {}, {}, chartPattern=1, daysToLookback=5)
+
+def test_validateIpoBase_valid_input(tools_instance):
+    # Create a sample DataFrame for testing
+    df = pd.DataFrame({'Open': [10, 15, 20, 12],
+                       'Close': [12, 18, 22, 28],
+                       'High': [12, 15, 12, 15]})
+    saveDict = {}
+    # Call the validateIpoBase function with the sample DataFrame
+    result = tools_instance.validateIpoBase('stock', df, {}, saveDict, percentage=0.3)
+    # Assert that the function returns True
+    assert result == True
+    assert saveDict["Pattern"] == 'IPO Base (0.0 %)'
+    df = pd.DataFrame({'Open': [10, 15, 20, 12],
+                       'Close': [12.1, 18, 22, 28],
+                       'High': [12, 15, 12, 15]})
+    result = tools_instance.validateIpoBase('stock', df, {}, saveDict, percentage=0.3)
+    # Assert that the function returns True
+    assert result == True
+    assert saveDict["Pattern"] == 'IPO Base (0.8 %)'
+
+def test_validateIpoBase_invalid_input(tools_instance):
+    # Create a sample DataFrame with invalid data
+    df = pd.DataFrame({'Open': [10, 15, 20, 25],
+                       'Close': [30, 35, 40, 45],
+                       'High': [30, 35, 40, 45]})
+
+    # Call the validateIpoBase function with the invalid DataFrame
+    result = tools_instance.validateIpoBase('stock', df, {}, {}, percentage=0.3)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateIpoBase_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateIpoBase function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateIpoBase('stock', df, {}, {}, percentage=0.3)
+
+def test_validateIpoBase_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'Open': ['a', 'b', 'c'],
+                       'Close': ['d', 'e', 'f'],
+                       'High': ['g', 'h', 'i']})
+
+    # Call the validateIpoBase function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateIpoBase('stock', df, {}, {}, percentage=0.3)
+
 # # Positive test case for validateBullishForTomorrow function
 # def test_validateBullishForTomorrow_positive(tools_instance):
 #     # Mocking the data
@@ -1825,6 +2127,14 @@ def test_validateCCI():
     saveDict['Trend'] = 'Down'
     assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == False
     assert screenDict['CCI'] == colorText.BOLD + colorText.FAIL + '50' + colorText.END
+
+    df = pd.DataFrame({'CCI': [70]})
+    screenDict = {}
+    saveDict = {"Trend":"Weak Down"}
+    minCCI = 40
+    maxCCI = 60
+    assert tool.validateCCI(df, screenDict, saveDict, minCCI, maxCCI) == True
+    assert screenDict['CCI'] == colorText.BOLD + colorText.FAIL + '70' + colorText.END
 
 def test_validateConfluence():
     tool = tools(None, None)

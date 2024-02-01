@@ -503,6 +503,8 @@ class tools:
 
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
+        if df is None or len(df) == 0:
+            return "Unknown"
         data = df.copy()
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
@@ -534,7 +536,7 @@ class tools:
                     )[0]
                 else:
                     slope = 0
-            except np.linalg.LinAlgError as e:
+            except np.linalg.LinAlgError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 screenDict["Trend"] = (
                     colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
@@ -570,12 +572,12 @@ class tools:
                     colorText.BOLD + colorText.FAIL + "Weak Down" + colorText.END
                 )
                 saveDict["Trend"] = "Weak Down"
-            elif angle <= -60:
+            elif angle < -60:
                 screenDict["Trend"] = (
                     colorText.BOLD + colorText.FAIL + "Strong Down" + colorText.END
                 )
                 saveDict["Trend"] = "Strong Down"
-        except np.linalg.LinAlgError as e:
+        except np.linalg.LinAlgError as e: # pragma: no cover
             self.default_logger.debug(e, exc_info=True)
             screenDict["Trend"] = (
                 colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
@@ -856,28 +858,28 @@ class tools:
             sma = pktalib.EMA(data["Close"], timeperiod=50)
             lma = pktalib.EMA(data["Close"], timeperiod=200)
             ssma = pktalib.EMA(data["Close"], timeperiod=9)
-            data.insert(6, "SMA", sma)
-            data.insert(7, "LMA", lma)
-            data.insert(8, "SSMA", ssma)
+            data.insert(len(data.columns), "SMA", sma)
+            data.insert(len(data.columns), "LMA", lma)
+            data.insert(len(data.columns), "SSMA", ssma)
         else:
             sma = data.rolling(window=50).mean()
             lma = data.rolling(window=200).mean()
             ssma = data.rolling(window=9).mean()
-            data.insert(6, "SMA", sma["Close"])
-            data.insert(7, "LMA", lma["Close"])
-            data.insert(8, "SSMA", ssma["Close"])
+            data.insert(len(data.columns), "SMA", sma["Close"])
+            data.insert(len(data.columns), "LMA", lma["Close"])
+            data.insert(len(data.columns), "SSMA", ssma["Close"])
         vol = data.rolling(window=20).mean()
         rsi = pktalib.RSI(data["Close"], timeperiod=14)
-        data.insert(9, "VolMA", vol["Volume"])
-        data.insert(10, "RSI", rsi)
+        data.insert(len(data.columns), "VolMA", vol["Volume"])
+        data.insert(len(data.columns), "RSI", rsi)
         cci = pktalib.CCI(data["High"], data["Low"], data["Close"], timeperiod=14)
-        data.insert(11, "CCI", cci)
+        data.insert(len(data.columns), "CCI", cci)
         # len(data["Close"])
         fastk, fastd = pktalib.STOCHRSI(
             data["Close"], timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0
         )
-        data.insert(12, "FASTK", fastk)
-        data.insert(13, "FASTD", fastd)
+        data.insert(len(data.columns), "FASTK", fastk)
+        data.insert(len(data.columns), "FASTD", fastd)
         data = data[::-1]  # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -945,8 +947,8 @@ class tools:
         data = data.replace([np.inf, -np.inf], 0)
         cci = int(data.head(1)["CCI"].iloc[0])
         saveDict["CCI"] = cci
-        if (cci <= minCCI or cci >= maxCCI) and ("Up" in saveDict["Trend"]):
-            if (cci <= minCCI) or cci >= maxCCI:
+        if (cci <= minCCI or cci >= maxCCI):
+            if ("Up" in saveDict["Trend"]):
                 screenDict["CCI"] = (
                     colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
                 )
