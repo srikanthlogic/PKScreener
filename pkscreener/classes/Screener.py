@@ -516,7 +516,11 @@ class tools:
         isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
         isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
         decision = '↑' if isUptrend else ('↓' if isDowntrend else '')
-        decision = decision.encode('utf-8').decode('utf-8')
+        try:
+            STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
+            decision = decision.encode('utf-8').decode(STD_ENCODING)
+        except:
+            pass
         saveDict["Trend"] = f"{saveDict['Trend']}{decision}"
         screenDict["Trend"] = f"{screenDict['Trend']}{decision}"
         return isUptrend
