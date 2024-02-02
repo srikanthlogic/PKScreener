@@ -38,8 +38,7 @@ from pkscreener import Imports
 from pkscreener.classes.Pktalib import pktalib
 
 if sys.version_info >= (3, 11):
-    from advanced_ta import LorentzianClassification
-
+    import advanced_ta as ata
 
 # from sklearn.preprocessing import StandardScaler
 if Imports["scipy"]:
@@ -501,6 +500,27 @@ class tools:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
+    def findUptrend(self, df, screenDict, saveDict, testing):
+        if df is None or len(df) < 300 or testing:
+            return False
+        data = df.copy()
+        data = data[::-1]
+        today_lma = pktalib.SMA(data["Close"], timeperiod=200)
+        lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
+        lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
+        lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
+        today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
+        lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
+        lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
+        lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+        isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
+        isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+        decision = '↑' if isUptrend else ('↓' if isDowntrend else '')
+        decision = decision.encode('utf-8').decode('utf-8')
+        saveDict["Trend"] = f"{saveDict['Trend']}{decision}"
+        screenDict["Trend"] = f"{screenDict['Trend']}{decision}"
+        return isUptrend
+    
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
         if df is None or len(df) == 0:
@@ -1162,7 +1182,7 @@ class tools:
             }
         )
         try:
-            lc = LorentzianClassification(data=data)
+            lc = ata.LorentzianClassification(data=data)
             if lc.df.iloc[-1]["isNewBuySignal"]:
                 screenDict["Pattern"] = (
                     colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
@@ -1222,6 +1242,8 @@ class tools:
         data = data.replace([np.inf, -np.inf], 0)
         if daysForLowestVolume is None:
             daysForLowestVolume = 30
+        if len(data) < daysForLowestVolume:
+            return False
         data = data.head(daysForLowestVolume)
         recent = data.head(1)
         if (recent["Volume"].iloc[0] <= data.describe()["Volume"]["min"]) and recent[
@@ -1257,7 +1279,7 @@ class tools:
         if len(data) > 250:
             yearlyLow = data.head(250).min()["Close"]
             yearlyHigh = data.head(250).max()["Close"]
-            if ltp < (2 * yearlyLow) or ltp < (0.75 * yearlyHigh):
+            if ltp < (2 * yearlyLow) and ltp < (0.75 * yearlyHigh):
                 verifyStageTwo = False
                 screenDict["Stock"] = colorText.FAIL + saveDict["Stock"] + colorText.END
         if ltp >= minLTP and ltp <= maxLTP:

@@ -295,6 +295,13 @@ class StockConsumer:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
+                        # Find general trend
+                        screener.findUptrend(
+                            fullData,
+                            screeningDictionary,
+                            saveDictionary,
+                            testbuild
+                        )
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
