@@ -163,14 +163,14 @@ jobs:
       run: |
           python3 -c "import os; file = open('.env.dev', 'w'); file.write('CHAT_ID='+os.environ['CHAT_ID_DEV']+'\n'); file.write('TOKEN='+os.environ['TOKEN_DEV']+'\n'); file.write('chat_idADMIN='+os.environ['CHAT_IDADMIN_DEV']+'\n'); file.close()"
   
-    - name: Send notification about this workflow trigger
-      shell: bash
-      env:
-        NOTIFY_USER : ${{ inputs.user }}
-        BACKTEST_NAME: ${{ inputs.name }}
-      run: |
-          pip3 install PKDevTools
-          python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message(message='Hello! The workflow('+os.environ['BACKTEST_NAME']+') has been triggered for backtesting (https://github.com/pkjmesra/PKScreener/actions).Results will be updated at https://pkjmesra.github.io/PKScreener/BacktestReports.html when workflow gets over. You can also check directly at https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_Summary_StockSorted.html for summary and https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_backtest_result_StockSorted.html for details.', userID=os.environ['NOTIFY_USER']);"
+    # - name: Send notification about this workflow trigger
+    #   shell: bash
+    #   env:
+    #     NOTIFY_USER : ${{ inputs.user }}
+    #     BACKTEST_NAME: ${{ inputs.name }}
+    #   run: |
+    #       pip3 install PKDevTools
+    #       python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message(message='Hello! The workflow('+os.environ['BACKTEST_NAME']+') has been triggered for backtesting (https://github.com/pkjmesra/PKScreener/actions).Results will be updated at https://pkjmesra.github.io/PKScreener/BacktestReports.html when workflow gets over. You can also check directly at https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_Summary_StockSorted.html for summary and https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_backtest_result_StockSorted.html for details.', userID=os.environ['NOTIFY_USER']);"
           
     - name: Run backtest on Windows
       shell: cmd
@@ -232,13 +232,13 @@ jobs:
         git pull
         git push -v -u origin +gh-pages
 
-    - name: Send notification about finished workflow trigger
-      shell: bash
-      env:
-        NOTIFY_USER : ${{ inputs.user }}
-        BACKTEST_NAME: ${{ inputs.name }}
-      run: |
-          python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message(message='Hello! The workflow('+os.environ['BACKTEST_NAME']+') for backtesting has finished and will soon get deployed in the next 2-3 minutes. You can check directly at https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_Summary_StockSorted.html for summary and https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_backtest_result_StockSorted.html for details after it gets deployed.', userID=os.environ['NOTIFY_USER']);"
+    # - name: Send notification about finished workflow trigger
+    #   shell: bash
+    #   env:
+    #     NOTIFY_USER : ${{ inputs.user }}
+    #     BACKTEST_NAME: ${{ inputs.name }}
+    #   run: |
+    #       python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message(message='Hello! The workflow('+os.environ['BACKTEST_NAME']+') for backtesting has finished and will soon get deployed in the next 2-3 minutes. You can check directly at https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_Summary_StockSorted.html for summary and https://pkjmesra.github.io/PKScreener/Backtest-Reports/PKScreener_'+os.environ['BACKTEST_NAME']+'_backtest_result_StockSorted.html for details after it gets deployed.', userID=os.environ['NOTIFY_USER']);"
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04
