@@ -23,7 +23,7 @@
 
 """
 import warnings
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch, PropertyMock
 
 import numpy as np
 
@@ -2058,6 +2058,10 @@ def test_validateIpoBase_invalid_input(tools_instance):
 
     # Assert that the function returns False
     assert result == False
+    df = pd.DataFrame({'Open': [13, 15, 20, 13],
+                       'Close': [8.1, 18, 22, 28],
+                       'High': [12, 15, 12, 15]})
+    assert tools_instance.validateIpoBase('stock', df, {}, {}, percentage=0.3) == False
 
 def test_validateIpoBase_empty_input(tools_instance):
     # Create an empty DataFrame for testing
@@ -2076,6 +2080,275 @@ def test_validateIpoBase_exception(tools_instance):
     # Call the validateIpoBase function with the invalid DataFrame
     with pytest.raises(Exception):
         tools_instance.validateIpoBase('stock', df, {}, {}, percentage=0.3)
+
+def test_validateLorentzian_buy_signal(tools_instance):
+    # Create a sample DataFrame with a buy signal
+    df = pd.DataFrame({'Open': [10, 15, 20, 25],
+                       'Close': [12, 18, 22, 28],
+                       'High': [12, 18, 22, 28],
+                       'Low': [8, 12, 16, 20],
+                       'Volume': [100, 200, 300, 400]})
+
+    # Call the validateLorentzian function with the sample DataFrame and lookFor=1 (Buy)
+    screenDict = {}
+    saveDict = {}
+    mock_lc = MagicMock()
+    with patch("advanced_ta.LorentzianClassification") as mock_lc:
+        mock_lc.return_value = mock_lc
+        mock_lc.df = pd.DataFrame([{"isNewSellSignal":False,"isNewBuySignal":True}])
+        result = tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=1)
+        # Assert that the function returns True and sets the appropriate screenDict and saveDict values
+        assert result == True
+        assert screenDict["Pattern"] == (colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END)
+        assert saveDict["Pattern"] == "Lorentzian-Buy"
+        assert tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=2) == False
+
+def test_validateLorentzian_sell_signal(tools_instance):
+    # Create a sample DataFrame with a sell signal
+    df = pd.DataFrame({'Open': [10, 15, 20, 25],
+                       'Close': [12, 18, 22, 28],
+                       'High': [12, 18, 22, 28],
+                       'Low': [8, 12, 16, 20],
+                       'Volume': [100, 200, 300, 400]})
+
+    # Call the validateLorentzian function with the sample DataFrame and lookFor=2 (Sell)
+    screenDict = {}
+    saveDict = {}
+    mock_lc = MagicMock()
+    with patch("advanced_ta.LorentzianClassification") as mock_lc:
+        mock_lc.return_value = mock_lc
+        mock_lc.df = pd.DataFrame([{"isNewSellSignal":True,"isNewBuySignal":False}])
+        result = tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=2)
+        # Assert that the function returns True and sets the appropriate screenDict and saveDict values
+        assert result == True
+        assert screenDict["Pattern"] == (colorText.BOLD + colorText.FAIL + "Lorentzian-Sell" + colorText.END)
+        assert saveDict["Pattern"] == "Lorentzian-Sell"
+        assert tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=1) == False
+        mock_lc.df = pd.DataFrame([{"isNewSellSignal":False,"isNewBuySignal":False}])
+        assert tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=1) == False
+
+def test_validateLorentzian_no_signal(tools_instance):
+    # Create a sample DataFrame without any signals
+    df = pd.DataFrame({'Open': [10, 15, 20, 25],
+                       'Close': [12, 18, 22, 28],
+                       'High': [12, 18, 22, 28],
+                       'Low': [8, 12, 16, 20],
+                       'Volume': [100, 200, 300, 400]})
+
+    # Call the validateLorentzian function with the sample DataFrame and lookFor=3 (Any)
+    screenDict = {}
+    saveDict = {}
+    result = tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=3)
+
+    # Assert that the function returns False and does not modify screenDict and saveDict
+    assert result == False
+    assert screenDict == {}
+    assert saveDict == {}
+
+def test_validateLorentzian_exception(tools_instance):
+    # Create a sample DataFrame that raises an exception
+    df = pd.DataFrame({'Open': ['a', 'b', 'c', 'd'],
+                       'Close': ['e', 'f', 'g', 'h'],
+                       'High': ['i', 'j', 'k', 'l'],
+                       'Low': ['m', 'n', 'o', 'p'],
+                       'Volume': ['q', 'r', 's', 't']})
+
+    # Call the validateLorentzian function with the invalid DataFrame
+    screenDict = {}
+    saveDict = {}
+    result = tools_instance.validateLorentzian(df, screenDict, saveDict, lookFor=3)
+
+    # Assert that the function returns False and does not modify screenDict and saveDict
+    assert result == False
+    assert screenDict == {}
+    assert saveDict == {}
+
+def test_validateLowerHighsLowerLows_valid_input(tools_instance):
+    # Create a sample DataFrame with lower highs, lower lows, and higher RSI
+    df = pd.DataFrame({'High': [7, 8, 9, 10],
+                       'Low': [2, 3, 4, 5],
+                       'RSI': [50, 55, 60, 65]})
+
+    # Call the validateLowerHighsLowerLows function with the sample DataFrame
+    result = tools_instance.validateLowerHighsLowerLows(df)
+
+    # Assert that the function returns True
+    assert result == True
+
+def test_validateLowerHighsLowerLows_invalid_input(tools_instance):
+    # Create a sample DataFrame without lower highs or lower lows
+    df = pd.DataFrame({'High': [10, 12, 8, 7],
+                       'Low': [5, 6, 3, 2],
+                       'RSI': [60, 55, 50, 45]})
+
+    # Call the validateLowerHighsLowerLows function with the sample DataFrame
+    result = tools_instance.validateLowerHighsLowerLows(df)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateLowerHighsLowerLows_no_higher_RSI(tools_instance):
+    # Create a sample DataFrame without higher RSI
+    df = pd.DataFrame({'High': [10, 9, 8, 7],
+                       'Low': [5, 4, 3, 2],
+                       'RSI': [40, 35, 30, 25]})
+
+    # Call the validateLowerHighsLowerLows function with the sample DataFrame
+    result = tools_instance.validateLowerHighsLowerLows(df)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateLowerHighsLowerLows_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateLowerHighsLowerLows function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateLowerHighsLowerLows(df)
+
+def test_validateLowerHighsLowerLows_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'High': [10, 9],
+                       'Low': [5, 4],
+                       'RSI': [60, 55]})
+
+    # Call the validateLowerHighsLowerLows function with the insufficient DataFrame
+    assert tools_instance.validateLowerHighsLowerLows(df) == False
+
+def test_validateLowerHighsLowerLows_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'High': ['a', 'b', 'c', 'd'],
+                       'Low': ['e', 'f', 'g', 'h'],
+                       'RSI': ['i', 'j', 'k', 'l']})
+
+    # Call the validateLowerHighsLowerLows function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateLowerHighsLowerLows(df)
+
+def test_validateLowestVolume_valid_input(tools_instance):
+    # Create a sample DataFrame with lowest volume
+    df = pd.DataFrame({'Volume': [70, 80, 90, 100, 110, 120, 130]})
+
+    # Call the validateLowestVolume function with the sample DataFrame and daysForLowestVolume=7
+    result = tools_instance.validateLowestVolume(df, daysForLowestVolume=7)
+
+    # Assert that the function returns True
+    assert result == True
+
+def test_validateLowestVolume_invalid_input(tools_instance):
+    # Create a sample DataFrame without lowest volume
+    df = pd.DataFrame({'Volume': [100, 200, 150, 120, 80, 90, 110]})
+
+    # Call the validateLowestVolume function with the sample DataFrame and daysForLowestVolume=7
+    result = tools_instance.validateLowestVolume(df, daysForLowestVolume=7)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateLowestVolume_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateLowestVolume function with the empty DataFrame
+    assert tools_instance.validateLowestVolume(df, daysForLowestVolume=7) == False
+
+def test_validateLowestVolume_insufficient_data(tools_instance):
+    # Create a DataFrame with less than the required number of days
+    df = pd.DataFrame({'Volume': [100, 200]})
+
+    # Call the validateLowestVolume function with the insufficient DataFrame
+    assert tools_instance.validateLowestVolume(df, daysForLowestVolume=7) == False
+
+def test_validateLowestVolume_nan_value(tools_instance):
+    # Create a sample DataFrame with NaN value in Volume
+    df = pd.DataFrame({'Volume': [100, 200, np.nan, 120, 80, 90, 70]})
+
+    # Call the validateLowestVolume function with the sample DataFrame and daysForLowestVolume=7
+    result = tools_instance.validateLowestVolume(df, daysForLowestVolume=7)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateLowestVolume_none_value(tools_instance):
+    # Create a sample DataFrame with NaN value in Volume
+    df = pd.DataFrame({'Volume': [100, 200, np.nan, 120, 80, 90, 70]})
+
+    # Call the validateLowestVolume function with the sample DataFrame and daysForLowestVolume=7
+    result = tools_instance.validateLowestVolume(df, daysForLowestVolume=None)
+
+    # Assert that the function returns False
+    assert result == False
+
+def test_validateLowestVolume_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'Volume': ['a', 'b', 'c', 'd', 'e', 'f', 'g']})
+
+    # Call the validateLowestVolume function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateLowestVolume(df, daysForLowestVolume=7)
+
+def test_validateLTP_valid_input(tools_instance):
+    # Create a sample DataFrame with a valid LTP
+    df = pd.DataFrame({'Close': [10, 15, 20, 25]})
+
+    # Call the validateLTP function with the sample DataFrame and minLTP=10, maxLTP=25
+    screenDict = {}
+    saveDict = {}
+    result, verifyStageTwo = tools_instance.validateLTP(df, screenDict, saveDict, minLTP=10, maxLTP=25)
+
+    # Assert that the function returns True for ltpValid and True for verifyStageTwo
+    assert result == True
+    assert verifyStageTwo == True
+    assert saveDict["LTP"] == 10
+    assert screenDict["LTP"] == (colorText.GREEN + "10.00" + colorText.END)
+
+def test_validateLTP_invalid_input(tools_instance):
+    # Create a sample DataFrame with an invalid LTP
+    df = pd.DataFrame({'Close': [10, 15, 20, 25]})
+
+    # Call the validateLTP function with the sample DataFrame and minLTP=30, maxLTP=40
+    screenDict = {}
+    saveDict = {}
+    result, verifyStageTwo = tools_instance.validateLTP(df, screenDict, saveDict, minLTP=30, maxLTP=40)
+
+    # Assert that the function returns False for ltpValid and True for verifyStageTwo
+    assert result == False
+    assert verifyStageTwo == True
+    assert saveDict["LTP"] == 10
+    assert screenDict["LTP"] == (colorText.FAIL + "10.00" + colorText.END)
+
+def test_validateLTP_verifyStageTwo(tools_instance):
+    # Create a sample DataFrame with more than 250 rows and an invalid LTP for verifyStageTwo
+    df = pd.DataFrame({'Close': [10, 15, 20, 25] * 100})
+
+    # Call the validateLTP function with the sample DataFrame and minLTP=10, maxLTP=25
+    screenDict = {}
+    saveDict = {"Stock":"SomeStock"}
+    result, verifyStageTwo = tools_instance.validateLTP(df, screenDict, saveDict, minLTP=10, maxLTP=25)
+
+    # Assert that the function returns True for ltpValid and False for verifyStageTwo
+    assert result == True
+    assert verifyStageTwo == False
+    assert saveDict["LTP"] == 10
+    assert screenDict["LTP"] == (colorText.GREEN + "10.00" + colorText.END)
+    assert screenDict["Stock"] == (colorText.FAIL + saveDict["Stock"] + colorText.END)
+
+def test_validateLTP_empty_input(tools_instance):
+    # Create an empty DataFrame for testing
+    df = pd.DataFrame()
+
+    # Call the validateLTP function with the empty DataFrame
+    with pytest.raises(KeyError):
+        tools_instance.validateLTP(df, {}, {}, minLTP=10, maxLTP=25)
+
+def test_validateLTP_exception(tools_instance):
+    # Create a DataFrame with invalid data that will raise an exception
+    df = pd.DataFrame({'Close': ['a', 'b', 'c', 'd']})
+
+    # Call the validateLTP function with the invalid DataFrame
+    with pytest.raises(Exception):
+        tools_instance.validateLTP(df, {}, {}, minLTP=10, maxLTP=25)
 
 # # Positive test case for validateBullishForTomorrow function
 # def test_validateBullishForTomorrow_positive(tools_instance):

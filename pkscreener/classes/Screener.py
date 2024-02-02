@@ -38,8 +38,7 @@ from pkscreener import Imports
 from pkscreener.classes.Pktalib import pktalib
 
 if sys.version_info >= (3, 11):
-    from advanced_ta import LorentzianClassification
-
+    import advanced_ta as ata
 
 # from sklearn.preprocessing import StandardScaler
 if Imports["scipy"]:
@@ -1162,7 +1161,7 @@ class tools:
             }
         )
         try:
-            lc = LorentzianClassification(data=data)
+            lc = ata.LorentzianClassification(data=data)
             if lc.df.iloc[-1]["isNewBuySignal"]:
                 screenDict["Pattern"] = (
                     colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
@@ -1222,6 +1221,8 @@ class tools:
         data = data.replace([np.inf, -np.inf], 0)
         if daysForLowestVolume is None:
             daysForLowestVolume = 30
+        if len(data) < daysForLowestVolume:
+            return False
         data = data.head(daysForLowestVolume)
         recent = data.head(1)
         if (recent["Volume"].iloc[0] <= data.describe()["Volume"]["min"]) and recent[
