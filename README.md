@@ -256,8 +256,6 @@ After you have finished the run, go to that copied path, zip the contents of the
 [GitHub release (latest by date)]: https://github.com/pkjmesra/PKScreener/releases/latest
 [pypi-badge]: https://img.shields.io/pypi/v/pkscreener.svg?style=flat-square
 [pypi]: https://pypi.python.org/pypi/pkscreener
-[coveralls]: https://coveralls.io/github/pkjmesra/PKScreener?branch=main
-[cover-badge]: https://coveralls.io/repos/github/pkjmesra/PKScreener/badge.svg?branch=main
 [wheel-badge]: https://img.shields.io/pypi/wheel/pkscreener.svg?style=flat-square
 [GitHub all releases]: https://img.shields.io/github/downloads/pkjmesra/PKScreener/total?color=Green&label=Downloads&style=for-the-badge
 [License-badge]: https://img.shields.io/github/license/pkjmesra/PKScreener?style=for-the-badge
