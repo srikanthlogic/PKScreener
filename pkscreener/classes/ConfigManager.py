@@ -53,7 +53,7 @@ class tools:
         self.daysToLookback = 30
         self.shuffleEnabled = True
         self.cacheEnabled = True
-        self.stageTwo = False
+        self.stageTwo = True
         self.useEMA = False
         self.showunknowntrends = True
         self.logsEnabled = False

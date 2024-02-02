@@ -57,7 +57,7 @@ def test_setConfig_default(config_parser):
     assert config_parser.get('config', 'consolidationPercentage') == '10'
     assert config_parser.get('config', 'shuffle') == 'y'
     assert config_parser.get('config', 'cacheStockData') == 'y'
-    assert config_parser.get('config', 'onlyStageTwoStocks') == 'n'
+    assert config_parser.get('config', 'onlyStageTwoStocks') == 'y'
     assert config_parser.get('config', 'useEMA') == 'n'
     assert config_parser.get('config', 'showunknowntrends') == 'y'
     assert config_parser.get('config', 'logsEnabled') == 'n'
@@ -93,7 +93,7 @@ def test_getConfig(config_parser):
     config_parser.set('config', 'consolidationPercentage', '10')
     config_parser.set('config', 'shuffle', 'y')
     config_parser.set('config', 'cacheStockData', 'y')
-    config_parser.set('config', 'onlyStageTwoStocks', 'n')
+    config_parser.set('config', 'onlyStageTwoStocks', 'y')
     config_parser.set('config', 'useEMA', 'n')
     config_parser.set('config', 'showunknowntrends', 'y')
     config_parser.set('config', 'logsEnabled', 'n')
@@ -112,7 +112,7 @@ def test_getConfig(config_parser):
     assert tool.consolidationPercentage == 10
     assert tool.shuffleEnabled == True
     assert tool.cacheEnabled == True
-    assert tool.stageTwo == False
+    assert tool.stageTwo == True
     assert tool.useEMA == False
     assert tool.showunknowntrends == True
     assert tool.logsEnabled == False

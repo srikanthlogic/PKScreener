@@ -500,6 +500,27 @@ class tools:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
+    def findUptrend(self, df, screenDict, saveDict, testing):
+        if df is None or len(df) < 300 or testing:
+            return False
+        data = df.copy()
+        data = data[::-1]
+        today_lma = pktalib.SMA(data["Close"], timeperiod=200)
+        lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
+        lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
+        lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
+        today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
+        lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
+        lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
+        lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+        isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
+        isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+        decision = '↑' if isUptrend else ('↓' if isDowntrend else '')
+        decision = decision.encode('utf-8').decode('utf-8')
+        saveDict["Trend"] = f"{saveDict['Trend']}{decision}"
+        screenDict["Trend"] = f"{screenDict['Trend']}{decision}"
+        return isUptrend
+    
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
         if df is None or len(df) == 0:
