@@ -1258,7 +1258,7 @@ class tools:
         if len(data) > 250:
             yearlyLow = data.head(250).min()["Close"]
             yearlyHigh = data.head(250).max()["Close"]
-            if ltp < (2 * yearlyLow) or ltp < (0.75 * yearlyHigh):
+            if ltp < (2 * yearlyLow) and ltp < (0.75 * yearlyHigh):
                 verifyStageTwo = False
                 screenDict["Stock"] = colorText.FAIL + saveDict["Stock"] + colorText.END
         if ltp >= minLTP and ltp <= maxLTP:
