@@ -329,6 +329,7 @@ def generateBacktestReportMainPage():
                 .y {color:yellow;}
                 .bg {background-color:darkslategrey;}
                 .bb {background-color:black;}
+                input#searchReports { width: 220px; }
             </style>
         </head>
         <body>
@@ -344,8 +345,14 @@ def generateBacktestReportMainPage():
     HTMLHEAD_TEXT = HTMLHEAD_TEXT + """
             <input type="checkbox" id="chkActualNumbers" name="chkActualNumbers" value="0">
             <label for="chkActualNumbers">Sort by actual numbers (Stocks + Date combinations of results. Higher the count, better the prediction reliability)</label><br>
+            <input 
+                type="text" 
+                id="searchReports" 
+                onkeyup="searchReportsByAny()" 
+                placeholder="Search for backtest reports.." 
+                title="Type in a name ID">
             <table id='resultsTable' style='' >
-                <thead><tr>
+                <thead><tr class="header">
                     <th>Srl #</th>
                     <th>Report Name</th>
                     <th>Stock-wise Report</th>
