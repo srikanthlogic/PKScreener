@@ -58,6 +58,7 @@ from pkscreener.globals import main
 from pkscreener.pkscreenercli import argParser, disableSysOut
 from RequestsMocker import RequestsMocker as PRM
 from sharedmock import SharedMock
+from pkscreener.classes import Utility
 
 session = CachedSession(
     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
@@ -160,7 +161,7 @@ def test_option_B_10_0_1(mocker, capsys):
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
-    assert globals.screenResultsCounter.value >= 0
+    assert globals.screenCounter.value >= 2
 
 
 def test_option_D(mocker, capsys):
@@ -170,6 +171,7 @@ def test_option_D(mocker, capsys):
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
+    assert os.path.isfile(os.path.join(Archiver.get_user_outputs_dir(),Utility.tools.afterMarketStockDataExists(False,False)[1])) is True
 
 
 def test_option_E(mocker, capsys):
@@ -225,19 +227,30 @@ def test_nifty_prediction(mocker, capsys):
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
+    assert len(globals.test_messages_queue) > 0
+    relevantMessageFound = False
+    for message in globals.test_messages_queue:
+        if "Nifty AI prediction for the Next Day" in message:
+            relevantMessageFound = True
+            break
+    assert relevantMessageFound == True
+
 
 
 def test_option_T(mocker, capsys):
+    originalPeriod = globals.configManager.period
     mocker.patch("builtins.input", side_effect=["T", "\n"])
     args = argParser.parse_known_args(args=["-e", "-a", "Y", "-t", "-p"])[0]
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
+    assert globals.configManager.period != originalPeriod
     # Revert to the original state
     mocker.patch("builtins.input", side_effect=["-e", "T", "\n"])
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
+    assert globals.configManager.period == originalPeriod
 
 
 def test_option_U(mocker, capsys):
@@ -255,12 +268,13 @@ def test_option_X_0(mocker):
         "builtins.input", side_effect=["X", "0", "0", globals.TEST_STKCODE, "y"]
     )
     args = argParser.parse_known_args(
-        args=["-e", "-a", "Y", "-o", "X:0:0:" + globals.TEST_STKCODE]
+        args=["-e", "-a", "Y","-u","00000", "-o", "X:0:0:" + globals.TEST_STKCODE]
     )[0]
     main(userArgs=args)
     assert globals.screenResults is not None
-    assert len(globals.screenResults) >= 0
-
+    assert len(globals.screenResults) >= 1
+    assert globals.screenResultsCounter.value >= 1
+    assert globals.screenCounter.value >= 1
 
 def test_option_X_0_input(mocker):
     cleanup()
@@ -270,8 +284,9 @@ def test_option_X_0_input(mocker):
     args = argParser.parse_known_args(args=["-e", "-a", "Y"])[0]
     main(userArgs=args)
     assert globals.screenResults is not None
-    assert len(globals.screenResults) >= 0
-
+    assert len(globals.screenResults) >= 1
+    assert globals.screenResultsCounter.value >= 1
+    assert globals.screenCounter.value >= 1
 
 def test_option_X_1_0(mocker):
     cleanup()
@@ -282,6 +297,8 @@ def test_option_X_1_0(mocker):
     main(userArgs=args)
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 0
+    assert globals.screenResultsCounter.value >= 1
+    assert globals.screenCounter.value >= 1
 
 
 def test_option_X_1_1(mocker):

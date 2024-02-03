@@ -104,12 +104,13 @@ newlyListedOnly = False
 screenCounter = None
 screener = Screener.tools(configManager, default_logger())
 screenResults = None
+backtest_df = None
 screenResultsCounter = None
 selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
 stockDict = None
 userPassedArgs = None
 elapsed_time = 0
-
+test_messages_queue = []
 
 def finishScreening(
     downloadOnly,
@@ -162,7 +163,7 @@ def getHistoricalDays(numStocks, testing):
     # We would like the backtest to finish withn 10 minutes (600 seconds).
     # days = numStocks/40 per second
     return (
-        10 if testing else configManager.backtestPeriod
+        2 if testing else configManager.backtestPeriod
     )  # if numStocks <= 2000 else 120 # (5 if iterations < 5 else (100 if iterations > 100 else iterations))
 
 
@@ -697,7 +698,7 @@ def main(userArgs=None):
     if tickerOption == "M" or executeOption == "M":
         # Go back to the caller. It will show the console menu again.
         return
-    handleRequestForSpecificStocks(options, tickerOption)
+    listStockCodes = handleRequestForSpecificStocks(options, tickerOption)
     handleExitRequest(executeOption)
     if executeOption is None:
         executeOption = 0
@@ -1049,7 +1050,21 @@ def main(userArgs=None):
                             totalStocksInReview += len(listStockCodes)
                     else:
                         totalStocksInReview += len(listStockCodes)
-                except:
+                except KeyboardInterrupt:
+                    try:
+                        keyboardInterruptEvent.set()
+                        keyboardInterruptEventFired = True
+                        actualHistoricalDuration = -1
+                        break
+                    except KeyboardInterrupt:
+                        pass
+                    print(
+                        colorText.BOLD
+                        + colorText.FAIL
+                        + "\n[+] Terminating Script, Please wait..."
+                        + colorText.END
+                    )
+                except Exception:
                     pass
                 moreItems = [
                     (
@@ -1352,9 +1367,11 @@ def handleMonitorFiveEMA():
         return
 
 def handleRequestForSpecificStocks(options, tickerOption):
+    listStockCodes = []
     if tickerOption == 0:
         if len(options) >= 4:
             listStockCodes = str(options[3]).split(",")
+    return listStockCodes
 
 def handleExitRequest(executeOption):
     if executeOption == "Z":
@@ -1985,7 +2002,10 @@ def saveNotifyResultsFile(
 def sendMessageToTelegramChannel(
     message=None, photo_filePath=None, document_filePath=None, caption=None, user=None
 ):
-    global userPassedArgs
+    global userPassedArgs, test_messages_queue
+    test_messages_queue.append(f"message:{message}\ncaption:{caption}\nuser:{user}\ndocument:{document_filePath}")
+    if len(test_messages_queue) >10:
+        test_messages_queue.pop(0)
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     if user is not None and caption is not None:
@@ -2209,7 +2229,8 @@ def takeBacktestInputs(
             "26",
             "27",
             "28",
-            "29" "42",
+            "29",
+            "42",
         ],
     )
     return tickerOption, executeOption, backtestPeriod
