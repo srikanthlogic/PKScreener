@@ -538,13 +538,13 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 )
             else:
                 if selection[2] == "4":  # Last N days
-                    selection.extend(["4", ""])
+                    selection.extend(["D", ""])
                 elif selection[2] == "5":  # RSI range
-                    selection.extend(["67", "71"])
+                    selection.extend(["D", "D"])
                 elif selection[2] == "8":  # CCI range
-                    selection.extend(["-100", "150"])
+                    selection.extend(["D", "D"])
                 elif selection[2] == "9":  # Vol gainer ratio
-                    selection.extend(["2.5", ""])
+                    selection.extend(["D", ""])
                 elif selection[2] in [
                     "1",
                     "2",
@@ -639,7 +639,7 @@ async def sendUpdatedMenu(menuText, update: Update, context, reply_markup):
 async def launchScreener(options, user, context, optionChoices, update):
     try:
         if str(optionChoices.upper()).startswith("B"):
-            optionChoices = optionChoices.replace(" ", "").replace(">", "_").replace(":","_")
+            optionChoices = optionChoices.replace(" ", "").replace(">", "_").replace(":","_").replace("_D","")
             while optionChoices.endswith("_"):
                 optionChoices = optionChoices[:-1]
             if str(optionChoices).split("_")[2] == "6" and str(optionChoices).split("_")[3] == "7":
@@ -987,13 +987,13 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 return START_ROUTES
             else:
                 if selection[2] == "4":  # Last N days
-                    selection.extend(["4", ""])
+                    selection.extend(["D", ""])
                 elif selection[2] == "5":  # RSI range
-                    selection.extend(["67", "71"])
+                    selection.extend(["D", "D"])
                 elif selection[2] == "8":  # CCI range
-                    selection.extend(["-100", "150"])
+                    selection.extend(["D", "D"])
                 elif selection[2] == "9":  # Vol gainer ratio
-                    selection.extend(["2.5", ""])
+                    selection.extend(["D", ""])
                 elif selection[2] in [
                     "1",
                     "2",
