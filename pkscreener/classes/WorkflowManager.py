@@ -34,7 +34,7 @@ def run_workflow(command, user, options, workflowType="B"):
     branch, owner, repo = "main", "pkjmesra", "PKScreener"
     if workflowType == "B":
         workflow_name = "w13-workflow-backtest_generic.yml"
-        options = f'{options.replace("B:","")}:D:D:D:D:D'
+        options = f'{options.replace("B:","")}:D:D:D:D:D'.replace("::",":")
         data = (
             '{"ref":"'
             + branch
@@ -56,7 +56,7 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -o {options.replace("_",":")}D:D:D:D:D'
+                + f'-a Y -e -p -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
                 + '","ref":"main"}}'
             )
         else:
@@ -66,7 +66,7 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -u {user} -o {options.replace("_",":")}D:D:D:D:D'
+                + f'-a Y -e -p -u {user} -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
                 + '","ref":"main"}}'
             )
 
