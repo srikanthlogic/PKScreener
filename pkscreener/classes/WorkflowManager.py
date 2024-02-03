@@ -56,7 +56,7 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -o {options.replace("_",":")}:D:D:D:D:D'
+                + f'-a Y -e -p -o {options.replace("_",":")}D:D:D:D:D'
                 + '","ref":"main"}}'
             )
         else:
@@ -66,7 +66,7 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -u {user} -o {options.replace("_",":")}:D:D:D:D:D'
+                + f'-a Y -e -p -u {user} -o {options.replace("_",":")}D:D:D:D:D'
                 + '","ref":"main"}}'
             )
 
