@@ -2823,6 +2823,123 @@ def test_validateShortTermBullish_negative(
     assert mock_screen_dict.get("MA-Signal") is None
     assert mock_save_dict.get("MA-Signal") is None
 
+def test_validateShortTermBullish(tools_instance):
+    # Mock the required functions and classes
+    patch('pandas.DataFrame.copy')
+    patch('numpy.round')
+    patch('pandas.DataFrame.fillna')
+    patch('pandas.DataFrame.replace')
+    patch('pandas.DataFrame.head')
+    patch('pandas.concat')
+    patch('pandas.DataFrame.rename')
+    patch('pandas.DataFrame.debug')
+
+    # Create a test case
+    df = pd.DataFrame({'Open': [1.0, 2.0, 3.0], 'High': [4.1, 5.1, 6.1], 'Low': [7.1, 8.1, 9.1], 'Close': [10.1, 11.1, 120.1], 'Volume': [13.1, 14.1, 15.1]})
+    df = pd.concat([df]*150, ignore_index=True)
+    ichi = pd.DataFrame({"ISA_9":[100,100,100],"ISB_26":[90,90,90],"IKS_26":[110,110,110],"ITS_9":[111,111,111]})
+    ichi = pd.concat([ichi]*150, ignore_index=True)
+    screenDict = {}
+    saveDict = {}
+    df,_ = tools_instance.preprocessData(df,30)
+    df["FASTK"].iloc[2] = 21
+    df["SSMA"].iloc[0] = 48
+    df["FASTD"].iloc[100] = 100
+    df["FASTK"].iloc[100] = 110
+    df["FASTD"].iloc[101] = 110
+    df["FASTK"].iloc[101] = 100
+    # Call the function under test
+    with patch('pkscreener.classes.Pktalib.pktalib.ichimoku',return_value=ichi):
+        result = tools_instance.validateShortTermBullish(df, screenDict, saveDict)
+
+        # Assert the expected behavior
+        assert result == True
+        assert screenDict['MA-Signal'] == '\033[1m\033[92mBullish\033[0m'
+        assert saveDict['MA-Signal'] == 'Bullish'
+    ichi = pd.DataFrame({"ISB_26":[100,100,100],"ISA_9":[90,90,90],"IKS_26":[110,110,110],"ITS_9":[111,111,111]})
+    ichi = pd.concat([ichi]*150, ignore_index=True)
+    with patch('pkscreener.classes.Pktalib.pktalib.ichimoku',return_value=ichi):
+        result = tools_instance.validateShortTermBullish(df, screenDict, saveDict)
+
+        # Assert the expected behavior
+        assert result == True
+        assert screenDict['MA-Signal'] == '\033[1m\033[92mBullish\033[0m'
+        assert saveDict['MA-Signal'] == 'Bullish'
+
+def test_validateMomentum(tools_instance):
+    # Mock the required functions and classes
+    patch('pandas.DataFrame.copy')
+    patch('pandas.DataFrame.head')
+    patch('pandas.DataFrame.iterrows')
+    patch('pandas.DataFrame.sort_values')
+    patch('pandas.DataFrame.equals')
+    patch('pandas.DataFrame.iloc')
+    patch('pandas.concat')
+    patch('pandas.DataFrame.rename')
+    patch('pandas.DataFrame.debug')
+
+    # Create a test case
+    df = pd.DataFrame({'Open': [1.1, 2, 3], 'High': [4.1, 5, 6], 'Low': [7.1, 8, 9], 'Close': [10.1, 11, 12], 'Volume': [13, 14, 15]})
+    df = pd.concat([df]*150, ignore_index=True)
+    screenDict = {}
+    saveDict = {}
+
+    # Call the function under test
+    result = tools_instance.validateMomentum(df, screenDict, saveDict)
+
+    # Assert the expected behavior
+    assert result == False
+    # assert screenDict['Pattern'] == '\033[1m\033[92mMomentum Gainer\033[0m'
+    # assert saveDict['Pattern'] == 'Momentum Gainer'
+
+def test_validateLTPForPortfolioCalc(tools_instance):
+    # Mock the required functions and classes
+    patch('pandas.DataFrame.copy')
+    patch('pandas.DataFrame.head')
+    patch('pandas.DataFrame.reset_index')
+    patch('pandas.DataFrame.iloc')
+    patch('pandas.concat')
+    patch('pandas.DataFrame.rename')
+    patch('pandas.DataFrame.debug')
+
+    # Create a test case
+    df = pd.DataFrame({'Open': [1, 2, 3], 'High': [4, 5, 6], 'Low': [7, 8, 9], 'Close': [10, 11, 12], 'Volume': [13, 14, 15]})
+    df = pd.concat([df]*150, ignore_index=True)
+    screenDict = {}
+    saveDict = {}
+
+    # Call the function under test
+    result = tools_instance.validateLTPForPortfolioCalc(df, screenDict, saveDict)
+
+    # Assert the expected behavior
+    assert result == None
+    assert screenDict['LTP1'] == '\033[92m11.00\033[0m'
+    assert saveDict['LTP1'] == 11.0
+
+def test_validateNarrowRange(tools_instance):
+    # Mock the required functions and classes
+    patch('pandas.DataFrame.copy')
+    patch('PKDevTools.PKDateUtilities.PKDateUtilities.isTradingTime')
+    patch('pandas.DataFrame.head')
+    patch('pandas.DataFrame.describe')
+    patch('pandas.DataFrame.iloc')
+    patch('pandas.concat')
+    patch('pandas.DataFrame.rename')
+    patch('pandas.DataFrame.debug')
+
+    # Create a test case
+    df = pd.DataFrame({'Open': [1.1, 2, 3], 'High': [4.1, 5, 6], 'Low': [7.1, 8, 9], 'Close': [10.1, 11, 12], 'Volume': [13, 14, 15]})
+    df = pd.concat([df]*150, ignore_index=True)
+    screenDict = {}
+    saveDict = {}
+
+    # Call the function under test
+    result = tools_instance.validateNarrowRange(df, screenDict, saveDict)
+
+    # Assert the expected behavior
+    assert result == True
+    assert screenDict['Pattern'] == '\033[1m\033[92mNR4\033[0m'
+    assert saveDict['Pattern'] == 'NR4'
 
 # def test_validateVCP_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
 #     # mock_data["High"] = [205, 210, 215, 220]
@@ -2849,12 +2966,19 @@ def test_validateVolume_positive(mock_data, mock_screen_dict, mock_save_dict, to
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False,True)
     assert mock_screen_dict["Volume"] == 0.67
     assert mock_save_dict["Volume"] == 0.67
+    mock_data["VolMA"].iloc[0] = 1000
+    mock_data["Volume"].iloc[0] = 2500
+    assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5,1000) == (True, True)
+    assert mock_screen_dict["Volume"] == 2.5
+    assert mock_save_dict["Volume"] == 2.5
 
 def test_validateVolume_negative(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
     mock_data["Volume"] = [1000, 2000, 3000, 3500]
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False, True)
     assert mock_screen_dict["Volume"] == 0.67
     assert mock_save_dict["Volume"] == 0.67
+    mock_data["VolMA"].iloc[0] = 0
+    assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5,10000) == (True, False)
 
 def test_SpreadAnalysis_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
     mock_data["Open"] = [140, 135, 150, 155]
@@ -2867,3 +2991,26 @@ def test_validateVolumeSpreadAnalysis_negative(mock_data, mock_screen_dict, mock
     assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == False
     assert mock_screen_dict.get("Pattern") == None
     assert mock_save_dict.get("Pattern") == None
+
+def test_validateVolumeSpreadAnalysis_datalength_lessthan2(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    assert tools_instance.validateVolumeSpreadAnalysis(mock_data.head(1), mock_screen_dict, mock_save_dict) == False
+    assert mock_screen_dict.get("Pattern") == None
+    assert mock_save_dict.get("Pattern") == None
+
+def test_validateVolumeSpreadAnalysis_open_less_than_close(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Open"].iloc[1] = 100
+    mock_data["Close"].iloc[1] = 110
+    assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == False
+    assert mock_screen_dict.get("Pattern") == None
+    assert mock_save_dict.get("Pattern") == None
+
+def test_validateVolumeSpreadAnalysis_spread0_lessthan_spread1(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
+    mock_data["Open"].iloc[1] = 120
+    mock_data["Close"].iloc[1] = 100
+    mock_data["Open"].iloc[0] = 110
+    mock_data["Close"].iloc[0] = 100
+    mock_data["Volume"].iloc[0] = mock_data.iloc[0]["VolMA"] + 1000
+    mock_data["Volume"].iloc[1] = mock_data["Volume"].iloc[0] -1000
+    assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == True
+    assert mock_screen_dict.get("Pattern") == colorText.BOLD + colorText.GREEN + "Demand Rise" + colorText.END 
+    assert mock_save_dict.get("Pattern") == 'Demand Rise'
