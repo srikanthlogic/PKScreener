@@ -814,7 +814,7 @@ class tools:
             elif data_list[cnt] in last_signal:
                 try:
                     condition = last_signal[data_list[cnt]][0]["SL"][0]
-                except KeyError as e:
+                except KeyError as e: # pragma: no cover
                     self.default_logger.debug(e, exc_info=True)
                     condition = last_signal[data_list[cnt]]["SL"][0]
                 # if last_signal[data_list[cnt]] is not final:          # Debug - Shows all conditions
@@ -1384,7 +1384,7 @@ class tools:
                     self.default_logger.info(
                         f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because either today-open ({to}) < yesterday-close ({yc}) or yesterday-open({yo}) < day-before-close({dyc})'
                     )
-            except IndexError as e:
+            except IndexError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # self.default_logger.debug(data)
                 pass
@@ -1809,7 +1809,7 @@ class tools:
                         )
                         saveDict["Pattern"] = "Demand Rise"
                         return True
-            except IndexError as e:
+            except IndexError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 pass
             return False

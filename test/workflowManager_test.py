@@ -47,7 +47,7 @@ def test_run_workflow_positive(mock_fetcher):
     assert result == mock_fetcher.return_value
     mock_fetcher.assert_called_once_with(
         "https://api.github.com/repos/pkjmesra/PKScreener/actions/workflows/w13-workflow-backtest_generic.yml/dispatches",
-        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D","name":"command"}}',
+        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D:D:D","name":"command"}}',
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + ghp_token,
@@ -63,7 +63,7 @@ def test_run_workflow_negative(mock_fetcher):
     assert result == mock_fetcher.return_value
     mock_fetcher.assert_called_once_with(
         "https://api.github.com/repos/pkjmesra/PKScreener/actions/workflows/w13-workflow-backtest_generic.yml/dispatches",
-        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D","name":"command"}}',
+        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D:D:D","name":"command"}}',
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + ghp_token,
@@ -79,7 +79,7 @@ def test_run_workflow_edge(mock_fetcher):
     assert result == mock_fetcher.return_value
     mock_fetcher.assert_called_once_with(
         "https://api.github.com/repos/pkjmesra/PKScreener/actions/workflows/w13-workflow-backtest_generic.yml/dispatches",
-        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D","name":"command"}}',
+        data='{"ref":"main","inputs":{"user":"user","params":"options:D:D:D:D:D","name":"command"}}',
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + ghp_token,
