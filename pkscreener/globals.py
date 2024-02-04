@@ -1503,7 +1503,7 @@ def printNotifySaveScreenedResults(
     )
     strategy_df = PortfolioXRay.bestStrategiesFromSummaryForReport(reportNameInsights,includeLargestDatasets=True)
     addendumLabel = (
-        "[+] Strategies that have best results in the past for this scan option:"
+        "[+] Strategies that have best results in the past for this scan option (calculated with 1 stock each with matching strategy in the result):"
     )
     tabulated_strategy = ""
     if strategy_df is not None and len(strategy_df) > 0:
