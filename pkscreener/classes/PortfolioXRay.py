@@ -83,7 +83,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                 reportName.replace("_X_", "_B_").replace("_G_", "_B_")
-            )
+            ),encoding="UTF-8"
         )
     except: # pragma: no cover
         pass
@@ -106,6 +106,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
             getMaxBestInsight(summary, dfs, periods, insights_list)
             insights = pd.DataFrame(insights_list).drop_duplicates(ignore_index=True)
             insights.dropna(axis=0, how="all", inplace=True)
+            insights = insights.replace(np.nan, "-", regex=True)
     return insights
 
 def cleanupInsightsSummary(df, periods):

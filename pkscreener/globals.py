@@ -223,13 +223,13 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
             dfs = pd.read_html(
                 "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                     reportNameSummary.replace("_X_", "_B_")
-                )
+                ),encoding="UTF-8"
             )
         _, reportNameDetail = getBacktestReportFilename()
         dfd = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                 reportNameDetail.replace("_X_", "_B_")
-            )
+            ),encoding="UTF-8"
         )
 
         if summaryRequired and len(dfs) > 0:
