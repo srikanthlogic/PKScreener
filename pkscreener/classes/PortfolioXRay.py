@@ -127,6 +127,7 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
     for df in dfs:
         strategy_percent = {}
         strategy = {}
+        firstPeriod = True
         for prd in periods:
             try:
                 max_p = df[f"{prd}Pd-%"].max()
@@ -134,11 +135,21 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
                 bestScanFilter = str(
                             df["ScanType"].iloc[maxIndexPos]).replace("[SUM]", "")
                 resultPoints = bestScanFilter.split("(")[-1]
-                strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if summary else ''}"
+                strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
                 scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
                 strategy[f"{prd}-Pd"] = scanType
             except: # pragma: no cover
+                try:
+                    max_p = df[f"{prd}Pd-%"]
+                    bestScanFilter = str(df["ScanType"]).replace("[SUM]", "")
+                    resultPoints = bestScanFilter.split("(")[-1]
+                    strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
+                    scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
+                    strategy[f"{prd}-Pd"] = scanType
+                except: # pragma: no cover
+                    pass
                 pass
+            firstPeriod = False
         insights_list.extend([strategy, strategy_percent])
 
 def addLargeDatasetInsights(dfs, max_datasets_df):
