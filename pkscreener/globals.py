@@ -1501,9 +1501,9 @@ def printNotifySaveScreenedResults(
     _, reportNameInsights = getBacktestReportFilename(
         sortKey="Date", optionalName="Insights"
     )
-    strategy_df = PortfolioXRay.bestStrategiesFromSummaryForReport(reportNameInsights)
+    strategy_df = PortfolioXRay.bestStrategiesFromSummaryForReport(reportNameInsights,includeLargestDatasets=True)
     addendumLabel = (
-        "[+] Strategy that has best results in the past for this scan option:"
+        "[+] Strategies that have best results in the past for this scan option:"
     )
     tabulated_strategy = ""
     if strategy_df is not None and len(strategy_df) > 0:
@@ -1720,11 +1720,11 @@ def sendQuickScanResult(
 
 def reformatTable(summaryText, headerDict, colored_text, sorting=True):
     if sorting:
-        tableText = "<!DOCTYPE html><html><head><script type='application/javascript' src='https://pkjmesra.github.io/PKScreener/pkscreener/classes/tableSorting.js' ></script><style type='text/css'>body, table {background-color: black; color: white;} table, th, td {border: 1px solid white;} th {cursor: pointer; color:white; text-decoration:underline;} .r {color:red;font-weight:bold;} .w {color:white;font-weight:bold;} .g {color:lightgreen;font-weight:bold;} .y {color:yellow;}</style></head><body><span style='color:white;' >"
+        tableText = "<!DOCTYPE html><html><head><script type='application/javascript' src='https://pkjmesra.github.io/PKScreener/pkscreener/classes/tableSorting.js' ></script><style type='text/css'>body, table {background-color: black; color: white;} table, th, td {border: 1px solid white;} th {cursor: pointer; color:white; text-decoration:underline;} .r {color:red;font-weight:bold;} .w {color:white;font-weight:bold;} .g {color:lightgreen;font-weight:bold;} .y {color:yellow;} .bg {background-color:darkslategrey;} .bb {background-color:black;} input#searchReports { width: 220px; } </style></head><body><span style='color:white;' >"
         colored_text = colored_text.replace(
-            "<table", f"{tableText}{summaryText}<br /><table"
-        )
+            "<table", f"{tableText}{summaryText}<br /><input type='text' id='searchReports' onkeyup='searchReportsByAny()' placeholder='Search for stock/scan reports..' title='Type in a name/ID'><table")
         colored_text = colored_text.replace("<table ", "<table id='resultsTable' ")
+        colored_text = colored_text.replace('<tr style="text-align: right;">','<tr style="text-align: right;" class="header">')
         for key in headerDict.keys():
             if key > 0:
                 colored_text = colored_text.replace(
