@@ -59,6 +59,8 @@ from pkscreener.pkscreenercli import argParser, disableSysOut
 from RequestsMocker import RequestsMocker as PRM
 from sharedmock import SharedMock
 from pkscreener.classes import Utility
+from PKDevTools.classes import Telegram
+from pkscreener import pkscreenercli
 
 session = CachedSession(
     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
@@ -110,6 +112,9 @@ def cleanup():
     configManager.deleteFileWithPattern(pattern="*.png")
     configManager.deleteFileWithPattern(pattern="*.xlsx")
     configManager.deleteFileWithPattern(pattern="*.html")
+    # del os.environ['RUNNER']
+    os.environ['RUNNER'] = "RUNNER"
+    Telegram.TOKEN = "Token"
 
 def getOrSetLastRelease():
     r = fetcher.fetchURL(
@@ -124,6 +129,13 @@ def getOrSetLastRelease():
         if r.json()["message"] == "Not Found":
             last_release = 0
 
+def messageSentToTelegramQueue(msgText=None):
+    relevantMessageFound = False
+    for message in globals.test_messages_queue:
+        if msgText in message:
+            relevantMessageFound = True
+            break
+    return relevantMessageFound
 
 def test_if_changelog_version_changed():
     global last_release
@@ -206,19 +218,19 @@ def test_option_E(mocker, capsys):
 
 def test_option_Y(mocker, capsys):
     mocker.patch("builtins.input", side_effect=["Y", "\n"])
-    args = argParser.parse_known_args(args=["-e", "-a", "Y", "-o", "Y"])[0]
+    args = argParser.parse_known_args(args=["-e", "-a", "Y", "-u","00000","-o", "Y"])[0]
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
-
+    assert messageSentToTelegramQueue("PKScreener User Configuration") == True
 
 def test_option_H(mocker, capsys):
     mocker.patch("builtins.input", side_effect=["H", "\n"])
-    args = argParser.parse_known_args(args=["-e", "-a", "N", "-t", "-p"])[0]
+    args = argParser.parse_known_args(args=["-e", "-a", "N", "-t", "-p","-u","00000","-o", "H"])[0]
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
-
+    assert messageSentToTelegramQueue("[ChangeLog]") == True
 
 def test_nifty_prediction(mocker, capsys):
     cleanup()
@@ -228,12 +240,7 @@ def test_nifty_prediction(mocker, capsys):
     out, err = capsys.readouterr()
     assert err == ""
     assert len(globals.test_messages_queue) > 0
-    relevantMessageFound = False
-    for message in globals.test_messages_queue:
-        if "Nifty AI prediction for the Next Day" in message:
-            relevantMessageFound = True
-            break
-    assert relevantMessageFound == True
+    assert messageSentToTelegramQueue("Nifty AI prediction for the Next Day") == True
 
 
 
@@ -260,6 +267,7 @@ def test_option_U(mocker, capsys):
     main(userArgs=args)
     out, err = capsys.readouterr()
     assert err == ""
+    assert OTAUpdater.checkForUpdate.url is not None
 
 
 def test_option_X_0(mocker):
@@ -275,13 +283,15 @@ def test_option_X_0(mocker):
     assert len(globals.screenResults) >= 1
     assert globals.screenResultsCounter.value >= 1
     assert globals.screenCounter.value >= 1
-
+    assert messageSentToTelegramQueue("[ChangeLog]") == True
+    
 def test_option_X_0_input(mocker):
     cleanup()
     mocker.patch(
         "builtins.input", side_effect=["X", "0", "0", globals.TEST_STKCODE, "y"]
     )
-    args = argParser.parse_known_args(args=["-e", "-a", "Y"])[0]
+    args = argParser.parse_known_args(args=["-e", "-a", "Y","-u","00000"])[0]
+    Telegram.TOKEN = "Token"
     main(userArgs=args)
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 1
@@ -292,8 +302,9 @@ def test_option_X_1_0(mocker):
     cleanup()
     mocker.patch("builtins.input", side_effect=["X", "1", "0", "y"])
     args = argParser.parse_known_args(
-        args=["-e", "-t", "-p", "-a", "Y", "-o", "X:1:0"]
+        args=["-e", "-t", "-p", "-a", "Y","-u","00000", "-o", "X:1:0"]
     )[0]
+    Telegram.TOKEN = "Token"
     main(userArgs=args)
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 0
@@ -310,7 +321,6 @@ def test_option_X_1_1(mocker):
     main(userArgs=args)
     assert globals.screenResults is not None
     assert len(globals.screenResults) >= 0
-
 
 def test_option_X_1_2(mocker):
     cleanup()
@@ -850,6 +860,8 @@ def test_option_X_12_all(mocker, capsys):
             x = m.find(key)
             _, cmds1 = listedMenusFromRendering(x, skipList=skipList)
             for cmd1 in cmds1:
+                startupOption = "X:12"
+                startupOption = f"{startupOption}:{key}"
                 key1 = cmd1.menuKey.upper()
                 startupOption = f"{startupOption}:{key1}:D:D"
                 args = argParser.parse_known_args(
@@ -859,10 +871,17 @@ def test_option_X_12_all(mocker, capsys):
         else:
             startupOption = f"{startupOption}:D:D"
             args = argParser.parse_known_args(
-                args=["-e", "-p", "-t", "-a", "Y", "-o", startupOption]
+                args=["-e", "-p", "-t", "-a", "Y", "-u","0000","-o", startupOption]
             )[0]
             argsList.extend([args])
     for arg in argsList:
         main(userArgs=arg)
+        # with pytest.raises(SystemExit):
+        #     pkscreenercli.args = arg
+        #     pkscreenercli.pkscreenercli()
         out, err = capsys.readouterr()
+        # print(f"ElapsedTimeFor:{arg.options}:{globals.elapsed_time}")
         assert err == ""
+        assert globals.screenCounter.value >= 1
+        if len(globals.test_messages_queue) > 0:
+            assert messageSentToTelegramQueue("found") == True
