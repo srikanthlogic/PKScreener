@@ -365,7 +365,7 @@ class tools:
         artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
         stdfont_addendumtext_height = 0
         if addendum is not None and len(addendum) > 0:
-            _ , stdfont_addendumtext_height = stdfont.getsize_multiline(addendum)
+            stdfont_addendumtext_width , stdfont_addendumtext_height = stdfont.getsize_multiline(addendum)
             titleLabels.append(addendumLabel)
             dfs_to_print.append(addendum)
             unstyled_dfs.append(tools.removeAllColorStyles(addendum))
@@ -389,6 +389,7 @@ class tools:
             artfont_repotext_width,
             artfont_scanResultText_width,
             artfont_backtestSummary_text_width,
+            stdfont_addendumtext_width
         ) + int(startColValue * 2)
         im_height = int(
                     artfont_arttext_height # Always
