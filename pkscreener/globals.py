@@ -1457,36 +1457,7 @@ def printNotifySaveScreenedResults(
     pngName = f'PKS_{getFormattedChoices()}_{PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")}'
     pngExtension = ".png"
     eligible = is_token_telegram_configured()
-    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
-        if saveResults is not None and len(saveResults) > 0:
-            df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
-            targetDateG10k = saveResults["Date"].iloc[0]
-            if df is not None and len(df) > 0:
-                titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
-                print(f"\n\n{titleLabelG10k}\n")
-                g10kStyledTable = colorText.miniTabulator().tabulate(
-                    df,
-                    headers="keys",
-                    tablefmt=colorText.No_Pad_GridFormat,
-                    showindex=False,
-                    maxcolwidths=Utility.tools.getMaxColumnWidths(df)
-                )
-                print(g10kStyledTable)
-                g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
-                if not testing and eligible:
-                    sendQuickScanResult(
-                        menuChoiceHierarchy,
-                        user,
-                        g10kStyledTable,
-                        g10kUnStyledTable,
-                        titleLabelG10k,
-                        pngName,
-                        pngExtension,
-                    )
-        elif user is not None and eligible:
-            sendMessageToTelegramChannel(
-                message=f"No scan results found for {menuChoiceHierarchy}", user=user
-            )
+    targetDateG10k = prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible)
     if saveResults is not None and "Date" in saveResults.columns:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
     removedUnusedColumns(screenResults, saveResults, ["Date"])
@@ -1618,6 +1589,41 @@ def printNotifySaveScreenedResults(
         )
     if not testing:
         Utility.tools.setLastScreenedResults(screenResults, saveResults, f"{getFormattedChoices()}_{recordDate if recordDate is not None else ''}")
+
+def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible):
+    targetDateG10k = None
+    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
+        if saveResults is not None and len(saveResults) > 0:
+            df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
+            targetDateG10k = saveResults["Date"].iloc[0]
+            if df is not None and len(df) > 0:
+                titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
+                print(f"\n\n{titleLabelG10k}\n")
+                g10kStyledTable = colorText.miniTabulator().tabulate(
+                    df,
+                    headers="keys",
+                    tablefmt=colorText.No_Pad_GridFormat,
+                    showindex=False,
+                    maxcolwidths=Utility.tools.getMaxColumnWidths(df)
+                )
+                print(g10kStyledTable)
+                g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
+                if not testing and eligible:
+                    sendQuickScanResult(
+                        menuChoiceHierarchy,
+                        user,
+                        g10kStyledTable,
+                        g10kUnStyledTable,
+                        titleLabelG10k,
+                        pngName,
+                        pngExtension,
+                    )
+        elif user is not None and eligible:
+            sendMessageToTelegramChannel(
+                message=f"No scan results found for {menuChoiceHierarchy}", user=user
+            )
+            
+    return targetDateG10k
 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):

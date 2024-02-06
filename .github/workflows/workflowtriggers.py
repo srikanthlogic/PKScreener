@@ -675,7 +675,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     from pkscreener import pkscreenercli
     from pkscreener.pkscreenercli import argParser as agp
     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-    ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", "S:","-v"])[0]
+    ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", "S:"])[0]
     pkscreenercli.args = ag
     pkscreenercli.pkscreenercli()
     tryCommitOutcomes(options)
