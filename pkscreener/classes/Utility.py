@@ -364,11 +364,13 @@ class tools:
         artfont_scanResultText_width, _ = artfont.getsize_multiline(table) if len(table) > 0 else (0,0)
         artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
         stdfont_addendumtext_height = 0
+        stdfont_addendumtext_width = 0
         if addendum is not None and len(addendum) > 0:
-            stdfont_addendumtext_width , stdfont_addendumtext_height = stdfont.getsize_multiline(addendum)
+            unstyled_addendum = tools.removeAllColorStyles(addendum)
+            stdfont_addendumtext_width , stdfont_addendumtext_height = stdfont.getsize_multiline(unstyled_addendum)
             titleLabels.append(addendumLabel)
             dfs_to_print.append(addendum)
-            unstyled_dfs.append(tools.removeAllColorStyles(addendum))
+            unstyled_dfs.append(unstyled_addendum)
 
         repoText = tools.getRepoHelpText()
         artfont_repotext_width, artfont_repotext_height = artfont.getsize_multiline(repoText)
