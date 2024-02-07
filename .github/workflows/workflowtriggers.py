@@ -432,7 +432,7 @@ def generateBacktestReportMainPage():
     f.close()
 
 
-def run_workflow(workflow_name, postdata):
+def run_workflow(workflow_name, postdata, option=""):
     owner, repo = "pkjmesra", "PKScreener"
     ghp_token = ""
     if "GITHUB_TOKEN" in os.environ.keys():
@@ -446,9 +446,9 @@ def run_workflow(workflow_name, postdata):
     }
     resp = requests.post(url, data=postdata, headers=headers, timeout=4)
     if resp.status_code == 204:
-        print(f"Workflow {workflow_name} Triggered!")
+        print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Workflow {option} {workflow_name} Triggered!")
     else:
-        print(f"Something went wrong while triggering {workflow_name}")
+        print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Something went wrong while triggering {workflow_name}")
     return resp
 
 def cleanuphistoricalscans(scanDaysInPast=270):
@@ -498,6 +498,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 daysInPast -=1
             tryCommitOutcomes(options)
         else:
+            cmd_options = scanOptions.replace("_",":")
             if args.user is None or len(args.user) == 0:
                 args.user = ""
                 postdata = (
@@ -506,7 +507,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     + '","inputs":{"user":"'
                     + f"{args.user}"
                     + '","params":"'
-                    + f'-a Y -e -p -o {scanOptions.replace("_",":")}'
+                    + f'-a Y -e -p -o {cmd_options}'
                     + '","ref":"main"}}'
                 )
             else:
@@ -516,11 +517,11 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     + '","inputs":{"user":"'
                     + f"{args.user}"
                     + '","params":"'
-                    + f'-a Y -e -p -u {args.user} -o {scanOptions.replace("_",":")}'
+                    + f'-a Y -e -p -u {args.user} -o {cmd_options}'
                     + '","ref":"main"}}'
                 )
 
-            resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata)
+            resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,cmd_options)
             if resp.status_code == 204:
                 sleep(5)
             else:
@@ -550,7 +551,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
                                 + (',"cleanuphistoricalscans":"Y"}' if (index == runForIndices[-1] and option==runForOptions[-1]) else "}")
                                 + '}'
                                 )
-                    resp = run_workflow("w9-workflow-download-data.yml", postdata)
+                    resp = run_workflow("w9-workflow-download-data.yml", postdata,f"X_{index}_{option}")
                     if resp.status_code == 204:
                         sleep(60)
                     else:
@@ -564,7 +565,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
         + (',"cleanuphistoricalscans":"Y"}')
         + '}'
         )
-    resp = run_workflow("w9-workflow-download-data.yml", postdata)
+    resp = run_workflow("w9-workflow-download-data.yml", postdata, "X_Cleanup")
     
     
 def tryCommitOutcomes(options,pathSpec=None,delete=False):
@@ -667,7 +668,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
                 + f'{"-i" if args.intraday else ""}'
                 + '"}}'
             )
-            resp = run_workflow("w13-workflow-backtest_generic.yml", postdata)
+            resp = run_workflow("w13-workflow-backtest_generic.yml", postdata,options)
             if resp.status_code == 204:
                 sleep(5)
             else:
@@ -676,6 +677,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     from pkscreener.pkscreenercli import argParser as agp
     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
     ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", "S:"])[0]
+    print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Workflow option S: Triggered!")
     pkscreenercli.args = ag
     pkscreenercli.pkscreenercli()
     tryCommitOutcomes(options)
@@ -739,3 +741,6 @@ if args.cleanuphistoricalscans:
     cleanuphistoricalscans(daysInPast)
 if args.updateholidays:
     updateHolidays()
+
+print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
+sys.exit(0)
