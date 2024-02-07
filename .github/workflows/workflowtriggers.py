@@ -460,7 +460,7 @@ def cleanuphistoricalscans(scanDaysInPast=270):
         if args.branchname is None:
             args.branchname = branch
         scanOptions = objectDictionary[key]["td3"]
-        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'
+        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'.replace("::",":")
         daysInPast = scanDaysInPast
         while daysInPast >=251:
             exists, fileSize, fileName = scanResultExists(options,daysInPast,True)
@@ -480,7 +480,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
         scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
         branch = "main"
         scanOptions = objectDictionary[key]["td3"]
-        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'
+        options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'.replace("::",":")
         if launchLocal:
             from pkscreener import pkscreenercli
             from pkscreener.pkscreenercli import argParser as agp
@@ -585,7 +585,7 @@ def scanOutputDirectory(backtest=False):
     dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
     outputFolder = os.path.join(os.getcwd(),dirName)
     if not os.path.isdir(outputFolder):
-        print("This must be run with actions-data-download branch checked-out")
+        print("This must be run with actions-data-download or gh-pages branch checked-out")
         print("Creating actions-data-scan directory now...")
         os.makedirs(os.path.dirname(os.path.join(os.getcwd(),f"{dirName}{os.sep}")), exist_ok=True)
     return outputFolder
@@ -633,7 +633,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
 
     for key in objectDictionary.keys():
         scanOptions = objectDictionary[key]["td3"]
-        options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'
+        options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'.replace("::",":")
         if not shouldRunBacktests(scanOptions,existing_df):
             continue
         if launchLocal:
