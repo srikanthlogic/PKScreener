@@ -673,14 +673,19 @@ def triggerBacktestWorkflowActions(launchLocal=False):
                 sleep(5)
             else:
                 break
-    from pkscreener import pkscreenercli
-    from pkscreener.pkscreenercli import argParser as agp
-    os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-    ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", "S:"])[0]
-    print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Workflow option S: Triggered!")
-    pkscreenercli.args = ag
-    pkscreenercli.pkscreenercli()
-    tryCommitOutcomes(options)
+    cmt_msg = "Strategy_Report"
+    postdata = (
+        '{"ref":"'
+        + branch
+        + '","inputs":{"user":"'
+        + "-1001785195297"
+        + '","params":"'
+        + f'-a Y -e -p -o S:'
+        + f'","ref":"{branch}"'
+        + '","postrun":"'
+        + f'git pull && git commit -m {cmt_msg} && git push -v -u origin +{branch}'
+        + '"}}')
+    resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,"S:")
     if launchLocal:
         sys.exit(0)
 
