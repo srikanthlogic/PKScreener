@@ -64,7 +64,10 @@ original__stdout=None
 def decorator(func):
     def new_func(*args, **kwargs):
         if printenabled:
-            func(*args,**kwargs)
+            try:
+                func(*args,**kwargs)
+            except: # pragma: no cover
+                pass
 
     return new_func
 
