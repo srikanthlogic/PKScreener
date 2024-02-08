@@ -434,6 +434,8 @@ def generateBacktestReportMainPage():
 
 def run_workflow(workflow_name, postdata, option=""):
     owner, repo = "pkjmesra", "PKScreener"
+    # from PKDevTools.classes.Telegram import get_secrets
+    # _, _, _, ghp_token = get_secrets()
     ghp_token = ""
     if "GITHUB_TOKEN" in os.environ.keys():
         ghp_token = os.environ["GITHUB_TOKEN"]
@@ -683,7 +685,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
         + f'-a Y -e -p -o S:'
         + f'","ref":"{branch}"'
         + ',"postrun":"'
-        + f'git pull && git commit -m {cmt_msg} && git push -v -u origin +{branch}'
+        + f'git config user.name github-actions && git config user.email github-actions@github.com && git pull && git commit -m {cmt_msg} && git push -v -u origin +{branch}'
         + '"}}')
     resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,"S:")
     if launchLocal:
