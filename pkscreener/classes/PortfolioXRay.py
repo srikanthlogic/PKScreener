@@ -213,7 +213,7 @@ def xRaySummary(savedResults=None):
             )
         sum_list.append(sum_dict)
     df = pd.DataFrame(sum_list)
-    df = formatGridOutput(df)
+    df = formatGridOutput(df, replacenan=False)
     saveResults = pd.concat([saveResults, df], axis=0)
     saveResults = saveResults.replace(np.nan, "-", regex=True)
     return saveResults
@@ -600,11 +600,12 @@ def statScanCalculationForRSI(args, saveResults, period, scanResults):
     return scanResults
 
 
-def formatGridOutput(df):
-    df = df.replace(np.nan, "-", regex=True)
+def formatGridOutput(df,replacenan=True):
+    if replacenan:
+        df = df.replace(np.nan, "-", regex=True)
     for col in df.columns:
         try:
-            df[col] = df[col].astype(float).fillna(0.0)
+            df[col] = df[col].astype(float).fillna(0)
         except: # pragma: no cover
             continue
         maxGrowth = df[col].max()
@@ -653,6 +654,10 @@ def formatGridOutput(df):
                     )
                 )
             )
+    df = df.replace(np.nan, "-", regex=True)
+    df = df.replace(colorText.FAIL + "-100.0 %" + colorText.END, "-", regex=False)
+    df = df.replace(colorText.WARN + "0.0 %" + colorText.END, "-", regex=False)
+    df = df.replace(colorText.FAIL + "0.0" + colorText.END, "-", regex=False)
     return df
 
 
