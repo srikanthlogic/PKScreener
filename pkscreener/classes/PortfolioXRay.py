@@ -278,6 +278,11 @@ def cleanFormattingForStatsData(calcForDate, saveResults, df):
     return df
 
 def getBacktestDataFromCleanedData(args, saveResults, df, period):
+    '''
+    Important
+    ---------
+    You should have called `cleanupData` before calling this.
+    '''
     saveResults[f"LTP{period}"] = (
                 saveResults[f"LTP{period}"].astype(float).fillna(0.0)
             )
@@ -286,18 +291,6 @@ def getBacktestDataFromCleanedData(args, saveResults, df, period):
             )
 
     scanResults = statScanCalculations(args, saveResults, period)
-
-    df_grouped = saveResults.groupby("Pattern")
-    for pattern, df_group in df_grouped:
-        if pattern is None or len(pattern) == 0:
-            pattern = "No Pattern"
-        scanResults.append(
-                    getCalculatedValues(df_group, period, f"[P]{pattern}", args)
-                )
-
-    scanResults.append(
-                getCalculatedValues(saveResults, period, "NoFilter", args)
-            )
 
     if df is None:
         df = pd.DataFrame(scanResults)
@@ -308,6 +301,20 @@ def getBacktestDataFromCleanedData(args, saveResults, df, period):
                 ]
         df = pd.concat([df, df_target], axis=1)
     return df
+
+def statScanCalculationForNoFilter(args, saveResults, period, scanResults):
+    scanResults.append(
+                getCalculatedValues(saveResults, period, "NoFilter", args)
+            )
+
+def statScanCalculationForPatterns(args, saveResults, period, scanResults):
+    df_grouped = saveResults.groupby("Pattern")
+    for pattern, df_group in df_grouped:
+        if pattern is None or len(pattern) == 0:
+            pattern = "No Pattern"
+        scanResults.append(
+                    getCalculatedValues(df_group, period, f"[P]{pattern}", args)
+                )
 
 def cleanupData(savedResults):
     saveResults = savedResults.copy()
@@ -374,7 +381,8 @@ def statScanCalculations(args, saveResults, period):
     statScanCalculationForBO(args, saveResults, period, scanResults)
     statScanCalculationFor52Wk(args, saveResults, period, scanResults)
     statScanCalculationForCCI(args, saveResults, period, scanResults)
-    
+    statScanCalculationForPatterns(args, saveResults, period, scanResults)
+    statScanCalculationForNoFilter(args, saveResults, period, scanResults)
     return scanResults
 
 def statScanCalculationForCCI(args, saveResults, period, scanResults):
@@ -589,7 +597,7 @@ def statScanCalculationForRSI(args, saveResults, period, scanResults):
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterRSI50To67(saveResults), period, "RSI<=67", args
+                    filterRSI50To67(saveResults), period, "50<=RSI<=67", args
                 )
             )
     scanResults.append(
@@ -903,3 +911,124 @@ def filterCCIAbove200(df):
     if df is None:
         return None
     return df[(df["CCI"] > 200)].fillna(0.0)
+
+def returnNoFilter(df):
+    return df
+
+def filterPattern(df, pattern):
+    if df is None:
+        return None
+    match_df = None
+    df_grouped = df.groupby("Pattern")
+    for foundPattern, df_group in df_grouped:
+        if foundPattern is None or len(foundPattern) == 0:
+            foundPattern = "No Pattern"
+        if f"[P]{foundPattern}" == pattern:
+            match_df = df_group
+            break
+    return match_df
+
+def strategyDictionary():
+    """
+    Available Strategies:
+
+    RSI
+    ---
+    `RSI>=50`, `50<=RSI<=67` and `RSI>=68`
+
+    CCI
+    ---
+    `[CCI]<=-100`, `[CCI]-100<C<0`, `[CCI]0<=C<=100`, `[CCI]100<C<=200` and `[CCI]>200`
+
+    52Wk H/L
+    --------
+    `[52Wk]LTP>=H`, `[52Wk]LTP>=.9*H`, `[52Wk]LTP<.9*H`, `[52Wk]LTP>L`, `[52Wk]LTP>=1.1*L` and `[52Wk]LTP<=L`
+
+    Breakout
+    --------
+    `[BO]LTP<BO`, `[BO]LTP>=BO`, `[BO]LTP<R` and `[BO]LTP>=R`
+
+    Consolidation
+    -------------
+    `Cons.<=10` and Cons.>10
+
+    Volume
+    ------
+    `Vol<2.5` and `Vol>=2.5`
+
+    Moving Averages
+    ---------------
+    `[MA]Bull`, `[MA]Bear`, `[MA]Neutral`, `[MA]BullCross`, `[MA]BearCross`, `[MA]Support` and `[MA]Resist`
+
+    Trends
+    ------
+    `[T]StrongUp`, `[T]WeakUp`, `[T]TrendUp`, `[T]StrongDown`, `[T]WeakDown`, `[T]Sideways` and `[T]TrendDown`
+
+    NoFilter
+    --------
+    `NoFilter`
+
+    Patterns
+    --------
+    `[P]{patern_name}`. For example, `[P]No Pattern`
+    """
+    strategies = {}
+    # RSI
+    strategies["RSI>=50"] = filterRSIAbove50
+    strategies["50<=RSI<=67"] = filterRSI50To67
+    strategies["RSI>=68"] = filterRSI68OrAbove
+    # CCI
+    strategies["[CCI]<=-100"] = filterCCIBelowMinus100
+    strategies["[CCI]-100<C<0"] = filterCCIBelow0
+    strategies["[CCI]0<=C<=100"] = filterCCI0To100
+    strategies["[CCI]100<C<=200"] = filterCCI100To200
+    strategies["[CCI]>200"] = filterCCIAbove200
+    # 52Wk H/L
+    strategies["[52Wk]LTP>=H"] = filterLTPMoreOREqual52WkH
+    strategies["[52Wk]LTP>=.9*H"] = filterLTPWithin90Percent52WkH
+    strategies["[52Wk]LTP<.9*H"] = filterLTPLess90Percent52WkH
+    strategies["[52Wk]LTP>L"] = filterLTPMore52WkL
+    strategies["C[52Wk]LTP>=1.1*LCI"] = filterLTPWithin90Percent52WkL
+    strategies["[52Wk]LTP<=L"] = filterLTPLess52WkL
+    # Breakout
+    strategies["[BO]LTP<BO"] = filterLTPLessThanBreakout
+    strategies["[BO]LTP>=BO"] = filterLTPMoreOREqualBreakout
+    strategies["[BO]LTP<R"] = filterLTPLessThanResistance
+    strategies["[BO]LTP>=R"] = filterLTPMoreOREqualResistance
+    # Consolidation
+    strategies["Cons.<=10"] = filterConsolidating10Percent
+    strategies["Cons.>10"] = filterConsolidatingMore10Percent
+    # Volume
+    strategies["Vol<2.5"] = filterVolumeLessThan25
+    strategies["Vol>=2.5"] = filterVolumeMoreThan25
+    # MA
+    strategies["[MA]Bull"] = filterMASignalBullish
+    strategies["[MA]Bear"] = filterMASignalBearish
+    strategies["[MA]Neutral"] = filterMASignalNeutral
+    strategies["[MA]BullCross"] = filterMASignalBullCross
+    strategies["[MA]BearCross"] = filterMASignalBearCross
+    strategies["[MA]Support"] = filterMASignalSupport
+    strategies["[MA]Resist"] = filterMASignalResist
+    # Trends
+    strategies["[T]StrongUp"] = filterTrendStrongUp
+    strategies["[T]WeakUp"] = filterTrendWeakUp
+    strategies["[T]TrendUp"] = filterTrendUp
+    strategies["[T]StrongDown"] = filterTrendStrongDown
+    strategies["[T]WeakDown"] = filterTrendWeakDown
+    strategies["[T]Sideways"] = filterTrendSideways
+    strategies["[T]TrendDown"] = filterTrendDown
+    # NoFilter
+    strategies["NoFilter"] = returnNoFilter
+    # Pattern
+    strategies["[P]"] = filterPattern
+    return strategies
+
+def strategyForKey(key:str):
+    strategies = strategyDictionary()
+    if key in strategies.keys():
+        return strategies[key]
+    elif key.startswith("[P]"):
+        return strategies["[P]"]
+
+def strategyNames():
+    return strategyDictionary().keys()
