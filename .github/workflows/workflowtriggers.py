@@ -682,7 +682,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
         + '","inputs":{"user":"'
         + "-1001785195297"
         + '","params":"'
-        + f'-a Y -e -p -o S:'
+        + f'-a Y -e -p -o S:S'
         + f'","ref":"{branch}"'
         + ',"postrun":"'
         + f'git config user.name github-actions && git config user.email github-actions@github.com && git pull && git commit -m {cmt_msg} && git push -v -u origin +{branch}'

@@ -111,6 +111,7 @@ stockDict = None
 userPassedArgs = None
 elapsed_time = 0
 test_messages_queue = []
+strategyFilter=[]
 
 def finishScreening(
     downloadOnly,
@@ -222,13 +223,13 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
             _, reportNameSummary = getBacktestReportFilename(optionalName="Summary")
             dfs = pd.read_html(
                 "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
-                    reportNameSummary.replace("_X_", "_B_")
+                    reportNameSummary.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
                 ),encoding="UTF-8"
             )
         _, reportNameDetail = getBacktestReportFilename()
         dfd = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
-                reportNameDetail.replace("_X_", "_B_")
+                reportNameDetail.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
             ),encoding="UTF-8"
         )
 
@@ -603,7 +604,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio)
 
 @tracelog
 def main(userArgs=None):
-    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired
+    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     testing = False if userArgs is None else (userArgs.testbuild and userArgs.prodbuild)
     testBuild = False if userArgs is None else (userArgs.testbuild and not testing)
@@ -665,30 +666,55 @@ def main(userArgs=None):
             str(menuOption).upper(), tickerOption, executeOption, backtestPeriod
         )
     elif menuOption in ["S"]:
-        print(
-            colorText.GREEN
-            + "[+] Collecting all metrics for summarising..."
-            + colorText.END
-        )
-        df_all = PortfolioXRay.summariseAllStrategies()
-        if df_all is not None and len(df_all) > 0:
-            print(
-                colorText.miniTabulator().tabulate(
-                    df_all,
-                    headers="keys",
-                    tablefmt=colorText.No_Pad_GridFormat,
-                    showindex=False,
-                    maxcolwidths=Utility.tools.getMaxColumnWidths(df_all)
-                )
-            )
-            showBacktestResults(
-                df_all, sortKey="Scanner", optionalName="InsightsSummary"
-            )
-        else:
-            print("[!] Nothing to show here yet. Check back later.")
+        if len(options) >= 2:
+            userOption = options[1]
         if defaultAnswer is None:
-            input("Press <Enter> to continue...")
-        return
+            selectedMenu = m0.find(menuOption)
+            m1.renderForMenu(selectedMenu=selectedMenu)
+            userOption = input(
+                        colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                    )
+            print(colorText.END, end="")
+        if userOption.lower() == "s":
+            print(
+                colorText.GREEN
+                + "[+] Collecting all metrics for summarising..."
+                + colorText.END
+            )
+            df_all = PortfolioXRay.summariseAllStrategies()
+            if df_all is not None and len(df_all) > 0:
+                print(
+                    colorText.miniTabulator().tabulate(
+                        df_all,
+                        headers="keys",
+                        tablefmt=colorText.No_Pad_GridFormat,
+                        showindex=False,
+                        maxcolwidths=Utility.tools.getMaxColumnWidths(df_all)
+                    )
+                )
+                showBacktestResults(
+                    df_all, sortKey="Scanner", optionalName="InsightsSummary"
+                )
+            else:
+                print("[!] Nothing to show here yet. Check back later.")
+            if defaultAnswer is None:
+                input("Press <Enter> to continue...")
+            return
+        else:
+            userOptions = userOption.split(",")
+            for usrOption in userOptions:
+                strategyFilter.append(m1.find(usrOption).menuText.strip())
+            menuOption, tickerOption, executeOption, selectedChoice = getScannerMenuChoices(
+            testBuild or testing,
+            downloadOnly,
+            startupoptions,
+            menuOption="X",
+            tickerOption=tickerOption,
+            executeOption=executeOption,
+            defaultAnswer=defaultAnswer,
+            user=user,
+        )
+
     else:
         print("Not implemented yet! Try selecting a different option.")
         sleep(3)
@@ -1032,7 +1058,7 @@ def main(userArgs=None):
                     # if daysInPast > 0:
                     # Always run from the entire list for today
                     pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
-                    filePrefix = getFormattedChoices().replace("B","X").replace("G","X")
+                    filePrefix = getFormattedChoices().replace("B","X").replace("G","X").replace("S","X")
                     url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
                     savedListResp = fetcher.fetchURL(url)
                     if savedListResp is not None and savedListResp.status_code == 200:
@@ -1162,6 +1188,17 @@ def main(userArgs=None):
                 )
             if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                 screenResults, saveResults = removeUnknowns(screenResults, saveResults)
+            if len(strategyFilter) > 0:
+                # We'd need to apply additional filters for selected strategy
+                df_screenResults = None
+                cleanedUpSaveResults = PortfolioXRay.cleanupData(saveResults)
+                for strFilter in strategyFilter:
+                    cleanedUpSaveResults = PortfolioXRay.strategyForKey(strFilter)(cleanedUpSaveResults)
+                    saveResults = saveResults[saveResults.index.isin(cleanedUpSaveResults.index.values)]
+                for stk in saveResults.index.values:
+                    df_screenResults_filter = screenResults[screenResults.index.astype(str).str.contains(f"NSE%3A{stk}") == True]
+                    df_screenResults = pd.concat([df_screenResults, df_screenResults_filter], axis=0)
+                screenResults = df_screenResults
             printNotifySaveScreenedResults(
                 screenResults,
                 saveResults,
@@ -1458,9 +1495,9 @@ def printNotifySaveScreenedResults(
     pngExtension = ".png"
     eligible = is_token_telegram_configured()
     targetDateG10k = prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible)
-    if saveResults is not None and "Date" in saveResults.columns:
+    if saveResults is not None and "Date" in saveResults.columns and len(saveResults) > 0:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
-    removedUnusedColumns(screenResults, saveResults, ["Date"])
+    removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"])
 
     tabulated_results = ""
     if screenResults is not None and len(screenResults) > 0:
@@ -1976,7 +2013,7 @@ def saveNotifyResultsFile(
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     caption = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b>'
-    if len(screenResults) >= 1:
+    if screenResults is not None and len(screenResults) >= 1:
         filename = Utility.tools.promptSaveResults(
             saveResults, defaultAnswer=defaultAnswer
         )

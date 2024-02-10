@@ -28,6 +28,7 @@ from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 
 import pkscreener.classes.ConfigManager as ConfigManager
+import pkscreener.classes.PortfolioXRay as strategyManager
 
 configManager = ConfigManager.tools()
 
@@ -42,6 +43,9 @@ level0MenuDict = {
     "U": "Check for software update",
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",
+}
+level1_S_MenuDict = {
+    "S": "Summary"
 }
 level1_X_MenuDict = {
     "W": "Screen stocks from my own Watchlist",
@@ -275,6 +279,13 @@ class menus:
                 skip=skip, asList=asList, renderStyle=renderStyle, parent=selectedMenu
             )
         elif selectedMenu is not None:
+            if selectedMenu.menuKey == "S":
+                    return self.renderLevel1_S_Menus(
+                    skip=skip,
+                    asList=asList,
+                    renderStyle=renderStyle,
+                    parent=selectedMenu,
+                )
             if selectedMenu.level == 0:
                 self.level = 1
                 # sub-menu of the top level main selected menu
@@ -376,6 +387,46 @@ class menus:
             )
             return menuText
 
+    def renderLevel1_S_Menus(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        strategies = strategyManager.strategyNames()
+        counter = 1
+        menuDict = {}
+        for strategyName in strategies:
+            menuDict[f"{counter}"] = strategyName.ljust(20)
+            counter += 1
+        for key in level1_S_MenuDict.keys():
+            menuDict[key] = level1_S_MenuDict[key]
+
+        menuText = self.fromDictionary(
+            menuDict,
+            renderExceptionKeys=level1_S_MenuDict.keys(),
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.THREE_PER_ROW,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            print(
+                colorText.BOLD
+                + colorText.WARN
+                + "[+] Select a Strategy for Screening:"
+                + colorText.END
+            )
+            print(
+                colorText.BOLD
+                + menuText
+                + """
+
+    Enter your choice > """
+                ""
+            )
+            return menuText
+        
     def renderLevel1_X_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):

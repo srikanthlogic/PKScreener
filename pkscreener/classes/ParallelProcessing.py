@@ -120,6 +120,7 @@ class StockConsumer:
                 isVSA = False
                 isNR = False
                 isBuyingTrendline = False
+                isMomentum = False
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:

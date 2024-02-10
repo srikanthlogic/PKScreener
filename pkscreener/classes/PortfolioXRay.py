@@ -82,7 +82,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
     try:
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
-                reportName.replace("_X_", "_B_").replace("_G_", "_B_")
+                reportName.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
             ),encoding="UTF-8"
         )
     except: # pragma: no cover
@@ -915,7 +915,7 @@ def filterCCIAbove200(df):
 def returnNoFilter(df):
     return df
 
-def filterPattern(df, pattern):
+def filterPattern(df, pattern="[P]No Pattern"):
     if df is None:
         return None
     match_df = None
@@ -988,7 +988,7 @@ def strategyDictionary():
     strategies["[52Wk]LTP>=.9*H"] = filterLTPWithin90Percent52WkH
     strategies["[52Wk]LTP<.9*H"] = filterLTPLess90Percent52WkH
     strategies["[52Wk]LTP>L"] = filterLTPMore52WkL
-    strategies["C[52Wk]LTP>=1.1*LCI"] = filterLTPWithin90Percent52WkL
+    strategies["[52Wk]LTP>=1.1*L"] = filterLTPWithin90Percent52WkL
     strategies["[52Wk]LTP<=L"] = filterLTPLess52WkL
     # Breakout
     strategies["[BO]LTP<BO"] = filterLTPLessThanBreakout
