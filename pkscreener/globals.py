@@ -670,6 +670,7 @@ def main(userArgs=None):
             userOption = options[1]
         if defaultAnswer is None:
             selectedMenu = m0.find(menuOption)
+            m1.strategyNames = PortfolioXRay.strategyNames()
             m1.renderForMenu(selectedMenu=selectedMenu)
             userOption = input(
                         colorText.BOLD + colorText.FAIL + "[+] Select option: "
@@ -2111,7 +2112,10 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
             lastSummaryRow = pd.DataFrame(lastRow).transpose()
             lastSummaryRow.set_index("Stock", inplace=True)
             lastSummaryRow = lastSummaryRow.iloc[:, lastSummaryRow.columns != "Stock"]
-        summaryText = f"{summaryText}\nOverall Summary of (correctness of) Strategy Prediction Positive outcomes:"
+        if "Insights" in optionalName:
+            summaryText = f"{summaryText}\nActual returns at a portfolio level with 1-stock each based on selected scan-parameters:"
+        else:
+            summaryText = f"{summaryText}\nOverall Summary of (correctness of) Strategy Prediction Positive outcomes:"
     tabulated_text = ""
     if backtest_df is not None and len(backtest_df) > 0:
         tabulated_text = colorText.miniTabulator().tabulate(

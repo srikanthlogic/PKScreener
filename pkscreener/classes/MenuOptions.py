@@ -28,7 +28,6 @@ from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 
 import pkscreener.classes.ConfigManager as ConfigManager
-import pkscreener.classes.PortfolioXRay as strategyManager
 
 configManager = ConfigManager.tools()
 
@@ -234,6 +233,7 @@ class menus:
     def __init__(self):
         self.level = 0
         self.menuDict = {}
+        self.strategyNames = []
 
     def fromDictionary(
         self,
@@ -390,7 +390,7 @@ class menus:
     def renderLevel1_S_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):
-        strategies = strategyManager.strategyNames()
+        strategies = self.strategyNames
         counter = 1
         menuDict = {}
         for strategyName in strategies:
