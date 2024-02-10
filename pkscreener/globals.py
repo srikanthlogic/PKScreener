@@ -670,6 +670,7 @@ def main(userArgs=None):
             userOption = options[1]
         if defaultAnswer is None:
             selectedMenu = m0.find(menuOption)
+            m1.strategyNames = PortfolioXRay.strategyNames()
             m1.renderForMenu(selectedMenu=selectedMenu)
             userOption = input(
                         colorText.BOLD + colorText.FAIL + "[+] Select option: "
