@@ -259,7 +259,7 @@ class tools:
                     colorText.miniTabulator().tabulate(
                         df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=tools.getMaxColumnWidths(df)
-                    ).encode("utf-8").decode("utf-8")
+                    ).encode("utf-8").decode(STD_ENCODING)
                 )
                 print(
                     colorText.BOLD
