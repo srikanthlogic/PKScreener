@@ -672,11 +672,27 @@ def main(userArgs=None):
             selectedMenu = m0.find(menuOption)
             m1.strategyNames = PortfolioXRay.strategyNames()
             m1.renderForMenu(selectedMenu=selectedMenu)
-            userOption = input(
-                        colorText.BOLD + colorText.FAIL + "[+] Select option: "
-                    )
-            print(colorText.END, end="")
-        if userOption.lower() == "s":
+            try:
+                userOption = input(
+                            colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                        )
+                print(colorText.END, end="")
+                if userOption == "":
+                    userOption = "37" # NoFilter
+            except EOFError:  # pragma: no cover
+                userOption = "37"  # NoFilter
+                pass
+            except:  # pragma: no cover
+                pass
+        userOption = userOption.upper()
+        if userOption == "M":
+                # Go back to the caller. It will show the console menu again.
+                return
+        elif userOption == "Z":
+            handleExitRequest(userOption)
+            return
+        
+        if userOption == "S":
             print(
                 colorText.GREEN
                 + "[+] Collecting all metrics for summarising..."

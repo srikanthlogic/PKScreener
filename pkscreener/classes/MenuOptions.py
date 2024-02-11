@@ -44,7 +44,9 @@ level0MenuDict = {
     "Z": "Exit (Ctrl + C)",
 }
 level1_S_MenuDict = {
-    "S": "Summary"
+    "S": "Summary",
+    "M": "Back to the Top/Main menu",
+    "Z": "Exit (Ctrl + C)",
 }
 level1_X_MenuDict = {
     "W": "Screen stocks from my own Watchlist",

@@ -36,6 +36,7 @@ import pandas as pd
 import pkscreener.classes.Utility as Utility
 from pkscreener import Imports
 from pkscreener.classes.Pktalib import pktalib
+from PKNSETools.morningstartools import Stock
 
 if sys.version_info >= (3, 11):
     import advanced_ta as ata
@@ -239,9 +240,9 @@ class tools:
             screenDict["Breakout"] = (
                 colorText.BOLD + colorText.WARN + "BO: 0 R: 0" + colorText.END
             )
-            self.default_logger.info(
-                f'For Stock:{saveDict["Stock"]}, the breakout is unknown because max-high ({maxHigh}) or max-close ({maxClose}) are not defined.'
-            )
+            # self.default_logger.info(
+            #     f'For Stock:{saveDict["Stock"]}, the breakout is unknown because max-high ({maxHigh}) or max-close ({maxClose}) are not defined.'
+            # )
             return False
         if maxHigh > maxClose:
             if (maxHigh - maxClose) <= (maxHigh * 2 / 100):
@@ -252,22 +253,26 @@ class tools:
                         + colorText.GREEN
                         + "BO: "
                         + str(maxClose)
+                        + colorText.END
+                        + (colorText.GREEN if recentClose >= maxHigh else colorText.FAIL)
                         + " R: "
                         + str(maxHigh)
                         + colorText.END
                     )
-                    self.default_logger.info(
-                        f'Stock:{saveDict["Stock"]}, has a breakout because max-high ({maxHigh}) >= max-close ({maxClose})'
-                    )
+                    # self.default_logger.info(
+                    #     f'Stock:{saveDict["Stock"]}, has a breakout because max-high ({maxHigh}) >= max-close ({maxClose})'
+                    # )
                     return True and alreadyBrokenout and self.getCandleType(recent)
-                self.default_logger.info(
-                    f'Stock:{saveDict["Stock"]}, does not have a breakout yet because max-high ({maxHigh}) < max-close ({maxClose})'
-                )
+                # self.default_logger.info(
+                #     f'Stock:{saveDict["Stock"]}, does not have a breakout yet because max-high ({maxHigh}) < max-close ({maxClose})'
+                # )
                 screenDict["Breakout"] = (
                     colorText.BOLD
                     + colorText.FAIL
                     + "BO: "
                     + str(maxClose)
+                    + colorText.END
+                    + (colorText.GREEN if recentClose >= maxHigh else colorText.FAIL)
                     + " R: "
                     + str(maxHigh)
                     + colorText.END
@@ -285,13 +290,13 @@ class tools:
                         + " R: 0"
                         + colorText.END
                     )
-                    self.default_logger.info(
-                        f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-high ({maxHigh})'
-                    )
+                    # self.default_logger.info(
+                    #     f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-high ({maxHigh})'
+                    # )
                     return True and alreadyBrokenout and self.getCandleType(recent)
-                self.default_logger.info(
-                    f'Stock:{saveDict["Stock"]}, does not have a breakout yet because recent-close ({recentClose}) < max-high ({maxHigh})'
-                )
+                # self.default_logger.info(
+                #     f'Stock:{saveDict["Stock"]}, does not have a breakout yet because recent-close ({recentClose}) < max-high ({maxHigh})'
+                # )
                 screenDict["Breakout"] = (
                     colorText.BOLD
                     + colorText.FAIL
@@ -303,27 +308,31 @@ class tools:
                 return not alreadyBrokenout
             saveDict["Breakout"] = "BO: " + str(maxClose) + " R: " + str(maxHigh)
             if recentClose >= maxClose:
-                self.default_logger.info(
-                    f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-close ({maxClose})'
-                )
+                # self.default_logger.info(
+                #     f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-close ({maxClose})'
+                # )
                 screenDict["Breakout"] = (
                     colorText.BOLD
                     + colorText.GREEN
                     + "BO: "
                     + str(maxClose)
+                    + colorText.END
+                    + (colorText.GREEN if recentClose >= maxHigh else colorText.FAIL)
                     + " R: "
                     + str(maxHigh)
                     + colorText.END
                 )
                 return True and alreadyBrokenout and self.getCandleType(recent)
-            self.default_logger.info(
-                f'Stock:{saveDict["Stock"]}, does not have a breakout yet because recent-close ({recentClose}) < max-high ({maxHigh})'
-            )
+            # self.default_logger.info(
+            #     f'Stock:{saveDict["Stock"]}, does not have a breakout yet because recent-close ({recentClose}) < max-high ({maxHigh})'
+            # )
             screenDict["Breakout"] = (
                 colorText.BOLD
                 + colorText.FAIL
                 + "BO: "
                 + str(maxClose)
+                + colorText.END
+                + (colorText.GREEN if recentClose >= maxHigh else colorText.FAIL)
                 + " R: "
                 + str(maxHigh)
                 + colorText.END
@@ -332,9 +341,9 @@ class tools:
         else:
             saveDict["Breakout"] = "BO: " + str(maxClose) + " R: 0"
             if recentClose >= maxClose:
-                self.default_logger.info(
-                    f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-close ({maxClose})'
-                )
+                # self.default_logger.info(
+                #     f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) >= max-close ({maxClose})'
+                # )
                 screenDict["Breakout"] = (
                     colorText.BOLD
                     + colorText.GREEN
@@ -344,9 +353,9 @@ class tools:
                     + colorText.END
                 )
                 return True and alreadyBrokenout and self.getCandleType(recent)
-            self.default_logger.info(
-                f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) < max-close ({maxClose})'
-            )
+            # self.default_logger.info(
+            #     f'Stock:{saveDict["Stock"]}, has a breakout because recent-close ({recentClose}) < max-close ({maxClose})'
+            # )
             screenDict["Breakout"] = (
                 colorText.BOLD
                 + colorText.FAIL
@@ -500,29 +509,46 @@ class tools:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
-    def findUptrend(self, df, screenDict, saveDict, testing):
-        if df is None or len(df) < 300 or testing:
-            return False
-        data = df.copy()
-        data = data[::-1]
-        today_lma = pktalib.SMA(data["Close"], timeperiod=200)
-        lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
-        lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
-        lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
-        today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
-        lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
-        lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
-        lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
-        isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
-        isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
-        decision = '↑' if isUptrend else ('↓' if isDowntrend else '')
+    def findUptrend(self, df, screenDict, saveDict, testing, stock):
+        # shouldProceed = True
+        isUptrend = False
+        isDowntrend = False
+        decision = ""
+        # if df is None or len(df) < 220 or testing:
+        #     shouldProceed = False
+        if df is not None:
+            data = df.copy()
+            data = data[::-1]
+            today_lma = pktalib.SMA(data["Close"], timeperiod=200)
+            lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
+            lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
+            lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
+            today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
+            lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
+            lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
+            lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+            isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
+            isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+            decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
+        mf_inst_ownershipChange = 0
         try:
             STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
             decision = decision.encode('utf-8').decode(STD_ENCODING)
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock)
         except:
             pass
-        saveDict["Trend"] = f"{saveDict['Trend']}{decision}"
-        screenDict["Trend"] = f"{screenDict['Trend']}{decision}"
+        mf = ""
+        mfs = ""
+        if mf_inst_ownershipChange > 0:
+            mf = "MFI:▲"
+            mfs = colorText.GREEN + mf + colorText.END
+        elif mf_inst_ownershipChange < 0:
+            mf = "MFI:▼"
+            mfs = colorText.FAIL + mf + colorText.END
+
+        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {mf}"
+        decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
+        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {mfs}"
         return isUptrend
     
     # Find out trend for days to lookback
@@ -683,6 +709,46 @@ class tools:
     def getCandleBodyHeight(self, dailyData):
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
+
+    def getMutualFundStatus(self, stock):
+        changeStatusDataMF = None
+        changeStatusDataInst = None
+        security = Stock(stock)
+        changeStatusRowsMF = security.mutualFundOwnership(top=50)
+        changeStatusRowsInst = security.institutionOwnership(top=50)
+        changeStatusDataMF = security.changeData(changeStatusRowsMF)
+        changeStatusDataInst = security.changeData(changeStatusRowsInst)
+        netChangeMF = 0
+        netChangeInst = 0
+        latest_mfdate = None
+        latest_instdate = None
+        lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
+        lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
+        if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
+            df_groupedMF = changeStatusDataMF.groupby("date", sort=False)
+            for mfdate, df_groupMF in df_groupedMF:
+                netChangeMF = df_groupMF["changeAmount"].sum()
+                latest_mfdate = mfdate
+                break
+        if changeStatusDataInst is not None and len(changeStatusDataInst) > 0:
+            df_groupedInst = changeStatusDataInst.groupby("date", sort=False)
+            for instdate, df_groupInst in df_groupedInst:
+                if (latest_mfdate is not None and latest_mfdate == instdate) or (latest_mfdate is None) or (instdate == lastDayLastMonth):
+                    netChangeInst = df_groupInst["changeAmount"].sum()
+                    latest_instdate = instdate
+                break
+        if latest_instdate == latest_mfdate:
+            return (netChangeMF + netChangeInst)
+        elif latest_mfdate == lastDayLastMonth:
+            return netChangeMF
+        elif latest_instdate == lastDayLastMonth:
+            return netChangeInst
+        else:
+            # find the latest date
+            latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
+            latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+            return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
+
 
     def getNiftyPrediction(self, df):
         import warnings
