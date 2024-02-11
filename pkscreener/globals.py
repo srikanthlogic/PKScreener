@@ -707,7 +707,7 @@ def main(userArgs=None):
                         tablefmt=colorText.No_Pad_GridFormat,
                         showindex=False,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(df_all)
-                    )
+                    ).encode("utf-8").decode("utf-8")
                 )
                 showBacktestResults(
                     df_all, sortKey="Scanner", optionalName="InsightsSummary"
@@ -1409,7 +1409,7 @@ def handleMonitorFiveEMA():
                                     headers="keys",
                                     tablefmt=colorText.No_Pad_GridFormat,
                                     maxcolwidths=Utility.tools.getMaxColumnWidths(result_df)
-                                )
+                                ).encode("utf-8").decode("utf-8")
                             )
             print("\nPress Ctrl+C to exit.")
             if len(result_df) != last_result_len and not first_scan:
@@ -1521,7 +1521,7 @@ def printNotifySaveScreenedResults(
         tabulated_results = colorText.miniTabulator().tabulate(
             screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
             maxcolwidths=Utility.tools.getMaxColumnWidths(screenResults)
-        )
+        ).encode("utf-8").decode("utf-8")
     print(tabulated_results)
     _, reportNameInsights = getBacktestReportFilename(
         sortKey="Date", optionalName="Insights"
@@ -1538,7 +1538,7 @@ def printNotifySaveScreenedResults(
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
             maxcolwidths=Utility.tools.getMaxColumnWidths(strategy_df)
-        )
+        ).encode("utf-8").decode("utf-8")
         print(addendumLabel)
         print(tabulated_strategy)
     if screenResults is not None and len(screenResults) >= 1:
@@ -1572,7 +1572,7 @@ def printNotifySaveScreenedResults(
                             headers="keys",
                             tablefmt=colorText.No_Pad_GridFormat,
                             maxcolwidths=Utility.tools.getMaxColumnWidths(screenResultsTrimmed)
-                        )
+                        ).encode("utf-8").decode("utf-8")
                 markdown_results = ""
                 if saveResultsTrimmed is not None and len(saveResultsTrimmed) > 0:
                     markdown_results = colorText.miniTabulator().tabulate(
@@ -1580,7 +1580,7 @@ def printNotifySaveScreenedResults(
                         headers="keys",
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
-                    )
+                    ).encode("utf-8").decode("utf-8")
                 if not testing:
                     sendQuickScanResult(
                         menuChoiceHierarchy,
@@ -1659,7 +1659,7 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
                     tablefmt=colorText.No_Pad_GridFormat,
                     showindex=False,
                     maxcolwidths=Utility.tools.getMaxColumnWidths(df)
-                )
+                ).encode("utf-8").decode("utf-8")
                 print(g10kStyledTable)
                 g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
                 if not testing and eligible:
@@ -1712,7 +1712,7 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
             maxcolwidths=Utility.tools.getMaxColumnWidths(summarydf)
-        )
+        ).encode("utf-8").decode("utf-8")
     if detaildf is not None and len(detaildf) > 0:
         if maxAllowed != 0 and len(detaildf) > 2 * maxAllowed:
             detaildf = detaildf.head(2 * maxAllowed)
@@ -1722,7 +1722,7 @@ def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
             maxcolwidths=Utility.tools.getMaxColumnWidths(detaildf)
-        )
+        ).encode("utf-8").decode("utf-8")
     if tabulated_backtest_summary != "":
         print(
             colorText.BOLD
@@ -2140,7 +2140,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
             tablefmt=colorText.No_Pad_GridFormat,
             showindex=False,
             maxcolwidths=Utility.tools.getMaxColumnWidths(backtest_df)
-        )
+        ).encode("utf-8").decode("utf-8")
     print(colorText.FAIL + summaryText + colorText.END + "\n")
     print(tabulated_text + "\n")
     choices, filename = getBacktestReportFilename(sortKey, optionalName)

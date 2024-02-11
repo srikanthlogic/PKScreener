@@ -519,17 +519,20 @@ class tools:
         if df is not None:
             data = df.copy()
             data = data[::-1]
-            today_lma = pktalib.SMA(data["Close"], timeperiod=200)
-            lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
-            lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
-            lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
-            today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
-            lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
-            lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
-            lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
-            isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
-            isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
-            decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
+            try:
+                today_lma = pktalib.SMA(data["Close"], timeperiod=200)
+                lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
+                lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
+                lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
+                today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
+                lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
+                lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
+                lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+                isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
+                isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+            except:  # pragma: no cover
+                pass
+        decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
         mf_inst_ownershipChange = 0
         try:
             STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'

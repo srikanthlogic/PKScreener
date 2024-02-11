@@ -259,7 +259,7 @@ class tools:
                     colorText.miniTabulator().tabulate(
                         df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=tools.getMaxColumnWidths(df)
-                    )
+                    ).encode("utf-8").decode("utf-8")
                 )
                 print(
                     colorText.BOLD
@@ -338,8 +338,8 @@ class tools:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
         return cleanedUpStyledValue
 
-    def getCellColor(cellStyledValue="", defaultCellFillColor="black"):
-        otherStyles = [colorText.HEAD, colorText.END, colorText.BOLD, colorText.UNDR]
+    def getCellColors(cellStyledValue="", defaultCellFillColor="black"):
+        otherStyles = [colorText.HEAD, colorText.BOLD, colorText.UNDR]
         mainStyles = [
             colorText.BLUE,
             colorText.GREEN,
@@ -360,15 +360,33 @@ class tools:
             if defaultCellFillColor == "white"
             else "black",
         }
+        cleanedUpStyledValues = []
+        cellFillColors = []
         cleanedUpStyledValue = cellStyledValue
-        cellFillColor = defaultCellFillColor
+        prefix = ""
         for style in otherStyles:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
-        for style in mainStyles:
-            if cleanedUpStyledValue.startswith(style) and (cellFillColor == defaultCellFillColor):
-                cellFillColor = colorsDict[style]
-            cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
-        return cellFillColor, cleanedUpStyledValue
+        # Find how many different colors are used for the cell value
+        coloredStyledValues = cleanedUpStyledValue.split(colorText.END)
+        for cleanedUpStyledValue in coloredStyledValues:
+            cleanedUpStyledValue = cleanedUpStyledValue.replace(colorText.END,"")
+            if cleanedUpStyledValue.strip() == "":
+                if len(cleanedUpStyledValues) > 0:
+                    cleanedUpStyledValues[len(cleanedUpStyledValues)-1] = f"{cleanedUpStyledValues[len(cleanedUpStyledValues)-1]}{cleanedUpStyledValue}"
+                else:
+                    prefix = cleanedUpStyledValue
+            else:
+                for style in mainStyles:
+                    if style in cleanedUpStyledValue:
+                        cellFillColors.append(colorsDict[style])
+                        cleanedUpStyledValues.append(prefix + cleanedUpStyledValue.replace(style, ""))
+                        prefix = ""
+                
+        if len(cellFillColors) == 0:
+            cellFillColors = [defaultCellFillColor]
+        if len(cleanedUpStyledValues) == 0:
+            cleanedUpStyledValues = [cellStyledValue]
+        return cellFillColors, cleanedUpStyledValues
 
     def tableToImage(
         table,
@@ -511,26 +529,31 @@ class tools:
                         )
                         colPixelRunValue = colPixelRunValue + stdfont_sep_width
                         unstyledLine = unstyledLines[lineNumber]
-                        style, cleanValue = tools.getCellColor(
+                        cellStyles, cellCleanValues = tools.getCellColors(
                             val, defaultCellFillColor=gridColor
                         )
-                        if columnNumber == 0:
-                            cleanValue = unstyledLine.split(column_separator)[1]
-                            # style = style if "%" in cleanValue else gridColor
-                        if bgColor == "white" and style == "yellow":
-                            # Yellow on a white background is difficult to read
-                            style = "blue"
-                        elif bgColor == "black" and style == "blue":
-                            # blue on a black background is difficult to read
-                            style = "yellow"
-                        col_width, _ = stdfont.getsize_multiline(cleanValue)
-                        draw.text(
-                            (colPixelRunValue, rowPixelRunValue),
-                            cleanValue,
-                            font=stdfont,
-                            fill=style,
-                        )
-                        colPixelRunValue = colPixelRunValue + col_width
+                        valCounter = 0
+                        for style in cellStyles:
+                            cleanValue = cellCleanValues[valCounter]
+                            valCounter += 1
+                            if columnNumber == 0:
+                                cleanValue = unstyledLine.split(column_separator)[1]
+                                # style = style if "%" in cleanValue else gridColor
+                            if bgColor == "white" and style == "yellow":
+                                # Yellow on a white background is difficult to read
+                                style = "blue"
+                            elif bgColor == "black" and style == "blue":
+                                # blue on a black background is difficult to read
+                                style = "yellow"
+                            col_width, _ = stdfont.getsize_multiline(cleanValue)
+                            draw.text(
+                                (colPixelRunValue, rowPixelRunValue),
+                                cleanValue,
+                                font=stdfont,
+                                fill=style,
+                            )
+                            colPixelRunValue = colPixelRunValue + col_width
+
                         columnNumber = columnNumber + 1
                     if len(valueScreenCols) > 0:
                         # Close the row with the separator
