@@ -301,7 +301,8 @@ class StockConsumer:
                             fullData,
                             screeningDictionary,
                             saveDictionary,
-                            testbuild
+                            testbuild,
+                            stock
                         )
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)

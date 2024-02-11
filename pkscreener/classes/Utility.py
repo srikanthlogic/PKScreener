@@ -98,6 +98,50 @@ PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc 
 artText = f"{artText}\nv{VERSION}"
 
 STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
+MF_Investing= """                   
+                   ▗▐▞▛▞▙▜▜▜▐▄▄▞▞▞▛▜▜▜▐▚▌▌▖
+                  ▞▞▌▙▚▜▐▞▟▞▌▙▐▞▙▜▐▚▌▙▜▞▞▙▜▄
+                 ▌▛▞▙▚▘▘   ▀▐▞▌▌▘▀▝▝▝ ▘▀▐▐▞▞▞
+                ▗▜▐▚▌▘                  ▗▙▜▞▌
+                ▐▐▚▌▙                  ▗▌▌▌▙▘
+                 ▚▌▛▞▛▖               ▞▟▞▙▜
+                  ▝▞▌▙▜▖            ▗▐▞▞▞▞▖
+                   ▝▜▐▞▟▚          ▗▌▙▜▞▌▘
+                     ▙▜▐▚▜▖▙▄▚▄▚▞▞▟▐▞▞▌▌
+                   ▗▚▚▙▚▜▚▜▖▙▚▚▌▛▟▐▚▜▞▌▙▚
+                  ▟▐▚▌▙▀           ▝▝▟▐▚▚▙▖
+                ▖▛▞▞▌▛                ▚▜▚▞▞▙
+              ▗▞▟▞▜▞▘                  ▝▐▞▌▙▜▄
+             ▄▚▜▄▀▌                      ▝▟▐▞▟▐
+           ▗▞▞▙▚▚▘                         ▚▜▐▞▛▄
+          ▗▚▜▐▞▌▘                           ▝▌▙▜▐▐
+         ▐▚▜▐▚▘                              ▝▐▐▚▙▀▖
+        ▞▌▛▞▌▘                                 ▚▌▙▜▞▖
+       ▞▞▙▜▞           ▗▄▖▄▗▄▖▄▗▄▗▄▗▄▖▄         ▝▟▐▞▟▗
+      ▐▞▜▐▝            ▐▖▌▙▚▚▚▚▚▞▚▚▚▚▞▞          ▝▟▐▞▞▖
+     ▗▌▛▙▀▝                    ▌▌▌                ▝▌▛▟▞
+     ▌▛▞▟▝             ▗▚▚▚▚▞▖▌▌▌▛▞▌▙▚▚            ▚▜▐▐▚
+    ▞▌▛▟▖              ▐▐▞▟▐▞▞▟▞▟▐▐▞▞▞▞             ▙▜▞▙
+    ▌▛▟▐                        ▌▙                  ▐▐▐▞▌
+   ▐▞▌▙▚               ▗▚▜▞▌▛▀▌▙▚▘                   ▛▟▐▞▖
+   ▞▟▞▟                 ▝▚▞▞▞▀▝ ▘                    ▐▞▌▛▖
+   ▟▐▞▟                   ▚▜▐▚▖                      ▐▐▞▌▌
+   ▙▚▜▐                    ▝▞▞▞▄                     ▐▐▞▌▌
+   ▚▜▞▙▘                     ▀▞▞▞▖                   ▝▌▙▜▝
+   ▜▞▟▐                       ▝▐▞▞▌▖                 ▚▜▐▞▘
+   ▝▟▐▞▌                        ▝▞▞                 ▝▙▜▐▞▘
+    ▌▙▚▜▘                                           ▌▌▛▟▝
+    ▝▞▙▚▛▄                                         ▙▜▞▌▌
+     ▝▐▚▜▐▄                                      ▖▛▞▟▐▝
+       ▜▐▚▚▛▄                                  ▗▟▐▚▜▐▘▘
+        ▘▜▞▟▐▚▚▗                            ▗▗▚▛▞▞▙▀
+          ▚▚▜▞▜▞▙▜▄▖▖▖                 ▗▗▄▞▜▞▙▜▐▞▀
+            ▘▀▚▚▚▌▌▛▟▞▛▜▚▌▌▙▞▄▚▞▄▚▚▚▜▀▛▙▚▚▜▞▞▟▐▝
+               ▘▘▀▞▟▐▞▞▙▚▜▞▞▟▐▚▜▐▞▙▜▞▙▚▌▛▞▌▚▀
+                     ▝▝▝▝▘▘▀▝▝▘▀▝▝▝▝▝▝▝▝
+"""
+MF_IN = colorText.GREEN + MF_Investing + colorText.END
+MF_OUT = colorText.FAIL + MF_Investing + colorText.END
 
 def marketStatus():
     lngStatus = None
@@ -215,7 +259,7 @@ class tools:
                     colorText.miniTabulator().tabulate(
                         df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=tools.getMaxColumnWidths(df)
-                    )
+                    ).encode("utf-8").decode("utf-8")
                 )
                 print(
                     colorText.BOLD
@@ -294,8 +338,8 @@ class tools:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
         return cleanedUpStyledValue
 
-    def getCellColor(cellStyledValue="", defaultCellFillColor="black"):
-        otherStyles = [colorText.HEAD, colorText.END, colorText.BOLD, colorText.UNDR]
+    def getCellColors(cellStyledValue="", defaultCellFillColor="black"):
+        otherStyles = [colorText.HEAD, colorText.BOLD, colorText.UNDR]
         mainStyles = [
             colorText.BLUE,
             colorText.GREEN,
@@ -316,16 +360,33 @@ class tools:
             if defaultCellFillColor == "white"
             else "black",
         }
+        cleanedUpStyledValues = []
+        cellFillColors = []
         cleanedUpStyledValue = cellStyledValue
-        cellFillColor = defaultCellFillColor
+        prefix = ""
         for style in otherStyles:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
-        for style in mainStyles:
-            if style in cleanedUpStyledValue:
-                cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
-                cellFillColor = colorsDict[style]
-                break
-        return cellFillColor, cleanedUpStyledValue
+        # Find how many different colors are used for the cell value
+        coloredStyledValues = cleanedUpStyledValue.split(colorText.END)
+        for cleanedUpStyledValue in coloredStyledValues:
+            cleanedUpStyledValue = cleanedUpStyledValue.replace(colorText.END,"")
+            if cleanedUpStyledValue.strip() == "":
+                if len(cleanedUpStyledValues) > 0:
+                    cleanedUpStyledValues[len(cleanedUpStyledValues)-1] = f"{cleanedUpStyledValues[len(cleanedUpStyledValues)-1]}{cleanedUpStyledValue}"
+                else:
+                    prefix = cleanedUpStyledValue
+            else:
+                for style in mainStyles:
+                    if style in cleanedUpStyledValue:
+                        cellFillColors.append(colorsDict[style])
+                        cleanedUpStyledValues.append(prefix + cleanedUpStyledValue.replace(style, ""))
+                        prefix = ""
+                
+        if len(cellFillColors) == 0:
+            cellFillColors = [defaultCellFillColor]
+        if len(cleanedUpStyledValues) == 0:
+            cleanedUpStyledValues = [cellStyledValue]
+        return cellFillColors, cleanedUpStyledValues
 
     def tableToImage(
         table,
@@ -459,20 +520,7 @@ class tools:
                     for val in valueScreenCols:
                         if lineNumber >= len(unstyledLines):
                             continue
-                        unstyledLine = unstyledLines[lineNumber]
-                        style, cleanValue = tools.getCellColor(
-                            val, defaultCellFillColor=gridColor
-                        )
-                        if columnNumber == 0:
-                            cleanValue = unstyledLine.split(column_separator)[1]
-                            # style = style if "%" in cleanValue else gridColor
-                        if bgColor == "white" and style == "yellow":
-                            # Yellow on a white background is difficult to read
-                            style = "blue"
-                        elif bgColor == "black" and style == "blue":
-                            # blue on a black background is difficult to read
-                            style = "yellow"
-                        col_width, _ = stdfont.getsize_multiline(cleanValue)
+                        # Draw the column separator first
                         draw.text(
                             (colPixelRunValue, rowPixelRunValue),
                             column_separator,
@@ -480,13 +528,32 @@ class tools:
                             fill=gridColor,
                         )
                         colPixelRunValue = colPixelRunValue + stdfont_sep_width
-                        draw.text(
-                            (colPixelRunValue, rowPixelRunValue),
-                            cleanValue,
-                            font=stdfont,
-                            fill=style,
+                        unstyledLine = unstyledLines[lineNumber]
+                        cellStyles, cellCleanValues = tools.getCellColors(
+                            val, defaultCellFillColor=gridColor
                         )
-                        colPixelRunValue = colPixelRunValue + col_width
+                        valCounter = 0
+                        for style in cellStyles:
+                            cleanValue = cellCleanValues[valCounter]
+                            valCounter += 1
+                            if columnNumber == 0:
+                                cleanValue = unstyledLine.split(column_separator)[1]
+                                # style = style if "%" in cleanValue else gridColor
+                            if bgColor == "white" and style == "yellow":
+                                # Yellow on a white background is difficult to read
+                                style = "blue"
+                            elif bgColor == "black" and style == "blue":
+                                # blue on a black background is difficult to read
+                                style = "yellow"
+                            col_width, _ = stdfont.getsize_multiline(cleanValue)
+                            draw.text(
+                                (colPixelRunValue, rowPixelRunValue),
+                                cleanValue,
+                                font=stdfont,
+                                fill=style,
+                            )
+                            colPixelRunValue = colPixelRunValue + col_width
+
                         columnNumber = columnNumber + 1
                     if len(valueScreenCols) > 0:
                         # Close the row with the separator
@@ -563,7 +630,8 @@ class tools:
         legendText = f"{legendText} trading session. Red means it fell.  *** 6. Volume ***: This shows the relative volume in the most recent trading day /today with respect to last 20 trading periods moving average of Volume. For example, 8.5x would mean today's volume so far is 8.5 times the average volume traded in the last 20 trading sessions. Volume in green means that volume for the date so far has been at"
         legendText = f"{legendText} least 2.5 times more than the average volume of last 20 sessions. If the volume is in red, it means the given date's volume is less than 2.5 times the avg volume of the last 20 sessions. *** 7. MA-Signal ***: It shows the price trend of the given stock by analyzing various 50-200 moving/exponential averages crossover strategies. Perform a Google search for the shown MA-Signals"
         legendText = f"{legendText} to learn about them more. If it is in green, the signal is bullish. Red means bearish. *** 8. RSI ***: Relative Strength Index is a momentum index which describes 14-period relative strength at the given price. Generally, below 30 is considered oversold and above 80 is considered overbought.  *** 9. Trend(30Prds) ***:  This describes the average trendline computed based on the"
-        legendText = f"{legendText} last 30 trading sessions. Their strength is displayed depending on the steepness of the trendlines. (Strong / Weak) Up / Down shows how high/low the demand is respectively. A Sideways trend is the horizontal price movement that occurs when the forces of supply and demand are nearly equal. *** 10. Pattern ***:This shows if the chart or the candle (from the candlestick chart) is"
+        legendText = f"{legendText} last 30 trading sessions. Their strength is displayed depending on the steepness of the trendlines. (Strong / Weak) Up / Down shows how high/low the demand is respectively. A Sideways trend is the horizontal price movement that occurs when the forces of supply and demand are nearly equal. T:▲ or T:▼ shows the general moving average based uptrend/downtrend. MFI:▲ or MFI:▼ shows"
+        legendText = f"{legendText} if the overall mutual funds and institutional investors ownership went up or down on the closing of the last month. *** 10. Pattern ***:This shows if the chart or the candle (from the candlestick chart) is"
         legendText = f"{legendText} forming any known pattern in the recent timeframe or as per the selected screening options. Do a google search for the shown pattern names to learn. *** 11. CCI ***: The Commodity Channel Index (CCI) is a technical indicator that measures the difference between the current price and the historical average price of the given stock. Generally below '- 100' is considered oversold"
         legendText = f"{legendText} and above 100 is considered overbought. If the CCI is < '-100' or CCI is > 100 and the Trend(30Prds) is Strong/Weak Up, it is shown in green. Otherwise it's in red. *** 12. 1-Pd/2-Pd etc. ***: 60.29% of (413) under 1-Pd in green shows that the given scan option was correct 60.23% of the times for 413 stocks that scanner found in the last 30 trading sessions under the same scan"
         legendText = f"{legendText} options. Similarly, 61.69 % of (154) in green under 22-Pd, means we found that 61.56% of 154 stocks (~95 stocks) prices found under the same scan options increased in 22 trading periods. 57.87% of (2661) under 'Overall' means that over the last 30 trading sessions we found 2661 stock instances under the same scanning options (for example, Momentum Gainers), out of which 57.87%"
@@ -574,8 +642,9 @@ class tools:
         return legendText
 
     def getRepoHelpText():
-        repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra | Telegram: https://t.me/PKScreener | This report is for learning/analysis purposes ONLY. pkjmesra assumes no responsibility or liability for any errors or omissions in this report or repository or gain/loss bearing out of this analysis.\n"
-        repoText = f"{repoText}\n[+] Understanding this report:\n"
+        repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra | Telegram: https://t.me/PKScreener |"
+        repoText = f"{repoText}\nThis report is for learning/analysis purposes ONLY. pkjmesra assumes no responsibility or liability for any errors or omissions in this report or repository, or gain/loss bearing out of this analysis.\n"
+        repoText = f"{repoText}\n[+] Understanding this report:\n\n"
         return repoText
 
     def set_github_output(name, value):

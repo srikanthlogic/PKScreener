@@ -116,10 +116,10 @@ def test_removeAllColorStyles():
 # Positive test case for getCellColor() function
 def test_getCellColor():
     cellStyledValue = "\033[92mHello World!\033[0m"
-    result = tools.getCellColor(cellStyledValue)
+    result = tools.getCellColors(cellStyledValue)
     # Assert that the result is the correct cell fill color and cleaned up styled value
     assert result == ("darkgreen", "Hello World!")
-    result = tools.getCellColor(cellStyledValue,defaultCellFillColor="white")
+    result = tools.getCellColors(cellStyledValue,defaultCellFillColor="white")
     assert result == ("lightgreen", "Hello World!")
 
 
