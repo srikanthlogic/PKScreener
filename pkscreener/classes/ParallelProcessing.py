@@ -121,6 +121,7 @@ class StockConsumer:
                 isNR = False
                 isBuyingTrendline = False
                 isMomentum = False
+                mfiStake = 0
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
@@ -296,14 +297,17 @@ class StockConsumer:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
-                        # Find general trend
-                        screener.findUptrend(
-                            fullData,
-                            screeningDictionary,
-                            saveDictionary,
-                            testbuild,
-                            stock
-                        )
+                        if executeOption != 21:
+                            # Find general trend
+                            screener.findUptrend(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                testbuild,
+                                stock
+                            )
+                        else:
+                            mfiStake = screener.findMFI(screeningDictionary, saveDictionary, stock, onlyMF=(reversalOption in [5,6]))
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -397,6 +401,8 @@ class StockConsumer:
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
                         or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25] and isValidityCheckMet)
+                        or (executeOption == 21 and (mfiStake > 0 and reversalOption in [3,5]))
+                        or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
                     ):
                         hostRef.processingResultsCounter.value += 1
                         return (

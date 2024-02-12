@@ -880,7 +880,7 @@ def main(userArgs=None):
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
             popOption = int(options[3])
-            if popOption >= 0 and popOption <= 3:
+            if popOption >= 0 and popOption <= 7:
                 pass
         else:
             popOption = Utility.tools.promptPopularStocks(selectedMenu)
@@ -888,24 +888,27 @@ def main(userArgs=None):
             return
         else:
             selectedChoice["3"] = str(popOption)
-        updateMenuChoiceHierarchy()
-        if popOption == 3:
-            screenResults = mstarFetcher.fetchMorningstarTopDividendsYieldStocks()
-        elif popOption > 0 and popOption <= 2:
-            screenResults = mstarFetcher.fetchMorningstarFundFavouriteStocks(
-                "NoOfFunds" if popOption == 2 else "ChangeInShares"
+        if popOption in [1,2,4]:
+            updateMenuChoiceHierarchy()
+            if popOption == 4:
+                screenResults = mstarFetcher.fetchMorningstarTopDividendsYieldStocks()
+            elif popOption > 0 and popOption <= 2:
+                screenResults = mstarFetcher.fetchMorningstarFundFavouriteStocks(
+                    "NoOfFunds" if popOption == 2 else "ChangeInShares"
+                )
+            printNotifySaveScreenedResults(
+                screenResults,
+                screenResults,
+                selectedChoice,
+                menuChoiceHierarchy,
+                False,
+                None,
             )
-        printNotifySaveScreenedResults(
-            screenResults,
-            screenResults,
-            selectedChoice,
-            menuChoiceHierarchy,
-            False,
-            None,
-        )
-        if defaultAnswer is None:
-            input("Press <Enter> to continue...")
-        return
+            if defaultAnswer is None:
+                input("Press <Enter> to continue...")
+            return
+        else:
+            reversalOption = popOption
     if executeOption == 22:
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
