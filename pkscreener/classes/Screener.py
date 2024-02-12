@@ -384,34 +384,6 @@ class tools:
         cond3 = cond2 and (recent["Close"].iloc[0] > recent["EMA10"].iloc[0])
         cond4 = cond3 and (recent["Close"].iloc[0] > recent["EMA200"].iloc[0])
         return cond4
-
-    def findMFI(self, screenDict, saveDict,stock,onlyMF=False, hostData=None):
-        mf_inst_ownershipChange = 0
-        change_millions = ""
-        try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData)
-            roundOff = 2
-            millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            while float(millions) == 0 and roundOff <=5:
-                roundOff +=1
-                millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            change_millions = f"({millions}M)"
-        except:
-            pass
-        mf = ""
-        mfs = ""
-        if mf_inst_ownershipChange > 0:
-            mf = f"MFI:▲ {change_millions}"
-            mfs = colorText.GREEN + mf + colorText.END
-        elif mf_inst_ownershipChange < 0:
-            mf = f"MFI:▼ {change_millions}"
-            mfs = colorText.FAIL + mf + colorText.END
-    
-        saveDict["Trend"] = f"{saveDict['Trend']} {mf}"
-        screenDict["Trend"] = f"{screenDict['Trend']} {mfs}"
-        saveDict["MFI"] = mf_inst_ownershipChange
-        screenDict["MFI"] = mf_inst_ownershipChange
-        return mf_inst_ownershipChange
     
     def findNR4Day(self, df):
         if df is None or len(df) == 0:
@@ -537,7 +509,7 @@ class tools:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
-    def findUptrend(self, df, screenDict, saveDict, testing, stock,hostData=None):
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None):
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
@@ -564,8 +536,13 @@ class tools:
         mf_inst_ownershipChange = 0
         change_millions =""
         try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,hostData=hostData)
-            change_millions = f"({round(mf_inst_ownershipChange/1000000,2)}M)"
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData)
+            roundOff = 2
+            millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            while float(millions) == 0 and roundOff <=5:
+                roundOff +=1
+                millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            change_millions = f"({millions}M)"
         except:
             pass
         mf = ""
@@ -580,7 +557,9 @@ class tools:
         saveDict["Trend"] = f"{saveDict['Trend']} {decision} {mf}"
         decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
         screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {mfs}"
-        return isUptrend
+        saveDict["MFI"] = mf_inst_ownershipChange
+        screenDict["MFI"] = mf_inst_ownershipChange
+        return isUptrend, mf_inst_ownershipChange
     
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):

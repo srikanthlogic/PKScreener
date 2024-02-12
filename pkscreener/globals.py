@@ -2030,10 +2030,7 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
         )
         Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday)
     else:
-        print(
-            colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END,
-            end="",
-        )
+        print(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 
 
 def saveNotifyResultsFile(
