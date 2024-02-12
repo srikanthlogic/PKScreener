@@ -114,13 +114,13 @@ def test_removeAllColorStyles():
 
 
 # Positive test case for getCellColor() function
-def test_getCellColor():
+def test_getCellColors():
     cellStyledValue = "\033[92mHello World!\033[0m"
     result = tools.getCellColors(cellStyledValue)
     # Assert that the result is the correct cell fill color and cleaned up styled value
-    assert result == ("darkgreen", "Hello World!")
+    assert result == (["darkgreen"], ["Hello World!"])
     result = tools.getCellColors(cellStyledValue,defaultCellFillColor="white")
-    assert result == ("lightgreen", "Hello World!")
+    assert result == (["lightgreen"], ["Hello World!"])
 
 
 # Positive test case for tradingDate() function

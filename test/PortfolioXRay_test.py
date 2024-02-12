@@ -315,7 +315,15 @@ def test_getBacktestDataFromCleanedData_no_df(args):
     saveResults = pd.DataFrame({"LTP": [11, 22, 33], "LTP1": [10, 20, 30], "Growth1": [0.1, 0.2, 0.3], "Pattern": ["A", "B", "C"]})
     period = 1
     
-    with patch('pkscreener.classes.PortfolioXRay.statScanCalculations', return_value=[]):
+    with patch('pkscreener.classes.PortfolioXRay.statScanCalculationForRSI') as mock_statScanCalculationForRSI, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForTrend') as mock_statScanCalculationForTrend, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForMA') as mock_statScanCalculationForMA, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForVol') as mock_statScanCalculationForVol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForConsol') as mock_statScanCalculationForConsol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForBO') as mock_statScanCalculationForBO, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationFor52Wk') as mock_statScanCalculationFor52Wk, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForCCI') as mock_statScanCalculationForCCI:
+
         result = getBacktestDataFromCleanedData(args, saveResults, df=None, period=period)
         
         assert isinstance(result, pd.DataFrame)
@@ -332,7 +340,15 @@ def test_getBacktestDataFromCleanedData_with_df(args):
     saveResults = pd.DataFrame({"LTP": [11, 22, 33], "LTP1": [10, 20, 30], "Growth1": [0.1, 0.2, 0.3], "Pattern": ["A", "B", "C"]})
     period = 1
     df = pd.DataFrame({"Pattern": ["D", "E", "F"]})
-    with patch('pkscreener.classes.PortfolioXRay.statScanCalculations', return_value=[]):
+    with patch('pkscreener.classes.PortfolioXRay.statScanCalculationForRSI') as mock_statScanCalculationForRSI, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForTrend') as mock_statScanCalculationForTrend, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForMA') as mock_statScanCalculationForMA, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForVol') as mock_statScanCalculationForVol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForConsol') as mock_statScanCalculationForConsol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForBO') as mock_statScanCalculationForBO, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationFor52Wk') as mock_statScanCalculationFor52Wk, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForCCI') as mock_statScanCalculationForCCI:
+
         result = getBacktestDataFromCleanedData(args, saveResults, df=df, period=period)
     
         assert isinstance(result, pd.DataFrame)
@@ -349,7 +365,15 @@ def test_getBacktestDataFromCleanedData_no_pattern(args):
     saveResults = pd.DataFrame({"LTP": [11, 22, 33], "LTP1": [10, 20, 30], "Growth1": [0.1, 0.2, 0.3], "Pattern": [None, "", "C"]})
     period = 1
     
-    with patch('pkscreener.classes.PortfolioXRay.statScanCalculations', return_value=[]):
+    with patch('pkscreener.classes.PortfolioXRay.statScanCalculationForRSI') as mock_statScanCalculationForRSI, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForTrend') as mock_statScanCalculationForTrend, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForMA') as mock_statScanCalculationForMA, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForVol') as mock_statScanCalculationForVol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForConsol') as mock_statScanCalculationForConsol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForBO') as mock_statScanCalculationForBO, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationFor52Wk') as mock_statScanCalculationFor52Wk, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForCCI') as mock_statScanCalculationForCCI:
+
         result = getBacktestDataFromCleanedData(args, saveResults, df=None, period=period)
         
         assert isinstance(result, pd.DataFrame)
@@ -431,13 +455,15 @@ def test_statScanCalculations(args, saveResults):
     scanResults = []
     
     with patch('pkscreener.classes.PortfolioXRay.statScanCalculationForRSI') as mock_statScanCalculationForRSI, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForTrend') as mock_statScanCalculationForTrend, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForMA') as mock_statScanCalculationForMA, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForVol') as mock_statScanCalculationForVol, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForConsol') as mock_statScanCalculationForConsol, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForBO') as mock_statScanCalculationForBO, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationFor52Wk') as mock_statScanCalculationFor52Wk, \
-         patch('pkscreener.classes.PortfolioXRay.statScanCalculationForCCI') as mock_statScanCalculationForCCI:
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForTrend') as mock_statScanCalculationForTrend, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForMA') as mock_statScanCalculationForMA, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForVol') as mock_statScanCalculationForVol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForConsol') as mock_statScanCalculationForConsol, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForBO') as mock_statScanCalculationForBO, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationFor52Wk') as mock_statScanCalculationFor52Wk, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForCCI') as mock_statScanCalculationForCCI, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForPatterns') as mock_statScanCalculationForPatterns, \
+        patch('pkscreener.classes.PortfolioXRay.statScanCalculationForNoFilter') as mock_statScanCalculationForNoFilter:
         
         result = statScanCalculations(args, saveResults, period)
         
@@ -450,6 +476,8 @@ def test_statScanCalculations(args, saveResults):
         mock_statScanCalculationForBO.assert_called_once_with(args, saveResults, period, scanResults)
         mock_statScanCalculationFor52Wk.assert_called_once_with(args, saveResults, period, scanResults)
         mock_statScanCalculationForCCI.assert_called_once_with(args, saveResults, period, scanResults)
+        mock_statScanCalculationForPatterns.assert_called_once_with(args, saveResults, period, scanResults)
+        mock_statScanCalculationForNoFilter.assert_called_once_with(args, saveResults, period, scanResults)
 
 
 def test_statScanCalculationForCCI(args, saveResults):
