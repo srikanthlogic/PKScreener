@@ -1147,7 +1147,7 @@ def main(userArgs=None):
                             else configManager.daysToLookback
                         ),
                         default_logger().level,
-                        (menuOption in ["B", "G"])
+                        (menuOption in ["B", "G", "X", "S"])
                         or (userPassedArgs.backtestdaysago is not None),
                         # assumption is that fetcher.fetchStockData would be
                         # mocked to avoid calling yf.download again and again
@@ -2030,10 +2030,7 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
         )
         Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday)
     else:
-        print(
-            colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END,
-            end="",
-        )
+        print(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 
 
 def saveNotifyResultsFile(

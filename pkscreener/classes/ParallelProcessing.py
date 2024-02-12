@@ -297,19 +297,17 @@ class StockConsumer:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
-                        if executeOption != 21:
-                            # Find general trend
-                            screener.findUptrend(
-                                fullData,
-                                screeningDictionary,
-                                saveDictionary,
-                                testbuild,
-                                stock,
-                                hostData=data
-                            )
-                        else:
-                            mfiStake = screener.findMFI(screeningDictionary, saveDictionary, stock, onlyMF=(reversalOption in [5,6]),hostData=data)
-                            hostRef.objectDictionary[stock] = data.to_dict("split")
+                        # Find general trend
+                        _,mfiStake = screener.findUptrend(
+                            fullData,
+                            screeningDictionary,
+                            saveDictionary,
+                            testbuild,
+                            stock,
+                            onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                            hostData=data
+                        )
+                        hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -545,6 +543,12 @@ class StockConsumer:
             fullData, processedData = screener.preprocessData(
                     data, daysToLookback=configManager.daysToLookback
                 )
+            if portfolio:
+                data = data[::-1]
+                screener.validateLTPForPortfolioCalc(
+                        data, screeningDictionary, saveDictionary
+                    )
+                data = data[::-1]
         else:
             if data is None or fullData is None or processedData is None:
                     # data will have the oldest date at the top and the most recent
@@ -597,7 +601,6 @@ class StockConsumer:
                         start=start,
                         end=start
                     )
-                # hostRef.default_logger.info(f"Fetcher fetched stock data:\n{data}")
             if (
                     (shouldCache and not self.isTradingTime and (hostData is None))
                     or downloadOnly
@@ -605,11 +608,7 @@ class StockConsumer:
                     shouldCache and hostData is None
                 ):  # and backtestDuration == 0 # save only if we're NOT backtesting
                 if start is None and data is not None:
-                        # Don't need to save if it's not for today. Save only for today
                     hostRef.objectDictionary[stock] = data.to_dict("split")
-                    # hostRef.default_logger.info(
-                    #     f"Stock data saved:\n{hostRef.objectDictionary[stock]}"
-                    # )
                 if downloadOnly:
                     with hostRef.processingResultsCounter.get_lock():
                         hostRef.processingResultsCounter.value += 1
@@ -697,12 +696,13 @@ class StockConsumer:
             "52Wk L",
             "RSI",
             "Volume",
+            "22-Pd %",
             "Consol.",
             "Breakout",
             "MA-Signal",
             "Trend",
             "Pattern",
-            "CCI",
+            "CCI"
         ]
         screeningDictionary = {
             "Stock": "",
@@ -712,12 +712,13 @@ class StockConsumer:
             "52Wk L": 0,
             "RSI": 0,
             "Volume": "",
+            "22-Pd %": "",
             "Consol.": "",
             "Breakout": "",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0,
+            "CCI": 0
         }
         saveDictionary = {
             "Stock": "",
@@ -727,12 +728,13 @@ class StockConsumer:
             "52Wk L": 0,
             "RSI": 0,
             "Volume": "",
+            "22-Pd %": "",
             "Consol.": "",
             "Breakout": "",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0,
+            "CCI": 0
         }
         for prd in periods:
             columns.append(f"LTP{prd}")
