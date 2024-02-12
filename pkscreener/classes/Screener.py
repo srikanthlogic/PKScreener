@@ -1423,6 +1423,10 @@ class tools:
                 )
                 saveDict[f"LTP{prd}"] = round(ltpTdy, 2)
                 saveDict[f"Growth{prd}"] = round(ltpTdy - prevLtp, 2)
+                if prd == 22:
+                    changePercent = round((prevLtp-ltpTdy)*100/ltpTdy, 2)
+                    saveDict[f"{prd}-Pd %"] = f"{changePercent}%"
+                    screenDict[f"{prd}-Pd %"] = (colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END
                 screenDict["Date"] = calc_date
                 saveDict["Date"] = calc_date
             else:

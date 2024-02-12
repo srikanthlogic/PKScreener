@@ -1147,7 +1147,7 @@ def main(userArgs=None):
                             else configManager.daysToLookback
                         ),
                         default_logger().level,
-                        (menuOption in ["B", "G"])
+                        (menuOption in ["B", "G", "X", "S"])
                         or (userPassedArgs.backtestdaysago is not None),
                         # assumption is that fetcher.fetchStockData would be
                         # mocked to avoid calling yf.download again and again

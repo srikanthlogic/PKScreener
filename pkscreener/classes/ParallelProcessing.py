@@ -543,6 +543,12 @@ class StockConsumer:
             fullData, processedData = screener.preprocessData(
                     data, daysToLookback=configManager.daysToLookback
                 )
+            if portfolio:
+                data = data[::-1]
+                screener.validateLTPForPortfolioCalc(
+                        data, screeningDictionary, saveDictionary
+                    )
+                data = data[::-1]
         else:
             if data is None or fullData is None or processedData is None:
                     # data will have the oldest date at the top and the most recent
@@ -690,12 +696,13 @@ class StockConsumer:
             "52Wk L",
             "RSI",
             "Volume",
+            "22-Pd %",
             "Consol.",
             "Breakout",
             "MA-Signal",
             "Trend",
             "Pattern",
-            "CCI",
+            "CCI"
         ]
         screeningDictionary = {
             "Stock": "",
@@ -705,12 +712,13 @@ class StockConsumer:
             "52Wk L": 0,
             "RSI": 0,
             "Volume": "",
+            "22-Pd %": "",
             "Consol.": "",
             "Breakout": "",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0,
+            "CCI": 0
         }
         saveDictionary = {
             "Stock": "",
@@ -720,12 +728,13 @@ class StockConsumer:
             "52Wk L": 0,
             "RSI": 0,
             "Volume": "",
+            "22-Pd %": "",
             "Consol.": "",
             "Breakout": "",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0,
+            "CCI": 0
         }
         for prd in periods:
             columns.append(f"LTP{prd}")
