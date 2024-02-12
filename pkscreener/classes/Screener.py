@@ -757,7 +757,7 @@ class tools:
                 saved_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
                 saved_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
                 today = PKDateUtilities.currentDateTime()
-                needsFreshUpdate = (saved_mfdate.date < lastDayLastMonth.date) and (saved_instdate.date < lastDayLastMonth.date)
+                needsFreshUpdate = (saved_mfdate.date() < lastDayLastMonth.date()) and (saved_instdate.date() < lastDayLastMonth.date())
             else:
                 needsFreshUpdate = True
 
@@ -1010,15 +1010,15 @@ class tools:
             data.insert(len(data.columns), "LMA", lma)
             data.insert(len(data.columns), "SSMA", ssma)
         else:
-            sma = data.rolling(window=50).mean()
-            lma = data.rolling(window=200).mean()
-            ssma = data.rolling(window=9).mean()
-            data.insert(len(data.columns), "SMA", sma["Close"])
-            data.insert(len(data.columns), "LMA", lma["Close"])
-            data.insert(len(data.columns), "SSMA", ssma["Close"])
-        vol = data.rolling(window=20).mean()
+            sma = pktalib.SMA(data["Close"], timeperiod=50)
+            lma = pktalib.SMA(data["Close"], timeperiod=200)
+            ssma = pktalib.SMA(data["Close"], timeperiod=9)
+            data.insert(len(data.columns), "SMA", sma)
+            data.insert(len(data.columns), "LMA", lma)
+            data.insert(len(data.columns), "SSMA", ssma)
+        vol = pktalib.SMA(data["Volume"], timeperiod=20)
         rsi = pktalib.RSI(data["Close"], timeperiod=14)
-        data.insert(len(data.columns), "VolMA", vol["Volume"])
+        data.insert(len(data.columns), "VolMA", vol)
         data.insert(len(data.columns), "RSI", rsi)
         cci = pktalib.CCI(data["High"], data["Low"], data["Close"], timeperiod=14)
         data.insert(len(data.columns), "CCI", cci)
@@ -1470,8 +1470,8 @@ class tools:
                 return False
             for row in data.iterrows():
                 # All 3 candles should be Green and NOT Circuits
-                yc = row[1]["Close"].item()
-                yo = row[1]["Open"].item()
+                yc = row[1]["Close"]
+                yo = row[1]["Open"]
                 if yc <= yo:
                     self.default_logger.info(
                         f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because yesterday-close ({yc}) <= yesterday-open ({yo})'

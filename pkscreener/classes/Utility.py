@@ -1241,4 +1241,4 @@ class tools:
             sleep(delay)
     
     def getMaxColumnWidths(df):
-        return [25 if (x in ["Pattern"] or "-Pd" in x) else  None for x in df.columns]
+        return [35 if (x in ["Pattern","Trend(30Prds)"] or "-Pd" in x) else None for x in df.columns]

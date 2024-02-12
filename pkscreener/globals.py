@@ -754,6 +754,8 @@ def main(userArgs=None):
         executeOption = 0
     executeOption = int(executeOption)
     volumeRatio = configManager.volumeRatio
+    if executeOption == 3:
+        userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
     if executeOption == 4:
         daysForLowestVolume = handleScannerExecuteOption4(executeOption, options)
     if executeOption == 5:
@@ -914,6 +916,7 @@ def main(userArgs=None):
                 input("Press <Enter> to continue...")
             return
         else:
+            userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
             reversalOption = popOption
     if executeOption == 22:
         selectedMenu = m2.find(str(executeOption))
@@ -1505,7 +1508,7 @@ def printNotifySaveScreenedResults(
     screenResults, saveResults, selectedChoice, menuChoiceHierarchy, testing, user=None
 ):
     global userPassedArgs, elapsed_time
-    MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
+    MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else min(int(userPassedArgs.maxdisplayresults),100)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d') if (userPassedArgs.backtestdaysago is None) else (PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago)))
