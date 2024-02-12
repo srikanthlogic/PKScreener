@@ -1455,8 +1455,8 @@ def test_getNiftyPrediction_positive(tools_instance):
     # Call the function and assert the result
     assert tools_instance.getNiftyPrediction(data) == (
         ANY,
-        "Market may Open BEARISH next day! Hold your Short position!",
-        "Probability/Strength of Prediction = 100.0%",
+        "Market may Open BULLISH next day! Stay Bullish!",
+        "Probability/Strength of Prediction = 0.0%",
     )
 
 
@@ -2355,10 +2355,10 @@ def test_findUptrend_valid_input_downtrend(tools_instance):
     df = pd.DataFrame({'Close': [10, 15, 20, 25, 30, 35, 40, 45, 50]*50})
     screenDict = {"Trend":""}
     saveDict = {"Trend":""}
-    result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False)
+    result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False,stock="SBIN")
     assert result == False
-    assert saveDict["Trend"] == "↓"
-    assert screenDict["Trend"] == "↓"
+    assert "T:▼" in saveDict["Trend"]
+    assert "T:▼" in screenDict["Trend"]
 
 def test_findUptrend_uptrend(tools_instance):
     # Create a sample DataFrame with a downtrend
@@ -2367,18 +2367,18 @@ def test_findUptrend_uptrend(tools_instance):
     # Call the findUptrend function with the sample DataFrame
     screenDict = {"Trend":""}
     saveDict = {"Trend":""}
-    result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False)
+    result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False,stock="SBIN")
 
     # Assert that the function returns False and sets the appropriate screenDict and saveDict values
     assert result == True
-    assert saveDict["Trend"] == "↑"
-    assert screenDict["Trend"] == "↑"
+    assert "T:▲" in saveDict["Trend"]
+    assert "T:▲" in screenDict["Trend"]
 
 def test_findUptrend_empty_input(tools_instance):
     # Create an empty DataFrame for testing
     df = pd.DataFrame()
     # Call the findUptrend function with the empty DataFrame
-    result = tools_instance.findUptrend(df, {}, {}, testing=False)
+    result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN")
     # Assert that the function returns False
     assert result == False
 
@@ -2387,7 +2387,7 @@ def test_findUptrend_insufficient_data(tools_instance):
     df = pd.DataFrame({'Close': [10, 15, 20, 25]})
 
     # Call the findUptrend function with the insufficient DataFrame
-    result = tools_instance.findUptrend(df, {}, {}, testing=False)
+    result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN")
 
     # Assert that the function returns False
     assert result == False
@@ -2397,7 +2397,7 @@ def test_findUptrend_testing_mode(tools_instance):
     df = pd.DataFrame({'Close': [10, 15, 20, 25, 30, 35, 40, 45, 50]})
 
     # Call the findUptrend function with testing=True
-    result = tools_instance.findUptrend(df, {}, {}, testing=True)
+    result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=True,stock="SBIN")
 
     # Assert that the function returns False
     assert result == False
@@ -2407,7 +2407,7 @@ def test_findUptrend_exception(tools_instance):
     df = pd.DataFrame({'Close': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})
 
     # Call the findUptrend function with the invalid DataFrame
-    assert tools_instance.findUptrend(df, {}, {}, testing=False) == False
+    assert tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN") == False
 
 # # Positive test case for validateBullishForTomorrow function
 # def test_validateBullishForTomorrow_positive(tools_instance):

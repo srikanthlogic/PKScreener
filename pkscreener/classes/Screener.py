@@ -535,8 +535,6 @@ class tools:
         decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
         mf_inst_ownershipChange = 0
         try:
-            STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
-            decision = decision.encode('utf-8').decode(STD_ENCODING)
             mf_inst_ownershipChange = self.getMutualFundStatus(stock)
         except:
             pass
