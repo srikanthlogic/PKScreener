@@ -304,10 +304,12 @@ class StockConsumer:
                                 screeningDictionary,
                                 saveDictionary,
                                 testbuild,
-                                stock
+                                stock,
+                                hostData=data
                             )
                         else:
-                            mfiStake = screener.findMFI(screeningDictionary, saveDictionary, stock, onlyMF=(reversalOption in [5,6]))
+                            mfiStake = screener.findMFI(screeningDictionary, saveDictionary, stock, onlyMF=(reversalOption in [5,6]),hostData=data)
+                            hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -429,6 +431,14 @@ class StockConsumer:
             pass
         except Screener.DownloadDataOnly as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
+            try:
+                data = hostRef.objectDictionary.get(stock)
+                if data is not None:
+                    data = pd.DataFrame(data["data"], columns=data["columns"], index=data["index"])
+                    screener.getMutualFundStatus(stock, hostData=data)
+                    hostRef.objectDictionary[stock] = data.to_dict("split")
+            except:
+                pass
             pass
         except Screener.LTPNotInConfiguredRange as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)

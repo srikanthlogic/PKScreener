@@ -570,8 +570,14 @@ def initQueues(minimumCount=0):
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
-        screenResults.sort_values(by=["Volume"], ascending=False, inplace=True)
-        saveResults.sort_values(by=["Volume"], ascending=False, inplace=True)
+        sortKey = "Volume"
+        if "MFI" in saveResults.columns:
+            sortKey = "MFI"
+        screenResults.sort_values(by=[sortKey], ascending=False, inplace=True)
+        saveResults.sort_values(by=[sortKey], ascending=False, inplace=True)
+        if sortKey == "MFI":
+            saveResults.drop(sortKey, axis=1, inplace=True, errors="ignore")
+            screenResults.drop(sortKey, axis=1, inplace=True, errors="ignore")
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
