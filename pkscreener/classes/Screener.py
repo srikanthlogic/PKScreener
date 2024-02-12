@@ -385,6 +385,25 @@ class tools:
         cond4 = cond3 and (recent["Close"].iloc[0] > recent["EMA200"].iloc[0])
         return cond4
 
+    def findMFI(self, screenDict, saveDict,stock,onlyMF=False):
+        mf_inst_ownershipChange = 0
+        try:
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF)
+        except:
+            pass
+        mf = ""
+        mfs = ""
+        if mf_inst_ownershipChange > 0:
+            mf = "MFI:▲"
+            mfs = colorText.GREEN + mf + colorText.END
+        elif mf_inst_ownershipChange < 0:
+            mf = "MFI:▼"
+            mfs = colorText.FAIL + mf + colorText.END
+
+        saveDict["Trend"] = f"{saveDict['Trend']} {mf}"
+        screenDict["Trend"] = f"{screenDict['Trend']} {mfs}"
+        return mf_inst_ownershipChange
+    
     def findNR4Day(self, df):
         if df is None or len(df) == 0:
             return False
@@ -711,7 +730,7 @@ class tools:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
-    def getMutualFundStatus(self, stock):
+    def getMutualFundStatus(self, stock,onlyMF=False):
         changeStatusDataMF = None
         changeStatusDataInst = None
         security = Stock(stock)
@@ -738,6 +757,9 @@ class tools:
                     netChangeInst = df_groupInst["changeAmount"].sum()
                     latest_instdate = instdate
                 break
+        
+        if onlyMF:
+            return netChangeMF
         if latest_instdate == latest_mfdate:
             return (netChangeMF + netChangeInst)
         elif latest_mfdate == lastDayLastMonth:

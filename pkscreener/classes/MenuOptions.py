@@ -92,7 +92,7 @@ level2_X_MenuDict = {
     "18": "Bullish Aroon(14) Crossover",
     "19": "MACD Histogram x below 0 (Sell) ",
     "20": "Bullish for next day",
-    "21": "Most Popular Stocks            ",
+    "21": "MF/FIIs Popular Stocks         ",
     "22": "View Stock Performance         ",
     "23": "Breaking out now               ",
     "24": "Higher Highs,Lows & Close (SuperTrend)",
@@ -125,9 +125,13 @@ level3_X_ChartPattern_MenuDict = {
     "0": "Cancel",
 }
 level3_X_PopularStocks_MenuDict = {
-    "1": "Shares bought/sold by Mutual Funds/FIIs",
-    "2": "Shareholding by number of Mutual Funds/FIIs",
-    "3": "Dividend Yield",
+    "1": "Shares bought/sold by Mutual Funds/FIIs (M*)",
+    "2": "Shareholding by number of Mutual Funds/FIIs (M*)",
+    "3": "MF/FIIs Net Ownership Increased",
+    "4": "Dividend Yield (M*)",
+    "5": "Only MF Net Ownership Increased",
+    "6": "Only MF Net Ownership Decreased",
+    "7": "MF/FIIs Net Ownership Decreased",
     "0": "Cancel",
 }
 
