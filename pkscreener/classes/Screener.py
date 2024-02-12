@@ -1470,8 +1470,8 @@ class tools:
                 return False
             for row in data.iterrows():
                 # All 3 candles should be Green and NOT Circuits
-                yc = row[1]["Close"].item()
-                yo = row[1]["Open"].item()
+                yc = row[1]["Close"]
+                yo = row[1]["Open"]
                 if yc <= yo:
                     self.default_logger.info(
                         f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because yesterday-close ({yc}) <= yesterday-open ({yo})'
