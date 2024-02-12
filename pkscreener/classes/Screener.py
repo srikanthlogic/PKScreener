@@ -385,23 +385,32 @@ class tools:
         cond4 = cond3 and (recent["Close"].iloc[0] > recent["EMA200"].iloc[0])
         return cond4
 
-    def findMFI(self, screenDict, saveDict,stock,onlyMF=False):
+    def findMFI(self, screenDict, saveDict,stock,onlyMF=False, hostData=None):
         mf_inst_ownershipChange = 0
+        change_millions = ""
         try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF)
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData)
+            roundOff = 2
+            millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            while float(millions) == 0 and roundOff <=5:
+                roundOff +=1
+                millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            change_millions = f"({millions}M)"
         except:
             pass
         mf = ""
         mfs = ""
         if mf_inst_ownershipChange > 0:
-            mf = "MFI:▲"
+            mf = f"MFI:▲ {change_millions}"
             mfs = colorText.GREEN + mf + colorText.END
         elif mf_inst_ownershipChange < 0:
-            mf = "MFI:▼"
+            mf = f"MFI:▼ {change_millions}"
             mfs = colorText.FAIL + mf + colorText.END
-
+    
         saveDict["Trend"] = f"{saveDict['Trend']} {mf}"
         screenDict["Trend"] = f"{screenDict['Trend']} {mfs}"
+        saveDict["MFI"] = mf_inst_ownershipChange
+        screenDict["MFI"] = mf_inst_ownershipChange
         return mf_inst_ownershipChange
     
     def findNR4Day(self, df):
@@ -528,7 +537,7 @@ class tools:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
-    def findUptrend(self, df, screenDict, saveDict, testing, stock):
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,hostData=None):
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
@@ -553,17 +562,19 @@ class tools:
                 pass
         decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
         mf_inst_ownershipChange = 0
+        change_millions =""
         try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock)
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,hostData=hostData)
+            change_millions = f"({round(mf_inst_ownershipChange/1000000,2)}M)"
         except:
             pass
         mf = ""
         mfs = ""
         if mf_inst_ownershipChange > 0:
-            mf = "MFI:▲"
+            mf = f"MFI:▲ {change_millions}"
             mfs = colorText.GREEN + mf + colorText.END
         elif mf_inst_ownershipChange < 0:
-            mf = "MFI:▼"
+            mf = f"MFI:▼ {change_millions}"
             mfs = colorText.FAIL + mf + colorText.END
 
         saveDict["Trend"] = f"{saveDict['Trend']} {decision} {mf}"
@@ -730,7 +741,48 @@ class tools:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
-    def getMutualFundStatus(self, stock,onlyMF=False):
+    def getMutualFundStatus(self, stock,onlyMF=False, hostData=None):
+        netChangeMF = 0
+        netChangeInst = 0
+        latest_mfdate = None
+        latest_instdate = None
+        needsFreshUpdate = True
+        lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
+        if hostData is not None and len(hostData) > 0:
+            if "MF" in hostData.columns:
+                netChangeMF = hostData["MF"].iloc[0]
+                latest_mfdate = hostData["MF_Date"].iloc[0]
+                netChangeInst = hostData["FII"].iloc[0]
+                latest_instdate = hostData["FII_Date"].iloc[0]
+                saved_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
+                saved_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+                today = PKDateUtilities.currentDateTime()
+                needsFreshUpdate = (saved_mfdate.date < lastDayLastMonth.date) and (saved_instdate.date < lastDayLastMonth.date)
+            else:
+                needsFreshUpdate = True
+
+        if needsFreshUpdate:
+            netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
+            hostData["MF"] = netChangeMF
+            hostData["MF_Date"] = latest_mfdate
+            hostData["FII"] = netChangeInst
+            hostData["FII_Date"] = latest_instdate
+        lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
+        if onlyMF:
+            return netChangeMF
+        if latest_instdate == latest_mfdate:
+            return (netChangeMF + netChangeInst)
+        elif latest_mfdate == lastDayLastMonth:
+            return netChangeMF
+        elif latest_instdate == lastDayLastMonth:
+            return netChangeInst
+        else:
+            # find the latest date
+            latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
+            latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+            return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
+
+    def getFreshMFIStatus(self, stock):
         changeStatusDataMF = None
         changeStatusDataInst = None
         security = Stock(stock)
@@ -738,10 +790,6 @@ class tools:
         changeStatusRowsInst = security.institutionOwnership(top=50)
         changeStatusDataMF = security.changeData(changeStatusRowsMF)
         changeStatusDataInst = security.changeData(changeStatusRowsInst)
-        netChangeMF = 0
-        netChangeInst = 0
-        latest_mfdate = None
-        latest_instdate = None
         lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
         lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
         if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
@@ -757,20 +805,7 @@ class tools:
                     netChangeInst = df_groupInst["changeAmount"].sum()
                     latest_instdate = instdate
                 break
-        
-        if onlyMF:
-            return netChangeMF
-        if latest_instdate == latest_mfdate:
-            return (netChangeMF + netChangeInst)
-        elif latest_mfdate == lastDayLastMonth:
-            return netChangeMF
-        elif latest_instdate == lastDayLastMonth:
-            return netChangeInst
-        else:
-            # find the latest date
-            latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
-            latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
-            return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
+        return netChangeMF,netChangeInst,latest_mfdate,latest_instdate
 
 
     def getNiftyPrediction(self, df):
