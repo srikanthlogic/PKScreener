@@ -580,12 +580,37 @@ class tools:
             fill=menuColor,
         )
         # Legend text
-        draw.text(
-            (colPixelRunValue, rowPixelRunValue + 2 * stdFont_oneLinelabel_height + 10),
-            legendText,
-            font=artfont,
-            fill=gridColor,
-        )
+        legendLineNumber = 0
+        rowPixelRunValue += 2 * stdFont_oneLinelabel_height + 20
+        legendLines = legendText.split("\n")
+        for line in legendLines:
+            colPixelRunValue = startColValue
+            _, artfont_line_height = artfont.getsize_multiline(line)
+            cellStyles, cellCleanValues = tools.getCellColors(
+                line, defaultCellFillColor=gridColor
+            )
+            valCounter = 0
+            for style in cellStyles:
+                cleanValue = cellCleanValues[valCounter]
+                valCounter += 1
+                if bgColor == "white" and style == "yellow":
+                    # Yellow on a white background is difficult to read
+                    style = "blue"
+                elif bgColor == "black" and style == "blue":
+                    # blue on a black background is difficult to read
+                    style = "yellow"
+                col_width, _ = artfont.getsize_multiline(cleanValue)
+                draw.text(
+                    (colPixelRunValue, rowPixelRunValue),
+                    cleanValue,
+                    font=artfont,
+                    fill=style,
+                )
+                # Move to the next text in the same line
+                colPixelRunValue += col_width + 2
+            # Let's go to the next line
+            rowPixelRunValue += artfont_line_height + 1
+
         im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
@@ -628,12 +653,12 @@ class tools:
         return fontPath
 
     def getLegendHelpText(table,backtestSummary):
-        legendText = "\n*** 1. Stock ***: This is the NSE symbol/ticker for a company. Stocks that are NOT stage two, are coloured red. *** 2. Consol.(30Prds) *** : It shows the price range in which stock is trading for the last 30 trading sessions(20 trading sessions per month) 3. *** Breakout(30Prds) ***: The BO is Breakout level based on last 30 sessions. R is the resistance level (if available)."
+        legendText = "\n*** 1. Stock ***: This is the NSE symbol/ticker for a company. Stocks that are NOT stage two, are coloured red. *** 2. Consol.(30Prds) ***: It shows the price range in which stock is trading for the last 30 trading sessions(20 trading sessions per month) *** 3. Breakout(30Prds) ***: The BO is Breakout level based on last 30 sessions. R is the resistance level (if available)."
         legendText = f"{legendText} An investor should consider both BO & R level to analyse entry / exits in their trading lessons. If the BO value is green, it means the stock has already broken out (is above BO level). If BO is in red, it means the stock is yet to break out.  *** 4. LTP ***: This is the last/latest trading/closing price of the given stock on a given date at NSE. The LTP in green/red means the"
-        legendText = f"{legendText} stock price has increased / decreased since last trading session. (1.5%, 1.3%,1.8%) with LTP shows the stock price rose by 1.5%, 1.3% and 1.8% in the last 1, 2 and 3 trading sessions respectively.*** 5. %Chng ***: This is the change(rise/fall in percentage) in closing/trading price from the previous trading session's closing price. Green means that price rose from the previous"
+        legendText = f"{legendText} stock price has increased / decreased since last trading session. (1.5%, 1.3%,1.8%) with LTP shows the stock price rose by 1.5%, 1.3% and 1.8% in the last 1, 2 and 3 trading sessions respectively. *** 5. %Chng ***: This is the change(rise/fall in percentage) in closing/trading price from the previous trading session's closing price. Green means that price rose from the previous"
         legendText = f"{legendText} trading session. Red means it fell.  *** 6. Volume ***: This shows the relative volume in the most recent trading day /today with respect to last 20 trading periods moving average of Volume. For example, 8.5x would mean today's volume so far is 8.5 times the average volume traded in the last 20 trading sessions. Volume in green means that volume for the date so far has been at"
         legendText = f"{legendText} least 2.5 times more than the average volume of last 20 sessions. If the volume is in red, it means the given date's volume is less than 2.5 times the avg volume of the last 20 sessions. *** 7. MA-Signal ***: It shows the price trend of the given stock by analyzing various 50-200 moving/exponential averages crossover strategies. Perform a Google search for the shown MA-Signals"
-        legendText = f"{legendText} to learn about them more. If it is in green, the signal is bullish. Red means bearish. *** 8. RSI ***: Relative Strength Index is a momentum index which describes 14-period relative strength at the given price. Generally, below 30 is considered oversold and above 80 is considered overbought.  *** 9. Trend(30Prds) ***:  This describes the average trendline computed based on the"
+        legendText = f"{legendText} to learn about them more. If it is in green, the signal is bullish. Red means bearish. *** 8. RSI ***: Relative Strength Index is a momentum index which describes 14-period relative strength at the given price. Generally, below 30 is considered oversold and above 80 is considered overbought. *** 9. Trend(30Prds) ***:  This describes the average trendline computed based on the"
         legendText = f"{legendText} last 30 trading sessions. Their strength is displayed depending on the steepness of the trendlines. (Strong / Weak) Up / Down shows how high/low the demand is respectively. A Sideways trend is the horizontal price movement that occurs when the forces of supply and demand are nearly equal. T:▲ or T:▼ shows the general moving average based uptrend/downtrend. MFI:▲ or MFI:▼ shows"
         legendText = f"{legendText} if the overall mutual funds and institutional investors ownership went up or down on the closing of the last month. *** 10. Pattern ***:This shows if the chart or the candle (from the candlestick chart) is"
         legendText = f"{legendText} forming any known pattern in the recent timeframe or as per the selected screening options. Do a google search for the shown pattern names to learn. *** 11. CCI ***: The Commodity Channel Index (CCI) is a technical indicator that measures the difference between the current price and the historical average price of the given stock. Generally below '- 100' is considered oversold"
@@ -641,8 +666,12 @@ class tools:
         legendText = f"{legendText} options. Similarly, 61.69 % of (154) in green under 22-Pd, means we found that 61.56% of 154 stocks (~95 stocks) prices found under the same scan options increased in 22 trading periods. 57.87% of (2661) under 'Overall' means that over the last 30 trading sessions we found 2661 stock instances under the same scanning options (for example, Momentum Gainers), out of which 57.87%"
         legendText = f"{legendText} of the stock prices increased in one or more of the last 1 or 2 or 3 or 4 or 5 or 10 or 22 or 30 trading sessions. If you want to see by what percent the prices increased, you should see the details. *** 13. 1 to 30 period gain/loss % ***: 4.17% under 1-Pd in green in the gain/loss table/grid means the stock price increased by 4.17% in the next 1 trading session. If this is in"
         legendText = f"{legendText} red, example, -5.67%, it means the price actually decreased by 5.67%. Gains are in green and losses are in red in this grid. The Date column has the date(s) on which that specific stock was found under the chosen scan options in the past 30 trading sessions. *** 14. 52Wk H/L ***: These have 52 weeks high/low prices within 10% of LTP:Yellow, above high:Green. Below 90% High:Red."
-        legendText = f"{legendText} *** 1-Pd-% ***: Shows the 1 period gain in percent from the given date. Similarly 2-Pd-%, 3-Pd-% etc shows 2 day, 3 days gain etc. *** 1-Pd-10k ***: Shows 1 period/day portfolio value if you would have invested 10,000 on the given date. *** [T][_trend_] *** : [T] is for Trends followed by the trend name in the filter. *** [BO] ***: Shows the Breakout filter value. *** [P] ***: [P] shows pattern name\n"
+        legendText = f"{legendText} *** 15. 1-Pd-% ***: Shows the 1 period gain in percent from the given date. Similarly 2-Pd-%, 3-Pd-% etc shows 2 day, 3 days gain etc. *** 16. 1-Pd-10k ***: Shows 1 period/day portfolio value if you would have invested 10,000 on the given date. *** 17. [T][_trend_] ***: [T] is for Trends followed by the trend name in the filter. *** 18. [BO] ***: Shows the Breakout filter value."
+        legendText = f"{legendText} *** 19. [P] ***: [P] shows pattern name. *** 20. MFI ***:Mutual fund ownership and Institutional investor ownership status as on the last day of the last month, based on analysis from Morningstar. *** 21. FairValue ***: Morningstar Fair value of a given stock as determined by 3rd party analysis based on fundamentals. \n"
         legendText = tools.wrapFitLegendText(table,backtestSummary, legendText)
+        # legendText = legendText.replace("***:", colorText.END + colorText.WHITE)
+        # legendText = legendText.replace("*** ", colorText.END + colorText.FAIL)
+        # return colorText.WHITE + legendText + colorText.END
         return legendText
 
     def getRepoHelpText():
