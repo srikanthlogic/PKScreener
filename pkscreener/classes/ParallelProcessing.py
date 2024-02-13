@@ -433,9 +433,9 @@ class StockConsumer:
                 data = hostRef.objectDictionary.get(stock)
                 if data is not None:
                     data = pd.DataFrame(data["data"], columns=data["columns"], index=data["index"])
-                    screener.getMutualFundStatus(stock, hostData=data)
+                    screener.getMutualFundStatus(stock, hostData=data, force=True)
                     hostRef.objectDictionary[stock] = data.to_dict("split")
-                    screener.getFairValue(stock,hostData=data)
+                    screener.getFairValue(stock,hostData=data, force=True)
                     hostRef.objectDictionary[stock] = data.to_dict("split")
             except Exception as ex:
                 hostRef.default_logger.debug(ex, exc_info=True)
@@ -604,6 +604,18 @@ class StockConsumer:
                         start=start,
                         end=start
                     )
+                if hostData is not None and data is not None:
+                    # During the market trading hours, we don't want to go for MFI/FV value fetching
+                    # So let's copy the old saved ones.
+                    try:
+                        data["MF"] = hostData["MF"]
+                        data["MF_Date"] = hostData["MF_Date"]
+                        data["FII"] = hostData["FII"]
+                        data["FII_Date"] = hostData["FII_Date"]
+                        data["FairValue"] = hostData["FairValue"]
+                    except Exception as e:
+                        hostRef.default_logger.debug(e, exc_info=True)
+                        pass
             if (
                     (shouldCache and not self.isTradingTime and (hostData is None))
                     or downloadOnly

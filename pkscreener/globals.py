@@ -1014,7 +1014,7 @@ def main(userArgs=None):
             input("Exiting now...")
             sys.exit(0)
 
-        if (menuOption in ["B", "G"] and not loadedStockData) or (
+        if (menuOption in ["X", "B", "G", "S"] and not loadedStockData) or (
             not downloadOnly
             and not PKDateUtilities.isTradingTime()
             and configManager.cacheEnabled
@@ -1026,7 +1026,7 @@ def main(userArgs=None):
                 configManager,
                 downloadOnly=downloadOnly,
                 defaultAnswer=defaultAnswer,
-                forceLoad=(menuOption in ["B", "G"]),
+                forceLoad=(menuOption in ["X", "B", "G", "S"]),
             )
             loadedStockData = True
         loadCount = len(stockDict)
