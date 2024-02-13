@@ -728,7 +728,7 @@ class tools:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
-    def getFairValue(self, stock, hostData=None):
+    def getFairValue(self, stock, hostData=None, force=False):
         if hostData is None or len(hostData) < 1:
             return 0
         # Let's look for fair values
@@ -736,16 +736,17 @@ class tools:
         if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday <= 4:
             fairValue = hostData["FairValue"].iloc[0]
         else:
-            # Refresh each saturday or sunday or when not found in saved data
-            security = Stock(stock)
-            fv = security.fairValue()
-            if fv is not None:
-                fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
-                fairValue = round(float(fairValue),1)
-                hostData["FairValue"] = fairValue
+            if PKDateUtilities.currentDateTime().weekday >=5 or force:
+                # Refresh each saturday or sunday or when not found in saved data
+                security = Stock(stock)
+                fv = security.fairValue()
+                if fv is not None:
+                    fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
+                    fairValue = round(float(fairValue),1)
+                    hostData["FairValue"] = fairValue
         return fairValue
 
-    def getMutualFundStatus(self, stock,onlyMF=False, hostData=None):
+    def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False):
         if hostData is None or len(hostData) < 1:
             return 0
         
@@ -768,7 +769,7 @@ class tools:
             else:
                 needsFreshUpdate = True
 
-        if needsFreshUpdate:
+        if needsFreshUpdate and force:
             netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
             hostData["MF"] = netChangeMF
             hostData["MF_Date"] = latest_mfdate
