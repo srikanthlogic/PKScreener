@@ -702,7 +702,8 @@ class StockConsumer:
             "MA-Signal",
             "Trend",
             "Pattern",
-            "CCI"
+            "CCI",
+            "FairValue"
         ]
         screeningDictionary = {
             "Stock": "",
@@ -718,7 +719,8 @@ class StockConsumer:
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0
+            "CCI": 0,
+            "FairValue": "-"
         }
         saveDictionary = {
             "Stock": "",
@@ -734,7 +736,8 @@ class StockConsumer:
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
-            "CCI": 0
+            "CCI": 0,
+            "FairValue": "-"
         }
         for prd in periods:
             columns.append(f"LTP{prd}")

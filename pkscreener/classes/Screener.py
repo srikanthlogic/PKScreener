@@ -543,7 +543,14 @@ class tools:
                 roundOff +=1
                 millions = round(mf_inst_ownershipChange/1000000,roundOff)
             change_millions = f"({millions}M)"
-        except:
+            security = Stock(stock)
+            fv = security.fairValue()
+            if fv is not None:
+                fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
+                saveDict["FairValue"] = fairValue
+                ltp = saveDict["LTP"]
+                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + str(fairValue) + colorText.END
+        except Exception as e:
             pass
         mf = ""
         mfs = ""
