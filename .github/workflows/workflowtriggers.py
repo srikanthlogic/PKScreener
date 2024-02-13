@@ -434,9 +434,10 @@ def generateBacktestReportMainPage():
 
 def run_workflow(workflow_name, postdata, option=""):
     owner, repo = "pkjmesra", "PKScreener"
+    ghp_token = ""
     # from PKDevTools.classes.Telegram import get_secrets
     # _, _, _, ghp_token = get_secrets()
-    ghp_token = ""
+    
     if "GITHUB_TOKEN" in os.environ.keys():
         ghp_token = os.environ["GITHUB_TOKEN"]
     url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_name}/dispatches"
@@ -531,9 +532,9 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
 
 def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
     defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13" if args.skiplistlevel1 is None else args.skiplistlevel1
-    defaultS2 = "42,0,21,22,26,27,28,29,30,31,M,Z" if args.skiplistlevel2 is None else args.skiplistlevel2
+    defaultS2 = "42,0,22,26,27,28,29,30,31,M,Z" if args.skiplistlevel2 is None else args.skiplistlevel2
     runForIndices = [12,5,8,1,11,14]
-    runForOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25]
+    runForOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25]
     runForIndicesStr = f" {' , '.join(map(str, runForIndices))} , "
     runForOptionsStr = f" {' , '.join(map(str, runForOptions))} , "
     branch = "actions-data-download"
