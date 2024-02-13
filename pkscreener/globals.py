@@ -267,7 +267,8 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
                 },
                 inplace=True,
             )
-    except:
+    except Exception as e:# pragma: no cover
+        default_logger().debug(e, exc_info=True)
         pass
     return summarydf, detaildf
 
@@ -621,6 +622,7 @@ def main(userArgs=None):
     defaultAnswer = None if userArgs is None else userArgs.answerdefault
     userPassedArgs = userArgs
     options = []
+    strategyFilter=[]
     screenCounter = multiprocessing.Value("i", 1)
     screenResultsCounter = multiprocessing.Value("i", 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
@@ -689,7 +691,8 @@ def main(userArgs=None):
             except EOFError:  # pragma: no cover
                 userOption = "37"  # NoFilter
                 pass
-            except:  # pragma: no cover
+            except Exception as e:# pragma: no cover
+                default_logger().debug(e, exc_info=True)
                 pass
         userOption = userOption.upper()
         if userOption == "M":
@@ -1218,7 +1221,8 @@ def main(userArgs=None):
                 )
             if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                 screenResults, saveResults = removeUnknowns(screenResults, saveResults)
-            if len(strategyFilter) > 0:
+                print(colorText.FAIL + f"[+] Configuration to remove unknown cell values resulted into removing all rows!" + colorText.END)
+            if len(strategyFilter) > 0 and saveResults is not None and len(saveResults) > 0:
                 # We'd need to apply additional filters for selected strategy
                 df_screenResults = None
                 cleanedUpSaveResults = PortfolioXRay.cleanupData(saveResults)
@@ -1228,6 +1232,8 @@ def main(userArgs=None):
                 for stk in saveResults.index.values:
                     df_screenResults_filter = screenResults[screenResults.index.astype(str).str.contains(f"NSE%3A{stk}") == True]
                     df_screenResults = pd.concat([df_screenResults, df_screenResults_filter], axis=0)
+                if len(df_screenResults) == 0:
+                    print(colorText.FAIL + f"[+] Of the {len(screenResults)} stocks, no results matching the selected strategies!" + colorText.END)
                 screenResults = df_screenResults
             printNotifySaveScreenedResults(
                 screenResults,

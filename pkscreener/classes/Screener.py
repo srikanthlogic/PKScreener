@@ -530,7 +530,8 @@ class tools:
                 lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
                 isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
                 isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
-            except:  # pragma: no cover
+            except Exception:  # pragma: no cover
+                # self.default_logger.debug(e, exc_info=True)
                 pass
         decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
         mf_inst_ownershipChange = 0
@@ -543,11 +544,11 @@ class tools:
                 roundOff +=1
                 millions = round(mf_inst_ownershipChange/1000000,roundOff)
             change_millions = f"({millions}M)"
-            security = Stock(stock)
-            fv = security.fairValue()
-            if fv is not None:
-                fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
-                saveDict["FairValue"] = fairValue
+            
+            #Let's get the fair value, either saved or fresh from service
+            fairValue = self.getFairValue(stock,hostData)
+            if fairValue != 0:
+                saveDict["FairValue"] = str(fairValue)
                 ltp = saveDict["LTP"]
                 screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + str(fairValue) + colorText.END
         except Exception as e:
@@ -727,7 +728,27 @@ class tools:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
+    def getFairValue(self, stock, hostData=None):
+        if hostData is None or len(hostData) < 1:
+            return 0
+        # Let's look for fair values
+        fairValue = 0
+        if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday <= 4:
+            fairValue = hostData["FairValue"].iloc[0]
+        else:
+            # Refresh each saturday or sunday or when not found in saved data
+            security = Stock(stock)
+            fv = security.fairValue()
+            if fv is not None:
+                fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
+                fairValue = round(float(fairValue),1)
+                hostData["FairValue"] = fairValue
+        return fairValue
+
     def getMutualFundStatus(self, stock,onlyMF=False, hostData=None):
+        if hostData is None or len(hostData) < 1:
+            return 0
+        
         netChangeMF = 0
         netChangeInst = 0
         latest_mfdate = None
@@ -771,6 +792,10 @@ class tools:
     def getFreshMFIStatus(self, stock):
         changeStatusDataMF = None
         changeStatusDataInst = None
+        netChangeMF = 0
+        netChangeInst = 0
+        latest_mfdate = None
+        latest_instdate = None
         security = Stock(stock)
         changeStatusRowsMF = security.mutualFundOwnership(top=50)
         changeStatusRowsInst = security.institutionOwnership(top=50)
