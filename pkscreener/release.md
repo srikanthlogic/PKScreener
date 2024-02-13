@@ -4,7 +4,9 @@
 1. [v0.43.20240213.145] release
 * Strategies menu is now enabled with various strategies that you can try out on your own alongside the scan types.
 * Summary of scan filters/strategies included along-side the main scan results.
-* Added the Mutual funds and institutional investor ownership trend based on the previous month's closing in the Trends column (See the MFI:<Trend>). You must already have been seeing stocks based on fund house popularity (X > 12 > 21> options).
+* Added the Mutual funds and institutional investor ownership trend based on the previous month's closing in the Trends column (See the MFI:<Trend>). This is updated once every week, over the weekend or daily after market-hours. You must already have been seeing stocks based on fund house popularity (X > 12 > 21> options). 
+* Added the fair value for all stocks. This is updated once every week, over the weekend or daily after market-hours.
+* Added a default 22-pd (1 month) return for all stocks as part of default reports
 * Alongside 30 candle trends, and MFI trends, now the moving averages based uptrend/downtrend is also shown with T:<Trend> in the same column.
 * Added option to scan using Lorenzian classifier. Try out X > 12 > 6 > 7.
 * Backtest reports can now run super fast. The reports are now concise and more friendly and easier to follow. The backtest report for relevant stocks in the scan result are also now part of user report when requested using bot @nse_pkscreener_bot.
