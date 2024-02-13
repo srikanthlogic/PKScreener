@@ -147,7 +147,8 @@ def marketStatus():
     lngStatus = None
     try:
         _,lngStatus,_ = nseFetcher.capitalMarketStatus()
-    except:# pragma: no cover
+    except Exception as e:# pragma: no cover
+        default_logger().debug(e, exc_info=True)
         pass
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
@@ -169,7 +170,8 @@ class tools:
             os.system("clear")
         try:
             print(art.encode('utf-8').decode(STD_ENCODING))
-        except:# pragma: no cover
+        except Exception as e:# pragma: no cover
+            default_logger().debug(e, exc_info=True)
             pass
 
     # Print about developers and repository
@@ -240,7 +242,8 @@ class tools:
                 + "[+] Failed to save recently screened result table on disk! Skipping.."
                 + colorText.END
             )
-        except:
+        except Exception as e:# pragma: no cover
+            default_logger().debug(e, exc_info=True)
             pass
 
     # Load last screened result to pickle file
@@ -507,7 +510,8 @@ class tools:
                     try:
                         del valueScreenCols[0] # Remove the empty column header at the first position
                         del valueScreenCols[-1] # Remove the empty column header at the last position
-                    except:
+                    except Exception as e:# pragma: no cover
+                        default_logger().debug(e, exc_info=True)
                         draw.text(
                             (colPixelRunValue, rowPixelRunValue),
                             line,

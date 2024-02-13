@@ -28,7 +28,7 @@ from argparse import Namespace
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
-
+from PKDevTools.classes.log import default_logger
 
 def summariseAllStrategies(testing=False):
     reports = getSavedBacktestReportNames(testing=testing)
@@ -85,7 +85,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
                 reportName.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
             ),encoding="UTF-8"
         )
-    except: # pragma: no cover
+    except Exception as e: # pragma: no cover
         pass
     insights = None
     if len(dfs) > 0:
@@ -139,7 +139,8 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
                 strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
                 scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
                 strategy[f"{prd}-Pd"] = scanType
-            except: # pragma: no cover
+            except Exception:# pragma: no cover
+                # default_logger().debug(e, exc_info=True)
                 try:
                     max_p = df[f"{prd}Pd-%"]
                     bestScanFilter = str(df["ScanType"]).replace("[SUM]", "")
@@ -147,7 +148,8 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
                     strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
                     scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
                     strategy[f"{prd}-Pd"] = scanType
-                except: # pragma: no cover
+                except Exception as e:# pragma: no cover
+                    default_logger().debug(e, exc_info=True)
                     pass
                 pass
             firstPeriod = False
@@ -160,7 +162,8 @@ def addLargeDatasetInsights(dfs, max_datasets_df):
     max_datasets_df["DatasetSize"] = max_datasets_df["DatasetSize"].str.replace(")", "")
     try:
         max_datasets_df["DatasetSize"] = (max_datasets_df["DatasetSize"].astype(float).fillna(0.0))
-    except: # pragma: no cover
+    except Exception as e:# pragma: no cover
+        default_logger().debug(e, exc_info=True)
         max_datasets_df.loc[:, "DatasetSize"] = max_datasets_df.loc[:, "DatasetSize"].apply(
                         lambda x: x.split("(")[-1]
                     )
@@ -367,7 +370,8 @@ def getbacktestPeriod(args):
     if args is not None and args.backtestdaysago is not None:
         try:
             backtestPeriods = int(args.backtestdaysago)
-        except: # pragma: no cover
+        except Exception as e:# pragma: no cover
+            default_logger().debug(e, exc_info=True)
             pass
     return backtestPeriods
 
@@ -614,7 +618,8 @@ def formatGridOutput(df,replacenan=True):
     for col in df.columns:
         try:
             df[col] = df[col].astype(float).fillna(0)
-        except: # pragma: no cover
+        except Exception as e:# pragma: no cover
+            default_logger().debug(e, exc_info=True)
             continue
         maxGrowth = df[col].max()
         if "Pd-%" in col:

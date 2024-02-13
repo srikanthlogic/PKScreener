@@ -66,7 +66,8 @@ def decorator(func):
         if printenabled:
             try:
                 func(*args,**kwargs)
-            except: # pragma: no cover
+            except Exception as e:# pragma: no cover
+                default_logger().debug(e, exc_info=True)
                 pass
 
     return new_func
@@ -90,7 +91,8 @@ def disableSysOut(input=True, disable=True):
         try:
             sys.stdout.close()
             sys.__stdout__.close()
-        except:# pragma: no cover
+        except Exception as e:# pragma: no cover
+            default_logger().debug(e, exc_info=True)
             pass
         sys.stdout = originalStdOut
         sys.__stdout__ = original__stdout
