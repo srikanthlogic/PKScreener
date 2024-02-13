@@ -733,15 +733,18 @@ class tools:
             return 0
         # Let's look for fair values
         fairValue = 0
-        if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday <= 4:
+        if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday() <= 4:
             fairValue = hostData["FairValue"].iloc[0]
         else:
-            if PKDateUtilities.currentDateTime().weekday >=5 or force:
+            if PKDateUtilities.currentDateTime().weekday() >= 5 or force:
                 # Refresh each saturday or sunday or when not found in saved data
                 security = Stock(stock)
                 fv = security.fairValue()
                 if fv is not None:
-                    fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
+                    try:
+                        fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
+                    except Exception as e:
+                        self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
                     hostData["FairValue"] = fairValue
         return fairValue
@@ -786,8 +789,10 @@ class tools:
             return netChangeInst
         else:
             # find the latest date
-            latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
-            latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+            if latest_mfdate is not None:
+                latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
+            if latest_instdate is not None:
+                latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
             return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
 
     def getFreshMFIStatus(self, stock):
