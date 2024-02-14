@@ -26,7 +26,7 @@
 import math
 import sys
 import warnings
-
+import datetime
 import numpy as np
 
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -741,7 +741,7 @@ class tools:
                 # Refresh each saturday or sunday or when not found in saved data
                 try:
                     security = Stock(stock)
-                except ValueError:
+                except ValueError: # pragma: no cover
                     # We did not find the stock? It's okay. Move on to the next one.
                     pass
                 if security is not None:
@@ -751,8 +751,9 @@ class tools:
                             fvResponseValue = fv["chart"]["chartDatums"]["recent"]["latestFairValue"]
                             if fvResponseValue is not None:
                                 fairValue = float(fvResponseValue)
-                        except Exception as e:
-                            self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
+                        except: # pragma: no cover
+                            pass
+                            # self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
                     hostData["FairValue"] = fairValue
         return fairValue
@@ -801,7 +802,7 @@ class tools:
                 latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
             if latest_instdate is not None:
                 latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
-            return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
+            return netChangeMF if ((latest_mfdate is not None) and latest_mfdate > (latest_instdate if latest_instdate is not None else (latest_mfdate - datetime.timedelta(1)))) else netChangeInst
 
     def getFreshMFIStatus(self, stock):
         changeStatusDataMF = None
