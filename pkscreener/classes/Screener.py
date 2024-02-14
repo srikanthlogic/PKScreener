@@ -437,8 +437,8 @@ class tools:
         highestHigh200From30 = round(data.tail(200).describe()["High"]["max"], 2)
         data = data.head(200)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
-        vol = data.rolling(window=200).mean()
-        data["SMA200V"] = vol["Volume"]
+        vol = pktalib.SMA(data["Volume"],timeperiod=200)
+        data["SMA200V"] = vol
         recent = data.tail(1)
         sma200v = recent["SMA200V"].iloc[0]
         if (

@@ -438,7 +438,7 @@ class StockConsumer:
                     screener.getFairValue(stock,hostData=data, force=True)
                     hostRef.objectDictionary[stock] = data.to_dict("split")
             except Exception as ex:
-                hostRef.default_logger.debug(ex, exc_info=True)
+                hostRef.default_logger.debug(f"{stock}:\n{ex}", exc_info=True)
                 pass
             pass
         except Screener.LTPNotInConfiguredRange as e: # pragma: no cover
