@@ -737,14 +737,22 @@ class tools:
             fairValue = hostData["FairValue"].iloc[0]
         else:
             if PKDateUtilities.currentDateTime().weekday() >= 5 or force:
+                security = None
                 # Refresh each saturday or sunday or when not found in saved data
-                security = Stock(stock)
-                fv = security.fairValue()
-                if fv is not None:
-                    try:
-                        fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
-                    except Exception as e:
-                        self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
+                try:
+                    security = Stock(stock)
+                except ValueError:
+                    # We did not find the stock? It's okay. Move on to the next one.
+                    pass
+                if security is not None:
+                    fv = security.fairValue()
+                    if fv is not None:
+                        try:
+                            fvResponseValue = fv["chart"]["chartDatums"]["recent"]["latestFairValue"]
+                            if fvResponseValue is not None:
+                                fairValue = float(fvResponseValue)
+                        except Exception as e:
+                            self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
                     hostData["FairValue"] = fairValue
         return fairValue
@@ -802,26 +810,37 @@ class tools:
         netChangeInst = 0
         latest_mfdate = None
         latest_instdate = None
-        security = Stock(stock)
-        changeStatusRowsMF = security.mutualFundOwnership(top=50)
-        changeStatusRowsInst = security.institutionOwnership(top=50)
-        changeStatusDataMF = security.changeData(changeStatusRowsMF)
-        changeStatusDataInst = security.changeData(changeStatusRowsInst)
-        lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
-        lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
-        if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
-            df_groupedMF = changeStatusDataMF.groupby("date", sort=False)
-            for mfdate, df_groupMF in df_groupedMF:
-                netChangeMF = df_groupMF["changeAmount"].sum()
-                latest_mfdate = mfdate
-                break
-        if changeStatusDataInst is not None and len(changeStatusDataInst) > 0:
-            df_groupedInst = changeStatusDataInst.groupby("date", sort=False)
-            for instdate, df_groupInst in df_groupedInst:
-                if (latest_mfdate is not None and latest_mfdate == instdate) or (latest_mfdate is None) or (instdate == lastDayLastMonth):
-                    netChangeInst = df_groupInst["changeAmount"].sum()
-                    latest_instdate = instdate
-                break
+        security = None
+        try:
+            security = Stock(stock)
+        except ValueError:
+            # We did not find the stock? It's okay. Move on to the next one.
+            pass
+        if security is not None:
+            try:
+                changeStatusRowsMF = security.mutualFundOwnership(top=50)
+                changeStatusRowsInst = security.institutionOwnership(top=50)
+                changeStatusDataMF = security.changeData(changeStatusRowsMF)
+                changeStatusDataInst = security.changeData(changeStatusRowsInst)
+            except Exception as e:
+                self.default_logger.debug(e, exc_info=True)
+                # TypeError or ConnectionError because we could not find the stock or MFI data isn't available?
+                pass
+            lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
+            lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
+            if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
+                df_groupedMF = changeStatusDataMF.groupby("date", sort=False)
+                for mfdate, df_groupMF in df_groupedMF:
+                    netChangeMF = df_groupMF["changeAmount"].sum()
+                    latest_mfdate = mfdate
+                    break
+            if changeStatusDataInst is not None and len(changeStatusDataInst) > 0:
+                df_groupedInst = changeStatusDataInst.groupby("date", sort=False)
+                for instdate, df_groupInst in df_groupedInst:
+                    if (latest_mfdate is not None and latest_mfdate == instdate) or (latest_mfdate is None) or (instdate == lastDayLastMonth):
+                        netChangeInst = df_groupInst["changeAmount"].sum()
+                        latest_instdate = instdate
+                    break
         return netChangeMF,netChangeInst,latest_mfdate,latest_instdate
 
 

@@ -33,5 +33,6 @@ pkscreener/classes/__pycache__
 *.jpg
 *.pdf
 results/*.txt
-results/nse_cookies.pkl
+results/*_cookies.pkl
+results/*_html.pkl
 *.txt
