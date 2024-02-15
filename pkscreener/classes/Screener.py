@@ -519,9 +519,9 @@ class tools:
         # if df is None or len(df) < 220 or testing:
         #     shouldProceed = False
         if df is not None:
-            data = df.copy()
-            data = data[::-1]
             try:
+                data = df.copy()
+                data = data[::-1]
                 today_lma = pktalib.SMA(data["Close"], timeperiod=200)
                 lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
                 lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
