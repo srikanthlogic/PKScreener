@@ -32,19 +32,10 @@ from datetime import timedelta
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
-from requests_cache import CachedSession
 
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Fetcher as Fetcher
 from pkscreener.classes import VERSION
-
-session = CachedSession(
-    cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
-    db_path=os.path.join(Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite"),
-    expire_after=timedelta(days=1),
-    stale_if_error=True,
-)
-
 
 class OTAUpdater:
     developmentVersion = "d"

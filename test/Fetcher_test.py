@@ -65,6 +65,7 @@ def test_fetchCodes_positive(configManager, tools_instance):
         assert result == ["AAPL", "GOOG"]
         mock_get.assert_called_once_with(
             "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+            params=None,
             proxies=None,
             stream=False,
             timeout=ANY,
@@ -85,6 +86,7 @@ def test_fetchCodes_positive_proxy(configManager, tools_instance):
             mock_get.assert_called_once_with(
                 "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
                 proxies={"https": "127.0.0.1:8080"},
+                params=None,
                 stream=False,
                 timeout=ANY,
                 headers=None,
@@ -225,6 +227,7 @@ def test_fetchStockCodes_positive_proxy(configManager, tools_instance):
             mock_get.assert_called_with(
                 ANY,
                 proxies=mock_proxy.return_value,
+                params=None,
                 stream=False,
                 timeout=ANY,
                 headers=None,
@@ -397,7 +400,7 @@ def test_postURL_positive(tools_instance):
     with patch("requests_cache.CachedSession.post", return_value=response) as mock_post:
         result = tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_once_with(
-            url, proxies=None, data=data, headers=headers, timeout=2
+            url, proxies=None, data=data, headers=headers, timeout=2, params=None
         )
         assert result == response
 
@@ -411,7 +414,7 @@ def test_postURL_connect_timeout(tools_instance):
     ) as mock_post:
         tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=8
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
 
 
@@ -424,7 +427,7 @@ def test_postURL_read_timeout(tools_instance):
     ) as mock_post:
         tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=8
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
 
 
@@ -435,7 +438,7 @@ def test_postURL_other_exception(tools_instance):
     with patch("requests_cache.CachedSession.post", side_effect=Exception) as mock_post:
         tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=8
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
 
 
@@ -450,7 +453,7 @@ def test_postURL_retry_connect_timeout(tools_instance):
     ) as mock_post:
         result = tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=4
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
         assert result == response
 
@@ -466,7 +469,7 @@ def test_postURL_retry_read_timeout(tools_instance):
     ) as mock_post:
         result = tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=4
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
         assert result == response
 
@@ -482,7 +485,7 @@ def test_postURL_retry_other_exception(tools_instance):
     ) as mock_post:
         result = tools_instance.postURL(url, data=data, headers=headers)
         mock_post.assert_called_with(
-            url, proxies=None, data=data, headers=headers, timeout=4
+            url, proxies=None, data=data, headers=headers, params=None,timeout=2
         )
         assert result == response
 
@@ -498,7 +501,7 @@ def test_postURL_retry_max_retries(tools_instance, configManager):
         with patch("requests.post") as mock_post_later:
             tools_instance.postURL(url, data=data, headers=headers)
             mock_post_later.assert_called_with(
-                url, proxies=None, data=data, headers=headers, timeout=4
+                url, proxies=None, data=data, headers=headers, params=None,timeout=2
             )
 
 

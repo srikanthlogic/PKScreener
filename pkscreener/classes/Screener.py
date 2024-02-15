@@ -514,12 +514,14 @@ class tools:
         isUptrend = False
         isDowntrend = False
         decision = ""
+        fairValue = 0
+        fairValueDiff = 0
         # if df is None or len(df) < 220 or testing:
         #     shouldProceed = False
         if df is not None:
-            data = df.copy()
-            data = data[::-1]
             try:
+                data = df.copy()
+                data = data[::-1]
                 today_lma = pktalib.SMA(data["Close"], timeperiod=200)
                 lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
                 lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
@@ -544,14 +546,21 @@ class tools:
                 roundOff +=1
                 millions = round(mf_inst_ownershipChange/1000000,roundOff)
             change_millions = f"({millions}M)"
-            
+        except Exception as e:  # pragma: no cover
+            self.default_logger.debug(e, exc_info=True)
+            pass
+        try:
             #Let's get the fair value, either saved or fresh from service
             fairValue = self.getFairValue(stock,hostData)
             if fairValue != 0:
-                saveDict["FairValue"] = str(fairValue)
                 ltp = saveDict["LTP"]
-                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + str(fairValue) + colorText.END
-        except Exception as e:
+                fairValueDiff = round(fairValue - ltp,0)
+                saveDict["FairValue"] = str(fairValue)
+                saveDict["FVDiff"] = fairValueDiff
+                screenDict["FVDiff"] = fairValueDiff
+                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + saveDict["FairValue"] + colorText.END
+        except Exception as e:  # pragma: no cover
+            self.default_logger.debug(e, exc_info=True)
             pass
         mf = ""
         mfs = ""
@@ -567,7 +576,7 @@ class tools:
         screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {mfs}"
         saveDict["MFI"] = mf_inst_ownershipChange
         screenDict["MFI"] = mf_inst_ownershipChange
-        return isUptrend, mf_inst_ownershipChange
+        return isUptrend, mf_inst_ownershipChange, fairValueDiff
     
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
@@ -769,13 +778,19 @@ class tools:
         needsFreshUpdate = True
         lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
         if hostData is not None and len(hostData) > 0:
-            if "MF" in hostData.columns:
+            if "MF" in hostData.columns or "FII" in hostData.columns:
                 netChangeMF = hostData["MF"].iloc[0]
                 latest_mfdate = hostData["MF_Date"].iloc[0]
                 netChangeInst = hostData["FII"].iloc[0]
                 latest_instdate = hostData["FII_Date"].iloc[0]
-                saved_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
-                saved_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+                if latest_mfdate is not None:
+                    saved_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
+                else:
+                    saved_mfdate = lastDayLastMonth - datetime.timedelta(1)
+                if latest_instdate is not None:
+                    saved_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
+                else:
+                    saved_instdate = lastDayLastMonth - datetime.timedelta(1)
                 today = PKDateUtilities.currentDateTime()
                 needsFreshUpdate = (saved_mfdate.date() < lastDayLastMonth.date()) and (saved_instdate.date() < lastDayLastMonth.date())
             else:

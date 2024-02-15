@@ -132,6 +132,8 @@ level3_X_PopularStocks_MenuDict = {
     "5": "Only MF Net Ownership Increased",
     "6": "Only MF Net Ownership Decreased",
     "7": "MF/FIIs Net Ownership Decreased",
+    "8": "Fair Value Buy Opportunities",
+    "9": "Fair Value Sell Opportunities",
     "0": "Cancel",
 }
 

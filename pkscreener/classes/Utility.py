@@ -60,7 +60,6 @@ from PIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
-from requests_cache import CachedSession
 from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -70,11 +69,6 @@ from pkscreener.classes.MenuOptions import menus
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 
 nseFetcher = nseStockDataFetcher()
-session = CachedSession(
-    cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
-    db_path=os.path.join(Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite"),
-    cache_control=True,
-)
 fetcher = Fetcher.screenerStockDataFetcher(ConfigManager.tools())
 
 artText = """
@@ -1049,7 +1043,7 @@ class tools:
                     + colorText.END
                 )
             )
-            if resp >= 0 and resp <= 7:
+            if resp >= 0 and resp <= 9:
                 return resp
             raise ValueError
         except ValueError as e:  # pragma: no cover

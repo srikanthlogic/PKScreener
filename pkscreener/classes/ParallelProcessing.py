@@ -122,6 +122,7 @@ class StockConsumer:
                 isBuyingTrendline = False
                 isMomentum = False
                 mfiStake = 0
+                fairValueDiff = 0
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
@@ -298,7 +299,7 @@ class StockConsumer:
                             stockName=stock,
                         )
                         # Find general trend
-                        _,mfiStake = screener.findUptrend(
+                        _,mfiStake,fairValueDiff = screener.findUptrend(
                             fullData,
                             screeningDictionary,
                             saveDictionary,
@@ -403,6 +404,8 @@ class StockConsumer:
                         or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25] and isValidityCheckMet)
                         or (executeOption == 21 and (mfiStake > 0 and reversalOption in [3,5]))
                         or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
+                        or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
+                        or (executeOption == 21 and (fairValueDiff < 0 and reversalOption in [9]))
                     ):
                         hostRef.processingResultsCounter.value += 1
                         return (

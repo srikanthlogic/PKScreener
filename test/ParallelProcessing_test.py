@@ -69,6 +69,7 @@ def test_screenStocks(stock_consumer):
         hostRef.screener.validateMomentum = MagicMock(return_value=bool_value)
         hostRef.screener.validateCCI = MagicMock(return_value=bool_value)
         hostRef.screener.findTrend = MagicMock(return_value=bool_value)
+        hostRef.screener.findUptrend = MagicMock(return_value=(bool_value, 0,0))
         hostRef.screener.findPotentialBreakout = MagicMock(return_value=bool_value)
         hostRef.screener.findBreakoutValue = MagicMock(return_value=bool_value)
         hostRef.screener.validateConsolidation = MagicMock(return_value=3)
