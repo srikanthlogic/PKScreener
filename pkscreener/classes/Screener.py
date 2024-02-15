@@ -26,7 +26,7 @@
 import math
 import sys
 import warnings
-
+import datetime
 import numpy as np
 
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -437,8 +437,8 @@ class tools:
         highestHigh200From30 = round(data.tail(200).describe()["High"]["max"], 2)
         data = data.head(200)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
-        vol = data.rolling(window=200).mean()
-        data["SMA200V"] = vol["Volume"]
+        vol = pktalib.SMA(data["Volume"],timeperiod=200)
+        data["SMA200V"] = vol
         recent = data.tail(1)
         sma200v = recent["SMA200V"].iloc[0]
         if (
@@ -737,14 +737,23 @@ class tools:
             fairValue = hostData["FairValue"].iloc[0]
         else:
             if PKDateUtilities.currentDateTime().weekday() >= 5 or force:
+                security = None
                 # Refresh each saturday or sunday or when not found in saved data
-                security = Stock(stock)
-                fv = security.fairValue()
-                if fv is not None:
-                    try:
-                        fairValue = float(fv["chart"]["chartDatums"]["recent"]["latestFairValue"])
-                    except Exception as e:
-                        self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
+                try:
+                    security = Stock(stock)
+                except ValueError: # pragma: no cover
+                    # We did not find the stock? It's okay. Move on to the next one.
+                    pass
+                if security is not None:
+                    fv = security.fairValue()
+                    if fv is not None:
+                        try:
+                            fvResponseValue = fv["chart"]["chartDatums"]["recent"]["latestFairValue"]
+                            if fvResponseValue is not None:
+                                fairValue = float(fvResponseValue)
+                        except: # pragma: no cover
+                            pass
+                            # self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
                     hostData["FairValue"] = fairValue
         return fairValue
@@ -793,7 +802,7 @@ class tools:
                 latest_mfdate = PKDateUtilities.dateFromYmdString(latest_mfdate.split("T")[0])
             if latest_instdate is not None:
                 latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
-            return netChangeMF if latest_mfdate > latest_instdate else netChangeInst
+            return netChangeMF if ((latest_mfdate is not None) and latest_mfdate > (latest_instdate if latest_instdate is not None else (latest_mfdate - datetime.timedelta(1)))) else netChangeInst
 
     def getFreshMFIStatus(self, stock):
         changeStatusDataMF = None
@@ -802,26 +811,37 @@ class tools:
         netChangeInst = 0
         latest_mfdate = None
         latest_instdate = None
-        security = Stock(stock)
-        changeStatusRowsMF = security.mutualFundOwnership(top=50)
-        changeStatusRowsInst = security.institutionOwnership(top=50)
-        changeStatusDataMF = security.changeData(changeStatusRowsMF)
-        changeStatusDataInst = security.changeData(changeStatusRowsInst)
-        lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
-        lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
-        if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
-            df_groupedMF = changeStatusDataMF.groupby("date", sort=False)
-            for mfdate, df_groupMF in df_groupedMF:
-                netChangeMF = df_groupMF["changeAmount"].sum()
-                latest_mfdate = mfdate
-                break
-        if changeStatusDataInst is not None and len(changeStatusDataInst) > 0:
-            df_groupedInst = changeStatusDataInst.groupby("date", sort=False)
-            for instdate, df_groupInst in df_groupedInst:
-                if (latest_mfdate is not None and latest_mfdate == instdate) or (latest_mfdate is None) or (instdate == lastDayLastMonth):
-                    netChangeInst = df_groupInst["changeAmount"].sum()
-                    latest_instdate = instdate
-                break
+        security = None
+        try:
+            security = Stock(stock)
+        except ValueError:
+            # We did not find the stock? It's okay. Move on to the next one.
+            pass
+        if security is not None:
+            try:
+                changeStatusRowsMF = security.mutualFundOwnership(top=5)
+                changeStatusRowsInst = security.institutionOwnership(top=5)
+                changeStatusDataMF = security.changeData(changeStatusRowsMF)
+                changeStatusDataInst = security.changeData(changeStatusRowsInst)
+            except Exception as e:
+                self.default_logger.debug(e, exc_info=True)
+                # TypeError or ConnectionError because we could not find the stock or MFI data isn't available?
+                pass
+            lastDayLastMonth = PKDateUtilities.last_day_of_previous_month(PKDateUtilities.currentDateTime())
+            lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
+            if changeStatusDataMF is not None and len(changeStatusDataMF) > 0:
+                df_groupedMF = changeStatusDataMF.groupby("date", sort=False)
+                for mfdate, df_groupMF in df_groupedMF:
+                    netChangeMF = df_groupMF["changeAmount"].sum()
+                    latest_mfdate = mfdate
+                    break
+            if changeStatusDataInst is not None and len(changeStatusDataInst) > 0:
+                df_groupedInst = changeStatusDataInst.groupby("date", sort=False)
+                for instdate, df_groupInst in df_groupedInst:
+                    if (latest_mfdate is not None and latest_mfdate == instdate) or (latest_mfdate is None) or (instdate == lastDayLastMonth):
+                        netChangeInst = df_groupInst["changeAmount"].sum()
+                        latest_instdate = instdate
+                    break
         return netChangeMF,netChangeInst,latest_mfdate,latest_instdate
 
 
