@@ -28,7 +28,6 @@ import glob
 import os
 import sys
 
-import requests_cache
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
@@ -365,6 +364,7 @@ class tools:
             self.restartRequestsCache()
 
     def restartRequestsCache(self):
+        import requests_cache
         try:
             if requests_cache.is_installed():
                 requests_cache.clear()
