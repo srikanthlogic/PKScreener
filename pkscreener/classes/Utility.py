@@ -1043,7 +1043,7 @@ class tools:
                     + colorText.END
                 )
             )
-            if resp >= 0 and resp <= 7:
+            if resp >= 0 and resp <= 9:
                 return resp
             raise ValueError
         except ValueError as e:  # pragma: no cover
