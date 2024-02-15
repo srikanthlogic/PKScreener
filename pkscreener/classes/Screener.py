@@ -819,8 +819,8 @@ class tools:
             pass
         if security is not None:
             try:
-                changeStatusRowsMF = security.mutualFundOwnership(top=50)
-                changeStatusRowsInst = security.institutionOwnership(top=50)
+                changeStatusRowsMF = security.mutualFundOwnership(top=5)
+                changeStatusRowsInst = security.institutionOwnership(top=5)
                 changeStatusDataMF = security.changeData(changeStatusRowsMF)
                 changeStatusDataInst = security.changeData(changeStatusRowsInst)
             except Exception as e:

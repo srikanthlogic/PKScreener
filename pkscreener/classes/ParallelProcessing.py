@@ -435,10 +435,14 @@ class StockConsumer:
                     data = pd.DataFrame(data["data"], columns=data["columns"], index=data["index"])
                     screener.getMutualFundStatus(stock, hostData=data, force=True)
                     hostRef.objectDictionary[stock] = data.to_dict("split")
-                    screener.getFairValue(stock,hostData=data, force=True)
-                    hostRef.objectDictionary[stock] = data.to_dict("split")
             except Exception as ex:
-                hostRef.default_logger.debug(f"{stock}:\n{ex}", exc_info=True)
+                hostRef.default_logger.debug(f"MFIStatus: {stock}:\n{ex}", exc_info=True)
+                pass
+            try:
+                screener.getFairValue(stock,hostData=data, force=True)
+                hostRef.objectDictionary[stock] = data.to_dict("split")
+            except Exception as ex:
+                hostRef.default_logger.debug(f"FairValue: {stock}:\n{ex}", exc_info=True)
                 pass
             pass
         except Screener.LTPNotInConfiguredRange as e: # pragma: no cover
