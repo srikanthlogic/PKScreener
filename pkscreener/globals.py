@@ -912,7 +912,7 @@ def main(userArgs=None):
             updateMenuChoiceHierarchy()
             if popOption == 4:
                 screenResults = mstarFetcher.fetchMorningstarTopDividendsYieldStocks()
-            elif popOption > 0 and popOption <= 2:
+            elif popOption in [1,2]:
                 screenResults = mstarFetcher.fetchMorningstarFundFavouriteStocks(
                     "NoOfFunds" if popOption == 2 else "ChangeInShares"
                 )
