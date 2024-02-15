@@ -6,6 +6,7 @@
 * Summary of scan filters/strategies included along-side the main scan results.
 * Added the Mutual funds and institutional investor ownership trend based on the previous month's closing in the Trends column (See the MFI:<Trend>). This is updated once every week, over the weekend or daily after market-hours. You must already have been seeing stocks based on fund house popularity (X > 12 > 21> options).
 * Added the fair value for all stocks. This is updated once every week, over the weekend or daily after market-hours.
+* Added the Buy/Sell opportunities screening option based on fair value. Try X > 12 > 21 > 8 or 9
 * Added a default 22-pd (1 month) return for all stocks as part of default reports
 * Alongside 30 candle trends, and MFI trends, now the moving averages based uptrend/downtrend is also shown with T:<Trend> in the same column.
 * Added option to scan using Lorenzian classifier. Try out X > 12 > 6 > 7.

@@ -568,17 +568,26 @@ def initQueues(minimumCount=0):
     return tasks_queue, results_queue, totalConsumers
 
 
-def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio):
+def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
         sortKey = "Volume"
+        ascending = False
+        if executeOption == 21:
+            if reversalOption in [3,5,6,7]:
+                sortKey = "MFI"
+                ascending = reversalOption in [6,7]
+            elif reversalOption in [8,9]:
+                sortKey = "FVDiff"
+                ascending = reversalOption in [9]
+        screenResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
+        saveResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
         if "MFI" in saveResults.columns:
-            sortKey = "MFI"
-        screenResults.sort_values(by=[sortKey], ascending=False, inplace=True)
-        saveResults.sort_values(by=[sortKey], ascending=False, inplace=True)
-        if sortKey == "MFI":
-            saveResults.drop(sortKey, axis=1, inplace=True, errors="ignore")
-            screenResults.drop(sortKey, axis=1, inplace=True, errors="ignore")
+            saveResults.drop("MFI", axis=1, inplace=True, errors="ignore")
+            screenResults.drop("MFI", axis=1, inplace=True, errors="ignore")
+        if "FVDiff" in saveResults.columns:
+            saveResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
+            screenResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
@@ -891,7 +900,7 @@ def main(userArgs=None):
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
             popOption = int(options[3])
-            if popOption >= 0 and popOption <= 7:
+            if popOption >= 0 and popOption <= 9:
                 pass
         else:
             popOption = Utility.tools.promptPopularStocks(selectedMenu)
@@ -1217,7 +1226,7 @@ def main(userArgs=None):
                 userPassedArgs.backtestdaysago = backtestPeriod
             if len(screenResults) > 0:
                 screenResults, saveResults = labelDataForPrinting(
-                    screenResults, saveResults, configManager, volumeRatio
+                    screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption
                 )
             if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                 screenResults, saveResults = removeUnknowns(screenResults, saveResults)
