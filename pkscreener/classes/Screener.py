@@ -836,8 +836,8 @@ class tools:
             try:
                 changeStatusRowsMF = security.mutualFundOwnership(top=5)
                 changeStatusRowsInst = security.institutionOwnership(top=5)
-                changeStatusDataMF = security.changeData(changeStatusRowsMF)
-                changeStatusDataInst = security.changeData(changeStatusRowsInst)
+                changeStatusDataMF = security.mutualFundFIIChangeData(changeStatusRowsMF)
+                changeStatusDataInst = security.mutualFundFIIChangeData(changeStatusRowsInst)
             except Exception as e:
                 self.default_logger.debug(e, exc_info=True)
                 # TypeError or ConnectionError because we could not find the stock or MFI data isn't available?
