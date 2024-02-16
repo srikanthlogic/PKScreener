@@ -201,8 +201,8 @@ jobs:
         git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
         git remote update
         git fetch
-        git add actions-data-download/stock_data_*.pkl --force
-        git add actions-data-download/intraday_stock_data_*.pkl --force
+        git add actions-data-download/*.pkl --force
+        git add results/*.pkl --force
         git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
         git push -v -u origin +actions-data-download
 
