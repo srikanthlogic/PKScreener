@@ -1040,13 +1040,7 @@ def main(userArgs=None):
             loadedStockData = True
         loadCount = len(stockDict)
 
-        if not downloadOnly:
-            print(
-                colorText.BOLD
-                + colorText.WARN
-                + f"[+] Starting Stock {'Screening' if menuOption=='X' else 'Backtesting.'}. Press Ctrl+C to stop!"
-            )
-        else:
+        if downloadOnly:
             print(
                 colorText.BOLD
                 + colorText.WARN
@@ -1080,6 +1074,7 @@ def main(userArgs=None):
         # and then keep coming to the next day (x-1) until we get to today (actualHistoricalDuration = 0)
         bar, spinner = Utility.tools.getProgressbarStyle()
         totalStocksInReview = 0
+        print(f"{colorText.GREEN}[+]Adding stocks to the queue...{colorText.END}")
         with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
             while actualHistoricalDuration >= 0:
                 daysInPast = (
@@ -1885,10 +1880,14 @@ def runScanners(
         numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
         queueCounter = 0
         dumpFreq = 1
-        print(colorText.END + colorText.BOLD)
         bar, spinner = Utility.tools.getProgressbarStyle()
         counter = 0
         start_time = time.time()
+        if not userPassedArgs.download:
+            print(colorText.WARN
+                + f"[+] Starting Stock {'Screening' if menuOption=='X' else 'Backtesting.'}. Press Ctrl+C to stop!"
+                + colorText.END
+            )
         with alive_bar(numStocks, bar=bar, spinner=spinner) as progressbar:
             lstscreen = []
             lstsave = []
