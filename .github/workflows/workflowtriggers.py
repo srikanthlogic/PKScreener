@@ -697,7 +697,11 @@ def shouldRunBacktests(backtestName="",df=None):
     if df is not None:
         gen_date_row = df[df["Insights"] == backtestName]
         if gen_date_row is not None:
-            shouldRun = not (str(gen_date_row["Generated Date"].iloc[0]) == today.replace("-","/"))
+            try:
+                shouldRun = not (str(gen_date_row["Generated Date"].iloc[0]) == today.replace("-","/"))
+            except Exception as e: # Ptobably the given backtest has never been run yet
+                print(f"Error for {backtestName}\n{e}")
+                pass
     return shouldRun
 
 def getFormattedChoices(options):

@@ -36,7 +36,7 @@ from PKDevTools.classes.ColorText import colorText
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Utility as Utility
 from pkscreener.classes.Screener import tools
-
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 @pytest.fixture
 def configManager():
     return ConfigManager.tools()
@@ -2932,7 +2932,9 @@ def test_validateNarrowRange(tools_instance):
     patch('pandas.DataFrame.debug')
 
     # Create a test case
-    df = pd.DataFrame({'Open': [1.1, 2, 3], 'High': [4.1, 5, 6], 'Low': [7.1, 8, 9], 'Close': [10.1, 11, 12], 'Volume': [13, 14, 15]})
+    isTrading = PKDateUtilities.isTradingTime()
+    closeValue = 10.1 if isTrading else 11
+    df = pd.DataFrame({'Open': [1.1, 2, 3], 'High': [4.1, 5, 6], 'Low': [7.1, 8, 9], 'Close': [10.1, closeValue , 12], 'Volume': [13, 14, 15]})
     df = pd.concat([df]*150, ignore_index=True)
     screenDict = {}
     saveDict = {}
@@ -2942,8 +2944,8 @@ def test_validateNarrowRange(tools_instance):
 
     # Assert the expected behavior
     assert result == True
-    assert screenDict['Pattern'] == '\033[1m\033[92mNR4\033[0m'
-    assert saveDict['Pattern'] == 'NR4'
+    assert screenDict['Pattern'] == '\033[1m\033[92mNR4\033[0m' if not isTrading else "\033[1m\033[92mBuy-NR4\033[0m"
+    assert saveDict['Pattern'] == 'NR4' if not isTrading else "Buy-NR4"
 
 # def test_validateVCP_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
 #     # mock_data["High"] = [205, 210, 215, 220]
@@ -2970,8 +2972,8 @@ def test_validateVolume_positive(mock_data, mock_screen_dict, mock_save_dict, to
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False,True)
     assert mock_screen_dict["Volume"] == 0.67
     assert mock_save_dict["Volume"] == 0.67
-    mock_data["VolMA"].iloc[0] = 1000
-    mock_data["Volume"].iloc[0] = 2500
+    mock_data.loc[0, "VolMA"] = 1000
+    mock_data.loc[0, "Volume"] = 2500
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5,1000) == (True, True)
     assert mock_screen_dict["Volume"] == 2.5
     assert mock_save_dict["Volume"] == 2.5
@@ -2981,7 +2983,7 @@ def test_validateVolume_negative(mock_data, mock_screen_dict, mock_save_dict, to
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5) == (False, True)
     assert mock_screen_dict["Volume"] == 0.67
     assert mock_save_dict["Volume"] == 0.67
-    mock_data["VolMA"].iloc[0] = 0
+    mock_data.loc[0, "VolMA"] = 0
     assert tools_instance.validateVolume(mock_data, mock_screen_dict, mock_save_dict, 2.5,10000) == (True, False)
 
 def test_SpreadAnalysis_positive(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
@@ -3002,19 +3004,19 @@ def test_validateVolumeSpreadAnalysis_datalength_lessthan2(mock_data, mock_scree
     assert mock_save_dict.get("Pattern") == None
 
 def test_validateVolumeSpreadAnalysis_open_less_than_close(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-    mock_data["Open"].iloc[1] = 100
-    mock_data["Close"].iloc[1] = 110
+    mock_data.loc[1, "Open"] = 100
+    mock_data.loc[1, "Close"] = 110
     assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == False
     assert mock_screen_dict.get("Pattern") == None
     assert mock_save_dict.get("Pattern") == None
 
 def test_validateVolumeSpreadAnalysis_spread0_lessthan_spread1(mock_data, mock_screen_dict, mock_save_dict, tools_instance):
-    mock_data["Open"].iloc[1] = 120
-    mock_data["Close"].iloc[1] = 100
-    mock_data["Open"].iloc[0] = 110
-    mock_data["Close"].iloc[0] = 100
-    mock_data["Volume"].iloc[0] = mock_data.iloc[0]["VolMA"] + 1000
-    mock_data["Volume"].iloc[1] = mock_data["Volume"].iloc[0] -1000
+    mock_data.loc[1, "Open"] = 120
+    mock_data.loc[1, "Close"] = 100
+    mock_data.loc[0, "Open"] = 110
+    mock_data.loc[0, "Close"] = 100
+    mock_data.loc[0, "Volume"] = mock_data.iloc[0]["VolMA"] + 1000
+    mock_data.loc[1, "Volume"] = mock_data["Volume"].iloc[0] -1000
     assert tools_instance.validateVolumeSpreadAnalysis(mock_data, mock_screen_dict, mock_save_dict) == True
     assert mock_screen_dict.get("Pattern") == colorText.BOLD + colorText.GREEN + "Demand Rise" + colorText.END 
     assert mock_save_dict.get("Pattern") == 'Demand Rise'
