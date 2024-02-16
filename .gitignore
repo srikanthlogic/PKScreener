@@ -35,4 +35,5 @@ pkscreener/classes/__pycache__
 results/*.txt
 results/*_cookies.pkl
 results/*_html.pkl
+results/*DB.pkl
 *.txt
