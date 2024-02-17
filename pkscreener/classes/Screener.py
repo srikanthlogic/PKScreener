@@ -757,7 +757,7 @@ class tools:
                     fv = security.fairValue()
                     if fv is not None:
                         try:
-                            fvResponseValue = fv["chart"]["chartDatums"]["recent"]["latestFairValue"]
+                            fvResponseValue = fv["latestFairValue"]
                             if fvResponseValue is not None:
                                 fairValue = float(fvResponseValue)
                         except: # pragma: no cover
