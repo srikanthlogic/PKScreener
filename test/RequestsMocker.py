@@ -80,26 +80,24 @@ class RequestsMocker:
         return r
         
     def patched_get(self, *args, **kwargs) -> AnyResponse:
-        return self.patched_fetchURL()
+        return self.patched_fetchURL(*args, **kwargs)
 
     def patched_post(self, *args, **kwargs)-> AnyResponse:
         r = self.returnFromFixture(*args, **kwargs)
-        if r is None:
+        if r is None and len(args) > 2:
             s = requests.Session()
             return s.post(args[0],data=args[2],**kwargs)
-        else:
-            return r
+        return r
 
     def patched_fetchURL(self, *args, **kwargs) -> AnyResponse:
         r = None
         if args is not None and len(args) > 0:
             r = self.returnFromFixture(*args, **kwargs)
-        if r is None:
+        if r is None and len(args) > 0:
             # return self.defaultEmptyResponse()
             s = requests.Session()
             return s.get(args[0],**kwargs)
-        else:
-            return r
+        return r
 
     def defaultEmptyResponse(self):
         user_encode_data = json.dumps("Empty mock up response! You need to define a fixture to capture this request!", indent=2).encode('utf-8')
