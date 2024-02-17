@@ -48,7 +48,41 @@ def getPlatformSpecificDetails(jsonDict):
         platName = platformNames[platforms[0]]
     return url, platName
 
-
+# Positive test case: Test checkForUpdate function with skipDownload = True
+def test_checkForUpdate_skipDownload():
+    VERSION = "1.0.0"
+    with patch("requests_cache.CachedSession.get") as mock_get:
+        mock_get.return_value.json.return_value = {
+            "tag_name": "2.0.0",
+            "assets": [
+                {
+                    "browser_download_url": "https://example.com/update3.run",
+                    "size": 300,
+                },
+                {
+                    "browser_download_url": "https://example.com/update1.exe",
+                    "size": 100,
+                },
+                {
+                    "browser_download_url": "https://example.com/update2.bin",
+                    "size": 200,
+                },
+            ],
+        }
+        with patch(
+            "pkscreener.classes.OtaUpdater.OTAUpdater.showWhatsNew"
+        ) as mock_showWhatsNew:
+            with patch("builtins.input", return_value="n"):
+                url, platName = getPlatformSpecificDetails(
+                    mock_get.return_value.json.return_value
+                )
+                with patch(
+                    f"pkscreener.classes.OtaUpdater.OTAUpdater.updateFor{platName}"
+                ) as mock_updateForPlatform:
+                    OTAUpdater.checkForUpdate(VERSION, skipDownload=True)
+                    assert mock_showWhatsNew.called
+                    assert not mock_updateForPlatform.called
+                    
 # Positive test case: Test updateForWindows function
 def test_updateForWindows():
     url = "https://example.com/update.exe"
@@ -193,42 +227,6 @@ def test_checkForUpdate_exception():
                             + "[+] Failure while checking update!"
                             + colorText.END
                         )
-
-
-# Positive test case: Test checkForUpdate function with skipDownload = True
-def test_checkForUpdate_skipDownload():
-    VERSION = "1.0.0"
-    with patch("requests_cache.CachedSession.get") as mock_get:
-        mock_get.return_value.json.return_value = {
-            "tag_name": "2.0.0",
-            "assets": [
-                {
-                    "browser_download_url": "https://example.com/update3.run",
-                    "size": 300,
-                },
-                {
-                    "browser_download_url": "https://example.com/update1.exe",
-                    "size": 100,
-                },
-                {
-                    "browser_download_url": "https://example.com/update2.bin",
-                    "size": 200,
-                },
-            ],
-        }
-        with patch(
-            "pkscreener.classes.OtaUpdater.OTAUpdater.showWhatsNew"
-        ) as mock_showWhatsNew:
-            with patch("builtins.input", return_value="n"):
-                url, platName = getPlatformSpecificDetails(
-                    mock_get.return_value.json.return_value
-                )
-                with patch(
-                    f"pkscreener.classes.OtaUpdater.OTAUpdater.updateFor{platName}"
-                ) as mock_updateForPlatform:
-                    OTAUpdater.checkForUpdate(VERSION, skipDownload=True)
-                    assert mock_showWhatsNew.called
-                    assert not mock_updateForPlatform.called
 
 
 # Positive test case: Test checkForUpdate function with no update available
