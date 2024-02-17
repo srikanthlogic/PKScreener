@@ -44,6 +44,7 @@ from pkscreener.classes.CandlePatterns import CandlePatterns
 class StockConsumer:
     def __init__(self):
         self.isTradingTime = PKDateUtilities.isTradingTime()
+        self.configManager = None
 
     # @tracelog
     def screenStocks(
@@ -78,6 +79,7 @@ class StockConsumer:
         fullData = None
         processedData = None
         configManager = hostRef.configManager
+        self.configManager = configManager
         fetcher = hostRef.fetcher
         screener = hostRef.screener
         candlePatterns = hostRef.candlePatterns
@@ -710,6 +712,11 @@ class StockConsumer:
 
     def initResultDictionaries(self):
         periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+        if self.configManager.backtestPeriodFactor != 1:
+            factored_periods = []
+            for period in periods:
+                factored_periods.append(period*self.configManager.backtestPeriodFactor)
+            periods = factored_periods
         columns = [
             "Stock",
             "LTP",

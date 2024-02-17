@@ -1705,6 +1705,11 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
     periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+    if configManager.backtestPeriodFactor != 1:
+        factored_periods = []
+        for period in periods:
+            factored_periods.append(period*configManager.backtestPeriodFactor)
+        periods = factored_periods
     for period in periods:
         if saveResults is not None:
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")

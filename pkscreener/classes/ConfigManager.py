@@ -62,6 +62,7 @@ class tools:
         self.backtestPeriod = 120
         self.minVolume = 10000
         self.logger = None
+        self.backtestPeriodFactor = 1
 
     @property
     def default_logger(self):
@@ -122,6 +123,7 @@ class tools:
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
             parser.set("config", "minimumVolume", str(self.minVolume))
+            parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
             try:
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)
@@ -221,6 +223,9 @@ class tools:
             self.minVolume = input(
                 "[+] Minimum per day traded volume of any stock (number)(Optimal = 100000): "
             )
+            self.backtestPeriodFactor = input(
+                "[+] Factor for backtest periods. If you choose 5, 1-Pd would mean 5-Pd returns. (number)(Optimal = 1): "
+            )
             parser.set("config", "period", self.period + "d")
             parser.set("config", "daysToLookback", self.daysToLookback)
             parser.set("config", "duration", self.duration + "d")
@@ -241,6 +246,7 @@ class tools:
             parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
             parser.set("config", "minimumVolume", self.minVolume)
+            parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
             # delete stock data due to config change
             self.deleteFileWithPattern()
             print(
@@ -324,6 +330,7 @@ class tools:
                 )
                 self.backtestPeriod = int(parser.get("config", "backtestPeriod"))
                 self.minVolume = int(parser.get("config", "minimumVolume"))
+                self.backtestPeriodFactor = int(parser.get("config", "backtestPeriodFactor"))
             except configparser.NoOptionError as e:# pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # input(colorText.BOLD + colorText.FAIL +

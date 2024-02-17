@@ -29,6 +29,9 @@ from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 from PKDevTools.classes.log import default_logger
+from pkscreener.classes.ConfigManager import parser, tools
+configManager = tools()
+configManager.getConfig(parser)
 
 def summariseAllStrategies(testing=False):
     reports = getSavedBacktestReportNames(testing=testing)
@@ -92,6 +95,11 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
         df = dfs[0]
         if len(df) > 0:
             periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+            if configManager.backtestPeriodFactor != 1:
+                factored_periods = []
+                for period in periods:
+                    factored_periods.append(period*configManager.backtestPeriodFactor)
+                periods = factored_periods
             insights = cleanupInsightsSummary(df, periods)
             # insights = insights.replace('', np.nan, regex=True)
             # insights = insights.replace('-', np.nan, regex=True)
@@ -185,6 +193,11 @@ def xRaySummary(savedResults=None):
     saveResults = savedResults.copy()
     df_grouped = saveResults.groupby("ScanType")
     periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+    if configManager.backtestPeriodFactor != 1:
+        factored_periods = []
+        for period in periods:
+            factored_periods.append(period*configManager.backtestPeriodFactor)
+        periods = factored_periods
     sum_list = []
     sum_dict = {}
     maxGrowth = -100
@@ -230,6 +243,11 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
         days = 0
         df = None
         periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+        if configManager.backtestPeriodFactor != 1:
+            factored_periods = []
+            for period in periods:
+                factored_periods.append(period*configManager.backtestPeriodFactor)
+            periods = factored_periods
         period = periods[days]
         backtestPeriods = getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults)
         while periods[days] <= backtestPeriods:
