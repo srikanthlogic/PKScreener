@@ -79,7 +79,7 @@ class StockDataNotAdequate(Exception):
 
 
 # This Class contains methods for stock analysis and screening validation
-class tools:
+class ScreeningStatistics:
     def __init__(self, configManager, default_logger) -> None:
         self.configManager = configManager
         self.default_logger = default_logger
@@ -1474,6 +1474,11 @@ class tools:
     def validateLTPForPortfolioCalc(self, df, screenDict, saveDict):
         data = df.copy()
         periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
+        if self.configManager.backtestPeriodFactor != 1:
+            factored_periods = []
+            for period in periods:
+                factored_periods.append(period*self.configManager.backtestPeriodFactor)
+            periods = factored_periods
         previous_recent = data.head(1)
         previous_recent.reset_index(inplace=True)
         calc_date = str(previous_recent.iloc[:, 0][0]).split(" ")[0]

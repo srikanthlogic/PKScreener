@@ -67,6 +67,9 @@ import pkscreener.classes.Fetcher as Fetcher
 from pkscreener.classes import VERSION, Changelog
 from pkscreener.classes.MenuOptions import menus
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
+from pkscreener.classes.PKTask import PKTask
+from pkscreener.classes.MarketStatus import MarketStatus
+# from pkscreener.classes.PKScheduler import scheduleTasks
 
 nseFetcher = nseStockDataFetcher()
 fetcher = Fetcher.screenerStockDataFetcher(ConfigManager.tools())
@@ -138,12 +141,11 @@ MF_IN = colorText.GREEN + MF_Investing + colorText.END
 MF_OUT = colorText.FAIL + MF_Investing + colorText.END
 
 def marketStatus():
-    lngStatus = None
-    try:
-        _,lngStatus,_ = nseFetcher.capitalMarketStatus()
-    except Exception as e:# pragma: no cover
-        default_logger().debug(e, exc_info=True)
-        pass
+    # task = PKTask("Nifty 50 Market Status",MarketStatus().getMarketStatus)
+    lngStatus = MarketStatus().marketStatus
+    # scheduleTasks(tasksList=[task])
+    if lngStatus == "":
+        lngStatus = MarketStatus().getMarketStatus()
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
 art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"

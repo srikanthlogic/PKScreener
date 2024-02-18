@@ -27,11 +27,11 @@ import logging
 import pandas as pd
 from unittest.mock import MagicMock, patch
 
-from pkscreener.classes.ParallelProcessing import StockConsumer
+from pkscreener.classes.StockScreener import StockScreener
 
 @pytest.fixture
 def stock_consumer():
-    return StockConsumer()
+    return StockScreener()
 
 def test_screenStocks(stock_consumer):
     hostRef = MagicMock()
