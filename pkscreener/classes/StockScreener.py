@@ -36,12 +36,12 @@ from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
-import pkscreener.classes.Screener as Screener
+import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
 from pkscreener import Imports
 from pkscreener.classes.CandlePatterns import CandlePatterns
 
 
-class StockConsumer:
+class StockScreener:
     def __init__(self):
         self.isTradingTime = PKDateUtilities.isTradingTime()
         self.configManager = None
@@ -75,11 +75,11 @@ class StockConsumer:
         assert (
             hostRef is not None
         ), "hostRef argument must not be None. It should b an instance of PKMultiProcessorClient"
+        configManager = hostRef.configManager
+        self.configManager = configManager
         screeningDictionary, saveDictionary = self.initResultDictionaries()
         fullData = None
         processedData = None
-        configManager = hostRef.configManager
-        self.configManager = configManager
         fetcher = hostRef.fetcher
         screener = hostRef.screener
         candlePatterns = hostRef.candlePatterns
@@ -99,7 +99,7 @@ class StockConsumer:
             # )
             if newlyListedOnly:
                 if not screener.validateNewlyListed(fullData, period):
-                    raise Screener.NotNewlyListed
+                    raise ScreeningStatistics.NotNewlyListed
 
             with hostRef.processingCounter.get_lock():
                 hostRef.processingCounter.value += 1
@@ -424,15 +424,15 @@ class StockConsumer:
         except StockDataEmptyException as e: # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotNewlyListed as e: # pragma: no cover
+        except ScreeningStatistics.NotNewlyListed as e: # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotAStageTwoStock as e: # pragma: no cover
+        except ScreeningStatistics.NotAStageTwoStock as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
-        except Screener.NotEnoughVolumeAsPerConfig as e: # pragma: no cover 
+        except ScreeningStatistics.NotEnoughVolumeAsPerConfig as e: # pragma: no cover 
             pass
-        except Screener.DownloadDataOnly as e: # pragma: no cover
+        except ScreeningStatistics.DownloadDataOnly as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             try:
                 data = hostRef.objectDictionary.get(stock)
@@ -450,7 +450,7 @@ class StockConsumer:
                 hostRef.default_logger.debug(f"FairValue: {stock}:\n{ex}", exc_info=True)
                 pass
             pass
-        except Screener.LTPNotInConfiguredRange as e: # pragma: no cover
+        except ScreeningStatistics.LTPNotInConfiguredRange as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
         except KeyError as e: # pragma: no cover
@@ -522,7 +522,7 @@ class StockConsumer:
                     minVolume=minVolume,
                 )
         if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
-            raise Screener.NotEnoughVolumeAsPerConfig
+            raise ScreeningStatistics.NotEnoughVolumeAsPerConfig
         return hasMinVolumeRatio
 
     def performBasicLTPChecks(self, executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener):
@@ -534,9 +534,9 @@ class StockConsumer:
                     maxLTP=configManager.maxLTP,
                 )
         if not isLtpValid:
-            raise Screener.LTPNotInConfiguredRange
+            raise ScreeningStatistics.LTPNotInConfiguredRange
         if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
-            raise Screener.NotAStageTwoStock
+            raise ScreeningStatistics.NotAStageTwoStock
 
     def updateStock(self, stock, screeningDictionary, saveDictionary):
         screeningDictionary["Stock"] = (
@@ -636,7 +636,7 @@ class StockConsumer:
                 if downloadOnly:
                     with hostRef.processingResultsCounter.get_lock():
                         hostRef.processingResultsCounter.value += 1
-                    raise Screener.DownloadDataOnly
+                    raise ScreeningStatistics.DownloadDataOnly
                 else:
                     hostData = hostRef.objectDictionary.get(stock)
         else:

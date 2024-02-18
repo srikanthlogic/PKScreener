@@ -35,7 +35,7 @@ from PKDevTools.classes.log import default_logger as dl
 from PKDevTools.classes.ColorText import colorText
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Utility as Utility
-from pkscreener.classes.Screener import tools
+from pkscreener.classes.ScreeningStatistics import ScreeningStatistics
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 @pytest.fixture
 def configManager():
@@ -49,7 +49,7 @@ def default_logger():
 
 @pytest.fixture
 def tools_instance(configManager, default_logger):
-    return tools(configManager, default_logger)
+    return ScreeningStatistics(configManager, default_logger)
 
 
 def test_positive_case_find52WeekHighBreakout(tools_instance):
@@ -646,7 +646,7 @@ def test_findBullishIntradayRSIMACD_positive():
         }
     )
     # Create an instance of the tools class
-    tool = tools(None, None)
+    tool = ScreeningStatistics(None, None)
     # Call the function and assert the result
     assert tool.findBullishIntradayRSIMACD(data) == False
     assert tool.findBullishIntradayRSIMACD(None) == False
@@ -771,7 +771,7 @@ def test_findNR4Day_positive():
         }
     )
     # Create an instance of the tools class
-    tool = tools(None, None)
+    tool = ScreeningStatistics(None, None)
     # Call the function and assert the result
     assert tool.findNR4Day(data) == False
 
@@ -2426,7 +2426,7 @@ def test_findUptrend_exception(tools_instance):
 #     assert tools_instance.validateBullishForTomorrow(data) == True
 
 def test_validateCCI():
-    tool = tools(None, None)
+    tool = ScreeningStatistics(None, None)
     # Test case 1: CCI within specified range and trend is Up
     df = pd.DataFrame({'CCI': [50]})
     screenDict = {}
@@ -2473,7 +2473,7 @@ def test_validateCCI():
     assert screenDict['CCI'] == colorText.BOLD + colorText.FAIL + '70' + colorText.END
 
 def test_validateConfluence():
-    tool = tools(None, None)
+    tool = ScreeningStatistics(None, None)
     # Test case 1: SMA and LMA are within specified percentage and SMA is greater than LMA
     df = pd.DataFrame({'SMA': [50], 'LMA': [45], 'Close': [100]})
     screenDict = {}
@@ -2513,7 +2513,7 @@ def test_validateConfluence():
     assert screenDict['MA-Signal'] == colorText.BOLD + colorText.FAIL + 'Confluence (4.0%)' + colorText.END
 
 def test_validateConsolidation():
-    tool = tools(None, None)
+    tool = ScreeningStatistics(None, None)
     # Test case 1: High and low close prices within specified percentage
     df = pd.DataFrame({'Close': [100, 95]})
     screenDict = {}

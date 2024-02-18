@@ -627,7 +627,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
     dfs = []
     existing_df = None
     try:
-        dfs = pd.read_html("https://pkjmesra.github.io/PKScreener/BacktestReports.html")
+        dfs = pd.read_html("https://pkjmesra.github.io/PKScreener/BacktestReports.html",encoding="UTF-8", attrs = {'id': 'resultsTable'})
     except:
         pass
     if len(dfs) > 0:

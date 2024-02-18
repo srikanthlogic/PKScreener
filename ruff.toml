@@ -11,5 +11,5 @@ unfixable = ["F401"]
 # Ignore 
 [per-file-ignores]
 "pkscreener/globals.py" =["F841", "E712"]
-"pkscreener/classes/ParallelProcessing.py" =["F841"]
+"pkscreener/classes/StockScreener.py" =["F841"]
 "pkscreener/classes/Utility.py" = ["F401"]

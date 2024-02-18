@@ -79,7 +79,7 @@ class StockDataNotAdequate(Exception):
 
 
 # This Class contains methods for stock analysis and screening validation
-class tools:
+class ScreeningStatistics:
     def __init__(self, configManager, default_logger) -> None:
         self.configManager = configManager
         self.default_logger = default_logger

@@ -86,7 +86,7 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                 reportName.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
-            ),encoding="UTF-8"
+            ),encoding="UTF-8", attrs = {'id': 'resultsTable'}
         )
     except Exception as e: # pragma: no cover
         pass
@@ -133,11 +133,15 @@ def cleanupInsightsSummary(df, periods):
     return insights
 
 def getMaxBestInsight(summary, dfs, periods, insights_list):
-    for df in dfs:
+    for dfInsights in dfs:
+        df = dfInsights.copy()
+        df.reset_index(drop = True, inplace=True)
         strategy_percent = {}
         strategy = {}
         firstPeriod = True
+        rowIndex = 0
         for prd in periods:
+            rowIndex += 1
             try:
                 max_p = df[f"{prd}Pd-%"].max()
                 maxIndexPos = df[f"{prd}Pd-%"].idxmax()
@@ -147,6 +151,13 @@ def getMaxBestInsight(summary, dfs, periods, insights_list):
                 strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
                 scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
                 strategy[f"{prd}-Pd"] = scanType
+            except KeyError:
+                    max_p = df[rowIndex*2]
+                    bestScanFilter = str(df[0]).replace("[SUM]", "")
+                    resultPoints = bestScanFilter.split("(")[-1]
+                    strategy_percent[f"{prd}-Pd"] = f"{colorText.GREEN if max_p > 0 else (colorText.FAIL if max_p < 0 else colorText.WARN)}{max_p} %{colorText.END}{(' from ('+resultPoints) if (summary or firstPeriod) else ''}"
+                    scanType = (bestScanFilter.split("(")[0] if not summary else bestScanFilter)
+                    strategy[f"{prd}-Pd"] = scanType
             except Exception:# pragma: no cover
                 # default_logger().debug(e, exc_info=True)
                 try:

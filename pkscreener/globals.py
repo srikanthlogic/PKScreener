@@ -57,7 +57,7 @@ from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
 import pkscreener.classes.Fetcher as Fetcher
-import pkscreener.classes.Screener as Screener
+import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
 import pkscreener.classes.Utility as Utility
 from pkscreener.classes.Utility import STD_ENCODING
 from pkscreener.classes import VERSION, PortfolioXRay
@@ -74,7 +74,7 @@ from pkscreener.classes.MenuOptions import (
     menus,
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
-from pkscreener.classes.ParallelProcessing import StockConsumer
+from pkscreener.classes.StockScreener import StockScreener
 
 multiprocessing.freeze_support()
 # import dataframe_image as dfi
@@ -103,7 +103,7 @@ maLength = None
 menuChoiceHierarchy = ""
 newlyListedOnly = False
 screenCounter = None
-screener = Screener.tools(configManager, default_logger())
+screener = ScreeningStatistics.ScreeningStatistics(configManager, default_logger())
 screenResults = None
 backtest_df = None
 screenResultsCounter = None
@@ -225,13 +225,13 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
             dfs = pd.read_html(
                 "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                     reportNameSummary.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
-                ),encoding="UTF-8"
+                ),encoding="UTF-8", attrs = {'id': 'resultsTable'}
             )
         _, reportNameDetail = getBacktestReportFilename()
         dfd = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
                 reportNameDetail.replace("_X_", "_B_").replace("_G_", "_B_").replace("_S_", "_B_")
-            ),encoding="UTF-8"
+            ),encoding="UTF-8", attrs = {'id': 'resultsTable'}
         )
 
         if summaryRequired and len(dfs) > 0:
@@ -1094,10 +1094,7 @@ def main(userArgs=None):
                     savedStocksCount = 0
                     # if daysInPast > 0:
                     # Always run from the entire list for today
-                    pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
-                    filePrefix = getFormattedChoices().replace("B","X").replace("G","X").replace("S","X")
-                    url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
-                    savedListResp = fetcher.fetchURL(url)
+                    pastDate, savedListResp = downloadSavedResults(daysInPast)
                     if savedListResp is not None and savedListResp.status_code == 200:
                         savedListStockCodes = savedListResp.text.replace("\n","").replace("\"","").split(",")
                         savedListStockCodes = sorted(list(filter(None,list(set(savedListStockCodes)))))
@@ -1179,10 +1176,10 @@ def main(userArgs=None):
         cp = CandlePatterns()
         cm = configManager
         # f = Fetcher.screenerStockDataFetcher(configManager)
-        scr = Screener.tools(configManager, default_logger())
+        scr = ScreeningStatistics.ScreeningStatistics(configManager, default_logger())
         consumers = [
             PKMultiProcessorClient(
-                StockConsumer().screenStocks,
+                StockScreener().screenStocks,
                 tasks_queue,
                 results_queue,
                 screenCounter,
@@ -1278,6 +1275,13 @@ def main(userArgs=None):
     
     # Change the config back to usual
     resetConfigToDefault()
+
+def downloadSavedResults(daysInPast):
+    pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
+    filePrefix = getFormattedChoices().replace("B","X").replace("G","X").replace("S","X")
+    url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
+    savedListResp = fetcher.fetchURL(url)
+    return pastDate,savedListResp
 
 def FinishBacktestDataCleanup(backtest_df, df_xray):
     showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
