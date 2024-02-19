@@ -647,8 +647,15 @@ def formatGridOutput(df,replacenan=True):
     for col in df.columns:
         try:
             df[col] = df[col].astype(float).fillna(0)
+        except ValueError as e:
+            if len(str(e).split("-")) < 2:
+                # We want to allow value "-" in column values
+                # We don't want to allow '2024-12-03' or 'RSI >=50' or "Trends-50-to-60"
+                pass
+            else:
+                continue
         except Exception as e:# pragma: no cover
-            default_logger().debug(e, exc_info=True)
+            default_logger().debug(f"For column:{col}:\n{e}", exc_info=True)
             continue
         maxGrowth = df[col].max()
         if "Pd-%" in col:

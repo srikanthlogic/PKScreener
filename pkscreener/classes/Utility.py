@@ -161,9 +161,9 @@ class tools:
         if "RUNNER" in os.environ.keys():
             return
         if platform.system() == "Windows":
-            os.system("cls")
+            os.system("cls >/dev/null 2>&1")
         else:
-            os.system("clear")
+            os.system("clear >/dev/null 2>&1")
         try:
             print(art.encode('utf-8').decode(STD_ENCODING))
         except Exception as e:# pragma: no cover
