@@ -42,10 +42,12 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from alive_progress import alive_bar
+from PKDevTools.classes import Archiver
 from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger, tracelog
+from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.Telegram import (
     is_token_telegram_configured,
@@ -111,6 +113,7 @@ selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
 stockDict = None
 userPassedArgs = None
 elapsed_time = 0
+start_time = 0
 test_messages_queue = []
 strategyFilter=[]
 
@@ -352,11 +355,7 @@ def handleSecondaryMenuChoices(
     menuOption, testing=False, defaultAnswer=None, user=None
 ):
     if menuOption == "H":
-        helpData = Utility.tools.showDevInfo(defaultAnswer=defaultAnswer)
-        if user is not None:
-            sendMessageToTelegramChannel(
-                message=Utility.tools.removeAllColorStyles(helpData), user=user
-            )
+        showSendHelpInfo(defaultAnswer, user)
     elif menuOption == "U":
         OTAUpdater.checkForUpdate(VERSION, skipDownload=testing)
         if defaultAnswer is None:
@@ -366,12 +365,18 @@ def handleSecondaryMenuChoices(
     elif menuOption == "E":
         configManager.setConfig(ConfigManager.parser)
     elif menuOption == "Y":
-        configData = configManager.showConfigFile(defaultAnswer=defaultAnswer)
-        if user is not None:
-            sendMessageToTelegramChannel(
-                message=Utility.tools.removeAllColorStyles(configData), user=user
-            )
+        showSendConfigInfo(defaultAnswer, user)
     return
+
+def showSendConfigInfo(defaultAnswer=None, user=None):
+    configData = configManager.showConfigFile(defaultAnswer=('Y' if user is not None else defaultAnswer))
+    if user is not None:
+        sendMessageToTelegramChannel(message=Utility.tools.removeAllColorStyles(configData), user=user)
+
+def showSendHelpInfo(defaultAnswer=None, user=None):
+    helpData = Utility.tools.showDevInfo(defaultAnswer=('Y' if user is not None else defaultAnswer))
+    if user is not None:
+        sendMessageToTelegramChannel(message=Utility.tools.removeAllColorStyles(helpData), user=user)
 
 
 def initDataframes():
@@ -621,8 +626,10 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
 
 @tracelog
 def main(userArgs=None):
-    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter
+    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
+    elapsed_time = 0
+    start_time = 0
     testing = False if userArgs is None else (userArgs.testbuild and userArgs.prodbuild)
     testBuild = False if userArgs is None else (userArgs.testbuild and not testing)
     downloadOnly = False if userArgs is None else userArgs.download
@@ -1075,6 +1082,7 @@ def main(userArgs=None):
         bar, spinner = Utility.tools.getProgressbarStyle()
         totalStocksInReview = 0
         print(f"{colorText.GREEN}[+]Adding stocks to the queue...{colorText.END}")
+        downloadedRecently = False
         with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
             while actualHistoricalDuration >= 0:
                 daysInPast = (
@@ -1092,12 +1100,10 @@ def main(userArgs=None):
                         )
                 try:
                     savedStocksCount = 0
-                    # if daysInPast > 0:
-                    # Always run from the entire list for today
-                    pastDate, savedListResp = downloadSavedResults(daysInPast)
-                    if savedListResp is not None and savedListResp.status_code == 200:
-                        savedListStockCodes = savedListResp.text.replace("\n","").replace("\"","").split(",")
-                        savedListStockCodes = sorted(list(filter(None,list(set(savedListStockCodes)))))
+                    pastDate, savedListResp = downloadSavedResults(daysInPast,downloadedRecently=downloadedRecently)
+                    downloadedRecently = True
+                    if savedListResp is not None and len(savedListResp) > 0:
+                        savedListStockCodes = savedListResp
                         savedStocksCount = len(savedListStockCodes)
                         if savedStocksCount > 0:
                             listStockCodes = savedListStockCodes
@@ -1276,12 +1282,28 @@ def main(userArgs=None):
     # Change the config back to usual
     resetConfigToDefault()
 
-def downloadSavedResults(daysInPast):
+def downloadSavedResults(daysInPast,downloadedRecently=False):
     pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(daysInPast)
     filePrefix = getFormattedChoices().replace("B","X").replace("G","X").replace("S","X")
-    url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
-    savedListResp = fetcher.fetchURL(url)
-    return pastDate,savedListResp
+    # url = f"https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-scan/{filePrefix}_{pastDate}.txt"
+    # savedListResp = fetcher.fetchURL(url)
+    localPath = Archiver.get_user_outputs_dir()
+    downloadedPath = os.path.join(localPath,"PKScreener","actions-data-scan")
+    if not downloadedRecently:
+        downloadedPath = downloadFolder(localPath=localPath,
+                                        repoPath="pkjmesra/PKScreener",
+                                        branchName="actions-data-download",
+                                        folderName="actions-data-scan")
+    items = []
+    savedList = []
+    fileName = os.path.join(downloadedPath,f"{filePrefix}_{pastDate}.txt")
+    if os.path.isfile(fileName):
+        #File already exists.
+        with open(fileName, 'r') as fe:
+            stocks = fe.read()
+            items = stocks.replace("\n","").replace("\"","").split(",")
+            savedList = sorted(list(filter(None,list(set(items)))))
+    return pastDate,savedList
 
 def FinishBacktestDataCleanup(backtest_df, df_xray):
     showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
@@ -1871,7 +1893,7 @@ def runScanners(
     backtest_df,
     testing=False,
 ):
-    global selectedChoice, userPassedArgs, elapsed_time
+    global selectedChoice, userPassedArgs, elapsed_time, start_time
     result = None
     choices = userReportName(selectedChoice)
     reviewDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
@@ -2059,7 +2081,7 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
 def saveNotifyResultsFile(
     screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=None
 ):
-    global userPassedArgs
+    global userPassedArgs, elapsed_time
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     caption = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b>'
@@ -2085,7 +2107,7 @@ def saveNotifyResultsFile(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + "[+] Screening Completed! Press Enter to Continue.."
+        + f"[+] Screening Completed in {elapsed_time} sec.! Press Enter to Continue.."
         + colorText.END
     )
     if defaultAnswer is None:

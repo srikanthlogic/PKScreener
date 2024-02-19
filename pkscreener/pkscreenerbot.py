@@ -56,6 +56,7 @@ from PKDevTools.classes.Telegram import get_secrets
 
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menu, menus
 from pkscreener.classes.WorkflowManager import run_workflow
+from pkscreener.globals import showSendConfigInfo, showSendHelpInfo
 
 try:
     from telegram import __version_info__
@@ -1028,14 +1029,18 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return START_ROUTES
     if cmd == "y" or cmd == "h":
         await shareUpdateWithChannel(update=update, context=context)
-        await launchScreener(
-            options=f"{cmd.upper()}:",
-            user=update.message.from_user,
-            context=context,
-            optionChoices=cmd.upper(),
-            update=update,
-        )
-        await sendRequestSubmitted(cmd.upper(), update=update, context=context)
+        if cmd == "y":
+            showSendConfigInfo()
+        elif cmd == "h":
+            showSendHelpInfo()
+        # await launchScreener(
+        #     options=f"{cmd.upper()}:",
+        #     user=update.message.from_user,
+        #     context=context,
+        #     optionChoices=cmd.upper(),
+        #     update=update,
+        # )
+        # await sendRequestSubmitted(cmd.upper(), update=update, context=context)
         return START_ROUTES
     await update.message.reply_text(f"{cmd.upper()} : Not implemented yet!")
     await help_command(update=update, context=context)
