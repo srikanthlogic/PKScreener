@@ -2220,7 +2220,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     finally:
         with open(filename, "w") as f:
             f.write(colored_text)
-        Committer.execOSCommand(f"git add {filename} -f")
+        Committer.execOSCommand(f"git add {filename} -f >/dev/null 2>&1")
 
     if lastSummaryRow is not None:
         oneline_text = lastSummaryRow.to_html(header=False, index=False)
@@ -2239,7 +2239,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
             oneline_text = f"{oneline_text}<td class='w'>{PKDateUtilities.currentDateTime().strftime('%Y/%m/%d')}</td><td class='w'>{round(elapsed_time,2)}</td>"
             with open(onelineSummaryFile, "w") as f:
                 f.write(oneline_text)
-            Committer.execOSCommand(f"git add {onelineSummaryFile} -f")
+            Committer.execOSCommand(f"git add {onelineSummaryFile} -f >/dev/null 2>&1")
 
 def scanOutputDirectory(backtest=False):
     dirName = 'actions-data-scan' if not backtest else "Backtest-Reports"
