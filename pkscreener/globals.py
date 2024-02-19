@@ -113,6 +113,7 @@ selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
 stockDict = None
 userPassedArgs = None
 elapsed_time = 0
+start_time = 0
 test_messages_queue = []
 strategyFilter=[]
 
@@ -625,8 +626,10 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
 
 @tracelog
 def main(userArgs=None):
-    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter
+    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
+    elapsed_time = 0
+    start_time = 0
     testing = False if userArgs is None else (userArgs.testbuild and userArgs.prodbuild)
     testBuild = False if userArgs is None else (userArgs.testbuild and not testing)
     downloadOnly = False if userArgs is None else userArgs.download
@@ -1292,15 +1295,14 @@ def downloadSavedResults(daysInPast,downloadedRecently=False):
                                         branchName="actions-data-download",
                                         folderName="actions-data-scan")
     items = []
-    savedList = ""
+    savedList = []
     fileName = os.path.join(downloadedPath,f"{filePrefix}_{pastDate}.txt")
     if os.path.isfile(fileName):
         #File already exists.
         with open(fileName, 'r') as fe:
             stocks = fe.read()
             items = stocks.replace("\n","").replace("\"","").split(",")
-            stockList = sorted(list(filter(None,list(set(items)))))
-            savedList = ",".join(stockList)
+            savedList = sorted(list(filter(None,list(set(items)))))
     return pastDate,savedList
 
 def FinishBacktestDataCleanup(backtest_df, df_xray):
@@ -1891,7 +1893,7 @@ def runScanners(
     backtest_df,
     testing=False,
 ):
-    global selectedChoice, userPassedArgs, elapsed_time
+    global selectedChoice, userPassedArgs, elapsed_time, start_time
     result = None
     choices = userReportName(selectedChoice)
     reviewDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d')
@@ -2079,7 +2081,7 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
 def saveNotifyResultsFile(
     screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=None
 ):
-    global userPassedArgs
+    global userPassedArgs, elapsed_time
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     caption = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b>'
@@ -2105,7 +2107,7 @@ def saveNotifyResultsFile(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + "[+] Screening Completed! Press Enter to Continue.."
+        + f"[+] Screening Completed in {elapsed_time} sec.! Press Enter to Continue.."
         + colorText.END
     )
     if defaultAnswer is None:
