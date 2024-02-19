@@ -56,9 +56,9 @@ def backtest(
     calcPeriods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
     if configManager.backtestPeriodFactor != 1:
         factored_periods = []
-        for period in periods:
+        for period in calcPeriods:
             factored_periods.append(period*configManager.backtestPeriodFactor)
-        periods = factored_periods
+        calcPeriods = factored_periods
     allStockBacktestData = []
     # Take the data based on which the result set for a strategy may have been arrived at
     # The results must have been arrived at with data based on configManager.backtestPeriod -sampleDays
