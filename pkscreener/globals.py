@@ -352,11 +352,7 @@ def handleSecondaryMenuChoices(
     menuOption, testing=False, defaultAnswer=None, user=None
 ):
     if menuOption == "H":
-        helpData = Utility.tools.showDevInfo(defaultAnswer=defaultAnswer)
-        if user is not None:
-            sendMessageToTelegramChannel(
-                message=Utility.tools.removeAllColorStyles(helpData), user=user
-            )
+        showSendHelpInfo(defaultAnswer, user)
     elif menuOption == "U":
         OTAUpdater.checkForUpdate(VERSION, skipDownload=testing)
         if defaultAnswer is None:
@@ -366,12 +362,18 @@ def handleSecondaryMenuChoices(
     elif menuOption == "E":
         configManager.setConfig(ConfigManager.parser)
     elif menuOption == "Y":
-        configData = configManager.showConfigFile(defaultAnswer=defaultAnswer)
-        if user is not None:
-            sendMessageToTelegramChannel(
-                message=Utility.tools.removeAllColorStyles(configData), user=user
-            )
+        showSendConfigInfo(defaultAnswer, user)
     return
+
+def showSendConfigInfo(defaultAnswer=None, user=None):
+    configData = configManager.showConfigFile(defaultAnswer=('Y' if user is not None else defaultAnswer))
+    if user is not None:
+        sendMessageToTelegramChannel(message=Utility.tools.removeAllColorStyles(configData), user=user)
+
+def showSendHelpInfo(defaultAnswer=None, user=None):
+    helpData = Utility.tools.showDevInfo(defaultAnswer=('Y' if user is not None else defaultAnswer))
+    if user is not None:
+        sendMessageToTelegramChannel(message=Utility.tools.removeAllColorStyles(helpData), user=user)
 
 
 def initDataframes():
