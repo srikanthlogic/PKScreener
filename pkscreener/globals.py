@@ -1219,6 +1219,9 @@ def main(userArgs=None):
 
         print(colorText.END)
         terminateAllWorkers(consumers, tasks_queue, testing)
+        if downloadOnly and menuOption in ["X"]:
+            scr.getFreshMFIStatus(stock="LatestCheckedOnDate")
+            scr.getFairValue(stock="LatestCheckedOnDate", force=True)
         if not downloadOnly and menuOption in ["X", "G"]:
             if menuOption == "G":
                 userPassedArgs.backtestdaysago = backtestPeriod
