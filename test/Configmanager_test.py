@@ -73,7 +73,7 @@ def test_setConfig_default(config_parser):
 def test_setConfig_non_default(config_parser):
     tool = tools()
     with patch('builtins.input') as mock_input, patch('builtins.open') as mock_open:
-        mock_input.side_effect = ['450', '30', '1', '20', '50000', '2.5', '10', 'n', 'n', 'n', 'n', 'n','n', '2', '4', '10', '30', '10000','\n']
+        mock_input.side_effect = ['450', '30', '1', '20', '50000', '2.5', '10', 'n', 'n', 'n', 'n', 'n','n', '2', '4', '10', '30', '10000','1','\n']
         tool.setConfig(config_parser, default=False, showFileCreatedText=False)
         mock_open.assert_called_with('pkscreener.ini', 'w')
 
@@ -102,6 +102,7 @@ def test_getConfig(config_parser):
     config_parser.set('config', 'maxNetworkRetryCount', '10')
     config_parser.set('config', 'backtestPeriod', '120')
     config_parser.set('config', 'minimumVolume', '10000')
+    config_parser.set('config', 'backtestPeriodFactor', '1')
     tool.getConfig(config_parser)
     assert tool.period == '450d'
     assert tool.daysToLookback == 30
@@ -121,6 +122,7 @@ def test_getConfig(config_parser):
     assert tool.maxNetworkRetryCount == 10
     assert tool.backtestPeriod == 120
     assert tool.minVolume == 10000
+    assert tool.backtestPeriodFactor == 1
     with patch('configparser.ConfigParser.read', return_value = ""):
         with patch('pkscreener.classes.ConfigManager.tools.setConfig') as mock_setconfig:
             tool.getConfig(config_parser)

@@ -283,7 +283,7 @@ def test_option_X_0(mocker):
     assert len(globals.screenResults) >= 1
     assert globals.screenResultsCounter.value >= 1
     assert globals.screenCounter.value >= 1
-    assert messageSentToTelegramQueue("[ChangeLog]") == True
+    assert messageSentToTelegramQueue("found") == True
     
 def test_option_X_0_input(mocker):
     cleanup()
