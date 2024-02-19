@@ -539,7 +539,7 @@ class ScreeningStatistics:
         mf_inst_ownershipChange = 0
         change_millions =""
         try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData)
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)))
             roundOff = 2
             millions = round(mf_inst_ownershipChange/1000000,roundOff)
             while float(millions) == 0 and roundOff <=5:
@@ -551,7 +551,7 @@ class ScreeningStatistics:
             pass
         try:
             #Let's get the fair value, either saved or fresh from service
-            fairValue = self.getFairValue(stock,hostData)
+            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns))
             if fairValue != 0:
                 ltp = saveDict["LTP"]
                 fairValueDiff = round(fairValue - ltp,0)
@@ -739,7 +739,7 @@ class ScreeningStatistics:
 
     def getFairValue(self, stock, hostData=None, force=False):
         if hostData is None or len(hostData) < 1:
-            return 0
+            hostData = pd.DataFrame()
         # Let's look for fair values
         fairValue = 0
         if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday() <= 4:
@@ -769,7 +769,7 @@ class ScreeningStatistics:
 
     def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False):
         if hostData is None or len(hostData) < 1:
-            return 0
+            hostData = pd.DataFrame()
         
         netChangeMF = 0
         netChangeInst = 0
