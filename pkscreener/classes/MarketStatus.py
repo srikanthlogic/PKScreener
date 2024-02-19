@@ -37,7 +37,7 @@ class MarketStatus(SingletonMixin, metaclass=SingletonType):
         if "marketStatus" in self.attributes.keys():
             return self.attributes["marketStatus"]
         else:
-            self.attributes["lock"] = "" # We don't need threading lock here
+            # self.attributes["lock"] = "" # We don't need threading lock here
             self.marketStatus = ""
             return self.marketStatus
     
