@@ -1030,9 +1030,9 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if cmd == "y" or cmd == "h":
         await shareUpdateWithChannel(update=update, context=context)
         if cmd == "y":
-            showSendConfigInfo()
+            showSendConfigInfo(defaultAnswer='Y',user=update.message.from_user)
         elif cmd == "h":
-            showSendHelpInfo()
+            showSendHelpInfo(defaultAnswer='Y',user=update.message.from_user)
         # await launchScreener(
         #     options=f"{cmd.upper()}:",
         #     user=update.message.from_user,
