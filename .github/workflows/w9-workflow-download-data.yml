@@ -40,19 +40,19 @@ on:
           required: false
           default: 'ubuntu-20.04'
       installtalib:
-        description: 'Is TA-Lib install required? (Y/N)'
+        description: 'Is TA-Lib install required? (Y/N). N to skip installing talib.'
         required: false
         default: 'Y'
       skipDownload:
-          description: 'Skip pkl download for 450d'
+          description: 'Skip pkl download for 450d. Leave empty to NOT skip download. Y to skip download'
           required: false
           default: ''
       cleanuphistoricalscans:
-        description: 'Clean up historical scans? LEave empty to run historical scans. Y to run clean up'
+        description: 'Clean up historical scans? Leave empty to run historical scans. Y to run clean up'
         required: false
         default: 'N'
       scanOptions:
-        description: 'Scan options for historical scans'
+        description: 'Scan options for historical scans. cleanuphistoricalscans MUST to be left empty to run historical scans.'
         required: false
         default: '--reScanForZeroSize --scanDaysInPast 7 -s2 42,0,21,22,26,27,28,29,30,31,M,Z -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13 -s0 S,T,E,U,Z,H,Y,B,G -s3 "0" -s4 "0" --branchname actions-data-download --scans --local -f'
 
@@ -161,9 +161,11 @@ jobs:
       run: |
         rm -rf actions-data-download
         mkdir actions-data-download
+        rm -rf results
+        mkdir results
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y -i 1m
-        cp results/*stock_data_*.pkl actions-data-download
+        cp results/*.pkl actions-data-download
         ls -l results
         ls -l actions-data-download
 
@@ -175,6 +177,8 @@ jobs:
       run: |
         rmdir /s /q actions-data-download
         mkdir actions-data-download
+        rmdir /s /q results
+        mkdir results
         pkscreenercli.exe -d -a Y
             
     - name: Download Intraday Stock Data on Windows
