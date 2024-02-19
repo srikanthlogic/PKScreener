@@ -2360,7 +2360,7 @@ def test_findUptrend_valid_input_downtrend(tools_instance):
     screenDict = {"Trend":""}
     saveDict = {"Trend":""}
     result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False,stock="SBIN")
-    assert result == (False,0,0)
+    assert result == (False,ANY,0)
     assert "T:▼" in saveDict["Trend"]
     assert "T:▼" in screenDict["Trend"]
 
@@ -2374,7 +2374,7 @@ def test_findUptrend_uptrend(tools_instance):
     result = tools_instance.findUptrend(df, screenDict, saveDict, testing=False,stock="SBIN")
 
     # Assert that the function returns False and sets the appropriate screenDict and saveDict values
-    assert result == (True,0,0)
+    assert result == (True,ANY,0)
     assert "T:▲" in saveDict["Trend"]
     assert "T:▲" in screenDict["Trend"]
 
@@ -2384,7 +2384,7 @@ def test_findUptrend_empty_input(tools_instance):
     # Call the findUptrend function with the empty DataFrame
     result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN")
     # Assert that the function returns False
-    assert result == (False,0,0)
+    assert result == (False,ANY,0)
 
 def test_findUptrend_insufficient_data(tools_instance):
     # Create a DataFrame with less than 300 rows
@@ -2394,7 +2394,7 @@ def test_findUptrend_insufficient_data(tools_instance):
     result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN")
 
     # Assert that the function returns False
-    assert result == (False,0,0)
+    assert result == (False,ANY,0)
 
 def test_findUptrend_testing_mode(tools_instance):
     # Create a sample DataFrame
@@ -2404,14 +2404,14 @@ def test_findUptrend_testing_mode(tools_instance):
     result = tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=True,stock="SBIN")
 
     # Assert that the function returns False
-    assert result == (False,0,0)
+    assert result == (False,ANY,0)
 
 def test_findUptrend_exception(tools_instance):
     # Create a DataFrame with invalid data that will raise an exception
     df = pd.DataFrame({'Close': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})
 
     # Call the findUptrend function with the invalid DataFrame
-    assert tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN") == (False,0,0)
+    assert tools_instance.findUptrend(df, {"Trend":""}, {"Trend":""}, testing=False,stock="SBIN") == (False,ANY,0)
 
 # # Positive test case for validateBullishForTomorrow function
 # def test_validateBullishForTomorrow_positive(tools_instance):

@@ -94,8 +94,10 @@ class RequestsMocker:
         if args is not None and len(args) > 0:
             r = self.returnFromFixture(*args, **kwargs)
         if r is None and len(args) > 0:
-            # return self.defaultEmptyResponse()
+            if "RECURSION_STOPPER" in args[0]:
+                return self.defaultEmptyResponse()
             s = requests.Session()
+            args=(f"{args[0]}{'&' if '?' in args[0] else '?'}RECURSION_STOPPER=1",)
             return s.get(args[0],**kwargs)
         return r
 
