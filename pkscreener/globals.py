@@ -1177,82 +1177,82 @@ def main(userArgs=None):
                 actualHistoricalDuration = samplingDuration - fillerPlaceHolder
                 if actualHistoricalDuration >= 0:
                     progressbar()
-
-        tasks_queue, results_queue, totalConsumers = initQueues(len(items))
-        cp = CandlePatterns()
-        cm = configManager
-        # f = Fetcher.screenerStockDataFetcher(configManager)
-        scr = ScreeningStatistics.ScreeningStatistics(configManager, default_logger())
-        consumers = [
-            PKMultiProcessorClient(
-                StockScreener().screenStocks,
+        if not keyboardInterruptEventFired:
+            tasks_queue, results_queue, totalConsumers = initQueues(len(items))
+            cp = CandlePatterns()
+            cm = configManager
+            # f = Fetcher.screenerStockDataFetcher(configManager)
+            scr = ScreeningStatistics.ScreeningStatistics(configManager, default_logger())
+            consumers = [
+                PKMultiProcessorClient(
+                    StockScreener().screenStocks,
+                    tasks_queue,
+                    results_queue,
+                    screenCounter,
+                    screenResultsCounter,
+                    stockDict,
+                    fetcher.proxyServer,
+                    keyboardInterruptEvent,
+                    default_logger(),
+                    fetcher,
+                    cm,
+                    cp,
+                    scr,
+                )
+                for _ in range(totalConsumers)
+            ]
+            startWorkers(consumers)
+            screenResults, saveResults, backtest_df = runScanners(
+                menuOption,
+                items,
                 tasks_queue,
                 results_queue,
-                screenCounter,
-                screenResultsCounter,
-                stockDict,
-                fetcher.proxyServer,
-                keyboardInterruptEvent,
-                default_logger(),
-                fetcher,
-                cm,
-                cp,
-                scr,
-            )
-            for _ in range(totalConsumers)
-        ]
-        startWorkers(consumers)
-        screenResults, saveResults, backtest_df = runScanners(
-            menuOption,
-            items,
-            tasks_queue,
-            results_queue,
-            len(items),
-            backtestPeriod,
-            samplingDuration - 1,
-            consumers,
-            screenResults,
-            saveResults,
-            backtest_df,
-            testing=testing,
-        )
-
-        print(colorText.END)
-        terminateAllWorkers(consumers, tasks_queue, testing)
-        if downloadOnly and menuOption in ["X"]:
-            scr.getFreshMFIStatus(stock="LatestCheckedOnDate")
-            scr.getFairValue(stock="LatestCheckedOnDate", force=True)
-        if not downloadOnly and menuOption in ["X", "G"]:
-            if menuOption == "G":
-                userPassedArgs.backtestdaysago = backtestPeriod
-            if len(screenResults) > 0:
-                screenResults, saveResults = labelDataForPrinting(
-                    screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption
-                )
-            if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
-                screenResults, saveResults = removeUnknowns(screenResults, saveResults)
-                print(colorText.FAIL + f"[+] Configuration to remove unknown cell values resulted into removing all rows!" + colorText.END)
-            if len(strategyFilter) > 0 and saveResults is not None and len(saveResults) > 0:
-                # We'd need to apply additional filters for selected strategy
-                df_screenResults = None
-                cleanedUpSaveResults = PortfolioXRay.cleanupData(saveResults)
-                for strFilter in strategyFilter:
-                    cleanedUpSaveResults = PortfolioXRay.strategyForKey(strFilter)(cleanedUpSaveResults)
-                    saveResults = saveResults[saveResults.index.isin(cleanedUpSaveResults.index.values)]
-                for stk in saveResults.index.values:
-                    df_screenResults_filter = screenResults[screenResults.index.astype(str).str.contains(f"NSE%3A{stk}") == True]
-                    df_screenResults = pd.concat([df_screenResults, df_screenResults_filter], axis=0)
-                if len(df_screenResults) == 0:
-                    print(colorText.FAIL + f"[+] Of the {len(screenResults)} stocks, no results matching the selected strategies!" + colorText.END)
-                screenResults = df_screenResults
-            printNotifySaveScreenedResults(
+                len(items),
+                backtestPeriod,
+                samplingDuration - 1,
+                consumers,
                 screenResults,
                 saveResults,
-                selectedChoice,
-                menuChoiceHierarchy,
-                testing,
-                user=user,
+                backtest_df,
+                testing=testing,
             )
+
+            print(colorText.END)
+            terminateAllWorkers(consumers, tasks_queue, testing)
+            if downloadOnly and menuOption in ["X"]:
+                scr.getFreshMFIStatus(stock="LatestCheckedOnDate")
+                scr.getFairValue(stock="LatestCheckedOnDate", force=True)
+            if not downloadOnly and menuOption in ["X", "G"]:
+                if menuOption == "G":
+                    userPassedArgs.backtestdaysago = backtestPeriod
+                if len(screenResults) > 0:
+                    screenResults, saveResults = labelDataForPrinting(
+                        screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption
+                    )
+                if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
+                    screenResults, saveResults = removeUnknowns(screenResults, saveResults)
+                    print(colorText.FAIL + f"[+] Configuration to remove unknown cell values resulted into removing all rows!" + colorText.END)
+                if len(strategyFilter) > 0 and saveResults is not None and len(saveResults) > 0:
+                    # We'd need to apply additional filters for selected strategy
+                    df_screenResults = None
+                    cleanedUpSaveResults = PortfolioXRay.cleanupData(saveResults)
+                    for strFilter in strategyFilter:
+                        cleanedUpSaveResults = PortfolioXRay.strategyForKey(strFilter)(cleanedUpSaveResults)
+                        saveResults = saveResults[saveResults.index.isin(cleanedUpSaveResults.index.values)]
+                    for stk in saveResults.index.values:
+                        df_screenResults_filter = screenResults[screenResults.index.astype(str).str.contains(f"NSE%3A{stk}") == True]
+                        df_screenResults = pd.concat([df_screenResults, df_screenResults_filter], axis=0)
+                    if len(df_screenResults) == 0:
+                        print(colorText.FAIL + f"[+] Of the {len(screenResults)} stocks, no results matching the selected strategies!" + colorText.END)
+                    screenResults = df_screenResults
+                printNotifySaveScreenedResults(
+                    screenResults,
+                    saveResults,
+                    selectedChoice,
+                    menuChoiceHierarchy,
+                    testing,
+                    user=user,
+                )
         if menuOption == "X":
             finishScreening(
                 downloadOnly,
@@ -1904,12 +1904,16 @@ def runScanners(
         reviewDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago))
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
+        originalIterations = iterations
         totalStocks = numStocks
         # If we put in more into the queue, it might cause the warnings from multiprocessing resource_tracker
         # about semaphore leakages etc. This is, caused due to overallocating RAM.
         idealNumStocksMaxPerIteration = 100
         iterations = int(numStocks*iterations/idealNumStocksMaxPerIteration) + 1
-        numStocksPerIteration = int(numStocks/int(iterations)) #numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
+        numStocksPerIteration = int(numStocks/int(iterations))
+        if numStocksPerIteration < 10:
+            numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
+            iterations = originalIterations
         print(
             colorText.BOLD
             + colorText.GREEN
@@ -1995,17 +1999,16 @@ def runScanners(
             global keyboardInterruptEventFired
             keyboardInterruptEvent.set()
             keyboardInterruptEventFired = True
+            print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "\n[+] Terminating Script, Please wait..."
+                + colorText.END
+            )
+            terminateAllWorkers(consumers=consumers, tasks_queue=tasks_queue,testing=testing)
+            logging.shutdown()
         except KeyboardInterrupt:
             pass
-        print(
-            colorText.BOLD
-            + colorText.FAIL
-            + "\n[+] Terminating Script, Please wait..."
-            + colorText.END
-        )
-        for worker in consumers:
-            worker.terminate()
-        logging.shutdown()
     except Exception as e:
         default_logger().debug(e, exc_info=True)
         print(
@@ -2014,8 +2017,7 @@ def runScanners(
             + f"\nException:\n{e}\n[+] Terminating Script, Please wait..."
             + colorText.END
         )
-        for worker in consumers:
-            worker.terminate()
+        terminateAllWorkers(consumers=consumers, tasks_queue=tasks_queue,testing=testing)
         logging.shutdown()
 
     if result is not None and len(result) >=3 and "Date" not in saveResults.columns:
