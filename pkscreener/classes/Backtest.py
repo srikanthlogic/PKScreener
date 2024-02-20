@@ -53,12 +53,7 @@ def backtest(
     if screenedDict is None or len(screenedDict) == 0:
         print(f"{(stock)}No backtesting strategy or screened dictionary received!")
         return
-    calcPeriods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
-    if configManager.backtestPeriodFactor != 1:
-        factored_periods = []
-        for period in calcPeriods:
-            factored_periods.append(period*configManager.backtestPeriodFactor)
-        calcPeriods = factored_periods
+    calcPeriods = configManager.periodsRange
     allStockBacktestData = []
     # Take the data based on which the result set for a strategy may have been arrived at
     # The results must have been arrived at with data based on configManager.backtestPeriod -sampleDays
@@ -77,9 +72,7 @@ def backtest(
     previous_recent.reset_index(inplace=True)
     data = data.head(periods + 1)
     # Let's check the returns for the given strategy over a period ranging from 1 period to 30 periods.
-    if backTestedData is None:
-        backTestedData = pd.DataFrame(
-            columns=[
+    columns=[
                 "Stock",
                 "Date",
                 "Volume",
@@ -87,18 +80,8 @@ def backtest(
                 "MA-Signal",
                 "LTP",
                 "52Wk H",
-                "52Wk L",
-                "1-Pd",
-                "2-Pd",
-                "3-Pd",
-                "4-Pd",
-                "5-Pd",
-                "10-Pd",
-                "15-Pd",
-                "22-Pd",
-                "30-Pd",
+                "52Wk L"
             ]
-        )
     backTestedStock = {
         "Stock": "",
         "Date": "",
@@ -107,17 +90,13 @@ def backtest(
         "MA-Signal": "",
         "LTP": "",
         "52Wk H": "",
-        "52Wk L": "",
-        "1-Pd": "",
-        "2-Pd": "",
-        "3-Pd": "",
-        "4-Pd": "",
-        "5-Pd": "",
-        "10-Pd": "",
-        "15-Pd": "",
-        "22-Pd": "",
-        "30-Pd": "",
+        "52Wk L": ""
     }
+    for prd in calcPeriods:
+        columns.append(f"{prd}-Pd")
+        backTestedStock[f"{prd}-Pd"] = ""
+    if backTestedData is None:
+        backTestedData = pd.DataFrame(columns=columns)
     backTestedStock["Stock"] = stock
     targetDate = (
         str(previous_recent["Date"].iloc[0])

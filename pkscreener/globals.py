@@ -690,6 +690,7 @@ def main(userArgs=None):
         tickerOption, executeOption, backtestPeriod = takeBacktestInputs(
             str(menuOption).upper(), tickerOption, executeOption, backtestPeriod
         )
+        backtestPeriod = backtestPeriod * configManager.backtestPeriodFactor
     elif menuOption in ["S"]:
         if len(options) >= 2:
             userOption = options[1]
@@ -1154,7 +1155,7 @@ def main(userArgs=None):
                         (
                             backtestPeriod
                             if menuOption == "B"
-                            else configManager.daysToLookback
+                            else configManager.effectiveDaysToLookback
                         ),
                         default_logger().level,
                         (menuOption in ["B", "G", "X", "S"])
@@ -1733,12 +1734,7 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
 
 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
-    periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
-    if configManager.backtestPeriodFactor != 1:
-        factored_periods = []
-        for period in periods:
-            factored_periods.append(period*configManager.backtestPeriodFactor)
-        periods = factored_periods
+    periods = configManager.periodsRange
     for period in periods:
         if saveResults is not None:
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")

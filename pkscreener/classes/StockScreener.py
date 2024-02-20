@@ -553,7 +553,7 @@ class StockScreener:
         processedData = None
         if backtestDuration == 0:
             fullData, processedData = screener.preprocessData(
-                    data, daysToLookback=configManager.daysToLookback
+                    data, daysToLookback=configManager.effectiveDaysToLookback
                 )
             if portfolio:
                 data = data[::-1]
@@ -711,12 +711,7 @@ class StockScreener:
         hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
 
     def initResultDictionaries(self):
-        periods = [1, 2, 3, 4, 5, 10, 15, 22, 30]
-        if self.configManager.backtestPeriodFactor != 1:
-            factored_periods = []
-            for period in periods:
-                factored_periods.append(period*self.configManager.backtestPeriodFactor)
-            periods = factored_periods
+        periods = self.configManager.periodsRange
         columns = [
             "Stock",
             "LTP",
