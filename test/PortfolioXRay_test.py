@@ -396,7 +396,7 @@ def test_cleanupData(savedResults):
         "RSI": ["50.0", "60.0", "70.0"],
         "Volume": ["100x", "200x", "300x"],
         "Consol.": ["Range: 10%", "Range: 20%", "Range: 30%"],
-        "Breakout(30Prds)": ["BO: 1.0 R: 2.0 (Potential)", "BO: 3.0 R: 4.0 (Potential)", "BO: 5.0 R: 6.0 (Potential)"],
+        "Breakout(22Prds)": ["BO: 1.0 R: 2.0 (Potential)", "BO: 3.0 R: 4.0 (Potential)", "BO: 5.0 R: 6.0 (Potential)"],
         "52Wk H": ["100.0", "200.0", "300.0"],
         "52Wk L": ["50.0", "100.0", "150.0"],
         "CCI": ["80.0", "90.0", "100.0"]
@@ -409,7 +409,7 @@ def test_cleanupData(savedResults):
     assert "LTP" in result.columns
     assert "RSI" in result.columns
     assert "Volume" in result.columns
-    assert "Consol.(30Prds)" in result.columns
+    assert "Consol." in result.columns
     assert "Breakout" in result.columns
     assert "Resistance" in result.columns
     assert "52Wk H" in result.columns
@@ -418,7 +418,7 @@ def test_cleanupData(savedResults):
     assert result["LTP"].tolist() == [10.0, 20.0, 30.0]
     assert result["RSI"].tolist() == [50.0, 60.0, 70.0]
     assert result["Volume"].tolist() == [100.0, 200.0, 300.0]
-    assert result["Consol.(30Prds)"].tolist() == [10.0, 20.0, 30.0]
+    assert result["Consol."].tolist() == [10.0, 20.0, 30.0]
     assert result["Breakout"].tolist() == [1.0, 3.0, 5.0]
     assert result["Resistance"].tolist() == [2.0, 4.0, 6.0]
     assert result["52Wk H"].tolist() == [100.0, 200.0, 300.0]
@@ -685,51 +685,51 @@ def test_filterRSI68OrAbove(df):
     assert filterRSI68OrAbove(None) is None
 
 def test_filterTrendStrongUp(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Strong Up", "Weak Up", "Strong Up", "Weak Down"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Strong Up", "Weak Up", "Strong Up", "Weak Down"]})
     result = filterTrendStrongUp(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Up", "Strong Up"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Strong Up", "Strong Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendStrongUp(None) is None
 
 def test_filterTrendWeakUp(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Weak Up", "Strong Up", "Weak Up", "Weak Down"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Weak Up", "Strong Up", "Weak Up", "Weak Down"]})
     result = filterTrendWeakUp(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Up", "Weak Up"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Weak Up", "Weak Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendWeakUp(None) is None
 
 def test_filterTrendWeakDown(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Weak Down", "Strong Down", "Weak Down", "Weak Up"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Weak Down", "Strong Down", "Weak Down", "Weak Up"]})
     result = filterTrendWeakDown(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Down", "Weak Down"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Weak Down", "Weak Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendWeakDown(None) is None
 
 def test_filterTrendStrongDown(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendStrongDown(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Strong Down"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Strong Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendStrongDown(None) is None
 
 def test_filterTrendUp(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendUp(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Weak Up"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Weak Up"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendUp(None) is None
 
 def test_filterSideways(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Sideways", "Weak Up"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Weak Down", "Sideways", "Weak Up"]})
     result = filterTrendSideways(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Sideways"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Sideways"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendSideways(None) is None
 
 def test_filterTrendDown(df):
-    df = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
+    df = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Weak Down", "Strong Down", "Weak Up"]})
     result = filterTrendDown(df)
-    expected_result = pd.DataFrame({"Trend(30Prds)": ["Strong Down", "Weak Down", "Strong Down"]})
+    expected_result = pd.DataFrame({"Trend(22Prds)": ["Strong Down", "Weak Down", "Strong Down"]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterTrendDown(None) is None
 
@@ -797,16 +797,16 @@ def test_filterVolumeMoreThan25(df):
     assert filterVolumeMoreThan25(None) is None
 
 def test_filterConsolidating10Percent(df):
-    df = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10,11,19,18]})
+    df = pd.DataFrame({"Consol.": [1,0.3,1.5,2.5,3,4,10,11,19,18]})
     result = filterConsolidating10Percent(df)
-    expected_result = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10]})
+    expected_result = pd.DataFrame({"Consol.": [1,0.3,1.5,2.5,3,4,10]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterConsolidating10Percent(None) is None
 
 def test_filterConsolidatingMore10Percent(df):
-    df = pd.DataFrame({"Consol.(30Prds)": [1,0.3,1.5,2.5,3,4,10,11.5,19,18]})
+    df = pd.DataFrame({"Consol.": [1,0.3,1.5,2.5,3,4,10,11.5,19,18]})
     result = filterConsolidatingMore10Percent(df)
-    expected_result = pd.DataFrame({"Consol.(30Prds)": [11.5,19,18]})
+    expected_result = pd.DataFrame({"Consol.": [11.5,19,18]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterConsolidatingMore10Percent(None) is None
 

@@ -49,7 +49,7 @@ class tools:
         self.maxLTP = 50000
         self.period = "450d"
         self.duration = "1d"
-        self.daysToLookback = 30
+        self.daysToLookback = 22 # 1 month
         self.shuffleEnabled = True
         self.cacheEnabled = True
         self.stageTwo = True
@@ -161,7 +161,7 @@ class tools:
                 "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 450): "
             )
             self.daysToLookback = input(
-                "[+] Number of recent days (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 30): "
+                "[+] Number of recent trading periods (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 22): "
             )
             self.duration = input(
                 "[+] Enter Duration of each candle (Days)(Optimal = 1): "
@@ -362,7 +362,7 @@ class tools:
             self.daysToLookback = 120  # At least the past 2 hours
         else:
             self.duration = candleDuration if candleDuration[-1] == "d" else "1d"
-            self.daysToLookback = 30  # At least the past 1.5 month
+            self.daysToLookback = 22  # At least the past 1.5 month
         self.setConfig(parser, default=True, showFileCreatedText=False)
         if clearCache:
             # Delete any cached *.pkl data

@@ -63,6 +63,8 @@ class CandlePatterns:
         existingPattern = ''
         if "Pattern" in saveDict.keys():
             existingPattern=f'{(", "+saveDict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
+            if existingPattern == ", ":
+                existingPattern = ""
         else:
             saveDict["Pattern"] = ""
             dict["Pattern"] = ""

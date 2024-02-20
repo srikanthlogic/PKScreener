@@ -222,7 +222,7 @@ Feel free to Edit the parameters in the ``pkscreener.ini`` file which will be ge
 
     [config]
     period = 450d
-    daystolookback = 30
+    daystolookback = 22
     duration = 1d
     minprice = 30
     maxprice = 10000
