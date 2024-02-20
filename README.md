@@ -197,7 +197,7 @@ Feel free to Edit the parameters in the `pkscreener.ini` file which will be gene
 ```
 [config]
 period = 450d
-daystolookback = 30
+daystolookback = 22
 duration = 1d
 minprice = 20.0
 maxprice = 50000.0

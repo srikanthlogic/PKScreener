@@ -49,7 +49,7 @@ def test_setConfig_default(config_parser):
     tool.default_logger = default_logger()
     assert tool.default_logger is not None
     assert config_parser.get('config', 'period') == '450d'
-    assert config_parser.get('config', 'daysToLookback') == '30'
+    assert config_parser.get('config', 'daysToLookback') == '22'
     assert config_parser.get('config', 'duration') == '1d'
     assert config_parser.get('config', 'minPrice') == '20.0'
     assert config_parser.get('config', 'maxPrice') == '50000'
@@ -85,7 +85,7 @@ def test_getConfig(config_parser):
         pass
     config_parser.add_section("config")
     config_parser.set('config', 'period', '450d')
-    config_parser.set('config', 'daysToLookback', '30')
+    config_parser.set('config', 'daysToLookback', '22')
     config_parser.set('config', 'duration', '1d')
     config_parser.set('config', 'minPrice', '20.0')
     config_parser.set('config', 'maxPrice', '50000')
@@ -105,7 +105,7 @@ def test_getConfig(config_parser):
     config_parser.set('config', 'backtestPeriodFactor', '1')
     tool.getConfig(config_parser)
     assert tool.period == '450d'
-    assert tool.daysToLookback == 30
+    assert tool.daysToLookback == 22
     assert tool.duration == '1d'
     assert tool.minLTP == 20.0
     assert tool.maxLTP == 50000
@@ -147,7 +147,7 @@ def test_toggleConfig_swing(config_parser):
     tool.toggleConfig('1d', clearCache=False)
     assert tool.period == '450d'
     assert tool.duration == '1d'
-    assert tool.daysToLookback == 30
+    assert tool.daysToLookback == 22
     assert tool.cacheEnabled == True
     tool.toggleConfig(None, clearCache=False)
     assert tool.duration == '1d'

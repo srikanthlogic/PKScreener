@@ -607,7 +607,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
             columns={
                 "Trend": f"Trend({configManager.daysToLookback}Prds)",
                 "Breakout": f"Breakout({configManager.daysToLookback}Prds)",
-                "Consol.": f"Consol.({configManager.daysToLookback}Prds)",
+                # "Consol.": f"Consol.({configManager.daysToLookback}Prds)",
             },
             inplace=True,
         )
@@ -615,7 +615,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
             columns={
                 "Trend": f"Trend({configManager.daysToLookback}Prds)",
                 "Breakout": f"Breakout({configManager.daysToLookback}Prds)",
-                "Consol.": f"Consol.({configManager.daysToLookback}Prds)",
+                # "Consol.": f"Consol.({configManager.daysToLookback}Prds)",
             },
             inplace=True,
         )
@@ -1081,7 +1081,7 @@ def main(userArgs=None):
         # and then keep coming to the next day (x-1) until we get to today (actualHistoricalDuration = 0)
         bar, spinner = Utility.tools.getProgressbarStyle()
         totalStocksInReview = 0
-        print(f"{colorText.GREEN}[+]Adding stocks to the queue...{colorText.END}")
+        print(f"{colorText.GREEN}[+] Adding stocks to the queue...{colorText.END}")
         downloadedRecently = False
         with alive_bar(actualHistoricalDuration, bar=bar, spinner=spinner) as progressbar:
             while actualHistoricalDuration >= 0:
@@ -1907,7 +1907,7 @@ def runScanners(
         totalStocks = numStocks
         # If we put in more into the queue, it might cause the warnings from multiprocessing resource_tracker
         # about semaphore leakages etc. This is, caused due to overallocating RAM.
-        idealNumStocksMaxPerIteration = 500
+        idealNumStocksMaxPerIteration = 100
         iterations = int(numStocks*iterations/idealNumStocksMaxPerIteration) + 1
         numStocksPerIteration = int(numStocks/int(iterations)) #numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
         print(
@@ -2114,7 +2114,7 @@ def saveNotifyResultsFile(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] Screening Completed in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
+        + f"[+] Screening Completed. Found {len(screenResults)} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
         + colorText.END
     )
     if defaultAnswer is None:

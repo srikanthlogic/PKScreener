@@ -360,20 +360,20 @@ def cleanupData(savedResults):
     saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: x.replace("x", "")
         )
-    if "Consol.(30Prds)" not in saveResults.columns:
+    if f"Trend({configManager.daysToLookback}Prds)" not in saveResults.columns:
         saveResults.rename(
                 columns={
-                    "Consol.": "Consol.(30Prds)",
-                    "Trend": "Trend(30Prds)",
-                    "Breakout": "Breakout(30Prds)",
+                    # "Consol.": f"Consol.({configManager.daysToLookback}Prds)",
+                    "Trend": f"Trend({configManager.daysToLookback}Prds)",
+                    "Breakout": f"Breakout({configManager.daysToLookback}Prds)",
                 },
                 inplace=True,
             )
-    saveResults.loc[:, "Consol.(30Prds)"] = saveResults.loc[
-            :, "Consol.(30Prds)"
+    saveResults.loc[:, f"Consol."] = saveResults.loc[
+            :, f"Consol."
         ].apply(lambda x: x.replace("Range:", "").replace("%", ""))
     saveResults[["Breakout", "Resistance"]] = saveResults[
-            "Breakout(30Prds)"
+            f"Breakout({configManager.daysToLookback}Prds)"
         ].str.split(" R: ", n=1, expand=True)
     saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
             lambda x: x.replace("BO: ", "").replace(" ", "")
@@ -382,8 +382,8 @@ def cleanupData(savedResults):
             :, "Resistance"
         ].apply(lambda x: x.replace("(Potential)", ""))
     saveResults["Volume"] = saveResults["Volume"].astype(float).fillna(0.0)
-    saveResults["Consol.(30Prds)"] = (
-            saveResults["Consol.(30Prds)"].astype(float).fillna(0.0)
+    saveResults[f"Consol."] = (
+            saveResults[f"Consol."].astype(float).fillna(0.0)
         )
     saveResults["Breakout"] = saveResults["Breakout"].astype(float).fillna(0.0)
     saveResults["Resistance"] = saveResults["Resistance"].astype(float).fillna(0.0)
@@ -753,43 +753,43 @@ def filterRSI68OrAbove(df):
 def filterTrendStrongUp(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"] == "Strong Up"].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"] == "Strong Up"].fillna(0.0)
 
 
 def filterTrendWeakUp(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"] == "Weak Up"].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"] == "Weak Up"].fillna(0.0)
 
 
 def filterTrendWeakDown(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"] == "Weak Down"].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"] == "Weak Down"].fillna(0.0)
 
 
 def filterTrendStrongDown(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"] == "Strong Down"].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"] == "Strong Down"].fillna(0.0)
 
 
 def filterTrendUp(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"].astype(str).str.endswith("Up")].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"].astype(str).str.endswith("Up")].fillna(0.0)
 
 
 def filterTrendSideways(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"] == "Sideways"].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"] == "Sideways"].fillna(0.0)
 
 
 def filterTrendDown(df):
     if df is None:
         return None
-    return df[df["Trend(30Prds)"].astype(str).str.endswith("Down")].fillna(0.0)
+    return df[df[f"Trend({configManager.daysToLookback}Prds)"].astype(str).str.endswith("Down")].fillna(0.0)
 
 
 def filterMASignalBullish(df):
@@ -849,13 +849,13 @@ def filterVolumeMoreThan25(df):
 def filterConsolidating10Percent(df):
     if df is None:
         return None
-    return df[df["Consol.(30Prds)"] <= 10].fillna(0.0)
+    return df[df[f"Consol."] <= 10].fillna(0.0)
 
 
 def filterConsolidatingMore10Percent(df):
     if df is None:
         return None
-    return df[df["Consol.(30Prds)"] > 10].fillna(0.0)
+    return df[df[f"Consol."] > 10].fillna(0.0)
 
 
 def filterLTPLessThanBreakout(df):
