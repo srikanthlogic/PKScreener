@@ -165,7 +165,9 @@ jobs:
         mkdir results
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y -i 1m
-        cp results/*.pkl actions-data-download
+        rm -rf results/*.lck
+        cp results/*DB.pkl actions-data-download
+        cp results/stock_data_*.pkl actions-data-download
         ls -l results
         ls -l actions-data-download
 
@@ -194,7 +196,8 @@ jobs:
       if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Windows' ) }}
       shell: cmd
       run: |
-        copy results\*.pkl actions-data-download
+        copy results\*DB.pkl actions-data-download
+        copy results\stock_data_*.pkl actions-data-download
         
     - name: Push Pickle Data
       if: ${{ inputs.skipDownload == '' }}
@@ -205,8 +208,9 @@ jobs:
         git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
         git remote update
         git fetch
-        git add actions-data-download/*.pkl --force
-        git add results/*.pkl --force
+        git add actions-data-download/stock_data_*.pkl --force
+        git add actions-data-download/*DB.pkl --force
+        git add results/*DB.pkl --force
         git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
         git push -v -u origin +actions-data-download
 
