@@ -1833,7 +1833,7 @@ def sendQuickScanResult(
 
 def reformatTable(summaryText, headerDict, colored_text, sorting=True):
     if sorting:
-        tableText = "<!DOCTYPE html><html><head><script type='application/javascript' src='https://pkjmesra.github.io/PKScreener/pkscreener/classes/tableSorting.js' ></script><style type='text/css'>body, table {background-color: black; color: white;} table, th, td {border: 1px solid white;} th {cursor: pointer; color:white; text-decoration:underline;} .r {color:red;font-weight:bold;} .w {color:white;font-weight:bold;} .g {color:lightgreen;font-weight:bold;} .y {color:yellow;} .bg {background-color:darkslategrey;} .bb {background-color:black;} input#searchReports { width: 220px; } </style></head><body><span style='color:white;' >"
+        tableText = "<!DOCTYPE html><html><head><script type='application/javascript' src='https://pkjmesra.github.io/PKScreener/pkscreener/classes/tableSorting.js' ></script><style type='text/css'>body, table {background-color: black; color: white;} table, th, td {border: 1px solid white;} th {cursor: pointer; color:white; text-decoration:underline;} .r {color:red;font-weight:bold;} .br {border-color:red;border-width:medium;} .w {color:white;font-weight:bold;} .g {color:lightgreen;font-weight:bold;} .y {color:yellow;} .bg {background-color:darkslategrey;} .bb {background-color:black;} input#searchReports { width: 220px; } table thead tr th { background-color: black; position: sticky; z-index: 100; top: 0; } </style></head><body><span style='color:white;' >"
         colored_text = colored_text.replace(
             "<table", f"{tableText}{summaryText}<br /><input type='text' id='searchReports' onkeyup='searchReportsByAny()' placeholder='Search for stock/scan reports..' title='Type in a name/ID'><table")
         colored_text = colored_text.replace("<table ", "<table id='resultsTable' ")
@@ -1859,6 +1859,7 @@ def reformatTable(summaryText, headerDict, colored_text, sorting=True):
     colored_text = colored_text.replace(f"{colorText.FAIL}", "<span class='r'>")
     colored_text = colored_text.replace(f"{colorText.WARN}", "<span class='y'>")
     colored_text = colored_text.replace(f"{colorText.WHITE}", "<span class='w'>")
+    colored_text = colored_text.replace("<td><span class='w'>","<td class='br'><span class='w'>")
     colored_text = colored_text.replace(colorText.END, "</span>")
     colored_text = colored_text.replace("\n", "")
     if sorting:
