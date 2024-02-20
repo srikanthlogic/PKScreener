@@ -28,6 +28,7 @@ from unittest.mock import patch
 import pytest
 
 from pkscreener.globals import *
+from pkscreener.classes.UserMenuChoicesHandler import UserMenuChoicesHandler
 
 # Positive test cases
 
@@ -63,7 +64,7 @@ def test_getTestBuildChoices_positive():
         selectedTickerOption,
         selectedExecuteOption,
         selectedChoice,
-    ) = getTestBuildChoices(tickerOption, executeOption)
+    ) = UserMenuChoicesHandler.getTestBuildChoices(tickerOption, executeOption)
     assert menuOption == "X"
     assert str(selectedTickerOption) == tickerOption
     assert str(selectedExecuteOption) == executeOption
@@ -76,7 +77,7 @@ def test_getDownloadChoices_positive():
         selectedTickerOption,
         selectedExecuteOption,
         selectedChoice,
-    ) = getDownloadChoices(defaultAnswer="Y")
+    ) = UserMenuChoicesHandler.getDownloadChoices(defaultAnswer="Y")
     assert menuOption == "X"
     assert str(selectedTickerOption) == "12"
     assert str(selectedExecuteOption) == "0"
@@ -94,7 +95,7 @@ def test_getTopLevelMenuChoices_positive():
     startupoptions = "X:1:0"
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, tickerOption, executeOption = UserMenuChoicesHandler.getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == ["X", "1", "0"]
@@ -166,7 +167,7 @@ def test_initPostLevel1Execution_negative():
 def test_getTestBuildChoices_negative():
     tickerOption = "A"
     executeOption = "0"
-    r1, r2, r3, r4 = getTestBuildChoices(tickerOption, executeOption)
+    r1, r2, r3, r4 = UserMenuChoicesHandler.getTestBuildChoices(tickerOption, executeOption)
     assert r1 == "X"
     assert r2 == 1
     assert r3 == 0
@@ -185,7 +186,7 @@ def test_getDownloadChoices_negative():
                     selectedTickerOption,
                     selectedExecuteOption,
                     selectedChoice,
-                ) = getDownloadChoices()
+                ) = UserMenuChoicesHandler.getDownloadChoices()
                 assert menuOption == "X"
                 assert selectedTickerOption == 12
                 assert selectedExecuteOption == 0
@@ -200,7 +201,7 @@ def test_getTopLevelMenuChoices_negative():
     startupoptions = "X:1:0"
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, tickerOption, executeOption = UserMenuChoicesHandler.getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == ["X", "1", "0"]
@@ -227,7 +228,7 @@ def test_getTopLevelMenuChoices_edge():
     startupoptions = ""
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, tickerOption, executeOption = UserMenuChoicesHandler.getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == [""]

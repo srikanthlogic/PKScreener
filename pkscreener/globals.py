@@ -77,6 +77,7 @@ from pkscreener.classes.MenuOptions import (
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.StockScreener import StockScreener
+from pkscreener.classes.UserMenuChoicesHandler import UserMenuChoicesHandler
 
 multiprocessing.freeze_support()
 # import dataframe_image as dfi
@@ -138,30 +139,6 @@ def finishScreening(
         saveNotifyResultsFile(
             screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=user
         )
-
-
-def getDownloadChoices(defaultAnswer=None):
-    global userPassedArgs
-    argsIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
-    intradayConfig = configManager.isIntradayConfig()
-    intraday = intradayConfig or argsIntraday
-    exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday)
-    if exists:
-        shouldReplace = Utility.tools.promptFileExists(
-            cache_file=cache_file, defaultAnswer=defaultAnswer
-        )
-        if shouldReplace == "N":
-            print(
-                cache_file
-                + colorText.END
-                + " already exists. Exiting as user chose not to replace it!"
-            )
-            sys.exit(0)
-        else:
-            pattern = f"{'intraday_' if intraday else ''}stock_data_"
-            configManager.deleteFileWithPattern(pattern)
-    return "X", 12, 0, {"0": "X", "1": "12", "2": "0"}
-
 
 def getHistoricalDays(numStocks, testing):
     # Generally it takes 40-50 stocks to be processed every second.
@@ -274,50 +251,6 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
         default_logger().debug(e, exc_info=True)
         pass
     return summarydf, detaildf
-
-
-def getTestBuildChoices(tickerOption=None, executeOption=None, menuOption=None):
-    if menuOption is not None:
-        return (
-            str(menuOption),
-            tickerOption if tickerOption is not None else 1,
-            executeOption if executeOption is not None else 0,
-            {
-                "0": str(menuOption),
-                "1": (str(tickerOption) if tickerOption is not None else 1),
-                "2": (str(executeOption) if executeOption is not None else 0),
-            },
-        )
-    return "X", 1, 0, {"0": "X", "1": "1", "2": "0"}
-
-
-def getTopLevelMenuChoices(startupoptions, testBuild, downloadOnly, defaultAnswer=None):
-    global selectedChoice, userPassedArgs
-    executeOption = None
-    menuOption = None
-    tickerOption = None
-    options = []
-    if startupoptions is not None:
-        options = startupoptions.split(":")
-        menuOption = options[0] if len(options) >= 1 else None
-        tickerOption = options[1] if len(options) >= 2 else None
-        executeOption = options[2] if len(options) >= 3 else None
-    if testBuild:
-        menuOption, tickerOption, executeOption, selectedChoice = getTestBuildChoices(
-            tickerOption=tickerOption,
-            executeOption=executeOption,
-            menuOption=menuOption,
-        )
-    elif downloadOnly:
-        menuOption, tickerOption, executeOption, selectedChoice = getDownloadChoices(
-            defaultAnswer=defaultAnswer
-        )
-        intraday = userPassedArgs.intraday or configManager.isIntradayConfig()
-        filePrefix = "INTRADAY_" if intraday else ""
-        _, cache_file_name = Utility.tools.afterMarketStockDataExists(intraday)
-        Utility.tools.set_github_output(f"{filePrefix}DOWNLOAD_CACHE_FILE_NAME",cache_file_name)
-    return options, menuOption, tickerOption, executeOption
-
 
 def handleScannerExecuteOption4(executeOption, options):
     try:
@@ -656,7 +589,7 @@ def main(userArgs=None):
     reversalOption = None
     listStockCodes = None
     screenResults, saveResults = initDataframes()
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, tickerOption, executeOption = UserMenuChoicesHandler.getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly, defaultAnswer=defaultAnswer
     )
     # Print Level 1 menu options
@@ -715,7 +648,7 @@ def main(userArgs=None):
                 # Go back to the caller. It will show the console menu again.
                 return
         elif userOption == "Z":
-            handleExitRequest(userOption)
+            UserMenuChoicesHandler.handleExitRequest(userOption)
             return
         
         if userOption == "S":
@@ -768,7 +701,7 @@ def main(userArgs=None):
         # Go back to the caller. It will show the console menu again.
         return
     listStockCodes = handleRequestForSpecificStocks(options, tickerOption)
-    handleExitRequest(executeOption)
+    UserMenuChoicesHandler.handleExitRequest(executeOption)
     if executeOption is None:
         executeOption = 0
     executeOption = int(executeOption)
@@ -1478,16 +1411,6 @@ def handleRequestForSpecificStocks(options, tickerOption):
         if len(options) >= 4:
             listStockCodes = str(options[3]).split(",")
     return listStockCodes
-
-def handleExitRequest(executeOption):
-    if executeOption == "Z":
-        input(
-            colorText.BOLD
-            + colorText.FAIL
-            + "[+] Press <Enter> to Exit!"
-            + colorText.END
-        )
-        sys.exit(0)
 
 def handleMenu_XBG(menuOption, tickerOption, executeOption):
     if menuOption in ["X", "B", "G"]:
