@@ -49,7 +49,6 @@ class tools:
         self.maxLTP = 50000
         self.period = "450d"
         self.duration = "1d"
-        self.daysToLookback = 22 # 1 month
         self.shuffleEnabled = True
         self.cacheEnabled = True
         self.stageTwo = True
@@ -63,7 +62,20 @@ class tools:
         self.minVolume = 10000
         self.logger = None
         self.backtestPeriodFactor = 1
+        self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
+        self.periods = [1,2,3,4,5,10,15,22,30]
 
+    @property
+    def periodsRange(self):
+        self._periodsRange = []
+        for prd in self.periods:
+            self._periodsRange.append(prd*self.backtestPeriodFactor)
+        return self._periodsRange
+
+    @property
+    def effectiveDaysToLookback(self):
+        return self.daysToLookback* self.backtestPeriodFactor
+    
     @property
     def default_logger(self):
         return self.logger if self.logger is not None else default_logger()
