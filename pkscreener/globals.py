@@ -1904,12 +1904,16 @@ def runScanners(
         reviewDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago))
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
+        originalIterations = iterations
         totalStocks = numStocks
         # If we put in more into the queue, it might cause the warnings from multiprocessing resource_tracker
         # about semaphore leakages etc. This is, caused due to overallocating RAM.
         idealNumStocksMaxPerIteration = 100
         iterations = int(numStocks*iterations/idealNumStocksMaxPerIteration) + 1
-        numStocksPerIteration = int(numStocks/int(iterations)) #numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
+        numStocksPerIteration = int(numStocks/int(iterations))
+        if numStocksPerIteration < 10:
+            numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
+            iterations = originalIterations
         print(
             colorText.BOLD
             + colorText.GREEN
