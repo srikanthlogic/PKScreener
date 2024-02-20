@@ -1904,14 +1904,18 @@ def runScanners(
         reviewDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago))
     max_allowed = iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
     try:
+        totalStocks = numStocks
+        # If we put in more into the queue, it might cause the warnings from multiprocessing resource_tracker
+        # about semaphore leakages etc. This is, caused due to overallocating RAM.
+        idealNumStocksMaxPerIteration = 500
+        iterations = int(numStocks*iterations/idealNumStocksMaxPerIteration) + 1
+        numStocksPerIteration = int(numStocks/int(iterations)) #numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
         print(
             colorText.BOLD
             + colorText.GREEN
             + f"[+] For {reviewDate}, total Stocks under review: {numStocks} over {iterations} iterations..."
             + colorText.END
         )
-        totalStocks = numStocks
-        numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
         queueCounter = 0
         dumpFreq = 1
         bar, spinner = Utility.tools.getProgressbarStyle()
@@ -2110,7 +2114,7 @@ def saveNotifyResultsFile(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] Screening Completed in {elapsed_time} sec.! Press Enter to Continue.."
+        + f"[+] Screening Completed in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
         + colorText.END
     )
     if defaultAnswer is None:
