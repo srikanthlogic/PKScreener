@@ -2224,6 +2224,7 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     except Exception:# pragma: no cover
         pass
     finally:
+        colored_text = colored_text.encode('utf-8').decode(STD_ENCODING)
         with open(filename, "w") as f:
             f.write(colored_text)
         Committer.execOSCommand(f"git add {filename} -f >/dev/null 2>&1")
