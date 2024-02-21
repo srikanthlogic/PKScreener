@@ -115,6 +115,8 @@ jobs:
               cd ..
               cd ..
               python3 -m pip install --upgrade pip
+              pip3 uninstall -y PKNSETools
+              pip3 uninstall -y PKDevTools
               pip3 install -r requirements.txt
               pip3 install -r requirements-dev.txt
               pip3 install .
@@ -140,6 +142,8 @@ jobs:
               sudo make install
               cd /home/runner/work/PKScreener/PKScreener/
               python3 -m pip install --upgrade pip
+              pip3 uninstall -y PKNSETools
+              pip3 uninstall -y PKDevTools
               pip3 install -r requirements.txt
               pip3 install -r requirements-dev.txt
               pip3 install ta-lib==0.4.28
@@ -158,6 +162,8 @@ jobs:
             DEP_BUILD: |
               brew install ta-lib
               python3 -m pip install --upgrade pip
+              pip3 uninstall -y PKNSETools
+              pip3 uninstall -y PKDevTools
               pip3 install -r requirements.txt
               pip3 install -r requirements-dev.txt
               pip3 install ta-lib==0.4.28
