@@ -686,8 +686,9 @@ class tools:
         openTime = curr.replace(hour=9, minute=15)
         cache_date = curr  # for monday to friday
         weekday = curr.weekday()
+        isTrading = PKDateUtilities.isTradingTime()
         # for monday to friday before 9:15 or between 9:15am to 3:30pm, we're backtesting
-        if curr < openTime or (forceLoad and PKDateUtilities.isTradingTime()):
+        if curr < openTime or (forceLoad and isTrading) or isTrading:
             cache_date = curr - datetime.timedelta(1)
         if weekday == 0 and curr < openTime:  # for monday before 9:15
             cache_date = curr - datetime.timedelta(3)
@@ -815,11 +816,15 @@ class tools:
                     f"Stock data cache file:{cache_file} request status ->{resp.status_code}"
                 )
             if resp is not None and resp.status_code == 200:
-                try:
-                    chunksize = 1024 * 1024 * 1
-                    filesize = int(int(resp.headers.get("content-length")) / chunksize)
-                    if filesize > 0:
-                        bar, spinner = tools.getProgressbarStyle()
+                contentLength = resp.headers.get("content-length")
+                serverBytes = int(contentLength) if contentLength is not None else 0
+                KB = 1024
+                MB = KB * 1024
+                chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
+                filesize = int( serverBytes / chunksize)
+                if filesize > 0:
+                    bar, spinner = tools.getProgressbarStyle()
+                    try:
                         f = open(
                             os.path.join(Archiver.get_user_outputs_dir(), cache_file),
                             "wb",
@@ -836,15 +841,14 @@ class tools:
                                     progressbar(1.0)
                         f.close()
                         stockDataLoaded = True
-                    else:
-                        default_logger().debug(
-                            f"Stock data cache file:{cache_file} on server has length ->{filesize}"
-                        )
-                except Exception as e:  # pragma: no cover
-                    default_logger().debug(e, exc_info=True)
-                    f.close()
-                    print("[!] Download Error - " + str(e))
-                print("")
+                    except Exception as e:  # pragma: no cover
+                        default_logger().debug(e, exc_info=True)
+                        f.close()
+                        print("[!] Download Error - " + str(e))
+                else:
+                    default_logger().debug(
+                        f"Stock data cache file:{cache_file} on server has length ->{filesize}"
+                    )
                 if not retrial and not stockDataLoaded:
                     # Don't try for more than once.
                     tools.loadStockData(

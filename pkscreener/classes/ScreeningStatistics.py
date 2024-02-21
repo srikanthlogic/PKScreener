@@ -120,7 +120,7 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
         week_52 = one_week * 50  # Considering holidays etc as well of 10 days
-        full52Week = data.head(week_52 + 1).tail(week_52)
+        full52Week = data.head(week_52 + 1).tail(week_52+1)
         recentHigh = data.head(1)["High"].iloc[0]
         recentLow = data.head(1)["Low"].iloc[0]
         full52WeekHigh = full52Week["High"].max()

@@ -61,7 +61,11 @@ class tools:
         self.backtestPeriod = 120
         self.minVolume = 10000
         self.logger = None
+        # This determines how many days apart the backtest calculations are run.
+        # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
+        # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
+
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
 
