@@ -1,5 +1,5 @@
 """
-The MIT License (MIT)
+    The MIT License (MIT)
 
     Copyright (c) 2023 pkjmesra
 
@@ -22,4 +22,34 @@ The MIT License (MIT)
     SOFTWARE.
 
 """
-VERSION = '0.44.20240220.172'
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
+
+class Security:
+    def __init__(self, ticker, ):
+        self.name = ""
+        self.ltp = 0
+
+class Portfolio:
+    def __init__(self, name):
+        self.name = name
+        self.initialValue = 0
+        self.currentValue = 0
+        self.profit = 0
+        self.loss = 0
+        self.addedSecuritiesInfo = {}
+        self.removedSecuritiesInfo = {}
+    
+    def addSecurity(self, security:Security=None):
+        self.addedSecuritiesInfo[PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")] = {security.name : 1}
+        self.initialValue += security.ltp
+
+
+    def removeSecurity(self, security:Security=None):
+        self.removedSecuritiesInfo[PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")] = {security.name : 1}
+
+    def getDifference(self,x):
+        return x.iloc[-1] - x.iloc[0]
+
+    def differenceFromLastNTradingSession(self,df,n=1):
+        df['LTP'].rolling(window=n).apply(self.getDifference)
+
