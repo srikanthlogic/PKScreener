@@ -30,6 +30,8 @@ from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 from PKDevTools.classes.log import default_logger
 from pkscreener.classes.ConfigManager import parser, tools
+from pkscreener.classes.Portfolio import Portfolio
+
 configManager = tools()
 configManager.getConfig(parser)
 
@@ -701,6 +703,8 @@ def getCalculatedValues(df, period, key, args=None):
     growthSum1ShareEach = round(df[f"Growth{period}"].sum(), 2)
     percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
     growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
+    # portfolio = Portfolio.portfolioFromXRayDataFrame(df,key,configManager.periodsRange)
+    # print(f"Portfolio Ledger:{key}\n{portfolio.description}\n")
     df = {
         "ScanType": key if tdySum1ShareEach != 0 else 999999999,
         f"{period}Pd-PFV": tdySum1ShareEach,
@@ -714,6 +718,7 @@ def getCalculatedValues(df, period, key, args=None):
     #     f'{period}Pd-PFG':percentGrowth if tdySum1ShareEach != 0 else '-',
     #     f'{period}Pd-Go10k':growth10k if tdySum1ShareEach != 0 else '-',
     #     }
+
     return df  # , df_col
 
 
