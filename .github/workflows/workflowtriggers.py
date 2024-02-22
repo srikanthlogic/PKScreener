@@ -625,10 +625,24 @@ def scanResultExists(options, nthDay=0,returnFalseIfSizeZero=True):
     print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))} : Scanning for {choices}_{today}")
     return False, fileSize,fileName
 
+def triggerGithubPagesDeploymentAction():
+    branch = "main"
+    postdata = (
+        '{"ref":"'
+        + branch
+        + '"}'
+    )
+    resp = run_workflow("gh-pages-deployment.yml", postdata,"gh-pages-deployment")
+    if resp.status_code == 204:
+        sleep(5)
+
 def triggerBacktestWorkflowActions(launchLocal=False):
     dfs = []
     existing_df = None
     try:
+        # Let's first deploy the existing branch changes, so that we do not re-run the same backtests
+        # that were already updated today
+        triggerGithubPagesDeploymentAction()
         dfs = pd.read_html("https://pkjmesra.github.io/PKScreener/BacktestReports.html",encoding="UTF-8", attrs = {'id': 'resultsTable'})
     except:
         pass
@@ -636,7 +650,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
         df = dfs[0]
         if len(df) > 0:
             existing_df= df
-
+    deploymentCounter = 0
     for key in objectDictionary.keys():
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'.replace("::",":")
@@ -678,6 +692,11 @@ def triggerBacktestWorkflowActions(launchLocal=False):
                 sleep(5)
             else:
                 break
+        deploymentCounter += 1
+        if deploymentCounter >= 35:
+            deploymentCounter = 0
+            triggerGithubPagesDeploymentAction()
+
     cmt_msg = "Strategy_Report"
     postdata = (
         '{"ref":"'
