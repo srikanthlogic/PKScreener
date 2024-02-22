@@ -30,7 +30,7 @@ from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener.classes import Utility
 from PKDevTools.classes.log import default_logger
 from pkscreener.classes.ConfigManager import parser, tools
-from pkscreener.classes.Portfolio import Portfolio
+from pkscreener.classes.Portfolio import Portfolio, PortfolioCollection
 
 configManager = tools()
 configManager.getConfig(parser)
@@ -258,6 +258,8 @@ def performXRay(savedResults=None, args=None, calcForDate=None):
         if df is None:
             return None
         df = cleanFormattingForStatsData(calcForDate, saveResults, df)
+        # print(f"All portfolios:\n{PortfolioCollection().portfoliosAsDataframe}")
+        # print(f"All portfoliosSummary:\n{PortfolioCollection().ledgerSummaryAsDataframe}")
         return df
 
 def getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults):
@@ -703,8 +705,9 @@ def getCalculatedValues(df, period, key, args=None):
     growthSum1ShareEach = round(df[f"Growth{period}"].sum(), 2)
     percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
     growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
-    # portfolio = Portfolio.portfolioFromXRayDataFrame(df,key,configManager.periodsRange)
-    # print(f"Portfolio Ledger:{key}\n{portfolio.description}\n")
+    if args.options.startswith("B"): # backtests
+        portfolio = Portfolio.portfolioFromXRayDataFrame(df,key,configManager.periodsRange)
+        PortfolioCollection().addPortfolio(portfolio)
     df = {
         "ScanType": key if tdySum1ShareEach != 0 else 999999999,
         f"{period}Pd-PFV": tdySum1ShareEach,

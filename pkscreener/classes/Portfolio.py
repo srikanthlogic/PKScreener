@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 
 class PortfolioSecurity:
     def __init__(self, ticker):
@@ -37,7 +38,7 @@ class PortfolioSecurity:
     
     @property
     def action(self):
-        return (colorText.GREEN + "[+]"+ colorText.END) if self.quantity > 0 else ((colorText.FAIL + "[-]"+ colorText.END) if self.quantity < 0 else (colorText.WARN + "[0]"+ colorText.END))
+        return (colorText.GREEN + "[Buy]"+ colorText.END) if self.quantity > 0 else ((colorText.FAIL + "[Sell]"+ colorText.END) if self.quantity < 0 else (colorText.WARN + "[Hold]"+ colorText.END))
     
     @property
     def investment(self):
@@ -59,7 +60,7 @@ class Portfolio:
         self.securities = {}
     
     @property
-    def description(self):
+    def descriptionAsDataframe(self):
         portfolio_df = None
         for date, ledgerEntries in self.ledger.items():
             firstLedgerEntry = ledgerEntries[0]
@@ -182,11 +183,9 @@ class Portfolio:
 
     def updateLedger(self,security:PortfolioSecurity=None):
         ledgerEntries = self.ledger.get(security.date) or []
-        runningLedger = {"Date": security.date} | security.description
+        runningLedger = {"ScanType": self.name, "Date": security.date} | security.description
         ledgerEntries.append(runningLedger)
         self.ledger[security.date] = ledgerEntries
-        # runningLedger["RunningProfit"] = round(self.profit,2)
-        # self.ledger[security.date] = ledgerEntries
 
     def getDifference(self,x):
         return x.iloc[-1] - x.iloc[0]
@@ -194,3 +193,39 @@ class Portfolio:
     def differenceFromLastNTradingSession(self,df,n=1):
         df['LTP'].rolling(window=n).apply(self.getDifference)
 
+
+class PortfolioCollection(SingletonMixin, metaclass=SingletonType):
+    def __init__(self):
+        super(PortfolioCollection, self).__init__()
+        self._portfolios = {}
+
+    @property
+    def ledgerSummaryAsDataframe(self):
+        portfolios_df = None
+        if len(self._portfolios) > 0:
+            for _, portfolio in self._portfolios.items():
+                portfolio_df = portfolio.descriptionAsDataframe
+                if portfolio_df is None:
+                    continue
+                if portfolios_df is None:
+                    portfolios_df = portfolio_df.tail(5).copy()
+                else:
+                    portfolios_df = pd.concat([portfolios_df,portfolio_df.tail(5)], axis=0)
+        return portfolios_df
+        
+    @property
+    def portfoliosAsDataframe(self):
+        portfolios_df = None
+        if len(self._portfolios) > 0:
+            for _, portfolio in self._portfolios.items():
+                portfolio_df = portfolio.descriptionAsDataframe
+                if portfolio_df is None:
+                    continue
+                if portfolios_df is None:
+                    portfolios_df = portfolio_df.copy()
+                else:
+                    portfolios_df = pd.concat([portfolios_df,portfolio_df], axis=0)
+        return portfolios_df
+
+    def addPortfolio(self,portfolio:Portfolio):
+        self._portfolios[portfolio.name] = portfolio
