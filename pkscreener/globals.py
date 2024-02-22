@@ -77,6 +77,7 @@ from pkscreener.classes.MenuOptions import (
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.StockScreener import StockScreener
+from pkscreener.classes.Portfolio import PortfolioCollection
 
 multiprocessing.freeze_support()
 # import dataframe_image as dfi
@@ -1030,6 +1031,10 @@ def main(userArgs=None):
             )
             input("Exiting now...")
             sys.exit(0)
+        if userPassedArgs.options is None or len(userPassedArgs.options) == 0:
+            userPassedArgs.options = ""
+            for choice in selectedChoice.keys():
+                userPassedArgs.options = (f"{userPassedArgs.options}:" if len(userPassedArgs.options) > 0  else '') + f"{selectedChoice[choice]}"
 
         if (menuOption in ["X", "B", "G", "S"] and not loadedStockData) or (
             not downloadOnly
@@ -1334,6 +1339,8 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
                 "V": "Volume",
                 "M": "MA-Signal",
             }
+    showBacktestResults(PortfolioCollection().portfoliosAsDataframe, sortKey=None, optionalName="PortfolioLedger")
+    showBacktestResults(PortfolioCollection().ledgerSummaryAsDataframe, sortKey=None, optionalName="PortfolioLedgerSnapshots")
     
     return summary_df,sorting,sortKeys
 
@@ -2182,7 +2189,8 @@ def showBacktestResults(backtest_df, sortKey="Stock", optionalName="backtest_res
     summaryText = f"Auto-generated in {round(elapsed_time,2)} sec. as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}\n{menuChoiceHierarchy.replace('Backtests','Growth of 10K' if optionalName=='Insights' else 'Backtests')}"
     lastSummaryRow = None
     if "Summary" not in optionalName:
-        backtest_df.sort_values(by=[sortKey], ascending=False, inplace=True)
+        if sortKey is not None and len(sortKey) > 0:
+            backtest_df.sort_values(by=[sortKey], ascending=False, inplace=True)
     else:
         lastRow = backtest_df.iloc[-1, :]
         if lastRow.iloc[0] == "SUMMARY":
@@ -2258,7 +2266,7 @@ def scanOutputDirectory(backtest=False):
 
 def getBacktestReportFilename(sortKey="Stock", optionalName="backtest_result"):
     choices = getFormattedChoices()
-    filename = f"PKScreener_{choices}_{optionalName}_{sortKey}Sorted.html"
+    filename = f"PKScreener_{choices}_{optionalName}_{sortKey if sortKey is not None else 'Default'}Sorted.html"
     return choices, filename
 
 
