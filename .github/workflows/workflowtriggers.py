@@ -324,7 +324,7 @@ def generateBacktestReportMainPage():
                 table, th, td {border: 1px solid white;}
                 th {cursor: pointer; color:white; text-decoration:underline;}
                 .r {color:red;font-weight:bold;}
-                .br {border-color:red;border-width:medium;}
+                .br {border-color:green;border-width:medium;}
                 .g {color:lightgreen;font-weight:bold;} 
                 .w {color:white;font-weight:bold;}
                 .y {color:yellow;}
