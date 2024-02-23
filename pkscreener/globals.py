@@ -78,6 +78,8 @@ from pkscreener.classes.MenuOptions import (
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.Portfolio import PortfolioCollection
+from pkscreener.classes.PKTask import PKTask
+from pkscreener.classes.PKScheduler import PKScheduler
 
 multiprocessing.freeze_support()
 # import dataframe_image as dfi
@@ -1339,8 +1341,17 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
                 "V": "Volume",
                 "M": "MA-Signal",
             }
-    showBacktestResults(PortfolioCollection().portfoliosAsDataframe, sortKey=None, optionalName="PortfolioLedger")
-    showBacktestResults(PortfolioCollection().ledgerSummaryAsDataframe, sortKey=None, optionalName="PortfolioLedgerSnapshots")
+    task1 = PKTask("PortfolioLedger",long_running_fn=PortfolioCollection().getPortfoliosAsDataframe)
+    task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
+    tasksList = [task1,task2]
+    if configManager.enablePortfolioCalculations:
+        PKScheduler.scheduleTasks(tasksList=tasksList)
+    else:
+        for task in tasksList:
+            task.long_running_fn(*(task,))
+    for task in tasksList:
+        if task.result is not None:
+            showBacktestResults(task.result, sortKey=None, optionalName=task.taskName)
     
     return summary_df,sorting,sortKeys
 

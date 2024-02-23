@@ -31,6 +31,8 @@ from pkscreener.classes import Utility
 from PKDevTools.classes.log import default_logger
 from pkscreener.classes.ConfigManager import parser, tools
 from pkscreener.classes.Portfolio import Portfolio, PortfolioCollection
+from pkscreener.classes.PKTask import PKTask
+from pkscreener.classes.PKScheduler import PKScheduler
 
 configManager = tools()
 configManager.getConfig(parser)
@@ -323,19 +325,35 @@ def getBacktestDataFromCleanedData(args, saveResults, df, period):
         df = pd.concat([df, df_target], axis=1)
     return df
 
-def statScanCalculationForNoFilter(args, saveResults, period, scanResults):
+def statScanCalculationForNoFilter(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
-                getCalculatedValues(saveResults, period, "NoFilter", args)
+                getCalculatedValues(saveResults, period, "NoFilter", userArgs,task)
             )
+    task.result = scanResults
+    return scanResults
 
-def statScanCalculationForPatterns(args, saveResults, period, scanResults):
+def statScanCalculationForPatterns(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     df_grouped = saveResults.groupby("Pattern")
     for pattern, df_group in df_grouped:
         if pattern is None or len(pattern) == 0:
             pattern = "No Pattern"
         scanResults.append(
-                    getCalculatedValues(df_group, period, f"[P]{pattern}", args)
+                    getCalculatedValues(df_group, period, f"[P]{pattern}", userArgs,task)
                 )
+    task.result = scanResults
+    return scanResults
 
 def cleanupData(savedResults):
     saveResults = savedResults.copy()
@@ -393,52 +411,76 @@ def getbacktestPeriod(args):
             pass
     return backtestPeriods
 
-def statScanCalculations(args, saveResults, period):
+def statScanCalculations(userArgs, saveResults, period):
     scanResults = []
-    statScanCalculationForRSI(args, saveResults, period, scanResults)
-    statScanCalculationForTrend(args, saveResults, period, scanResults)
-    statScanCalculationForMA(args, saveResults, period, scanResults)
-    statScanCalculationForVol(args, saveResults, period, scanResults)
-    statScanCalculationForConsol(args, saveResults, period, scanResults)
-    statScanCalculationForBO(args, saveResults, period, scanResults)
-    statScanCalculationFor52Wk(args, saveResults, period, scanResults)
-    statScanCalculationForCCI(args, saveResults, period, scanResults)
-    statScanCalculationForPatterns(args, saveResults, period, scanResults)
-    statScanCalculationForNoFilter(args, saveResults, period, scanResults)
+    task1 = PKTask(f"[{len(saveResults)}] RSI Stats({period})",long_running_fn=statScanCalculationForRSI)
+    task2 = PKTask(f"[{len(saveResults)}] Trend Stats({period})",long_running_fn=statScanCalculationForTrend)
+    task3 = PKTask(f"[{len(saveResults)}] MA Stats({period})",long_running_fn=statScanCalculationForMA)
+    task4 = PKTask(f"[{len(saveResults)}] Volume Stats({period})",long_running_fn=statScanCalculationForVol)
+    task5 = PKTask(f"[{len(saveResults)}] Consolidation Stats({period})",long_running_fn=statScanCalculationForConsol)
+    task6 = PKTask(f"[{len(saveResults)}] Breakout Stats({period})",long_running_fn=statScanCalculationForBO)
+    task7 = PKTask(f"[{len(saveResults)}] 52Week Stats({period})",long_running_fn=statScanCalculationFor52Wk)
+    task8 = PKTask(f"[{len(saveResults)}] CCI Stats({period})",long_running_fn=statScanCalculationForCCI)
+    task9 = PKTask(f"[{len(saveResults)}] CCI Stats({period})",long_running_fn=statScanCalculationForPatterns)
+    task10 = PKTask(f"[{len(saveResults)}] NoFilter Stats({period})",long_running_fn=statScanCalculationForNoFilter)
+    tasksList=[task1,task2,task3,task4,task5,task6,task7,task8,task9,task10]
+    for task in tasksList:
+        task.long_running_fn_args = (userArgs, saveResults, period, scanResults)
+    if configManager.enablePortfolioCalculations:
+        PKScheduler.scheduleTasks(tasksList)
+    else:
+        for task in tasksList:
+            task.long_running_fn(*(task,))
+    for task in tasksList:
+        if task.result is not None and len(task.result) > 0:
+            scanResults.extend(task.result)
     return scanResults
 
-def statScanCalculationForCCI(args, saveResults, period, scanResults):
+def statScanCalculationForCCI(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIBelowMinus100(saveResults), period, "[CCI]<=-100", args
+                    filterCCIBelowMinus100(saveResults), period, "[CCI]<=-100", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIBelow0(saveResults), period, "[CCI]-100<C<0", args
+                    filterCCIBelow0(saveResults), period, "[CCI]-100<C<0", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCI0To100(saveResults), period, "[CCI]0<=C<=100", args
+                    filterCCI0To100(saveResults), period, "[CCI]0<=C<=100", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCI100To200(saveResults), period, "[CCI]100<C<=200", args
+                    filterCCI100To200(saveResults), period, "[CCI]100<C<=200", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterCCIAbove200(saveResults), period, "[CCI]>200", args
+                    filterCCIAbove200(saveResults), period, "[CCI]>200", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationFor52Wk(args, saveResults, period, scanResults):
+def statScanCalculationFor52Wk(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterLTPMoreOREqual52WkH(saveResults), period, "[52Wk]LTP>=H", args
+                    filterLTPMoreOREqual52WkH(saveResults), period, "[52Wk]LTP>=H", userArgs,task
                 )
             )
     scanResults.append(
@@ -446,7 +488,8 @@ def statScanCalculationFor52Wk(args, saveResults, period, scanResults):
                     filterLTPWithin90Percent52WkH(saveResults),
                     period,
                     "[52Wk]LTP>=.9*H",
-                    args,
+                    userArgs,
+                    task
                 )
             )
     scanResults.append(
@@ -454,12 +497,13 @@ def statScanCalculationFor52Wk(args, saveResults, period, scanResults):
                     filterLTPLess90Percent52WkH(saveResults),
                     period,
                     "[52Wk]LTP<.9*H",
-                    args,
+                    userArgs,
+                    task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterLTPMore52WkL(saveResults), period, "[52Wk]LTP>L", args
+                    filterLTPMore52WkL(saveResults), period, "[52Wk]LTP>L", userArgs,task
                 )
             )
     scanResults.append(
@@ -467,20 +511,28 @@ def statScanCalculationFor52Wk(args, saveResults, period, scanResults):
                     filterLTPWithin90Percent52WkL(saveResults),
                     period,
                     "[52Wk]LTP>=1.1*L",
-                    args,
+                    userArgs,
+                    task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterLTPLess52WkL(saveResults), period, "[52Wk]LTP<=L", args
+                    filterLTPLess52WkL(saveResults), period, "[52Wk]LTP<=L", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForBO(args, saveResults, period, scanResults):
+def statScanCalculationForBO(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterLTPLessThanBreakout(saveResults), period, "[BO]LTP<BO", args
+                    filterLTPLessThanBreakout(saveResults), period, "[BO]LTP<BO", userArgs,task
                 )
             )
     scanResults.append(
@@ -488,12 +540,13 @@ def statScanCalculationForBO(args, saveResults, period, scanResults):
                     filterLTPMoreOREqualBreakout(saveResults),
                     period,
                     "[BO]LTP>=BO",
-                    args,
+                    userArgs,
+                    task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterLTPLessThanResistance(saveResults), period, "[BO]LTP<R", args
+                    filterLTPLessThanResistance(saveResults), period, "[BO]LTP<R", userArgs,task
                 )
             )
     scanResults.append(
@@ -501,15 +554,23 @@ def statScanCalculationForBO(args, saveResults, period, scanResults):
                     filterLTPMoreOREqualResistance(saveResults),
                     period,
                     "[BO]LTP>=R",
-                    args,
+                    userArgs,
+                    task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForConsol(args, saveResults, period, scanResults):
+def statScanCalculationForConsol(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterConsolidating10Percent(saveResults), period, "Cons.<=10", args
+                    filterConsolidating10Percent(saveResults), period, "Cons.<=10", userArgs,task
                 )
             )
     scanResults.append(
@@ -517,116 +578,146 @@ def statScanCalculationForConsol(args, saveResults, period, scanResults):
                     filterConsolidatingMore10Percent(saveResults),
                     period,
                     "Cons.>10",
-                    args,
+                    userArgs,
+                    task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForVol(args, saveResults, period, scanResults):
+def statScanCalculationForVol(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterVolumeLessThan25(saveResults), period, "Vol<2.5", args
+                    filterVolumeLessThan25(saveResults), period, "Vol<2.5", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", args
+                    filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForMA(args, saveResults, period, scanResults):
+def statScanCalculationForMA(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalBullish(saveResults), period, "[MA]Bull", args
+                    filterMASignalBullish(saveResults), period, "[MA]Bull", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalBearish(saveResults), period, "[MA]Bear", args
+                    filterMASignalBearish(saveResults), period, "[MA]Bear", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalNeutral(saveResults), period, "[MA]Neutral", args
+                    filterMASignalNeutral(saveResults), period, "[MA]Neutral", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalBullCross(saveResults), period, "[MA]BullCross", args
+                    filterMASignalBullCross(saveResults), period, "[MA]BullCross", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalBearCross(saveResults), period, "[MA]BearCross", args
+                    filterMASignalBearCross(saveResults), period, "[MA]BearCross", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalSupport(saveResults), period, "[MA]Support", args
+                    filterMASignalSupport(saveResults), period, "[MA]Support", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterMASignalResist(saveResults), period, "[MA]Resist", args
+                    filterMASignalResist(saveResults), period, "[MA]Resist", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForTrend(args, saveResults, period, scanResults):
+def statScanCalculationForTrend(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendStrongUp(saveResults), period, "[T]StrongUp", args
+                    filterTrendStrongUp(saveResults), period, "[T]StrongUp", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendWeakUp(saveResults), period, "[T]WeakUp", args
+                    filterTrendWeakUp(saveResults), period, "[T]WeakUp", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendUp(saveResults), period, "[T]TrendUp", args
+                    filterTrendUp(saveResults), period, "[T]TrendUp", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendStrongDown(saveResults), period, "[T]StrongDown", args
+                    filterTrendStrongDown(saveResults), period, "[T]StrongDown", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendWeakDown(saveResults), period, "[T]WeakDown", args
+                    filterTrendWeakDown(saveResults), period, "[T]WeakDown", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendSideways(saveResults), period, "[T]Sideways", args
+                    filterTrendSideways(saveResults), period, "[T]Sideways", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterTrendDown(saveResults), period, "[T]TrendDown", args
+                    filterTrendDown(saveResults), period, "[T]TrendDown", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
-def statScanCalculationForRSI(args, saveResults, period, scanResults):
+def statScanCalculationForRSI(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        userArgs, saveResults, period, scanResults = task.long_running_fn_args
+    else:
+        userArgs, saveResults, period, scanResults = args[0],args[1],args[2],args[3]
     scanResults.append(
                 getCalculatedValues(
-                    filterRSIAbove50(saveResults), period, "RSI>=50", args
+                    filterRSIAbove50(saveResults), period, "RSI>=50", userArgs, task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterRSI50To67(saveResults), period, "50<=RSI<=67", args
+                    filterRSI50To67(saveResults), period, "50<=RSI<=67", userArgs,task
                 )
             )
     scanResults.append(
                 getCalculatedValues(
-                    filterRSI68OrAbove(saveResults), period, "RSI>=68", args
+                    filterRSI68OrAbove(saveResults), period, "RSI>=68", userArgs,task
                 )
             )
+    task.result = scanResults
     return scanResults
 
 
@@ -699,14 +790,17 @@ def formatGridOutput(df,replacenan=True):
     return df
 
 
-def getCalculatedValues(df, period, key, args=None):
+def getCalculatedValues(df, period, key, userArgs=None, task=None):
     ltpSum1ShareEach = round(df["LTP"].sum(), 2)
     tdySum1ShareEach = round(df[f"LTP{period}"].sum(), 2)
     growthSum1ShareEach = round(df[f"Growth{period}"].sum(), 2)
-    percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
+    percentGrowth = 0
+    if ltpSum1ShareEach > 0:
+        percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
     growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
-    if args.options.startswith("B"): # backtests
-        portfolio = Portfolio.portfolioFromXRayDataFrame(df,key,configManager.periodsRange)
+    if configManager.enablePortfolioCalculations and userArgs.options.startswith("B"): # backtests
+        portfolio = Portfolio(name=key)
+        portfolio.updatePortfolioFromXRayDataFrame(df,configManager.periodsRange,task)
         PortfolioCollection().addPortfolio(portfolio)
     df = {
         "ScanType": key if tdySum1ShareEach != 0 else 999999999,

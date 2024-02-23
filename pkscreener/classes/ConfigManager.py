@@ -54,6 +54,7 @@ class tools:
         self.stageTwo = True
         self.useEMA = False
         self.showunknowntrends = True
+        self.enablePortfolioCalculations = False
         self.logsEnabled = False
         self.generalTimeout = 2
         self.longTimeout = 4
@@ -134,6 +135,7 @@ class tools:
                 "config", "showunknowntrends", "y" if self.showunknowntrends else "n"
             )
             parser.set("config", "logsEnabled", "y" if self.logsEnabled else "n")
+            parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
             parser.set("config", "generalTimeout", str(self.generalTimeout))
             parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
@@ -221,7 +223,12 @@ class tools:
             ).lower()
             self.logsEnabledPrompt = str(
                 input(
-                    "[+] Enable Viewing logs? You can ebale if you are having problems.[Y/N]: "
+                    "[+] Enable Viewing logs? You can enable if you are having problems.[Y/N]: "
+                )
+            ).lower()
+            self.enablePortfolioCalculations = str(
+                input(
+                    "[+] Enable calculating portfolio values? [Y/N]: "
                 )
             ).lower()
             self.generalTimeout = input(
@@ -256,6 +263,7 @@ class tools:
             parser.set("config", "onlyStageTwoStocks", self.stageTwoPrompt)
             parser.set("config", "useEMA", self.useEmaPrompt)
             parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
+            parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
             parser.set("config", "logsEnabled", self.logsEnabledPrompt)
             parser.set("config", "generalTimeout", self.generalTimeout)
             parser.set("config", "longTimeout", self.longTimeout)
@@ -337,6 +345,11 @@ class tools:
                 self.logsEnabled = (
                     False
                     if "y" not in str(parser.get("config", "logsEnabled")).lower()
+                    else True
+                )
+                self.enablePortfolioCalculations = (
+                    False
+                    if "y" not in str(parser.get("config", "enablePortfolioCalculations")).lower()
                     else True
                 )
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
