@@ -77,6 +77,13 @@ argParser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 argParser.add_argument(
+    "-m",
+    "--misc",
+    help="Miscellaneous tasks that may have to be run",
+    required=required,
+    action=argparse.BooleanOptionalAction,
+)
+argParser.add_argument(
     "-r",
     "--report",
     action="store_true",
@@ -503,10 +510,17 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 daysInPast -=1
             tryCommitOutcomes(options)
         else:
-            cmd_options = scanOptions.replace("_",":")
-            if args.user is None or len(args.user) == 0:
-                args.user = ""
-                postdata = (
+            resp = triggerRemoteScanAlertWorkflow(scanOptions, branch)
+            if resp.status_code == 204:
+                sleep(5)
+            else:
+                break
+
+def triggerRemoteScanAlertWorkflow(scanOptions, branch):
+    cmd_options = scanOptions.replace("_",":")
+    if args.user is None or len(args.user) == 0:
+        args.user = ""
+        postdata = (
                     '{"ref":"'
                     + branch
                     + '","inputs":{"user":"'
@@ -515,8 +529,8 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     + f'-a Y -e -p -o {cmd_options}'
                     + '","ref":"main"}}'
                 )
-            else:
-                postdata = (
+    else:
+        postdata = (
                     '{"ref":"'
                     + branch
                     + '","inputs":{"user":"'
@@ -526,11 +540,8 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                     + '","ref":"main"}}'
                 )
 
-            resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,cmd_options)
-            if resp.status_code == 204:
-                sleep(5)
-            else:
-                break
+    resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,cmd_options)
+    return resp
 
 def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
     defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13" if args.skiplistlevel1 is None else args.skiplistlevel1
@@ -753,11 +764,27 @@ def updateHolidays():
 def shouldRunWorkflow():
     return marketStatus == "Open" or today == tradeDate or (not PKDateUtilities.isTodayHoliday()[0] and PKDateUtilities.isTradingWeekday()) or args.force
 
+def triggerMiscellaneousTasks():
+    today_date = PKDateUtilities.currentDateTime()
+    if today_date.date() == PKDateUtilities.firstTradingDateOfMonth(today_date):
+        # Trigger mutual fund reports that must have been updated yesterday
+        branch = "main"
+        # Shares bought/sold by Mutual Funds/FIIs
+        # MF/FIIs Net Ownership Increased
+        scanList = ["X:12:21:1", "X:12:21:3"]
+        for scanOptions in scanList:
+            resp = triggerRemoteScanAlertWorkflow(scanOptions, branch)
+            if resp.status_code == 204:
+                sleep(5)
+
 if args.report:
     generateBacktestReportMainPage()
 if args.backtests:
     if shouldRunWorkflow():
         triggerBacktestWorkflowActions(args.local)
+if args.misc:
+    # Perform miscellaneous adhoc tasks that may be rule dependent
+    triggerMiscellaneousTasks()
 if args.scans:
     if shouldRunWorkflow():
         daysInPast = 0

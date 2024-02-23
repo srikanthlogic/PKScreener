@@ -44,7 +44,7 @@ on:
         description: 'Build docker image?'
         required: false
         type: string
-        default: 'N'
+        default: 'Y'
       targetPythonVersion:
         description: 'Target Python version: 3.9 , 3.10, 3.11 ?'
         required: false

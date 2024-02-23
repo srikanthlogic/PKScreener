@@ -224,6 +224,13 @@ jobs:
         git fetch
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
+    - name: Trigger miscellaneous tasks that are download-data dependent
+      if: ${{ inputs.skipDownload == '' }}
+      shell: bash
+      continue-on-error: true
+      run: |
+        python3 .github/workflows/workflowtriggers.py -f --misc
+
     - name: Install Python Dependencies for clean up
       if: ${{ inputs.cleanuphistoricalscans == 'Y' }}
       run: |
