@@ -112,32 +112,41 @@ jobs:
 
     - name: Telegram Bot
       timeout-minutes: 350
+      continue-on-error: true
       shell: cmd
       run: |
         cd pkscreener/
         python3 pkscreenerbot.py
 
-  Delete_Workflow_Run:
-    runs-on: ubuntu-20.04
-    needs: [Prod_Telegram_Bot]
-    name: Delete workflow run
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: main
+    - name: Delete this workflow run
+      shell: bash
+      run: |
+        gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+        gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+      env:
+        GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
+
+  # Delete_Workflow_Run:
+  #   runs-on: ubuntu-20.04
+  #   needs: [Prod_Telegram_Bot]
+  #   name: Delete workflow run
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         ref: main
           
-      - name: Delete this workflow run
-        if: startsWith(runner.os, 'Linux')
-        shell: bash
-        run: |
-          gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-          # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-          # for id in $(gh run list -w "CodeQL" --limit 100 --jq ".[] | select (.status == \"completed\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #     - name: Delete this workflow run
+  #       if: startsWith(runner.os, 'Linux')
+  #       shell: bash
+  #       run: |
+  #         gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+  #         gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+  #         # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"cancelled\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         # for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"failure\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
+  #         # for id in $(gh run list -w "CodeQL" --limit 100 --jq ".[] | select (.status == \"completed\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
           
-          # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
-          # for id in $(gh run list -w "13. Backtest for Generic" --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
-        env:
-          GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
+  #         # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
+  #         # for id in $(gh run list -w "13. Backtest for Generic" --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
+  #       env:
+  #         GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
