@@ -300,17 +300,18 @@ class StockScreener:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
+                        if backtestDuration == 0:
                         # Find general trend
-                        _,mfiStake,fairValueDiff = screener.findUptrend(
-                            fullData,
-                            screeningDictionary,
-                            saveDictionary,
-                            testbuild,
-                            stock,
-                            onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                            hostData=data
-                        )
-                        hostRef.objectDictionary[stock] = data.to_dict("split")
+                            _,mfiStake,fairValueDiff = screener.findUptrend(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                testbuild,
+                                stock,
+                                onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                                hostData=data
+                            )
+                            hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"

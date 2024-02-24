@@ -239,6 +239,7 @@ class PortfolioCollection(SingletonMixin,PKScheduledTaskProgress, metaclass=Sing
                 task.progress = task.total
                 self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
                 task.result = self._portfoliosSummary_df
+                task.resultsDict[task.taskId] = self._portfoliosSummary_df
             return self._portfoliosSummary_df
         portfolios_df = None
         if len(self._portfolios) > 0:
@@ -259,6 +260,7 @@ class PortfolioCollection(SingletonMixin,PKScheduledTaskProgress, metaclass=Sing
             task.progress = task.total
             self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
             task.result = portfolios_df
+            task.resultsDict[task.taskId] = self.portfolios_df
         return portfolios_df
         
     @property
@@ -271,6 +273,7 @@ class PortfolioCollection(SingletonMixin,PKScheduledTaskProgress, metaclass=Sing
                 task.progress = task.total
                 self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
                 task.result = self._portfolios_df
+                task.resultsDict[task.taskId] = self._portfolios_df
             return self._portfolios_df
         portfolios_df = None
         if len(self._portfolios) > 0:
@@ -291,6 +294,7 @@ class PortfolioCollection(SingletonMixin,PKScheduledTaskProgress, metaclass=Sing
             task.progress = task.total
             self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
             task.result = portfolios_df
+            task.resultsDict[task.taskId] = self.portfolios_df
         return portfolios_df
 
     def addPortfolio(self,portfolio:Portfolio):

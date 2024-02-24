@@ -36,4 +36,5 @@ class PKTask:
         self.long_running_fn = long_running_fn
         self.long_running_fn_args = long_running_fn_args
         self.progress_fn = progress_fn
+        self.resultsDict = None
         self.result = None

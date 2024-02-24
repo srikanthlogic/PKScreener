@@ -25,7 +25,9 @@
 """
 # Keep module imports prior to classes
 import os
-
+import warnings
+warnings.simplefilter("ignore", UserWarning,append=True)
+os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import logging
 import multiprocessing
@@ -565,8 +567,8 @@ def initPostLevel1Execution(tickerOption, executeOption=None, skip=[], retrial=F
 
 
 def initQueues(minimumCount=0):
-    tasks_queue = multiprocessing.JoinableQueue()
-    results_queue = multiprocessing.Queue()
+    tasks_queue = multiprocessing.JoinableQueue(500)
+    results_queue = multiprocessing.Queue(500)
 
     totalConsumers = min(minimumCount, multiprocessing.cpu_count())
     if totalConsumers == 1:
@@ -1345,7 +1347,7 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
     task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
     tasksList = [task1,task2]
     if configManager.enablePortfolioCalculations:
-        PKScheduler.scheduleTasks(tasksList=tasksList)
+        PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})")
     else:
         for task in tasksList:
             task.long_running_fn(*(task,))
@@ -1359,18 +1361,28 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
     df_grouped = backtest_df.groupby("Date")
     userPassedArgs.backtestdaysago = backtestPeriod
     df_xray = None
+    groupCounter = 0
+    tasksList=[]
     for calcForDate, df_group in df_grouped:
-        p_df = PortfolioXRay.performXRay(
-                    df_group, userPassedArgs, calcForDate=calcForDate
-                )
-        if df_xray is not None:
-            df_xray = pd.concat([df_xray, p_df], axis=0)
-        else:
-            df_xray = p_df
+        groupCounter += 1
+        func_args = (df_group, userPassedArgs, calcForDate,f"Portfolio X-Ray | {calcForDate} | {groupCounter} of {len(df_grouped)}")
+        task = PKTask(f"Portfolio X-Ray | {calcForDate} | {groupCounter} of {len(df_grouped)}",
+                      long_running_fn=PortfolioXRay.performXRay,
+                      long_running_fn_args=func_args)
+        task.total = len(df_grouped)
+        tasksList.append(task)
+    PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
+    
+    for task in tasksList:
+        p_df = task.result
+        if p_df is not None:
+            if df_xray is not None:
+                df_xray = pd.concat([df_xray, p_df.copy()], axis=0)
+            else:
+                df_xray = p_df.copy()
             # Let's drop the columns no longer required for backtest report
-    removedUnusedColumns(
-                None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"]
-            )
+
+    removedUnusedColumns(None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"])
     df_xray = df_xray.replace(np.nan, "", regex=True)
     df_xray = PortfolioXRay.xRaySummary(df_xray)
     df_xray.loc[:, "Date"] = df_xray.loc[:, "Date"].apply(
@@ -1719,7 +1731,7 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
     targetDateG10k = None
     if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
         if saveResults is not None and len(saveResults) > 0:
-            df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
+            df = PortfolioXRay.performXRay(saveResults, userPassedArgs,None, None)
             targetDateG10k = saveResults["Date"].iloc[0]
             if df is not None and len(df) > 0:
                 titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
@@ -1929,6 +1941,9 @@ def runScanners(
         if numStocksPerIteration < 10:
             numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
             iterations = originalIterations
+        if numStocksPerIteration > 500:
+            numStocksPerIteration = 500
+            iterations = int(numStocks/numStocksPerIteration) + 1
         print(
             colorText.BOLD
             + colorText.GREEN
@@ -2403,6 +2418,7 @@ def terminateAllWorkers(consumers, tasks_queue, testing):
         try:
             _ = tasks_queue.get(False)
         except Exception as e:  # pragma: no cover
+            default_logger().debug(e, exc_info=True)
             break
 
 

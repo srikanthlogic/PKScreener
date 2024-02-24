@@ -240,29 +240,45 @@ def xRaySummary(savedResults=None):
     return saveResults
 
 
-def performXRay(savedResults=None, args=None, calcForDate=None):
+def performXRay(*args, **kwargs):
+    task = None
+    if isinstance(args[0], PKTask):
+        task = args[0]
+        savedResults, userArgs, calcForDate, progressLabel = task.long_running_fn_args
+    else:
+        savedResults, userArgs, calcForDate, progressLabel = args[0],args[1],args[2],args[3]
+    df = None
     if savedResults is not None and len(savedResults) > 0:
-        backtestPeriods = getbacktestPeriod(args)
+        backtestPeriods = getbacktestPeriod(userArgs)
         saveResults = cleanupData(savedResults)
 
         days = 0
-        df = None
         periods = configManager.periodsRange
-        period = periods[days]
-        backtestPeriods = getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults)
-        while periods[days] <= backtestPeriods:
-            period = periods[days]
-            df = getBacktestDataFromCleanedData(args, saveResults, df, period)
-            days += 1
-            if days >= len(periods):
-                break
-        
+        # period = periods[days]
+        # requiredPeriods = []
+        # If the calcForDate is more than the backtestPeriods, we should be able to 
+        # still calculate the backtested returns for all 30 periods or periods more than
+        # the requested backtestPeriods
+        # backtestPeriods = getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults)
+        # while periods[days] <= backtestPeriods:
+        #     period = periods[days]
+        #     requiredPeriods.append(period)
+        #     days += 1
+        #     if days >= len(periods):
+        #         break
+        df = getBacktestDataFromCleanedData(userArgs, saveResults, df, periods,progressLabel)
         if df is None:
             return None
         df = cleanFormattingForStatsData(calcForDate, saveResults, df)
         # print(f"All portfolios:\n{PortfolioCollection().portfoliosAsDataframe}")
         # print(f"All portfoliosSummary:\n{PortfolioCollection().ledgerSummaryAsDataframe}")
-        return df
+    if task is not None:
+        if task.taskId > 0:
+            task.progressStatusDict[task.taskId] = {'progress': 0, 'total': 1}
+            task.resultsDict[task.taskId] = df
+        else:
+            task.result = df
+    return df
 
 def getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults):
     targetDate = (
@@ -276,7 +292,7 @@ def getUpdatedBacktestPeriod(calcForDate, backtestPeriods, saveResults):
             today.date(),
         )
     backtestPeriods = gap if gap > backtestPeriods else backtestPeriods
-    return backtestPeriods
+    return backtestPeriods if backtestPeriods <= configManager.maxBacktestWindow else configManager.maxBacktestWindow
 
 def cleanFormattingForStatsData(calcForDate, saveResults, df):
     if df is None or not isinstance(df, pd.DataFrame) or df.empty \
@@ -300,20 +316,21 @@ def cleanFormattingForStatsData(calcForDate, saveResults, df):
     
     return df
 
-def getBacktestDataFromCleanedData(args, saveResults, df, period):
+def getBacktestDataFromCleanedData(args, saveResults, df, periods,progressLabel:str=None):
     '''
     Important
     ---------
     You should have called `cleanupData` before calling this.
     '''
-    saveResults[f"LTP{period}"] = (
-                saveResults[f"LTP{period}"].astype(float).fillna(0.0)
-            )
-    saveResults[f"Growth{period}"] = (
-                saveResults[f"Growth{period}"].astype(float).fillna(0.0)
-            )
+    for period in periods:
+        saveResults[f"LTP{period}"] = (
+                    saveResults[f"LTP{period}"].astype(float).fillna(0.0)
+                )
+        saveResults[f"Growth{period}"] = (
+                    saveResults[f"Growth{period}"].astype(float).fillna(0.0)
+                )
 
-    scanResults = statScanCalculations(args, saveResults, period)
+    scanResults = statScanCalculations(args, saveResults, periods,progressLabel)
 
     if df is None:
         df = pd.DataFrame(scanResults)
@@ -335,7 +352,12 @@ def statScanCalculationForNoFilter(*args, **kwargs):
     scanResults.append(
                 getCalculatedValues(saveResults, period, "NoFilter", userArgs,task)
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForPatterns(*args, **kwargs):
@@ -352,7 +374,12 @@ def statScanCalculationForPatterns(*args, **kwargs):
         scanResults.append(
                     getCalculatedValues(df_group, period, f"[P]{pattern}", userArgs,task)
                 )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def cleanupData(savedResults):
@@ -400,7 +427,7 @@ def cleanupData(savedResults):
     return saveResults
 
 def getbacktestPeriod(args):
-    backtestPeriods = 30  # Max backtest days
+    backtestPeriods = configManager.maxBacktestWindow  # Max backtest days
     if args is None or ((not isinstance(args,int)) and (not isinstance(args,Namespace))):
         return backtestPeriods
     if args is not None and args.backtestdaysago is not None:
@@ -411,23 +438,23 @@ def getbacktestPeriod(args):
             pass
     return backtestPeriods
 
-def statScanCalculations(userArgs, saveResults, period):
+def statScanCalculations(userArgs, saveResults, periods,progressLabel:str=None):
     scanResults = []
-    task1 = PKTask(f"[{len(saveResults)}] RSI Stats({period})",long_running_fn=statScanCalculationForRSI)
-    task2 = PKTask(f"[{len(saveResults)}] Trend Stats({period})",long_running_fn=statScanCalculationForTrend)
-    task3 = PKTask(f"[{len(saveResults)}] MA Stats({period})",long_running_fn=statScanCalculationForMA)
-    task4 = PKTask(f"[{len(saveResults)}] Volume Stats({period})",long_running_fn=statScanCalculationForVol)
-    task5 = PKTask(f"[{len(saveResults)}] Consolidation Stats({period})",long_running_fn=statScanCalculationForConsol)
-    task6 = PKTask(f"[{len(saveResults)}] Breakout Stats({period})",long_running_fn=statScanCalculationForBO)
-    task7 = PKTask(f"[{len(saveResults)}] 52Week Stats({period})",long_running_fn=statScanCalculationFor52Wk)
-    task8 = PKTask(f"[{len(saveResults)}] CCI Stats({period})",long_running_fn=statScanCalculationForCCI)
-    task9 = PKTask(f"[{len(saveResults)}] CCI Stats({period})",long_running_fn=statScanCalculationForPatterns)
-    task10 = PKTask(f"[{len(saveResults)}] NoFilter Stats({period})",long_running_fn=statScanCalculationForNoFilter)
+    task1 = PKTask(f"[{len(saveResults)}] RSI Stats",long_running_fn=statScanCalculationForRSI)
+    task2 = PKTask(f"[{len(saveResults)}] Trend Stats",long_running_fn=statScanCalculationForTrend)
+    task3 = PKTask(f"[{len(saveResults)}] MA Stats",long_running_fn=statScanCalculationForMA)
+    task4 = PKTask(f"[{len(saveResults)}] Volume Stats",long_running_fn=statScanCalculationForVol)
+    task5 = PKTask(f"[{len(saveResults)}] Consolidation Stats",long_running_fn=statScanCalculationForConsol)
+    task6 = PKTask(f"[{len(saveResults)}] Breakout Stats",long_running_fn=statScanCalculationForBO)
+    task7 = PKTask(f"[{len(saveResults)}] 52Week Stats",long_running_fn=statScanCalculationFor52Wk)
+    task8 = PKTask(f"[{len(saveResults)}] CCI Stats",long_running_fn=statScanCalculationForCCI)
+    task9 = PKTask(f"[{len(saveResults)}] CCI Stats",long_running_fn=statScanCalculationForPatterns)
+    task10 = PKTask(f"[{len(saveResults)}] NoFilter Stats",long_running_fn=statScanCalculationForNoFilter)
     tasksList=[task1,task2,task3,task4,task5,task6,task7,task8,task9,task10]
     for task in tasksList:
-        task.long_running_fn_args = (userArgs, saveResults, period, scanResults)
+        task.long_running_fn_args = (userArgs, saveResults, periods, scanResults)
     if configManager.enablePortfolioCalculations:
-        PKScheduler.scheduleTasks(tasksList)
+        PKScheduler.scheduleTasks(tasksList,label=progressLabel,showProgressBars=True)
     else:
         for task in tasksList:
             task.long_running_fn(*(task,))
@@ -468,7 +495,12 @@ def statScanCalculationForCCI(*args, **kwargs):
                     filterCCIAbove200(saveResults), period, "[CCI]>200", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationFor52Wk(*args, **kwargs):
@@ -520,7 +552,12 @@ def statScanCalculationFor52Wk(*args, **kwargs):
                     filterLTPLess52WkL(saveResults), period, "[52Wk]LTP<=L", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForBO(*args, **kwargs):
@@ -558,7 +595,12 @@ def statScanCalculationForBO(*args, **kwargs):
                     task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForConsol(*args, **kwargs):
@@ -582,7 +624,12 @@ def statScanCalculationForConsol(*args, **kwargs):
                     task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForVol(*args, **kwargs):
@@ -602,7 +649,12 @@ def statScanCalculationForVol(*args, **kwargs):
                     filterVolumeMoreThan25(saveResults), period, "Vol>=2.5", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForMA(*args, **kwargs):
@@ -647,7 +699,12 @@ def statScanCalculationForMA(*args, **kwargs):
                     filterMASignalResist(saveResults), period, "[MA]Resist", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForTrend(*args, **kwargs):
@@ -692,7 +749,12 @@ def statScanCalculationForTrend(*args, **kwargs):
                     filterTrendDown(saveResults), period, "[T]TrendDown", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 def statScanCalculationForRSI(*args, **kwargs):
@@ -717,7 +779,12 @@ def statScanCalculationForRSI(*args, **kwargs):
                     filterRSI68OrAbove(saveResults), period, "RSI>=68", userArgs,task
                 )
             )
-    task.result = scanResults
+    if task is not None:
+        if task.taskId > 0:
+            task.resultsDict[task.taskId] = scanResults
+            task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+        else:
+            task.result = scanResults
     return scanResults
 
 
@@ -790,24 +857,29 @@ def formatGridOutput(df,replacenan=True):
     return df
 
 
-def getCalculatedValues(df, period, key, userArgs=None, task=None):
-    ltpSum1ShareEach = round(df["LTP"].sum(), 2)
-    tdySum1ShareEach = round(df[f"LTP{period}"].sum(), 2)
-    growthSum1ShareEach = round(df[f"Growth{period}"].sum(), 2)
-    percentGrowth = 0
-    if ltpSum1ShareEach > 0:
-        percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
-    growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
-    if configManager.enablePortfolioCalculations and userArgs.options.startswith("B"): # backtests
-        portfolio = Portfolio(name=key)
-        portfolio.updatePortfolioFromXRayDataFrame(df,configManager.periodsRange,task)
-        PortfolioCollection().addPortfolio(portfolio)
-    df = {
-        "ScanType": key if tdySum1ShareEach != 0 else 999999999,
-        f"{period}Pd-PFV": tdySum1ShareEach,
-        f"{period}Pd-%": percentGrowth if tdySum1ShareEach != 0 else 999999999,
-        f"{period}Pd-10k": growth10k if tdySum1ShareEach != 0 else 999999999,
-    }
+def getCalculatedValues(df, periods, key, userArgs=None, task=None):
+    collated_df = None
+    for period in periods:
+        ltpSum1ShareEach = round(df["LTP"].sum(), 2)
+        tdySum1ShareEach = round(df[f"LTP{period}"].sum(), 2)
+        growthSum1ShareEach = round(df[f"Growth{period}"].sum(), 2)
+        percentGrowth = 0
+        if ltpSum1ShareEach > 0:
+            percentGrowth = round(100 * growthSum1ShareEach / ltpSum1ShareEach, 2)
+        growth10k = round(10000 * (1 + 0.01 * percentGrowth), 2)
+        if configManager.enablePortfolioCalculations and userArgs.options.startswith("B"): # backtests
+            portfolio = Portfolio(name=key)
+            portfolio.updatePortfolioFromXRayDataFrame(df,configManager.periodsRange,task)
+            PortfolioCollection().addPortfolio(portfolio)
+        result_df = {
+            "ScanType": key if tdySum1ShareEach != 0 else 999999999,
+            f"{period}Pd-PFV": tdySum1ShareEach,
+            f"{period}Pd-%": percentGrowth if tdySum1ShareEach != 0 else 999999999,
+            f"{period}Pd-10k": growth10k if tdySum1ShareEach != 0 else 999999999,
+        }
+        if collated_df is None:
+            collated_df = result_df
+        collated_df = collated_df | result_df
     # percentGrowth = colorText.GREEN if percentGrowth >=0 else colorText.FAIL + percentGrowth + colorText.END
     # growth10k = colorText.GREEN if percentGrowth >=0 else colorText.FAIL + growth10k + colorText.END
     # df_col = {'ScanType':key,
@@ -816,7 +888,7 @@ def getCalculatedValues(df, period, key, userArgs=None, task=None):
     #     f'{period}Pd-Go10k':growth10k if tdySum1ShareEach != 0 else '-',
     #     }
 
-    return df  # , df_col
+    return collated_df  # , df_col
 
 
 def filterRSIAbove50(df):

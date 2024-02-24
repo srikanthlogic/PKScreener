@@ -60,6 +60,7 @@ class tools:
         self.longTimeout = 4
         self.maxNetworkRetryCount = 10
         self.backtestPeriod = 120
+        self.maxBacktestWindow = 30
         self.minVolume = 10000
         self.logger = None
         # This determines how many days apart the backtest calculations are run.
@@ -69,10 +70,14 @@ class tools:
 
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
+        if self.maxBacktestWindow > self.periods[-1]:
+            self.periods.extend(self.maxBacktestWindow)
 
     @property
     def periodsRange(self):
         self._periodsRange = []
+        if self.maxBacktestWindow > self.periods[-1]:
+            self.periods.extend(self.maxBacktestWindow)
         for prd in self.periods:
             self._periodsRange.append(prd*self.backtestPeriodFactor)
         return self._periodsRange
@@ -140,6 +145,7 @@ class tools:
             parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
+            parser.set("config", "maxBacktestWindow", str(self.maxBacktestWindow))
             parser.set("config", "minimumVolume", str(self.minVolume))
             parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
             try:
@@ -243,6 +249,9 @@ class tools:
             self.backtestPeriod = input(
                 "[+] Number of days in the past for backtesting(in days)(Optimal = 30): "
             )
+            self.maxBacktestWindow = input(
+                "[+] Number of days to show the results for backtesting(in days)(Optimal = 1 to 30): "
+            )
             self.minVolume = input(
                 "[+] Minimum per day traded volume of any stock (number)(Optimal = 100000): "
             )
@@ -269,6 +278,7 @@ class tools:
             parser.set("config", "longTimeout", self.longTimeout)
             parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
+            parser.set("config", "maxBacktestWindow", self.maxBacktestWindow)
             parser.set("config", "minimumVolume", self.minVolume)
             parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
             # delete stock data due to config change
@@ -358,6 +368,7 @@ class tools:
                     parser.get("config", "maxNetworkRetryCount")
                 )
                 self.backtestPeriod = int(parser.get("config", "backtestPeriod"))
+                self.maxBacktestWindow = int(parser.get("config", "maxBacktestWindow"))
                 self.minVolume = int(parser.get("config", "minimumVolume"))
                 self.backtestPeriodFactor = int(parser.get("config", "backtestPeriodFactor"))
             except configparser.NoOptionError as e:# pragma: no cover

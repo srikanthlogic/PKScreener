@@ -22,7 +22,13 @@
     SOFTWARE.
 
 """
+import warnings
+import os
+warnings.simplefilter("ignore", UserWarning,append=True)
+os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
 import multiprocessing
+from multiprocessing import Lock
+
 from time import sleep
 from concurrent.futures import ProcessPoolExecutor
 from rich.progress import Progress, BarColumn, TimeRemainingColumn, TimeElapsedColumn
@@ -32,6 +38,12 @@ from rich.segment import ControlType
 from pkscreener.classes.PKTask import PKTask
 
 multiprocessing.freeze_support()
+
+def init_pool_processes(the_lock):
+    '''Initialize each process with a global variable lock.
+    '''
+    global lock
+    lock = the_lock
 
 # def long_running_fn(*args, **kwargs):
 #     len_of_task = random.randint(3, 20000)  # take some random length of time
@@ -48,7 +60,7 @@ multiprocessing.freeze_support()
 
 progressUpdater=None
 class PKScheduler():
-    def scheduleTasks(tasksList=[], showProgressBars=False):
+    def scheduleTasks(tasksList=[], label:str=None, showProgressBars=False):
         n_workers = multiprocessing.cpu_count() - 1  # set this to the number of cores you have on your machine
         global progressUpdater
         console = Console()
@@ -73,21 +85,24 @@ class PKScheduler():
                 # this is the key - we share some state between our 
                 # main process and our worker functions
                 _progress = manager.dict()
+                _results = manager.dict()
                 console.control(Control(*((ControlType.CURSOR_UP,1),))) # Cursor up 1 lines
-                overall_progress_task = progress.add_task("[green]Pending jobs progress:")
+                overall_progress_task = progress.add_task(f"[green]{label if label is not None else 'Pending jobs progress:'}")
 
-                with ProcessPoolExecutor(max_workers=n_workers) as executor:
+                lock = Lock()
+                with ProcessPoolExecutor(max_workers=n_workers,
+                                         initializer=init_pool_processes,
+                                         initargs=(lock,)) as executor:
                     for task in tasksList:  # iterate over the jobs we need to run
                         # set visible false so we don't have a lot of bars all at once:
-                        task_id = progress.add_task(f"Task :{task.taskName}", visible=True)
+                        task_id = progress.add_task(f"Task :{task.taskName}", visible=showProgressBars)
                         task.taskId = task_id
                         task.progressStatusDict = _progress
+                        task.resultsDict = _results
                         futures.append(executor.submit(task.long_running_fn, task))
 
                     # monitor the progress:
-                    while (n_finished := sum([future.done() for future in futures])) < len(
-                        futures
-                    ):
+                    while (n_finished := sum([future.done() for future in futures])) < len(futures):
                         progress.update(
                             overall_progress_task,
                             completed=n_finished,
@@ -95,6 +110,9 @@ class PKScheduler():
                             visible=n_finished < len(futures)
                         )
                         for task_id, update_data in _progress.items():
+                            for task in tasksList:
+                                if task.taskId == task_id:
+                                    task.result = task.resultsDict.get(task_id)
                             latest = update_data["progress"]
                             total = update_data["total"]
                             # update the progress bar for this task:
@@ -102,20 +120,32 @@ class PKScheduler():
                                 task_id,
                                 completed=latest,
                                 total=total,
-                                visible=latest < total,
+                                visible=(latest < total) and showProgressBars,
                             )
+                            lock.acquire()
                             progress.refresh()
+                            lock.release()
                     # sleep(0.1)
                     progress.update(
                             overall_progress_task,
-                            completed=n_finished,
-                            total=len(futures),
-                            visible=n_finished < len(futures)
+                            completed=1,
+                            total=1,
+                            visible=False
                         )
+                    for task_id, update_data in _progress.items():
+                        # update the progress bar for this task:
+                        progress.update(
+                            task_id,
+                            completed=1,
+                            total=1,
+                            visible=False,
+                        )
+                    lock.acquire()
                     progress.refresh()
                     # raise any errors:
                     for future in futures:
                         future.result()
+                    lock.release()
 
 # if __name__ == "__main__":
 #     scheduleTasks([PKTask("Task 1",long_running_fn,),
