@@ -1343,17 +1343,18 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
                 "V": "Volume",
                 "M": "MA-Signal",
             }
-    task1 = PKTask("PortfolioLedger",long_running_fn=PortfolioCollection().getPortfoliosAsDataframe)
-    task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
-    tasksList = [task1,task2]
     if configManager.enablePortfolioCalculations:
-        PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})")
-    else:
+        if 'RUNNER' not in os.environ.keys():
+            task1 = PKTask("PortfolioLedger",long_running_fn=PortfolioCollection().getPortfoliosAsDataframe)
+            task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
+            tasksList = [task1,task2]
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})")
+        else:
+            for task in tasksList:
+                task.long_running_fn(*(task,))
         for task in tasksList:
-            task.long_running_fn(*(task,))
-    for task in tasksList:
-        if task.result is not None:
-            showBacktestResults(task.result, sortKey=None, optionalName=task.taskName)
+            if task.result is not None:
+                showBacktestResults(task.result, sortKey=None, optionalName=task.taskName)
     
     return summary_df,sorting,sortKeys
 
@@ -1371,8 +1372,14 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
                       long_running_fn_args=func_args)
         task.total = len(df_grouped)
         tasksList.append(task)
-    PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
-    
+    if 'RUNNER' not in os.environ.keys():
+        # On Github CI, we may run out of memory because of saving results in
+        # shared multiprocessing dict.
+        PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
+    else:
+        # On Github CI, let's run synchronously.
+        for task in tasksList:
+            task.long_running_fn(*(task,))
     for task in tasksList:
         p_df = task.result
         if p_df is not None:
