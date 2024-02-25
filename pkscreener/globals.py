@@ -581,23 +581,26 @@ def initQueues(minimumCount=0):
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
-        sortKey = "Volume"
-        ascending = False
+        sortKey = ["Volume"]
+        ascending = [False]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
-                sortKey = "MFI"
-                ascending = reversalOption in [6,7]
+                sortKey = ["MFI"]
+                ascending = [reversalOption in [6,7]]
             elif reversalOption in [8,9]:
-                sortKey = "FVDiff"
-                ascending = reversalOption in [9]
-        screenResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
-        saveResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
-        if "MFI" in saveResults.columns:
-            saveResults.drop("MFI", axis=1, inplace=True, errors="ignore")
-            screenResults.drop("MFI", axis=1, inplace=True, errors="ignore")
-        if "FVDiff" in saveResults.columns:
-            saveResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
-            screenResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
+                sortKey = ["FVDiff"]
+                ascending = [reversalOption in [9]]
+        elif executeOption == 7:
+            if reversalOption in [3]:
+                sortKey = ["Volume","MA-Signal"]
+                ascending = [False, False]
+        screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference"]
+        for column in columnsToBeDeleted:
+            if column in saveResults.columns:
+                saveResults.drop(column, axis=1, inplace=True, errors="ignore")
+                screenResults.drop(column, axis=1, inplace=True, errors="ignore")
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
@@ -1243,7 +1246,7 @@ def main(userArgs=None):
                     userPassedArgs.backtestdaysago = backtestPeriod
                 if len(screenResults) > 0:
                     screenResults, saveResults = labelDataForPrinting(
-                        screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption
+                        screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
                     )
                 if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                     screenResults, saveResults = removeUnknowns(screenResults, saveResults)

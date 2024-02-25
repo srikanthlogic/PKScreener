@@ -1187,13 +1187,15 @@ class ScreeningStatistics:
                             (recent["SMA"].iloc[1] >= recent["LMA"].iloc[1])
         is50DMA = (recent["SMA"].iloc[0] <= recent["Close"].iloc[0])
         is200DMA = (recent["LMA"].iloc[0] <= recent["Close"].iloc[0])
-        difference = round(
-                abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0])
+        difference = round((recent["SMA"].iloc[0] - recent["LMA"].iloc[0])
                 / recent["Close"].iloc[0]
                 * 100,
                 2,
             )
-        confText = f"{'GoldenCrossover' if isGoldenCrossOver else ('DeadCrossover' if isDeadCrossOver else ('Conf. Up' if is50DMAUpTrend else ('Conf. Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
+        saveDict["ConfDMADifference"] = difference
+        screenDict["ConfDMADifference"] = difference
+        # difference = abs(difference)
+        confText = f"{'GoldenCrossover' if isGoldenCrossOver else ('DeadCrossover' if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
         if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
             recent["SMA"].iloc[0] * percentage
         ):
