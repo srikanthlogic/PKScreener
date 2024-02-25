@@ -270,7 +270,7 @@ for mnu0 in cmds0:
                     p3 = mnu3.menuKey.upper()
                     if p3 == "0":
                         continue
-                    if p3 in [ "7"]:
+                    if p3 in [ "7"] and p2 not in ["21"]:
                         selectedMenu = m3.find(p3)
                         # Find the 2nd level menus, skipping those in the provided list
                         cmds4 = m4.renderForMenu(
