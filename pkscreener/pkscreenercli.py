@@ -260,6 +260,10 @@ def warnAboutDependencies():
 
 def runApplication():
     from pkscreener.globals import main
+    # From a previous call to main with args, it may have been mutated.
+    # Let's stock to the original args passed by user
+    argsv = argParser.parse_known_args()
+    args = argsv[0]
 
     main(userArgs=args)
 

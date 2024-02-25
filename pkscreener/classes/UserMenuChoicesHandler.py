@@ -58,38 +58,38 @@ class UserMenuChoicesHandler:
         global selectedChoice, userPassedArgs
         executeOption = None
         menuOption = None
-        tickerOption = None
+        indexOption = None
         options = []
         if startupoptions is not None:
             options = startupoptions.split(":")
             menuOption = options[0] if len(options) >= 1 else None
-            tickerOption = options[1] if len(options) >= 2 else None
+            indexOption = options[1] if len(options) >= 2 else None
             executeOption = options[2] if len(options) >= 3 else None
         if testBuild:
-            menuOption, tickerOption, executeOption, selectedChoice = UserMenuChoicesHandler.getTestBuildChoices(
-                tickerOption=tickerOption,
+            menuOption, indexOption, executeOption, selectedChoice = UserMenuChoicesHandler.getTestBuildChoices(
+                indexOption=indexOption,
                 executeOption=executeOption,
                 menuOption=menuOption,
             )
         elif downloadOnly:
-            menuOption, tickerOption, executeOption, selectedChoice = UserMenuChoicesHandler.getDownloadChoices(
+            menuOption, indexOption, executeOption, selectedChoice = UserMenuChoicesHandler.getDownloadChoices(
                 defaultAnswer=defaultAnswer
             )
             intraday = userPassedArgs.intraday or UserMenuChoicesHandler.configManager.isIntradayConfig()
             filePrefix = "INTRADAY_" if intraday else ""
             _, cache_file_name = Utility.tools.afterMarketStockDataExists(intraday)
             Utility.tools.set_github_output(f"{filePrefix}DOWNLOAD_CACHE_FILE_NAME",cache_file_name)
-        return options, menuOption, tickerOption, executeOption
+        return options, menuOption, indexOption, executeOption
     
-    def getTestBuildChoices(tickerOption=None, executeOption=None, menuOption=None):
+    def getTestBuildChoices(indexOption=None, executeOption=None, menuOption=None):
         if menuOption is not None:
             return (
                 str(menuOption),
-                tickerOption if tickerOption is not None else 1,
+                indexOption if indexOption is not None else 1,
                 executeOption if executeOption is not None else 0,
                 {
                     "0": str(menuOption),
-                    "1": (str(tickerOption) if tickerOption is not None else 1),
+                    "1": (str(indexOption) if indexOption is not None else 1),
                     "2": (str(executeOption) if executeOption is not None else 0),
                 },
             )

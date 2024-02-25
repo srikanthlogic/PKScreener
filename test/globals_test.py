@@ -40,45 +40,45 @@ def test_initExecution_positive():
 
 def test_initPostLevel0Execution_positive():
     menuOption = "X"
-    tickerOption = "1"
+    indexOption = "1"
     executeOption = "0"
-    t, e = initPostLevel0Execution(menuOption, tickerOption, executeOption)
-    assert str(t) == tickerOption
+    t, e = initPostLevel0Execution(menuOption, indexOption, executeOption)
+    assert str(t) == indexOption
     assert str(e) == executeOption
 
 
 def test_initPostLevel1Execution_positive():
-    tickerOption = "1"
+    indexOption = "1"
     executeOption = "0"
-    t, e = initPostLevel1Execution(tickerOption, executeOption)
-    assert str(t) == tickerOption
+    t, e = initPostLevel1Execution(indexOption, executeOption)
+    assert str(t) == indexOption
     assert str(e) == executeOption
 
 
 def test_getTestBuildChoices_positive():
-    tickerOption = "1"
+    indexOption = "1"
     executeOption = "0"
     (
         menuOption,
-        selectedTickerOption,
+        selectedindexOption,
         selectedExecuteOption,
         selectedChoice,
-    ) = getTestBuildChoices(tickerOption, executeOption)
+    ) = getTestBuildChoices(indexOption, executeOption)
     assert menuOption == "X"
-    assert str(selectedTickerOption) == tickerOption
+    assert str(selectedindexOption) == indexOption
     assert str(selectedExecuteOption) == executeOption
-    assert selectedChoice == {"0": "X", "1": tickerOption, "2": executeOption}
+    assert selectedChoice == {"0": "X", "1": indexOption, "2": executeOption}
 
 
 def test_getDownloadChoices_positive():
     (
         menuOption,
-        selectedTickerOption,
+        selectedindexOption,
         selectedExecuteOption,
         selectedChoice,
     ) = getDownloadChoices(defaultAnswer="Y")
     assert menuOption == "X"
-    assert str(selectedTickerOption) == "12"
+    assert str(selectedindexOption) == "12"
     assert str(selectedExecuteOption) == "0"
     assert selectedChoice == {"0": "X", "1": "12", "2": "0"}
 
@@ -94,12 +94,12 @@ def test_getTopLevelMenuChoices_positive():
     startupoptions = "X:1:0"
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == ["X", "1", "0"]
     assert menuOption == "X"
-    assert tickerOption == "1"
+    assert indexOption == "1"
     assert executeOption == "0"
 
 
@@ -138,10 +138,10 @@ def test_initExecution_exit_positive():
 
 def test_initPostLevel0Execution_negative():
     menuOption = "X"
-    tickerOption = "15"
+    indexOption = "15"
     executeOption = "0"
     with patch("builtins.print") as mock_print:
-        initPostLevel0Execution(menuOption, tickerOption, executeOption)
+        initPostLevel0Execution(menuOption, indexOption, executeOption)
         mock_print.assert_called_with(
             colorText.BOLD
             + colorText.FAIL
@@ -151,10 +151,10 @@ def test_initPostLevel0Execution_negative():
 
 
 def test_initPostLevel1Execution_negative():
-    tickerOption = "1"
+    indexOption = "1"
     executeOption = "45"
     with patch("builtins.print") as mock_print:
-        initPostLevel1Execution(tickerOption, executeOption)
+        initPostLevel1Execution(indexOption, executeOption)
         mock_print.assert_called_with(
             colorText.BOLD
             + colorText.FAIL
@@ -164,9 +164,9 @@ def test_initPostLevel1Execution_negative():
 
 
 def test_getTestBuildChoices_negative():
-    tickerOption = "A"
+    indexOption = "A"
     executeOption = "0"
-    r1, r2, r3, r4 = getTestBuildChoices(tickerOption, executeOption)
+    r1, r2, r3, r4 = getTestBuildChoices(indexOption, executeOption)
     assert r1 == "X"
     assert r2 == 1
     assert r3 == 0
@@ -182,12 +182,12 @@ def test_getDownloadChoices_negative():
             with pytest.raises(SystemExit):
                 (
                     menuOption,
-                    selectedTickerOption,
+                    selectedindexOption,
                     selectedExecuteOption,
                     selectedChoice,
                 ) = getDownloadChoices()
                 assert menuOption == "X"
-                assert selectedTickerOption == 12
+                assert selectedindexOption == 12
                 assert selectedExecuteOption == 0
                 assert selectedChoice == {"0": "X", "1": "12", "2": "0"}
     try:
@@ -200,12 +200,12 @@ def test_getTopLevelMenuChoices_negative():
     startupoptions = "X:1:0"
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == ["X", "1", "0"]
     assert menuOption == "X"
-    assert tickerOption == "1"
+    assert indexOption == "1"
     assert executeOption == "0"
 
 
@@ -227,10 +227,10 @@ def test_getTopLevelMenuChoices_edge():
     startupoptions = ""
     testBuild = False
     downloadOnly = False
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly
     )
     assert options == [""]
     assert menuOption == ""
-    assert tickerOption is None
+    assert indexOption is None
     assert executeOption is None

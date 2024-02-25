@@ -2,6 +2,8 @@
 
 ## What's New?
 1. [v0.44.20240224.183] release
+* Support for Golden/Dead crossovers under MA confluence (Try X>12>7>3)
+* Support for portfolio calculations as part of backtests (by default disabled, but can be enabled in configuration)
 * Strategies menu is now enabled with various strategies that you can try out on your own alongside the scan types.
 * Summary of scan filters/strategies included along-side the main scan results.
 * Added the Mutual funds and institutional investor ownership trend based on the previous month's closing in the Trends column (See the MFI:<Trend>). This is updated once every week, over the weekend or daily after market-hours. You must already have been seeing stocks based on fund house popularity (X > 12 > 21> options).

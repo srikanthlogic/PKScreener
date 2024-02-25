@@ -593,9 +593,7 @@ class StockScreener:
                 or downloadOnly
                 or self.isTradingTime
                 or hostData is None
-            ) and (
-                hostData is None and backtestDuration >= 0
-            ):  # Fetch only if we are NOT backtesting
+            ):
             start = None
             if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
