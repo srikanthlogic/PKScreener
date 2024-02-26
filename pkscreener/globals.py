@@ -25,7 +25,9 @@
 """
 # Keep module imports prior to classes
 import os
-
+import warnings
+warnings.simplefilter("ignore", UserWarning,append=True)
+os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import logging
 import multiprocessing
@@ -78,6 +80,8 @@ from pkscreener.classes.MenuOptions import (
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.Portfolio import PortfolioCollection
+from pkscreener.classes.PKTask import PKTask
+from pkscreener.classes.PKScheduler import PKScheduler
 
 multiprocessing.freeze_support()
 # import dataframe_image as dfi
@@ -178,7 +182,7 @@ def getScannerMenuChoices(
     downloadOnly=False,
     startupoptions=None,
     menuOption=None,
-    tickerOption=None,
+    indexOption=None,
     executeOption=None,
     defaultAnswer=None,
     user=None,
@@ -186,7 +190,7 @@ def getScannerMenuChoices(
     global selectedChoice
     executeOption = executeOption
     menuOption = menuOption
-    tickerOption = tickerOption
+    indexOption = indexOption
     try:
         if menuOption is None:
             selectedMenu = initExecution(menuOption=menuOption)
@@ -196,13 +200,13 @@ def getScannerMenuChoices(
                 menuOption, testBuild, defaultAnswer=defaultAnswer, user=user
             )
         elif menuOption == "X":
-            tickerOption, executeOption = initPostLevel0Execution(
+            indexOption, executeOption = initPostLevel0Execution(
                 menuOption=menuOption,
-                tickerOption=tickerOption,
+                indexOption=indexOption,
                 executeOption=executeOption,
             )
-            tickerOption, executeOption = initPostLevel1Execution(
-                tickerOption=tickerOption, executeOption=executeOption
+            indexOption, executeOption = initPostLevel1Execution(
+                indexOption=indexOption, executeOption=executeOption
             )
     except KeyboardInterrupt:
         input(
@@ -214,7 +218,7 @@ def getScannerMenuChoices(
         sys.exit(0)
     except Exception as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
-    return menuOption, tickerOption, executeOption, selectedChoice
+    return menuOption, indexOption, executeOption, selectedChoice
 
 
 def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
@@ -277,15 +281,15 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
     return summarydf, detaildf
 
 
-def getTestBuildChoices(tickerOption=None, executeOption=None, menuOption=None):
+def getTestBuildChoices(indexOption=None, executeOption=None, menuOption=None):
     if menuOption is not None:
         return (
             str(menuOption),
-            tickerOption if tickerOption is not None else 1,
+            indexOption if indexOption is not None else 1,
             executeOption if executeOption is not None else 0,
             {
                 "0": str(menuOption),
-                "1": (str(tickerOption) if tickerOption is not None else 1),
+                "1": (str(indexOption) if indexOption is not None else 1),
                 "2": (str(executeOption) if executeOption is not None else 0),
             },
         )
@@ -296,28 +300,28 @@ def getTopLevelMenuChoices(startupoptions, testBuild, downloadOnly, defaultAnswe
     global selectedChoice, userPassedArgs
     executeOption = None
     menuOption = None
-    tickerOption = None
+    indexOption = None
     options = []
     if startupoptions is not None:
         options = startupoptions.split(":")
         menuOption = options[0] if len(options) >= 1 else None
-        tickerOption = options[1] if len(options) >= 2 else None
+        indexOption = options[1] if len(options) >= 2 else None
         executeOption = options[2] if len(options) >= 3 else None
     if testBuild:
-        menuOption, tickerOption, executeOption, selectedChoice = getTestBuildChoices(
-            tickerOption=tickerOption,
+        menuOption, indexOption, executeOption, selectedChoice = getTestBuildChoices(
+            indexOption=indexOption,
             executeOption=executeOption,
             menuOption=menuOption,
         )
     elif downloadOnly:
-        menuOption, tickerOption, executeOption, selectedChoice = getDownloadChoices(
+        menuOption, indexOption, executeOption, selectedChoice = getDownloadChoices(
             defaultAnswer=defaultAnswer
         )
         intraday = userPassedArgs.intraday or configManager.isIntradayConfig()
         filePrefix = "INTRADAY_" if intraday else ""
         _, cache_file_name = Utility.tools.afterMarketStockDataExists(intraday)
         Utility.tools.set_github_output(f"{filePrefix}DOWNLOAD_CACHE_FILE_NAME",cache_file_name)
-    return options, menuOption, tickerOption, executeOption
+    return options, menuOption, indexOption, executeOption
 
 
 def handleScannerExecuteOption4(executeOption, options):
@@ -456,7 +460,7 @@ def initExecution(menuOption=None):
 
 
 def initPostLevel0Execution(
-    menuOption=None, tickerOption=None, executeOption=None, skip=[], retrial=False
+    menuOption=None, indexOption=None, executeOption=None, skip=[], retrial=False
 ):
     global newlyListedOnly, selectedChoice
     Utility.tools.clearScreen()
@@ -470,30 +474,30 @@ def initPostLevel0Execution(
         + level0MenuDict[menuOption].strip()
         + colorText.END
     )
-    if tickerOption is None:
+    if indexOption is None:
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu=selectedMenu, skip=skip)
     try:
-        if tickerOption is None:
-            tickerOption = input(
+        if indexOption is None:
+            indexOption = input(
                 colorText.BOLD + colorText.FAIL + "[+] Select option: "
             )
             print(colorText.END, end="")
-        if tickerOption == "" or tickerOption is None:
-            tickerOption = 12
-        # elif tickerOption == 'W' or tickerOption == 'w' or tickerOption == 'N' or tickerOption == 'n' or tickerOption == 'E' or tickerOption == 'e':
-        elif not str(tickerOption).isnumeric():
-            tickerOption = tickerOption.upper()
-            if tickerOption in ["M", "E", "N", "Z"]:
-                return tickerOption, 0
+        if indexOption == "" or indexOption is None:
+            indexOption = 12
+        # elif indexOption == 'W' or indexOption == 'w' or indexOption == 'N' or indexOption == 'n' or indexOption == 'E' or indexOption == 'e':
+        elif not str(indexOption).isnumeric():
+            indexOption = indexOption.upper()
+            if indexOption in ["M", "E", "N", "Z"]:
+                return indexOption, 0
         else:
-            tickerOption = int(tickerOption)
-            if tickerOption < 0 or tickerOption > 14:
+            indexOption = int(indexOption)
+            if indexOption < 0 or indexOption > 14:
                 raise ValueError
-            elif tickerOption == 13:
+            elif indexOption == 13:
                 newlyListedOnly = True
-                tickerOption = 12
-        selectedChoice["1"] = str(tickerOption)
+                indexOption = 12
+        selectedChoice["1"] = str(indexOption)
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except Exception as e:  # pragma: no cover
@@ -508,13 +512,13 @@ def initPostLevel0Execution(
             sleep(2)
             Utility.tools.clearScreen()
             return initPostLevel0Execution(retrial=True)
-    return tickerOption, executeOption
+    return indexOption, executeOption
 
 
-def initPostLevel1Execution(tickerOption, executeOption=None, skip=[], retrial=False):
+def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=False):
     global selectedChoice
     if executeOption is None:
-        if tickerOption is not None and tickerOption != "W":
+        if indexOption is not None and indexOption != "W":
             Utility.tools.clearScreen()
             print(
                 colorText.BOLD
@@ -525,10 +529,10 @@ def initPostLevel1Execution(tickerOption, executeOption=None, skip=[], retrial=F
                 + level1_X_MenuDict[selectedChoice["1"]].strip()
                 + colorText.END
             )
-            selectedMenu = m1.find(tickerOption)
+            selectedMenu = m1.find(indexOption)
             m2.renderForMenu(selectedMenu=selectedMenu, skip=skip)
     try:
-        if tickerOption is not None and tickerOption != "W":
+        if indexOption is not None and indexOption != "W":
             if executeOption is None:
                 executeOption = input(
                     colorText.BOLD + colorText.FAIL + "[+] Select option: "
@@ -558,13 +562,13 @@ def initPostLevel1Execution(tickerOption, executeOption=None, skip=[], retrial=F
         if not retrial:
             sleep(2)
             Utility.tools.clearScreen()
-            return initPostLevel1Execution(tickerOption, executeOption, retrial=True)
-    return tickerOption, executeOption
+            return initPostLevel1Execution(indexOption, executeOption, retrial=True)
+    return indexOption, executeOption
 
 
 def initQueues(minimumCount=0):
-    tasks_queue = multiprocessing.JoinableQueue()
-    results_queue = multiprocessing.Queue()
+    tasks_queue = multiprocessing.JoinableQueue(500)
+    results_queue = multiprocessing.Queue(500)
 
     totalConsumers = min(minimumCount, multiprocessing.cpu_count())
     if totalConsumers == 1:
@@ -577,23 +581,26 @@ def initQueues(minimumCount=0):
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
-        sortKey = "Volume"
-        ascending = False
+        sortKey = ["Volume"]
+        ascending = [False]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
-                sortKey = "MFI"
-                ascending = reversalOption in [6,7]
+                sortKey = ["MFI"]
+                ascending = [reversalOption in [6,7]]
             elif reversalOption in [8,9]:
-                sortKey = "FVDiff"
-                ascending = reversalOption in [9]
-        screenResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
-        saveResults.sort_values(by=[sortKey], ascending=ascending, inplace=True)
-        if "MFI" in saveResults.columns:
-            saveResults.drop("MFI", axis=1, inplace=True, errors="ignore")
-            screenResults.drop("MFI", axis=1, inplace=True, errors="ignore")
-        if "FVDiff" in saveResults.columns:
-            saveResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
-            screenResults.drop("FVDiff", axis=1, inplace=True, errors="ignore")
+                sortKey = ["FVDiff"]
+                ascending = [reversalOption in [9]]
+        elif executeOption == 7:
+            if reversalOption in [3]:
+                sortKey = ["Volume","MA-Signal"]
+                ascending = [False, False]
+        screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference"]
+        for column in columnsToBeDeleted:
+            if column in saveResults.columns:
+                saveResults.drop(column, axis=1, inplace=True, errors="ignore")
+                screenResults.drop(column, axis=1, inplace=True, errors="ignore")
         screenResults.set_index("Stock", inplace=True)
         saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
@@ -657,7 +664,7 @@ def main(userArgs=None):
     reversalOption = None
     listStockCodes = None
     screenResults, saveResults = initDataframes()
-    options, menuOption, tickerOption, executeOption = getTopLevelMenuChoices(
+    options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly, defaultAnswer=defaultAnswer
     )
     # Print Level 1 menu options
@@ -665,12 +672,12 @@ def main(userArgs=None):
     menuOption = selectedMenu.menuKey
     if menuOption in ["X", "T", "E", "Y", "U", "H"]:
         # Print Level 2 menu options
-        menuOption, tickerOption, executeOption, selectedChoice = getScannerMenuChoices(
+        menuOption, indexOption, executeOption, selectedChoice = getScannerMenuChoices(
             testBuild or testing,
             downloadOnly,
             startupoptions,
             menuOption=menuOption,
-            tickerOption=tickerOption,
+            indexOption=indexOption,
             executeOption=executeOption,
             defaultAnswer=defaultAnswer,
             user=user,
@@ -682,14 +689,14 @@ def main(userArgs=None):
         # Backtests
         backtestPeriod = 0
         if len(options) >= 2:
-            if str(tickerOption).isnumeric():
-                backtestPeriod = int(tickerOption)
+            if str(indexOption).isnumeric():
+                backtestPeriod = int(indexOption)
             if len(options) >= 4:
-                tickerOption = executeOption
+                indexOption = executeOption
                 executeOption = options[3]
             del options[1]  # Let's delete the backtestperiod from the provided options
-        tickerOption, executeOption, backtestPeriod = takeBacktestInputs(
-            str(menuOption).upper(), tickerOption, executeOption, backtestPeriod
+        indexOption, executeOption, backtestPeriod = takeBacktestInputs(
+            str(menuOption).upper(), indexOption, executeOption, backtestPeriod
         )
         backtestPeriod = backtestPeriod * configManager.backtestPeriodFactor
     elif menuOption in ["S"]:
@@ -749,12 +756,12 @@ def main(userArgs=None):
             userOptions = userOption.split(",")
             for usrOption in userOptions:
                 strategyFilter.append(m1.find(usrOption).menuText.strip())
-            menuOption, tickerOption, executeOption, selectedChoice = getScannerMenuChoices(
+            menuOption, indexOption, executeOption, selectedChoice = getScannerMenuChoices(
             testBuild or testing,
             downloadOnly,
             startupoptions,
             menuOption="X",
-            tickerOption=tickerOption,
+            indexOption=indexOption,
             executeOption=executeOption,
             defaultAnswer=defaultAnswer,
             user=user,
@@ -765,11 +772,11 @@ def main(userArgs=None):
         sleep(3)
         return
 
-    handleMenu_XBG(menuOption, tickerOption, executeOption)
-    if tickerOption == "M" or executeOption == "M":
+    handleMenu_XBG(menuOption, indexOption, executeOption)
+    if indexOption == "M" or executeOption == "M":
         # Go back to the caller. It will show the console menu again.
         return
-    listStockCodes = handleRequestForSpecificStocks(options, tickerOption)
+    listStockCodes = handleRequestForSpecificStocks(options, indexOption)
     handleExitRequest(executeOption)
     if executeOption is None:
         executeOption = 0
@@ -829,6 +836,7 @@ def main(userArgs=None):
                 selectedChoice["4"] = str(maLength)
     if executeOption == 7:
         selectedMenu = m2.find(str(executeOption))
+        maLength = 0
         if len(options) >= 4:
             respChartPattern = int(options[3])
             selectedChoice["3"] = options[3]
@@ -838,14 +846,22 @@ def main(userArgs=None):
                         insideBarToLookback = float(options[4])
                     elif str(options[4]).upper() == "D":
                         insideBarToLookback = 7 if respChartPattern in [1, 2] else 0.02
+                    if len(options) >= 6:
+                        if str(options[5]).isnumeric():
+                            maLength = int(options[5])
+                        elif str(options[5]).upper() == "D":
+                            maLength = 1 # Conf. up
                 elif defaultAnswer == "Y" and user is not None:
                     # bot mode
                     insideBarToLookback = 7 if respChartPattern in [1, 2] else 0.02
+                    maLength = 1 if respChartPattern in [3] else 0
                 else:
                     (
                         respChartPattern,
                         insideBarToLookback,
                     ) = Utility.tools.promptChartPatterns(selectedMenu)
+                if maLength == 0:
+                    maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
             elif respChartPattern in [0, 4, 5, 6]:
                 insideBarToLookback = 0
             else:
@@ -857,14 +873,18 @@ def main(userArgs=None):
             respChartPattern, insideBarToLookback = Utility.tools.promptChartPatterns(
                 selectedMenu
             )
+            if maLength == 0:
+                maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
         if (
             respChartPattern is None
             or insideBarToLookback is None
             or respChartPattern == 0
+            or maLength == 0
         ):
             return
         else:
             selectedChoice["3"] = str(respChartPattern)
+            selectedChoice["4"] = str(maLength)
     if executeOption == 8:
         if len(options) >= 5:
             if str(options[3]).isnumeric():
@@ -912,7 +932,7 @@ def main(userArgs=None):
             if popOption >= 0 and popOption <= 9:
                 pass
         else:
-            popOption = Utility.tools.promptPopularStocks(selectedMenu)
+            popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
         if popOption is None or popOption == 0:
             return
         else:
@@ -925,6 +945,38 @@ def main(userArgs=None):
                 screenResults = mstarFetcher.fetchMorningstarFundFavouriteStocks(
                     "NoOfFunds" if popOption == 2 else "ChangeInShares"
                 )
+            if menuOption in ["X"]:
+                printNotifySaveScreenedResults(
+                    screenResults,
+                    screenResults,
+                    selectedChoice,
+                    menuChoiceHierarchy,
+                    False,
+                    None,
+                )
+                if defaultAnswer is None:
+                    input("Press <Enter> to continue...")
+                return
+            else:
+                listStockCodes = ",".join(list(screenResults.index))
+        else:
+            userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
+            reversalOption = popOption
+    if executeOption == 22:
+        selectedMenu = m2.find(str(executeOption))
+        if len(options) >= 4:
+            popOption = int(options[3])
+            if popOption >= 0 and popOption <= 3:
+                pass
+        else:
+            popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
+        if popOption is None or popOption == 0:
+            return
+        else:
+            selectedChoice["3"] = str(popOption)
+        updateMenuChoiceHierarchy()
+        screenResults = mstarFetcher.fetchMorningstarStocksPerformanceForExchange()
+        if menuOption in ["X"]:
             printNotifySaveScreenedResults(
                 screenResults,
                 screenResults,
@@ -937,33 +989,7 @@ def main(userArgs=None):
                 input("Press <Enter> to continue...")
             return
         else:
-            userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
-            reversalOption = popOption
-    if executeOption == 22:
-        selectedMenu = m2.find(str(executeOption))
-        if len(options) >= 4:
-            popOption = int(options[3])
-            if popOption >= 0 and popOption <= 3:
-                pass
-        else:
-            popOption = Utility.tools.promptPopularStocks(selectedMenu)
-        if popOption is None or popOption == 0:
-            return
-        else:
-            selectedChoice["3"] = str(popOption)
-        updateMenuChoiceHierarchy()
-        screenResults = mstarFetcher.fetchMorningstarStocksPerformanceForExchange()
-        printNotifySaveScreenedResults(
-            screenResults,
-            screenResults,
-            selectedChoice,
-            menuChoiceHierarchy,
-            False,
-            None,
-        )
-        if defaultAnswer is None:
-            input("Press <Enter> to continue...")
-        return
+            listStockCodes = ",".join(list(screenResults.index))
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
         return
@@ -977,14 +1003,14 @@ def main(userArgs=None):
         input("Press <Enter> to continue...")
         return
     if (
-        not str(tickerOption).isnumeric() and tickerOption in ["W", "E", "M", "N", "Z"]
+        not str(indexOption).isnumeric() and indexOption in ["W", "E", "M", "N", "Z"]
     ) or (
-        str(tickerOption).isnumeric()
-        and (int(tickerOption) >= 0 and int(tickerOption) < 15)
+        str(indexOption).isnumeric()
+        and (int(indexOption) >= 0 and int(indexOption) < 15)
     ):
         configManager.getConfig(ConfigManager.parser)
         try:
-            if tickerOption == "W":
+            if indexOption == "W":
                 listStockCodes = fetcher.fetchWatchlist()
                 if listStockCodes is None:
                     input(
@@ -994,7 +1020,7 @@ def main(userArgs=None):
                         + colorText.END
                     )
                     sys.exit(0)
-            elif tickerOption == "N":
+            elif indexOption == "N":
                 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
                 prediction, pText, sText = screener.getNiftyPrediction(
                     df=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
@@ -1007,9 +1033,9 @@ def main(userArgs=None):
                 if defaultAnswer is None:
                     input("\nPress <Enter> to Continue...\n")
                 return
-            elif tickerOption == "M":
+            elif indexOption == "M":
                 return
-            elif tickerOption == "Z":
+            elif indexOption == "Z":
                 input(
                     colorText.BOLD
                     + colorText.FAIL
@@ -1017,10 +1043,10 @@ def main(userArgs=None):
                     + colorText.END
                 )
                 sys.exit(0)
-            elif tickerOption == "E":
+            elif indexOption == "E":
                 return handleMonitorFiveEMA()
             else:
-                listStockCodes = prepareStocksForScreening(testing, downloadOnly, listStockCodes, tickerOption)
+                listStockCodes = prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption)
         except urllib.error.URLError as e:
             default_logger().debug(e, exc_info=True)
             print(
@@ -1183,6 +1209,7 @@ def main(userArgs=None):
                 actualHistoricalDuration = samplingDuration - fillerPlaceHolder
                 if actualHistoricalDuration >= 0:
                     progressbar()
+        sys.stdout.write(f"\x1b[1A")
         if not keyboardInterruptEventFired:
             tasks_queue, results_queue, totalConsumers = initQueues(len(items))
             cp = CandlePatterns()
@@ -1233,7 +1260,7 @@ def main(userArgs=None):
                     userPassedArgs.backtestdaysago = backtestPeriod
                 if len(screenResults) > 0:
                     screenResults, saveResults = labelDataForPrinting(
-                        screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption
+                        screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
                     )
                 if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
                     screenResults, saveResults = removeUnknowns(screenResults, saveResults)
@@ -1339,8 +1366,18 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
                 "V": "Volume",
                 "M": "MA-Signal",
             }
-    showBacktestResults(PortfolioCollection().portfoliosAsDataframe, sortKey=None, optionalName="PortfolioLedger")
-    showBacktestResults(PortfolioCollection().ledgerSummaryAsDataframe, sortKey=None, optionalName="PortfolioLedgerSnapshots")
+    if configManager.enablePortfolioCalculations:
+        if 'RUNNER' not in os.environ.keys():
+            task1 = PKTask("PortfolioLedger",long_running_fn=PortfolioCollection().getPortfoliosAsDataframe)
+            task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
+            tasksList = [task1,task2]
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})")
+        else:
+            for task in tasksList:
+                task.long_running_fn(*(task,))
+        for task in tasksList:
+            if task.result is not None:
+                showBacktestResults(task.result, sortKey=None, optionalName=task.taskName)
     
     return summary_df,sorting,sortKeys
 
@@ -1348,18 +1385,34 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
     df_grouped = backtest_df.groupby("Date")
     userPassedArgs.backtestdaysago = backtestPeriod
     df_xray = None
+    groupCounter = 0
+    tasksList=[]
     for calcForDate, df_group in df_grouped:
-        p_df = PortfolioXRay.performXRay(
-                    df_group, userPassedArgs, calcForDate=calcForDate
-                )
-        if df_xray is not None:
-            df_xray = pd.concat([df_xray, p_df], axis=0)
-        else:
-            df_xray = p_df
+        groupCounter += 1
+        func_args = (df_group, userPassedArgs, calcForDate,f"Portfolio X-Ray | {calcForDate} | {groupCounter} of {len(df_grouped)}")
+        task = PKTask(f"Portfolio X-Ray | {calcForDate} | {groupCounter} of {len(df_grouped)}",
+                      long_running_fn=PortfolioXRay.performXRay,
+                      long_running_fn_args=func_args)
+        task.total = len(df_grouped)
+        tasksList.append(task)
+    if 'RUNNER' not in os.environ.keys():
+        # On Github CI, we may run out of memory because of saving results in
+        # shared multiprocessing dict.
+        PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
+    else:
+        # On Github CI, let's run synchronously.
+        for task in tasksList:
+            task.long_running_fn(*(task,))
+    for task in tasksList:
+        p_df = task.result
+        if p_df is not None:
+            if df_xray is not None:
+                df_xray = pd.concat([df_xray, p_df.copy()], axis=0)
+            else:
+                df_xray = p_df.copy()
             # Let's drop the columns no longer required for backtest report
-    removedUnusedColumns(
-                None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"]
-            )
+
+    removedUnusedColumns(None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"])
     df_xray = df_xray.replace(np.nan, "", regex=True)
     df_xray = PortfolioXRay.xRaySummary(df_xray)
     df_xray.loc[:, "Date"] = df_xray.loc[:, "Date"].apply(
@@ -1402,16 +1455,16 @@ def resetConfigToDefault():
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
 
-def prepareStocksForScreening(testing, downloadOnly, listStockCodes, tickerOption):
+def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption):
     if not downloadOnly:
         updateMenuChoiceHierarchy()
     if listStockCodes is None or len(listStockCodes) == 0:
         listStockCodes = fetcher.fetchStockCodes(
-                        tickerOption, stockCode=None
+                        indexOption, stockCode=None
                     )
         if (listStockCodes is None or len(listStockCodes) == 0) and testing:
             listStockCodes = [TEST_STKCODE]
-    if tickerOption == 0:
+    if indexOption == 0:
         selectedChoice["3"] = ".".join(listStockCodes)
     if testing:
         import random
@@ -1480,9 +1533,9 @@ def handleMonitorFiveEMA():
         input("\nPress <Enter> to Continue...\n")
         return
 
-def handleRequestForSpecificStocks(options, tickerOption):
+def handleRequestForSpecificStocks(options, indexOption):
     listStockCodes = []
-    if tickerOption == 0:
+    if indexOption == 0:
         if len(options) >= 4:
             listStockCodes = str(options[3]).split(",")
     return listStockCodes
@@ -1497,12 +1550,12 @@ def handleExitRequest(executeOption):
         )
         sys.exit(0)
 
-def handleMenu_XBG(menuOption, tickerOption, executeOption):
+def handleMenu_XBG(menuOption, indexOption, executeOption):
     if menuOption in ["X", "B", "G"]:
         selMenu = m0.find(menuOption)
         m1.renderForMenu(selMenu, asList=True)
-        if tickerOption is not None:
-            selMenu = m1.find(tickerOption)
+        if indexOption is not None:
+            selMenu = m1.find(indexOption)
             m2.renderForMenu(selMenu, asList=True)
             if executeOption is not None:
                 selMenu = m2.find(executeOption)
@@ -1708,7 +1761,7 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
     targetDateG10k = None
     if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
         if saveResults is not None and len(saveResults) > 0:
-            df = PortfolioXRay.performXRay(saveResults, userPassedArgs)
+            df = PortfolioXRay.performXRay(saveResults, userPassedArgs,None, None)
             targetDateG10k = saveResults["Date"].iloc[0]
             if df is not None and len(df) > 0:
                 titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
@@ -1760,7 +1813,7 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
 
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
-    if "RUNNER" in os.environ.keys() and not force:
+    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force):
         return
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
@@ -1813,7 +1866,7 @@ def sendQuickScanResult(
     addendum=None,
     addendumLabel=None,
 ):
-    if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
+    if (("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
         return
     try:
         Utility.tools.tableToImage(
@@ -1918,6 +1971,9 @@ def runScanners(
         if numStocksPerIteration < 10:
             numStocksPerIteration = numStocks if (iterations == 1 or numStocks<= iterations) else int(numStocks/int(iterations))
             iterations = originalIterations
+        if numStocksPerIteration > 500:
+            numStocksPerIteration = 500
+            iterations = int(numStocks/numStocksPerIteration) + 1
         print(
             colorText.BOLD
             + colorText.GREEN
@@ -1989,9 +2045,11 @@ def runScanners(
                     len(lstscreen) >= 1 or counter >= int(numStocksPerIteration * 0.05)
                 )) or len(lstscreen) >= max_allowed:
                     break
-                if counter >= numStocksPerIteration:
+                # Add to the queue when we're through 75% of the previously added items already
+                if counter >= int(numStocksPerIteration * 0.75):
                     queueCounter += 1
                     counter = 0
+        print(f"\x1b[3A")
         elapsed_time = time.time() - start_time
         if menuOption in ["X", "G"]:
             # create extension
@@ -2327,7 +2385,7 @@ def startWorkers(consumers):
 
 
 def takeBacktestInputs(
-    menuOption=None, tickerOption=None, executeOption=None, backtestPeriod=0
+    menuOption=None, indexOption=None, executeOption=None, backtestPeriod=0
 ):
     g10k = '"Growth of 10k"'
     print(
@@ -2348,14 +2406,14 @@ def takeBacktestInputs(
         default_logger().debug(e, exc_info=True)
     if backtestPeriod == 0:
         backtestPeriod = 3 if menuOption == "G" else 30
-    tickerOption, executeOption = initPostLevel0Execution(
+    indexOption, executeOption = initPostLevel0Execution(
         menuOption=menuOption,
-        tickerOption=tickerOption,
+        indexOption=indexOption,
         executeOption=executeOption,
         skip=["N", "E"],
     )
-    tickerOption, executeOption = initPostLevel1Execution(
-        tickerOption=tickerOption,
+    indexOption, executeOption = initPostLevel1Execution(
+        indexOption=indexOption,
         executeOption=executeOption,
         skip=[
             "0",
@@ -2366,7 +2424,7 @@ def takeBacktestInputs(
             "42",
         ],
     )
-    return tickerOption, executeOption, backtestPeriod
+    return indexOption, executeOption, backtestPeriod
 
 
 def terminateAllWorkers(consumers, tasks_queue, testing):
@@ -2392,6 +2450,7 @@ def terminateAllWorkers(consumers, tasks_queue, testing):
         try:
             _ = tasks_queue.get(False)
         except Exception as e:  # pragma: no cover
+            default_logger().debug(e, exc_info=True)
             break
 
 

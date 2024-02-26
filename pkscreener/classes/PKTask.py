@@ -23,10 +23,18 @@
 
 """
 class PKTask:
-    def __init__(self, taskName=None, long_running_fn=None):
+    def __init__(self, taskName=None, long_running_fn=None, long_running_fn_args=None, progress_fn=None):
         if taskName is None or taskName == "":
             raise ValueError("taskName cannot be None or empty string!")
         if long_running_fn is None:
             raise ValueError("long_running_fn cannot be None!")
         self.taskName = taskName
+        self.progressStatusDict = None
+        self.taskId = 0
+        self.progress = 0
+        self.total = 0
         self.long_running_fn = long_running_fn
+        self.long_running_fn_args = long_running_fn_args
+        self.progress_fn = progress_fn
+        self.resultsDict = None
+        self.result = None

@@ -26,6 +26,7 @@ import argparse
 import os
 from time import sleep
 
+# .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 argParser = argparse.ArgumentParser()
 required = True
 argParser.add_argument(
@@ -35,6 +36,9 @@ argParser.add_argument(
     "-b", "--branch", help="Origin branch name to push to", required=required
 )
 args = argParser.parse_args()
+
+# args.message = "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
+# args.branch = "actions-data-download"
 
 c_msg = args.message  # "GitHub Action Workflow - Market Data Download (Default Config)"
 
@@ -50,13 +54,18 @@ with open("msg.log", "r") as f:
 
 cnt = 0
 commit_hash = ""
+previousCommitFound = False
 for line in lines:
     if c_msg in line:
         cnt += 1
+        previousCommitFound = True
     else:
-        commit_hash = line.split(" ")[0]
-        cnt -= 1
-        break
+        if previousCommitFound:
+            commit_hash = line.split(" ")[0]
+            cnt -= 1
+            break
+        else:
+            cnt += 1
 
 
 print(f"[+] Reset at HEAD~{cnt}")

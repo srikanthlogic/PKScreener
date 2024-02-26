@@ -25,17 +25,19 @@
 """
 # Pyinstaller compile Windows: pyinstaller --onefile --icon=screenshots\icon.ico pkscreener\pkscreenercli.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress
 # Pyinstaller compile Linux  : pyinstaller --onefile --icon=screenshots/icon.ico pkscreener/pkscreenercli.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress
-
+import warnings
+warnings.simplefilter("ignore", UserWarning,append=True)
 import argparse
 import builtins
 import logging
-import multiprocessing
 import traceback
 
 # Keep module imports prior to classes
 import os
 import sys
 import tempfile
+os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
+import multiprocessing
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -258,6 +260,10 @@ def warnAboutDependencies():
 
 def runApplication():
     from pkscreener.globals import main
+    # From a previous call to main with args, it may have been mutated.
+    # Let's stock to the original args passed by user
+    argsv = argParser.parse_known_args()
+    args = argsv[0]
 
     main(userArgs=args)
 
@@ -355,7 +361,7 @@ def runApplicationForScreening():
             disableSysOut(disable=False)
             return
         sys.exit(0)
-    except Exception as e:  # pragma: no cover
+    except (RuntimeError, Exception) as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
         if args.prodbuild:
             disableSysOut(disable=False)

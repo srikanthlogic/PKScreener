@@ -27,6 +27,8 @@ import numpy as np
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
+from pkscreener.classes.PKScheduledTaskProgress import PKScheduledTaskProgress
+from pkscreener.classes.PKTask import PKTask
 
 class PortfolioSecurity:
     def __init__(self, ticker):
@@ -51,8 +53,9 @@ class PortfolioSecurity:
                 "Action": self.action, "Investment": self.investment, "RunningTotal": 0, 
                 "Growth": self.growth, "Profits" : 0}
 
-class Portfolio:
+class Portfolio(PKScheduledTaskProgress):
     def __init__(self, name):
+        super(Portfolio, self).__init__()
         self.name = name
         self._initialValue = 0
         self._currentValue = 0
@@ -74,12 +77,15 @@ class Portfolio:
             portfolio_df["Profits"] = portfolio_df[['Growth']].cumsum()
         return portfolio_df
     
-    @staticmethod
-    def portfolioFromXRayDataFrame(df:pd.DataFrame, portfolioName:str, periods:list):
+    def updatePortfolioFromXRayDataFrame(self,df:pd.DataFrame, periods:list,task:PKTask=None):
+        if task is not None:
+            taskId = task.taskId
+            if taskId > 0:
+                self.tasksDict[taskId] = task
         xray_df = df.copy()
         df_grouped = xray_df.groupby("Stock")
-        portfolio = Portfolio(name=portfolioName)
         periodCounter = -1
+        task.progress = 0
         for period in periods:
             periodCounter += 1
             if f"LTP{period}" not in xray_df.columns:
@@ -90,24 +96,27 @@ class Portfolio:
                 df_group[f"Growth{period}"] = df_group[f"Growth{period}"].astype(float).fillna(0)
                 if df_group.iloc[0][f"LTP{period}"] == 0 or df_group.iloc[0][f"LTP"] == 0:
                     continue
+                task.total = len(periods) * len(df_grouped)
+                task.progress += 1
+                self.updateProgress(task.taskId)
                 security = PortfolioSecurity(stock)
-                security.ltp = df_group.iloc[0]["LTP"] if not portfolio.hasSecurity(stock) else df_group.iloc[0][f"LTP{period}"]
+                security.ltp = df_group.iloc[0]["LTP"] if not self.hasSecurity(stock) else df_group.iloc[0][f"LTP{period}"]
                 previousPeriod = periods[periodCounter-1]
                 try:
                     priceRise = round(df_group.iloc[0][f"LTP{period}"] - df_group.iloc[0]["LTP" if periodCounter == 0 else f"LTP{previousPeriod}"],2)
                     growth = df_group.iloc[0][f"Growth{period}"]
                     security.date = df_group.iloc[0]["Date"] if periodCounter == 0 else PKDateUtilities.nextTradingDate(df_group.iloc[0]["Date"], days=period).strftime("%Y-%m-%d")
-                    if portfolio.hasSecurity(stock):
+                    if self.hasSecurity(stock):
                         # This security was already added earlier and exists in the portfolio
                         security.quantity = 1 if priceRise >= 0 else -1
                         if priceRise < 0:
                             security.growth = priceRise * abs(security.quantity)
-                            portfolio.removeSecurity(security=security)
+                            self.removeSecurity(security=security)
                         else:
                             security.quantity = 0 # This is not an actual buy
                             security.growth = priceRise
                             security.ltp = df_group.iloc[0][f"LTP{period}"]
-                            portfolio.addSecurity(security=security)
+                            self.addSecurity(security=security)
                     else:
                         # This security was never added earlier. The very fact it exists under this
                         # outcome dataframe, we need to take losses and then remove it from portfolio
@@ -115,17 +124,18 @@ class Portfolio:
                         security.growth = 0 # First day of trade
                         security.date = df_group.iloc[0]["Date"]
                         security.ltp = df_group.iloc[0]["LTP"]
-                        portfolio.addSecurity(security=security)
+                        self.addSecurity(security=security)
                         if priceRise < 0:
                             security.date = PKDateUtilities.nextTradingDate(df_group.iloc[0]["Date"], days=period).strftime("%Y-%m-%d")
                             security.ltp = df_group.iloc[0][f"LTP{period}"]
                             security.quantity = -1
                             security.growth = priceRise * abs(security.quantity)
-                            portfolio.removeSecurity(security=security)
+                            self.removeSecurity(security=security)
                 except:
                     pass
                     continue
-        return portfolio
+        task.progress = task.total
+        self.updateProgress(task.taskId)
 
     @property
     def profit(self):
@@ -194,13 +204,43 @@ class Portfolio:
         df['LTP'].rolling(window=n).apply(self.getDifference)
 
 
-class PortfolioCollection(SingletonMixin, metaclass=SingletonType):
+class PortfolioCollection(SingletonMixin,PKScheduledTaskProgress, metaclass=SingletonType):
     def __init__(self):
         super(PortfolioCollection, self).__init__()
         self._portfolios = {}
+        self._portfolios_df = None
+        self._portfoliosSummary_df = None
+        self.ledgerSummaryAsDataframeTaskId = 0
+        self.portfoliosAsDataframeTaskId = 0
 
+    def getLedgerSummaryAsDataframe(self,*args):
+        task = args[0]
+        taskId = task.taskId
+        if taskId > 0:
+            self.tasksDict[taskId] = task
+            self.ledgerSummaryAsDataframeTaskId = taskId
+        return self.ledgerSummaryAsDataframe
+    
+    def getPortfoliosAsDataframe(self,*args):
+        task = args[0]
+        taskId = task.taskId
+        if taskId > 0:
+            self.tasksDict[taskId] = task
+            self.portfoliosAsDataframeTaskId = taskId
+        return self.portfoliosAsDataframe
+    
     @property
     def ledgerSummaryAsDataframe(self):
+        task = None
+        if self._portfoliosSummary_df is not None:
+            if self.ledgerSummaryAsDataframeTaskId > 0:
+                task = self.tasksDict.get(self.ledgerSummaryAsDataframeTaskId)
+                task.total = len(self._portfolios.keys())
+                task.progress = task.total
+                self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+                task.result = self._portfoliosSummary_df
+                task.resultsDict[task.taskId] = self._portfoliosSummary_df
+            return self._portfoliosSummary_df
         portfolios_df = None
         if len(self._portfolios) > 0:
             for _, portfolio in self._portfolios.items():
@@ -211,10 +251,30 @@ class PortfolioCollection(SingletonMixin, metaclass=SingletonType):
                     portfolios_df = portfolio_df.tail(5).copy()
                 else:
                     portfolios_df = pd.concat([portfolios_df,portfolio_df.tail(5)], axis=0)
+                if task is not None:
+                    task.progress = len(portfolios_df)
+                self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+        self._portfoliosSummary_df = portfolios_df
+        if task is not None:
+            # Mark the progress finished
+            task.progress = task.total
+            self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+            task.result = portfolios_df
+            task.resultsDict[task.taskId] = self.portfolios_df
         return portfolios_df
         
     @property
     def portfoliosAsDataframe(self):
+        task = None
+        if self._portfolios_df is not None:
+            if self.portfoliosAsDataframeTaskId > 0:
+                task = self.tasksDict.get(self.portfoliosAsDataframeTaskId)
+                task.total = len(self._portfolios.keys())
+                task.progress = task.total
+                self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+                task.result = self._portfolios_df
+                task.resultsDict[task.taskId] = self._portfolios_df
+            return self._portfolios_df
         portfolios_df = None
         if len(self._portfolios) > 0:
             for _, portfolio in self._portfolios.items():
@@ -225,6 +285,16 @@ class PortfolioCollection(SingletonMixin, metaclass=SingletonType):
                     portfolios_df = portfolio_df.copy()
                 else:
                     portfolios_df = pd.concat([portfolios_df,portfolio_df], axis=0)
+                if task is not None:
+                    task.progress = len(portfolios_df)
+                self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+        self._portfolios_df = portfolios_df
+        if task is not None:
+            # Mark the progress finished
+            task.progress = task.total
+            self.updateProgress(self.ledgerSummaryAsDataframeTaskId)
+            task.result = portfolios_df
+            task.resultsDict[task.taskId] = self.portfolios_df
         return portfolios_df
 
     def addPortfolio(self,portfolio:Portfolio):

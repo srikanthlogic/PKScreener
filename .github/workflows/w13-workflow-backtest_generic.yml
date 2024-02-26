@@ -232,14 +232,14 @@ jobs:
         git pull
         git push -v -u origin +gh-pages
     
-    - name: Delete this workflow run
-      if: startsWith(runner.os, 'Linux')
-      shell: bash
-      run: |
-        gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-        gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
-      env:
-        GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
+    # - name: Delete this workflow run
+    #   if: startsWith(runner.os, 'Linux')
+    #   shell: bash
+    #   run: |
+    #     gh run list --status success --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+    #     gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
+    #   env:
+    #     GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
 
     # - name: Send notification about finished workflow trigger
     #   shell: bash

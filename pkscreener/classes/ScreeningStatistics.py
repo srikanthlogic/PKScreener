@@ -513,7 +513,10 @@ class ScreeningStatistics:
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
+        is50DMAUptrend = False
+        is50DMADowntrend = False
         decision = ""
+        dma50decision = ""
         fairValue = 0
         fairValueDiff = 0
         # if df is None or len(df) < 220 or testing:
@@ -522,6 +525,10 @@ class ScreeningStatistics:
             try:
                 data = df.copy()
                 data = data[::-1]
+                today_sma = pktalib.SMA(data["Close"], timeperiod=50)
+                sma_minus9 = pktalib.SMA(data.head(len(data)-9)["Close"], timeperiod=50)
+                sma_minus14 = pktalib.SMA(data.head(len(data)-14)["Close"], timeperiod=50)
+                sma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=50)
                 today_lma = pktalib.SMA(data["Close"], timeperiod=200)
                 lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
                 lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
@@ -530,12 +537,19 @@ class ScreeningStatistics:
                 lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
                 lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
                 lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+                today_sma = today_sma.iloc[len(today_sma)-1] if today_sma is not None else 0
+                sma_minus9 = sma_minus9.iloc[len(sma_minus9)-1] if sma_minus9 is not None else 0
+                sma_minus14 = sma_minus14.iloc[len(sma_minus14)-1] if sma_minus14 is not None else 0
+                sma_minus20 = sma_minus20.iloc[len(sma_minus20)-1] if sma_minus20 is not None else 0
                 isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
                 isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+                is50DMAUptrend = (today_sma > sma_minus9) or (today_sma > sma_minus14) or (today_sma > sma_minus20)
+                is50DMADowntrend = (today_sma < sma_minus9) and (today_sma < sma_minus14) and (today_sma < sma_minus20)
             except Exception:  # pragma: no cover
                 # self.default_logger.debug(e, exc_info=True)
                 pass
         decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
+        dma50decision = 't:▲' if is50DMAUptrend else ('t:▼' if is50DMADowntrend else '')
         mf_inst_ownershipChange = 0
         change_millions =""
         try:
@@ -571,9 +585,10 @@ class ScreeningStatistics:
             mf = f"MFI:▼ {change_millions}"
             mfs = colorText.FAIL + mf + colorText.END
 
-        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {mf}"
         decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
-        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {mfs}"
+        dma50decision_scr = (colorText.GREEN if is50DMAUptrend else (colorText.FAIL if is50DMADowntrend else colorText.WARN)) + f"{dma50decision}" + colorText.END
+        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {dma50decision} {mf}"
+        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {dma50decision_scr} {mfs}"
         saveDict["MFI"] = mf_inst_ownershipChange
         screenDict["MFI"] = mf_inst_ownershipChange
         return isUptrend, mf_inst_ownershipChange, fairValueDiff
@@ -1161,35 +1176,61 @@ class ScreeningStatistics:
         return False
 
     # Find Conflucence
-    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1):
+    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1,confFilter=3):
         data = df.copy()
-        recent = data.head(1)
-        if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
-            recent["SMA"].iloc[0] * percentage
-        ):
-            difference = round(
-                abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0])
+        recent = data.head(2)
+        is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
+        is50DMADownTrend = (recent["SMA"].iloc[0] < recent["SMA"].iloc[1])
+        isGoldenCrossOver = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
+                            (recent["SMA"].iloc[1] <= recent["LMA"].iloc[1])
+        isDeadCrossOver = (recent["SMA"].iloc[0] <= recent["LMA"].iloc[0]) and \
+                            (recent["SMA"].iloc[1] >= recent["LMA"].iloc[1])
+        is50DMA = (recent["SMA"].iloc[0] <= recent["Close"].iloc[0])
+        is200DMA = (recent["LMA"].iloc[0] <= recent["Close"].iloc[0])
+        difference = round((recent["SMA"].iloc[0] - recent["LMA"].iloc[0])
                 / recent["Close"].iloc[0]
                 * 100,
                 2,
             )
+        saveDict["ConfDMADifference"] = difference
+        screenDict["ConfDMADifference"] = difference
+        # difference = abs(difference)
+        confText = f"{'GoldenCrossover' if isGoldenCrossOver else ('DeadCrossover' if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
+        if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
+            recent["SMA"].iloc[0] * percentage
+        ):
             if recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]:
                 screenDict["MA-Signal"] = (
                     colorText.BOLD
-                    + colorText.GREEN
-                    + f"Confluence ({difference}%)"
+                    + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
+                    + f"{confText} ({difference}%)"
                     + colorText.END
                 )
-                saveDict["MA-Signal"] = f"Confluence ({difference}%)"
+                saveDict["MA-Signal"] = f"{confText} ({difference}%)"
             else:
                 screenDict["MA-Signal"] = (
                     colorText.BOLD
-                    + colorText.FAIL
-                    + f"Confluence ({difference}%)"
+                    + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
+                    + f"{confText} ({difference}%)"
                     + colorText.END
                 )
-                saveDict["MA-Signal"] = f"Confluence ({difference}%)"
-            return True
+                saveDict["MA-Signal"] = f"{confText} ({difference}%)"
+            return confFilter == 3 or \
+                (confFilter == 1 and (is50DMAUpTrend or (isGoldenCrossOver or 'Up' in confText))) or \
+                (confFilter == 2 and (is50DMADownTrend or isDeadCrossOver or 'Down' in confText))
+        # Maybe the difference is not within the range, but we'd still like to keep the stock in
+        # the list if it's a golden crossover or dead crossover
+        if isGoldenCrossOver or isDeadCrossOver:
+            screenDict["MA-Signal"] = (
+                    colorText.BOLD
+                    + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
+                    + f"{confText} ({difference}%)"
+                    + colorText.END
+                )
+            saveDict["MA-Signal"] = f"{confText} ({difference}%)"
+            return confFilter == 3 or \
+                (confFilter == 1 and isGoldenCrossOver) or \
+                (confFilter == 2 and isDeadCrossOver)
         return False
 
     # Validate if share prices are consolidating

@@ -160,6 +160,7 @@ class StockScreener:
                             screeningDictionary,
                             saveDictionary,
                             percentage=insideBarToLookback,
+                            confFilter=(maLength if maLength > 0 else 3) # 1 = Conf up, 2 = Conf Down, 3 = all
                         )
                         if not isConfluence:
                             return None
@@ -300,17 +301,18 @@ class StockScreener:
                             daysToLookback=configManager.daysToLookback,
                             stockName=stock,
                         )
+                        if backtestDuration == 0:
                         # Find general trend
-                        _,mfiStake,fairValueDiff = screener.findUptrend(
-                            fullData,
-                            screeningDictionary,
-                            saveDictionary,
-                            testbuild,
-                            stock,
-                            onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                            hostData=data
-                        )
-                        hostRef.objectDictionary[stock] = data.to_dict("split")
+                            _,mfiStake,fairValueDiff = screener.findUptrend(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                testbuild,
+                                stock,
+                                onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                                hostData=data
+                            )
+                            hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -592,9 +594,7 @@ class StockScreener:
                 or downloadOnly
                 or self.isTradingTime
                 or hostData is None
-            ) and (
-                hostData is None and backtestDuration >= 0
-            ):  # Fetch only if we are NOT backtesting
+            ):
             start = None
             if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)

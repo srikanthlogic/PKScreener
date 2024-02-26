@@ -270,7 +270,7 @@ for mnu0 in cmds0:
                     p3 = mnu3.menuKey.upper()
                     if p3 == "0":
                         continue
-                    if p3 in [ "7"]:
+                    if p3 in [ "7"] and p2 not in ["21"]:
                         selectedMenu = m3.find(p3)
                         # Find the 2nd level menus, skipping those in the provided list
                         cmds4 = m4.renderForMenu(
@@ -489,9 +489,8 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original__stdout = sys.__stdout__
     commitFrequency = [21,34,55,89,144,200]
     for key in objectDictionary.keys():
-        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
+        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D_D_D'
         branch = "main"
-        scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'.replace("::",":")
         if launchLocal:
             from pkscreener import pkscreenercli
