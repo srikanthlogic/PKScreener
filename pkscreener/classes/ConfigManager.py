@@ -94,15 +94,14 @@ class tools:
     def default_logger(self, logger):
         self.logger = logger
 
-    def deleteFileWithPattern(self, pattern=None, excludeFile=None):
+    def deleteFileWithPattern(self, pattern=None, excludeFile=None, rootDir=None, recursive=False):
         if pattern is None:
             pattern = (
                 f"{'intraday_' if self.isIntradayConfig() else ''}stock_data_*.pkl"
             )
-
-        for f in glob.glob(
-            pattern, root_dir=os.sep.join(os.getcwd().split(os.sep)[:-1])
-        ):
+        if rootDir is None:
+            rootDir = Archiver.get_user_outputs_dir()
+        for f in glob.glob(pattern, root_dir=rootDir, recursive=recursive):
             try:
                 if excludeFile is not None:
                     if not f.endswith(excludeFile):

@@ -50,7 +50,7 @@ class UserMenuChoicesHandler:
                 )
                 sys.exit(0)
             else:
-                pattern = f"{'intraday_' if intraday else ''}stock_data_"
+                pattern = f"{'intraday_' if intraday else ''}stock_data_*.pkl"
                 UserMenuChoicesHandler.configManager.deleteFileWithPattern(pattern)
         return "X", 12, 0, {"0": "X", "1": "12", "2": "0"}
 

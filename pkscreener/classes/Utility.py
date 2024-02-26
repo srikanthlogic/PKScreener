@@ -60,6 +60,7 @@ from PIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
+from PKDevTools.classes.Committer import Committer
 from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -705,18 +706,24 @@ class tools:
                 break
         return exists, cache_file
 
-    def saveStockData(stockDict, configManager, loadCount, intraday=False):
-        exists, cache_file = tools.afterMarketStockDataExists(
+    def saveStockData(stockDict, configManager, loadCount, intraday=False, downloadOnly=False):
+        exists, fileName = tools.afterMarketStockDataExists(
             configManager.isIntradayConfig() or intraday
         )
-        if exists:
-            configManager.deleteFileWithPattern(excludeFile=cache_file)
-        cache_file = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        outputFolder = Archiver.get_user_outputs_dir()
+        if downloadOnly:
+            outputFolder = outputFolder.replace("results","actions-data-download")
+            if not os.path.isdir(outputFolder):
+                os.makedirs(os.path.dirname(f"{outputFolder}{os.sep}"), exist_ok=True)
+        configManager.deleteFileWithPattern(excludeFile=fileName,rootDir=outputFolder)
+        cache_file = os.path.join(outputFolder, fileName)
         if not os.path.exists(cache_file) or len(stockDict) > (loadCount + 1):
             try:
                 with open(cache_file, "wb") as f:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
                     print(colorText.BOLD + colorText.GREEN + "=> Done." + colorText.END)
+                if downloadOnly:
+                    Committer.execOSCommand(f"git add {cache_file} -f >/dev/null 2>&1")
             except pickle.PicklingError as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
                 print(
