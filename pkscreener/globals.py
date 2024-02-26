@@ -1397,6 +1397,7 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
         task.total = len(df_grouped)
         tasksList.append(task)
     if 'RUNNER' not in os.environ.keys():
+        # if configManager.enablePortfolioCalculations:
         # On Github CI, we may run out of memory because of saving results in
         # shared multiprocessing dict.
         PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
@@ -2052,7 +2053,7 @@ def runScanners(
                 )) or len(lstscreen) >= max_allowed:
                     break
                 # Add to the queue when we're through 75% of the previously added items already
-                if counter >= int(numStocksPerIteration * 0.75):
+                if counter >= numStocksPerIteration: #int(numStocksPerIteration * 0.75):
                     queueCounter += 1
                     counter = 0
         print(f"\x1b[3A")
