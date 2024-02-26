@@ -163,7 +163,7 @@ def getDownloadChoices(defaultAnswer=None):
             )
             sys.exit(0)
         else:
-            pattern = f"{'intraday_' if intraday else ''}stock_data_"
+            pattern = f"{'intraday_' if intraday else ''}stock_data_*.pkl"
             configManager.deleteFileWithPattern(pattern)
     return "X", 12, 0, {"0": "X", "1": "12", "2": "0"}
 
@@ -2145,6 +2145,8 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
             end="",
         )
         Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday)
+        if downloadOnly:
+            Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday, downloadOnly=downloadOnly)
     else:
         print(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 

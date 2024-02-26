@@ -6,7 +6,7 @@ __pycache__/
 .vscode/
 *.xlsx
 *last_screened_*.pkl
-*stock_data_*.pkl
+results/*stock_data_*.pkl
 *.spec
 .DS_Store
 Help
