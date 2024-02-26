@@ -160,6 +160,7 @@ class StockScreener:
                             screeningDictionary,
                             saveDictionary,
                             percentage=insideBarToLookback,
+                            confFilter=(maLength if maLength > 0 else 3) # 1 = Conf up, 2 = Conf Down, 3 = all
                         )
                         if not isConfluence:
                             return None

@@ -836,6 +836,7 @@ def main(userArgs=None):
                 selectedChoice["4"] = str(maLength)
     if executeOption == 7:
         selectedMenu = m2.find(str(executeOption))
+        maLength = 0
         if len(options) >= 4:
             respChartPattern = int(options[3])
             selectedChoice["3"] = options[3]
@@ -845,14 +846,22 @@ def main(userArgs=None):
                         insideBarToLookback = float(options[4])
                     elif str(options[4]).upper() == "D":
                         insideBarToLookback = 7 if respChartPattern in [1, 2] else 0.02
+                    if len(options) >= 6:
+                        if str(options[5]).isnumeric():
+                            maLength = int(options[5])
+                        elif str(options[5]).upper() == "D":
+                            maLength = 1 # Conf. up
                 elif defaultAnswer == "Y" and user is not None:
                     # bot mode
                     insideBarToLookback = 7 if respChartPattern in [1, 2] else 0.02
+                    maLength = 1 if respChartPattern in [3] else 0
                 else:
                     (
                         respChartPattern,
                         insideBarToLookback,
                     ) = Utility.tools.promptChartPatterns(selectedMenu)
+                if maLength == 0:
+                    maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
             elif respChartPattern in [0, 4, 5, 6]:
                 insideBarToLookback = 0
             else:
@@ -864,14 +873,18 @@ def main(userArgs=None):
             respChartPattern, insideBarToLookback = Utility.tools.promptChartPatterns(
                 selectedMenu
             )
+            if maLength == 0:
+                maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
         if (
             respChartPattern is None
             or insideBarToLookback is None
             or respChartPattern == 0
+            or maLength == 0
         ):
             return
         else:
             selectedChoice["3"] = str(respChartPattern)
+            selectedChoice["4"] = str(maLength)
     if executeOption == 8:
         if len(options) >= 5:
             if str(options[3]).isnumeric():
@@ -919,7 +932,7 @@ def main(userArgs=None):
             if popOption >= 0 and popOption <= 9:
                 pass
         else:
-            popOption = Utility.tools.promptPopularStocks(selectedMenu)
+            popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
         if popOption is None or popOption == 0:
             return
         else:
@@ -956,7 +969,7 @@ def main(userArgs=None):
             if popOption >= 0 and popOption <= 3:
                 pass
         else:
-            popOption = Utility.tools.promptPopularStocks(selectedMenu)
+            popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
         if popOption is None or popOption == 0:
             return
         else:
@@ -1799,7 +1812,7 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
 
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
-    if "RUNNER" in os.environ.keys() and not force:
+    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force):
         return
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""

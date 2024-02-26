@@ -124,6 +124,14 @@ level3_X_ChartPattern_MenuDict = {
     "5": "Buying at Trendline (Ideal for Swing/Mid/Long term)",
     "0": "Cancel",
 }
+
+level4_X_ChartPattern_Confluence_MenuDict = {
+    "1": "Confluence up / GoldenCrossOver / DMA50 / DMA200",
+    "2": "Confluence Down / DeadCrossOver",
+    "3": "Any/All",
+    "0": "Cancel",
+}
+
 level3_X_PopularStocks_MenuDict = {
     "1": "Shares bought/sold by Mutual Funds/FIIs (M*)",
     "2": "Shareholding by number of Mutual Funds/FIIs (M*)",
@@ -346,8 +354,15 @@ class menus:
             elif selectedMenu.level == 3:
                 self.level = 4
                 # next levelsub-menu of the selected sub-menu
-                if selectedMenu.menuKey == "7":
+                if selectedMenu.parent.menuKey == "6" and selectedMenu.menuKey == "7":
                     return self.renderLevel4_X_Lorenzian_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+                if selectedMenu.parent.menuKey == "7" and selectedMenu.menuKey == "3":
+                    return self.renderLevel4_X_ChartPattern_Confluence_Menus(
                         skip=skip,
                         asList=asList,
                         renderStyle=renderStyle,
@@ -655,6 +670,37 @@ class menus:
             )
             return menuText
 
+    def renderLevel4_X_ChartPattern_Confluence_Menus(
+        self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level4_X_ChartPattern_Confluence_MenuDict,
+            renderExceptionKeys=["0"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            print(
+                colorText.BOLD
+                + colorText.WARN
+                + "[+] Select an option: "
+                + colorText.END
+            )
+            print(
+                colorText.BOLD
+                + menuText
+                + """
+
+        """
+                + colorText.END
+            )
+            return menuText
+        
 # Fundamentally good compnaies but nearing 52 week low
 # https://www.tickertape.in/screener/equity/prebuilt/SCR0005
 

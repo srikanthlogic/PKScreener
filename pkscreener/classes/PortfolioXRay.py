@@ -22,6 +22,7 @@
     SOFTWARE.
 
 """
+import os
 import numpy as np
 import pandas as pd
 from argparse import Namespace
@@ -86,6 +87,9 @@ def getSavedBacktestReportNames(testing=False):
 
 def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
     dfs = []
+    insights = None
+    if ("RUNNER" not in os.environ.keys()):
+        return None
     try:
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
@@ -94,7 +98,6 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
         )
     except Exception as e: # pragma: no cover
         pass
-    insights = None
     if len(dfs) > 0:
         df = dfs[0]
         if len(df) > 0:

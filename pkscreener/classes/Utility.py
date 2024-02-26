@@ -1038,8 +1038,15 @@ class tools:
         m.level = menu.level if menu is not None else 0
         return m.renderForMenu(menu)
 
-    # Prompt for Popular stocks
-    def promptPopularStocks(menu=None):
+    def promptConfluenceSubMenu(menu,respChartPattern):
+        m3 = menus()
+        m3.renderForMenu(menu,asList=True)
+        lMenu =  m3.find(str(respChartPattern))
+        maLength = tools.promptSubMenuOptions(lMenu)
+        return maLength
+    
+    # Prompt for submenu options
+    def promptSubMenuOptions(menu=None):
         try:
             tools.promptMenus(menu=menu)
             resp = int(
@@ -1120,7 +1127,7 @@ class tools:
                     m3 = menus()
                     m3.renderForMenu(menu,asList=True)
                     lMenu =  m3.find(str(resp))
-                    return 7, tools.promptPopularStocks(lMenu)
+                    return 7, tools.promptSubMenuOptions(lMenu)
                 return resp, None
             raise ValueError
         except ValueError as e:  # pragma: no cover

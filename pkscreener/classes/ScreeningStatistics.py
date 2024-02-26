@@ -1176,7 +1176,7 @@ class ScreeningStatistics:
         return False
 
     # Find Conflucence
-    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1):
+    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1,confFilter=3):
         data = df.copy()
         recent = data.head(2)
         is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
@@ -1215,7 +1215,9 @@ class ScreeningStatistics:
                     + colorText.END
                 )
                 saveDict["MA-Signal"] = f"{confText} ({difference}%)"
-            return True
+            return confFilter == 3 or \
+                (confFilter == 1 and (is50DMAUpTrend or (isGoldenCrossOver or 'Up' in confText))) or \
+                (confFilter == 2 and (is50DMADownTrend or isDeadCrossOver or 'Down' in confText))
         # Maybe the difference is not within the range, but we'd still like to keep the stock in
         # the list if it's a golden crossover or dead crossover
         if isGoldenCrossOver or isDeadCrossOver:
@@ -1226,7 +1228,9 @@ class ScreeningStatistics:
                     + colorText.END
                 )
             saveDict["MA-Signal"] = f"{confText} ({difference}%)"
-            return True
+            return confFilter == 3 or \
+                (confFilter == 1 and isGoldenCrossOver) or \
+                (confFilter == 2 and isDeadCrossOver)
         return False
 
     # Validate if share prices are consolidating
