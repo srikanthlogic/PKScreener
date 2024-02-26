@@ -28,7 +28,7 @@ from time import sleep
 
 # .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 argParser = argparse.ArgumentParser()
-required = False
+required = True
 argParser.add_argument(
     "-m", "--message", help="Commit message to look for", required=required
 )
@@ -37,8 +37,8 @@ argParser.add_argument(
 )
 args = argParser.parse_args()
 
-args.message = "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
-args.branch = "actions-data-download"
+# args.message = "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
+# args.branch = "actions-data-download"
 
 c_msg = args.message  # "GitHub Action Workflow - Market Data Download (Default Config)"
 
