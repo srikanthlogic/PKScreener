@@ -66,8 +66,8 @@ jobs:
   Download_Stock_Data:
 
     runs-on: ${{ inputs.runson || 'ubuntu-20.04'}} #ubuntu-20.04 #windows-latest
-    permissions:
-      actions: write
+    permissions: write-all
+      # actions: write
     outputs:
       should_clean: ${{ inputs.scanOptions }}
     steps:
@@ -226,15 +226,8 @@ jobs:
         git fetch
         python3 .github/workflows/squash.py -b actions-data-download -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
 
-    - name: Trigger miscellaneous tasks that are download-data dependent
-      if: ${{ inputs.skipDownload == '' }}
-      shell: bash
-      continue-on-error: true
-      run: |
-        python3 .github/workflows/workflowtriggers.py -f --misc
-
     - name: Install Python Dependencies for clean up
-      if: ${{ inputs.cleanuphistoricalscans == 'Y' }}
+      if: ${{ inputs.cleanuphistoricalscans == 'Y' || inputs.skipDownload == '' }}
       run: |
         pip3 install pandas
         pip3 install pytz
@@ -242,6 +235,13 @@ jobs:
         pip3 install PKNSETools
         pip3 install pkscreener
         
+    - name: Trigger miscellaneous tasks that are download-data dependent
+      if: ${{ inputs.skipDownload == '' }}
+      shell: bash
+      continue-on-error: true
+      run: |
+        python3 .github/workflows/workflowtriggers.py -f --misc
+
     - name: Clean up old historical scan results
       shell: bash
       if: ${{ inputs.cleanuphistoricalscans == 'Y' }}

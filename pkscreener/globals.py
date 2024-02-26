@@ -75,6 +75,7 @@ from pkscreener.classes.MenuOptions import (
     level3_X_PopularStocks_MenuDict,
     level3_X_Reversal_MenuDict,
     level4_X_Lorenzian_MenuDict,
+    level4_X_ChartPattern_Confluence_MenuDict,
     menus,
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
@@ -1579,6 +1580,11 @@ def updateMenuChoiceHierarchy():
         menuChoiceHierarchy = (
             menuChoiceHierarchy
             + f'>{level3_X_ChartPattern_MenuDict[selectedChoice["3"]].strip()}'
+        )
+        if len(selectedChoice) >= 5 and selectedChoice["3"] == "3":
+            menuChoiceHierarchy = (
+            menuChoiceHierarchy
+            + f'>{level4_X_ChartPattern_Confluence_MenuDict[selectedChoice["4"]].strip()}'
         )
     elif selectedChoice["2"] == "21":
         menuChoiceHierarchy = (
