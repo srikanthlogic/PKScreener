@@ -875,7 +875,7 @@ def getCalculatedValues(df, periods, key, userArgs=None, task=None):
             portfolio.updatePortfolioFromXRayDataFrame(df,configManager.periodsRange,task)
             PortfolioCollection().addPortfolio(portfolio)
         result_df = {
-            "ScanType": key if tdySum1ShareEach != 0 else 999999999,
+            "ScanType": key, #if tdySum1ShareEach != 0 else 999999999,
             f"{period}Pd-PFV": tdySum1ShareEach,
             f"{period}Pd-%": percentGrowth if tdySum1ShareEach != 0 else 999999999,
             f"{period}Pd-10k": growth10k if tdySum1ShareEach != 0 else 999999999,
