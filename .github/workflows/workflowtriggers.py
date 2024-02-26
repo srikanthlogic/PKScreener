@@ -489,9 +489,8 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
     # original__stdout = sys.__stdout__
     commitFrequency = [21,34,55,89,144,200]
     for key in objectDictionary.keys():
-        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
+        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D_D_D'
         branch = "main"
-        scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'.replace("::",":")
         if launchLocal:
             from pkscreener import pkscreenercli
