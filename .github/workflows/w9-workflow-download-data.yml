@@ -66,8 +66,8 @@ jobs:
   Download_Stock_Data:
 
     runs-on: ${{ inputs.runson || 'ubuntu-20.04'}} #ubuntu-20.04 #windows-latest
-    permissions:
-      actions: write
+    permissions: write-all
+      # actions: write
     outputs:
       should_clean: ${{ inputs.scanOptions }}
     steps:

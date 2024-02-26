@@ -85,8 +85,8 @@ jobs:
     needs: check_should_run
     #needs: Create-Release
     runs-on: ${{ matrix.os }}
-    permissions:
-      actions: write
+    permissions: write-all
+      # actions: write
     outputs:
         version: ${{ steps.vars.outputs.THIS_VERSION }}
         oldVersion: ${{ steps.vars.outputs.CURRENT_VERSION }}
@@ -303,8 +303,8 @@ jobs:
 
   README_Update:
     runs-on: ubuntu-20.04
-    permissions:
-      actions: write
+    permissions: write-all
+      # actions: write
     needs: [Build]
     name: Updates latest README file
     steps:
