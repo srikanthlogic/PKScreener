@@ -1209,6 +1209,7 @@ def main(userArgs=None):
                 actualHistoricalDuration = samplingDuration - fillerPlaceHolder
                 if actualHistoricalDuration >= 0:
                     progressbar()
+        sys.stdout.write(f"\x1b[1A")
         if not keyboardInterruptEventFired:
             tasks_queue, results_queue, totalConsumers = initQueues(len(items))
             cp = CandlePatterns()
@@ -1865,7 +1866,7 @@ def sendQuickScanResult(
     addendum=None,
     addendumLabel=None,
 ):
-    if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
+    if (("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
         return
     try:
         Utility.tools.tableToImage(
@@ -2044,9 +2045,11 @@ def runScanners(
                     len(lstscreen) >= 1 or counter >= int(numStocksPerIteration * 0.05)
                 )) or len(lstscreen) >= max_allowed:
                     break
-                if counter >= numStocksPerIteration:
+                # Add to the queue when we're through 75% of the previously added items already
+                if counter >= int(numStocksPerIteration * 0.75):
                     queueCounter += 1
                     counter = 0
+        print(f"\x1b[3A")
         elapsed_time = time.time() - start_time
         if menuOption in ["X", "G"]:
             # create extension
