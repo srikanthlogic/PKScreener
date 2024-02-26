@@ -503,7 +503,7 @@ class StockScreener:
         if executeOption == 20:
             isValid = screener.validateBullishForTomorrow(fullData)
         if executeOption == 23:
-            isValid = screener.findBreakingoutNow(processedData)
+            isValid = screener.findBreakingoutNow(processedData, fullData, saveDictionary, screeningDictionary)
         if executeOption == 24:
             isValid = (
                 screener.validateHigherHighsHigherLowsHigherClose(fullData)

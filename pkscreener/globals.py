@@ -595,9 +595,12 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
             if reversalOption in [3]:
                 sortKey = ["Volume","MA-Signal"]
                 ascending = [False, False]
+        elif executeOption == 23:
+            sortKey = ["bbands_ulr_ratio_max5"]
+            ascending = [False]
         screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
         saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
-        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference"]
+        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5"]
         for column in columnsToBeDeleted:
             if column in saveResults.columns:
                 saveResults.drop(column, axis=1, inplace=True, errors="ignore")
