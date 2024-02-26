@@ -33,6 +33,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 
+from sys import float_info as sflt
 import pkscreener.classes.Utility as Utility
 from pkscreener import Imports
 from pkscreener.classes.Pktalib import pktalib
@@ -198,12 +199,20 @@ class ScreeningStatistics:
         up = recent[f"AROONU_{period}"].iloc[0]
         down = recent[f"AROOND_{period}"].iloc[0]
         return up > down
-
+    
+    def non_zero_range(self, high: pd.Series, low: pd.Series) -> pd.Series:
+        """Returns the difference of two series and adds epsilon to any zero values.  This occurs commonly in crypto data when 'high' = 'low'."""
+        diff = high - low
+        if diff.eq(0).any().any():
+            diff += sflt.epsilon
+        return diff
+    
     # Find accurate breakout value
-    def findBreakingoutNow(self, df):
+    def findBreakingoutNow(self, df, fullData, saveDict, screenDict):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
+        reversedData = fullData[::-1].copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
@@ -217,11 +226,26 @@ class ScreeningStatistics:
             candleHeight = abs(self.getCandleBodyHeight(data[candle:]))
             totalCandleHeight += candleHeight
 
+        reversedData.loc[:,'BBands-U'], reversedData.loc[:,'BBands-M'], reversedData.loc[:,'BBands-L'] = pktalib.BBANDS(reversedData["Close"], 20)
+        reversedData = reversedData[::-1]
+        recents = reversedData.head(6)
+        ulr = self.non_zero_range(recents.loc[:,'BBands-U'], recents.loc[:,'BBands-L'])
+        maxOfLast5Candles = ulr.tail(5).max()
+        # bandwidth = 100 * ulr / recents.loc[:,'BBands-M']
+        # percent = self.non_zero_range(recents.loc[:,'Close'], recents.loc[:,'BBands-L']) / ulr
+        saveDict["bbands_ulr_ratio_max5"] = round(ulr.iloc[0]/maxOfLast5Candles,2) #percent.iloc[0]
+        screenDict["bbands_ulr_ratio_max5"] = saveDict["bbands_ulr_ratio_max5"]
+        # saveDict["bbands_bandwidth"] = bandwidth.iloc[0]
+        # screenDict["bbands_bandwidth"] = saveDict["bbands_bandwidth"]
+        # saveDict["bbands_ulr"] = ulr.iloc[0]
+        # screenDict["bbands_ulr"] = saveDict["bbands_ulr"]
+
         return (
             recentCandleHeight > 0
             and totalCandleHeight > 0
             and (recentCandleHeight >= 3 * (float(totalCandleHeight / candle)))
         )
+
 
     # Find accurate breakout value
     def findBreakoutValue(

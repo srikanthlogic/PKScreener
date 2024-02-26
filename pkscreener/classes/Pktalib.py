@@ -54,6 +54,14 @@ else:
 
 class pktalib:
     @classmethod
+    def BBANDS(self, close, timeperiod,std=2, mamode=0):
+        try:
+            return talib.bbands(close, timeperiod)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return talib.BBANDS(close, timeperiod, std, std, mamode)
+        
+    @classmethod
     def EMA(self, close, timeperiod):
         try:
             return talib.ema(close, timeperiod)
