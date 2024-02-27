@@ -432,7 +432,7 @@ def initExecution(menuOption=None):
         if menuOption is None:
             menuOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ")
             print(colorText.END, end="")
-        if menuOption == "":
+        if menuOption == "" or menuOption is None:
             menuOption = "X"
         menuOption = menuOption.upper()
         selectedMenu = m0.find(menuOption)

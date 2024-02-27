@@ -885,6 +885,7 @@ class tools:
         If it fails to save, it will then try to save to Desktop and then eventually into
         a temporary directory.
         """
+        isSaved = False
         try:
             if defaultAnswer is None:
                 response = str(
@@ -899,7 +900,7 @@ class tools:
         except ValueError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             response = "Y"
-        if response != "N":
+        if response is not None and response.upper() != "N":
             filename = (
                 "PKScreener-result_"
                 + PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
@@ -912,6 +913,7 @@ class tools:
             try:
                 filePath = os.path.join(Archiver.get_user_outputs_dir(), filename)
                 df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
+                isSaved = True
             except Exception as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
                 print(
@@ -925,6 +927,7 @@ class tools:
                 try:
                     filePath = os.path.join(desktop, filename)
                     df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
+                    isSaved = True
                 except Exception as ex:  # pragma: no cover
                     default_logger().debug(ex, exc_info=True)
                     print(
@@ -937,10 +940,11 @@ class tools:
                     )
                     filePath = os.path.join(tempfile.gettempdir(), filename)
                     df.to_excel(filePath,engine="xlsxwriter")
+                    isSaved = True
             print(
                 colorText.BOLD
-                + colorText.GREEN
-                + ("[+] Results saved to %s" % filePath)
+                + (colorText.GREEN if isSaved else colorText.FAIL)
+                + (("[+] Results saved to %s" % filePath) if isSaved else "[+] Failed saving results into Excel file!")
                 + colorText.END
             )
             return filePath
