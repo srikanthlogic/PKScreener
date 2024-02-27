@@ -877,6 +877,14 @@ class tools:
 
     # Save screened results to excel
     def promptSaveResults(df, defaultAnswer=None):
+        """
+        Tries to save the dataframe output into an excel file.
+
+        It will first try to save to the current-working-directory/results/
+
+        If it fails to save, it will then try to save to Desktop and then eventually into
+        a temporary directory.
+        """
         try:
             if defaultAnswer is None:
                 response = str(
@@ -898,50 +906,44 @@ class tools:
                 + ".xlsx"
             )
             desktop = os.path.expanduser("~/Desktop")
-            # the above is valid on Windows (after 7) but if you want it in os normalized form:
+            # # the above is valid on Windows (after 7) but if you want it in os normalized form:
             desktop = os.path.normpath(os.path.expanduser("~/Desktop"))
+            filePath = ""
             try:
-                df.to_excel(
-                    os.path.join(os.getcwd(), filename), engine="xlsxwriter"
-                )  # openpyxl throws an error exporting % sign.
-                filename = os.path.join(os.getcwd(), filename)
+                filePath = os.path.join(Archiver.get_user_outputs_dir(), filename)
+                df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
             except Exception as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
                 print(
                     colorText.FAIL
                     + (
                         "[+] Error saving file at %s"
-                        % os.path.join(os.getcwd(), filename)
+                        % filePath
                     )
                     + colorText.END
                 )
                 try:
-                    df.to_excel(
-                        os.path.join(desktop, filename), engine="xlsxwriter"
-                    )  # openpyxl throws an error exporting % sign.
-                    filename = os.path.join(desktop, filename)
+                    filePath = os.path.join(desktop, filename)
+                    df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
                 except Exception as ex:  # pragma: no cover
                     default_logger().debug(ex, exc_info=True)
                     print(
                         colorText.FAIL
                         + (
                             "[+] Error saving file at %s"
-                            % os.path.join(desktop, filename)
+                            % filePath
                         )
                         + colorText.END
                     )
-                    df.to_excel(
-                        os.path.join(tempfile.gettempdir(), filename),
-                        engine="xlsxwriter",
-                    )
-                    filename = os.path.join(tempfile.gettempdir(), filename)
+                    filePath = os.path.join(tempfile.gettempdir(), filename)
+                    df.to_excel(filePath,engine="xlsxwriter")
             print(
                 colorText.BOLD
                 + colorText.GREEN
-                + ("[+] Results saved to %s" % filename)
+                + ("[+] Results saved to %s" % filePath)
                 + colorText.END
             )
-            return filename
+            return filePath
         return None
 
     # Save screened results to excel
