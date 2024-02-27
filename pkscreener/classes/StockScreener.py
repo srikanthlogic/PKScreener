@@ -676,11 +676,16 @@ class StockScreener:
                     try:
                         data["MF"] = hostData["MF"]
                         data["MF_Date"] = hostData["MF_Date"]
+                    except KeyError:
+                        pass
+                    try:
                         data["FII"] = hostData["FII"]
                         data["FII_Date"] = hostData["FII_Date"]
+                    except KeyError:
+                        pass
+                    try:
                         data["FairValue"] = hostData["FairValue"]
-                    except Exception as e:
-                        hostRef.default_logger.debug(e, exc_info=True)
+                    except KeyError:
                         pass
             if (
                     (shouldCache and not self.isTradingTime and (hostData is None))

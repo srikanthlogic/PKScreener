@@ -590,7 +590,7 @@ class ScreeningStatistics:
         try:
             #Let's get the fair value, either saved or fresh from service
             fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns))
-            if fairValue != 0:
+            if fairValue is not None and fairValue != 0:
                 ltp = saveDict["LTP"]
                 fairValueDiff = round(fairValue - ltp,0)
                 saveDict["FairValue"] = str(fairValue)
@@ -837,10 +837,18 @@ class ScreeningStatistics:
 
         if needsFreshUpdate and force:
             netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
-            hostData["MF"] = netChangeMF
-            hostData["MF_Date"] = latest_mfdate
-            hostData["FII"] = netChangeInst
-            hostData["FII_Date"] = latest_instdate
+            if netChangeMF is not None:
+                hostData["MF"] = netChangeMF
+            else:
+                netChangeMF = 0
+            if latest_mfdate is not None:
+                hostData["MF_Date"] = latest_mfdate
+            if netChangeInst is not None:
+                hostData["FII"] = netChangeInst
+            else:
+                netChangeInst = 0
+            if latest_instdate is not None:
+                hostData["FII_Date"] = latest_instdate
         lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
         if onlyMF:
             return netChangeMF
