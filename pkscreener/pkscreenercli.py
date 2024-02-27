@@ -298,7 +298,7 @@ def pkscreenercli():
     if originalStdOut is None:
         # Clear only if this is the first time it's being called from some
         # loop within workflowtriggers.
-        Utility.tools.clearScreen()
+        Utility.tools.clearScreen(userArgs=args)
     warnAboutDependencies()
     if args.prodbuild:
         disableSysOut()

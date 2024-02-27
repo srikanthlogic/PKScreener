@@ -158,6 +158,7 @@ argsv = argParser.parse_known_args()
 args = argsv[0]
 originalStdOut = sys.stdout
 original__stdout = sys.__stdout__
+
 # args.force = True
 # args.scans = True
 # args.report = True
@@ -167,14 +168,15 @@ original__stdout = sys.__stdout__
 # args.cleanuphistoricalscans = True
 # args.local = True
 # args.triggerRemotely = True
-# args.scanDaysInPast = 280
+# args.scanDaysInPast = 7
 # args.reScanForZeroSize = True
 # args.user = "-1001785195297"
-# args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G"
+# args.skiplistlevel0 = "S,T,E,U,Z,H,Y,B,G"
 # args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
-# args.skiplistlevel2 = "0,21,22,26,27,28,29,30,42,M,Z"
+# args.skiplistlevel2 = "0,22,26,27,28,29,30,31,42,M,Z"
 # args.skiplistlevel3 = "0"
 # args.skiplistlevel4 = "0"
+# args.branchname = "actions-data-download"
 
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menus
 
@@ -493,17 +495,20 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
         branch = "main"
         options = f'{scanOptions.replace("_",":").replace("B:","X:")}:D:D:D'.replace("::",":")
         if launchLocal:
-            from pkscreener import pkscreenercli
-            from pkscreener.pkscreenercli import argParser as agp
+            # from pkscreener import pkscreenercli
+            # from pkscreener.pkscreenercli import argParser as agp
             daysInPast = scanDaysInPast
             while daysInPast >=0:
                 # sys.stdout = originalStdOut
                 # sys.__stdout__ = original__stdout
                 if not scanResultExists(options,daysInPast,args.reScanForZeroSize)[0]:
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
-                    ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
-                    pkscreenercli.args = ag
-                    pkscreenercli.pkscreenercli()
+                    os.system("export RUNNER='LOCAL_RUN_SCANNER'")
+                    stringArgs = f"-a Y -e -p -o {options} --backtestdaysagoc {daysInPast} --maxdisplayresults 500 -v"
+                    os.system(f"python3 pkscreener/pkscreenercli.py {stringArgs}")
+                    # ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
+                    # pkscreenercli.args = ag
+                    # pkscreenercli.pkscreenercli()
                 if daysInPast in commitFrequency:
                     tryCommitOutcomes(options)
                 daysInPast -=1

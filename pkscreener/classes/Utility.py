@@ -158,8 +158,10 @@ lastScreened = os.path.join(
 # Class for managing misc and utility methods
 
 class tools:
-    def clearScreen():
-        if "RUNNER" in os.environ.keys():
+    def clearScreen(userArgs=None):
+        if "RUNNER" in os.environ.keys() or (userArgs is not None and userArgs.prodbuild):
+            if userArgs is not None and userArgs.v:
+                os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
             return
         if platform.system() == "Windows":
             os.system("cls")
