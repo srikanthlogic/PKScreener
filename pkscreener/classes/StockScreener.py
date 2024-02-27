@@ -121,10 +121,14 @@ class StockScreener:
                 isVCP = False
                 isVSA = False
                 isNR = False
+                isValidRsi = False
                 isBuyingTrendline = False
                 isMomentum = False
                 mfiStake = 0
                 fairValueDiff = 0
+                consolidationValue = 0
+                isBreaking = False
+                isValidCci = False
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
@@ -141,9 +145,10 @@ class StockScreener:
                 if executeOption == 4 and (not isLowestVolume):
                     return None
                 
-                isValidRsi = screener.validateRSI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
-                )
+                if executeOption == 5:
+                    isValidRsi = screener.validateRSI(
+                        processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                    )
                 if executeOption == 5 and (not isValidRsi):
                     return None
 
@@ -220,26 +225,29 @@ class StockScreener:
                             )
                             if not isBuyingTrendline:
                                 return None
-                if sys.version_info >= (3, 11):
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        isLorentzian = screener.validateLorentzian(
-                            fullData,
-                            screeningDictionary,
-                            saveDictionary,
-                            lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
-                        )
-                        if executeOption == 6 and reversalOption == 7 and not isLorentzian:
-                            return None
-                else:
-                    isLorentzian = False
+                            
+                if executeOption == 6 and reversalOption == 7:
+                    if sys.version_info >= (3, 11):
+                        with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                            isLorentzian = screener.validateLorentzian(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
+                            )
+                            if executeOption == 6 and reversalOption == 7 and not isLorentzian:
+                                return None
+                    else:
+                        isLorentzian = False
                 
-                isBreaking = screener.findBreakoutValue(
-                    processedData,
-                    screeningDictionary,
-                    saveDictionary,
-                    daysToLookback=configManager.daysToLookback,
-                    alreadyBrokenout=(executeOption == 2),
-                )
+                if executeOption in [1,2]:
+                    isBreaking = screener.findBreakoutValue(
+                        processedData,
+                        screeningDictionary,
+                        saveDictionary,
+                        daysToLookback=configManager.daysToLookback,
+                        alreadyBrokenout=(executeOption == 2),
+                    )
                 if executeOption == 1:
                     isPotentialBreaking = screener.findPotentialBreakout(
                         fullData,
@@ -252,13 +260,14 @@ class StockScreener:
                 elif executeOption == 2:
                     if not (isBreaking) or not hasMinVolumeRatio:
                         return None
-                    
-                consolidationValue = screener.validateConsolidation(
-                    processedData,
-                    screeningDictionary,
-                    saveDictionary,
-                    percentage=configManager.consolidationPercentage,
-                )
+
+                if executeOption == 3:
+                    consolidationValue = screener.validateConsolidation(
+                        processedData,
+                        screeningDictionary,
+                        saveDictionary,
+                        percentage=configManager.consolidationPercentage,
+                    )
                 if ((executeOption == 3)
                         and (
                             consolidationValue == 0 or
@@ -302,26 +311,28 @@ class StockScreener:
                             stockName=stock,
                         )
                         if backtestDuration == 0:
-                        # Find general trend
-                            _,mfiStake,fairValueDiff = screener.findUptrend(
-                                fullData,
-                                screeningDictionary,
-                                saveDictionary,
-                                testbuild,
-                                stock,
-                                onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                                hostData=data
-                            )
-                            hostRef.objectDictionary[stock] = data.to_dict("split")
+                            if executeOption == 21 and reversalOption in [3,5,6,7,8,9]:
+                                # Find general trend
+                                _,mfiStake,fairValueDiff = screener.findUptrend(
+                                    fullData,
+                                    screeningDictionary,
+                                    saveDictionary,
+                                    testbuild,
+                                    stock,
+                                    onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                                    hostData=data
+                                )
+                                hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
                     saveDictionary["Trend"] = "Unknown"
                 # CCI also uses "Trend" value from findTrend above.
                 # So it must only be called after findTrend
-                isValidCci = screener.validateCCI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
-                )
+                if executeOption == 8:
+                    isValidCci = screener.validateCCI(
+                        processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                    )
                 if executeOption == 8 and not isValidCci:
                     return None
 
@@ -348,10 +359,6 @@ class StockScreener:
                     )
                     if executeOption == 6 and reversalOption ==3 and not isMomentum:
                         return None
-
-                screener.find52WeekHighLow(
-                    fullData, saveDictionary, screeningDictionary
-                )
 
                 with hostRef.processingResultsCounter.get_lock():
                     # hostRef.default_logger.info(
@@ -411,6 +418,56 @@ class StockScreener:
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
                         or (executeOption == 21 and (fairValueDiff < 0 and reversalOption in [9]))
                     ):
+                        # Now screen for common ones to improve performance
+                        if not (executeOption == 6 and reversalOption == 7):
+                            if sys.version_info >= (3, 11):
+                                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                                    screener.validateLorentzian(
+                                        fullData,
+                                        screeningDictionary,
+                                        saveDictionary,
+                                        lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
+                                    )
+                        if not (executeOption in [1,2]):
+                            screener.findBreakoutValue(
+                                processedData,
+                                screeningDictionary,
+                                saveDictionary,
+                                daysToLookback=configManager.daysToLookback,
+                                alreadyBrokenout=(executeOption == 2),
+                            )
+                        if executeOption != 3:
+                            screener.validateConsolidation(
+                                processedData,
+                                screeningDictionary,
+                                saveDictionary,
+                                percentage=configManager.consolidationPercentage,
+                            )
+                        if executeOption != 5:
+                            screener.validateRSI(
+                                processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                            )
+                        screener.find52WeekHighLow(
+                            fullData, saveDictionary, screeningDictionary
+                        )
+                        if executeOption != 8:
+                            screener.validateCCI(
+                                processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
+                            )
+                        if executeOption != 21:
+                            # For executeOption 21, we'd have already got the mfiStake and fairValueDiff
+                            # Find general trend, MFI data and fairvalue only after the stocks are already screened
+                            screener.findUptrend(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                testbuild,
+                                stock,
+                                onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                                hostData=data
+                            )
+                            hostRef.objectDictionary[stock] = data.to_dict("split")
+
                         hostRef.processingResultsCounter.value += 1
                         return (
                             screeningDictionary,
