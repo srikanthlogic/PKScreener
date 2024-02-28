@@ -100,17 +100,24 @@ class tools:
                 f"{'intraday_' if self.isIntradayConfig() else ''}stock_data_*.pkl"
             )
         if rootDir is None:
-            rootDir = Archiver.get_user_outputs_dir()
-        for f in glob.glob(pattern, root_dir=rootDir, recursive=recursive):
-            try:
+            rootDir = [Archiver.get_user_outputs_dir(),Archiver.get_user_outputs_dir().replace("results","actions-data-download")]
+        else:
+            rootDir = [rootDir]
+        for dir in rootDir:
+            for f in glob.glob(pattern, root_dir=dir, recursive=recursive):
                 if excludeFile is not None:
                     if not f.endswith(excludeFile):
-                        os.remove(f)
+                        try:
+                            os.remove(f if os.sep in f else os.path.join(dir,f))
+                        except:
+                            self.default_logger.debug(e, exc_info=True)
+                            pass
                 else:
-                    os.remove(f)
-            except Exception as e:  # pragma: no cover
-                self.default_logger.debug(e, exc_info=True)
-                pass
+                    try:
+                        os.remove(f if os.sep in f else os.path.join(dir,f))
+                    except:
+                        self.default_logger.debug(e, exc_info=True)
+                        pass
 
     # Handle user input and save config
 

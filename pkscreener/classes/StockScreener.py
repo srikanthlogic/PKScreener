@@ -24,6 +24,7 @@
 """
 import logging
 import sys
+import time
 import warnings
 
 import numpy as np
@@ -31,6 +32,8 @@ import numpy as np
 warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
+# from PKDevTools.classes.log import tracelog
+# from PKDevTools.classes.PKTimer import PKTimer
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.SuppressOutput import SuppressOutput
@@ -84,7 +87,11 @@ class StockScreener:
         screener = hostRef.screener
         candlePatterns = hostRef.candlePatterns
         userArgsLog = printCounter
+        start_time = time.time()
         try:
+            with hostRef.processingCounter.get_lock():
+                hostRef.processingCounter.value += 1
+
             volumeRatio, period = self.determineBasicConfigs(stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog)
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
@@ -101,12 +108,10 @@ class StockScreener:
                 if not screener.validateNewlyListed(fullData, period):
                     raise ScreeningStatistics.NotNewlyListed
 
-            with hostRef.processingCounter.get_lock():
-                hostRef.processingCounter.value += 1
-                # hostRef.default_logger.info(
-                #     f"Processing {stock} in {hostRef.processingCounter.value}th counter"
-                # )
-            if not processedData.empty:
+            if processedData.empty:
+                return None
+            
+            with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
                 self.updateStock(stock, screeningDictionary, saveDictionary)
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener)
@@ -129,35 +134,92 @@ class StockScreener:
                 consolidationValue = 0
                 isBreaking = False
                 isValidCci = False
+                isVSA = False
+                isCandlePattern = False
+                isLowestVolume = False
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
                     return None
                 isShortTermBullish = (executeOption == 11 and isValidityCheckMet)
-                if executeOption == 4:
+                if newlyListedOnly:
+                    isIpoBase = screener.validateIpoBase(
+                        stock, fullData, screeningDictionary, saveDictionary
+                    )
+                if executeOption in [1,2]:
+                    isBreaking = screener.findBreakoutValue(
+                        processedData,
+                        screeningDictionary,
+                        saveDictionary,
+                        daysToLookback=configManager.daysToLookback,
+                        alreadyBrokenout=(executeOption == 2),
+                    )
+                    if executeOption == 1:
+                        isPotentialBreaking = screener.findPotentialBreakout(
+                            fullData,
+                            screeningDictionary,
+                            saveDictionary,
+                            daysToLookback=configManager.daysToLookback,
+                        )
+                        if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio:
+                            return None
+                    elif executeOption == 2:
+                        if not (isBreaking) or not hasMinVolumeRatio:
+                            return None
+                elif executeOption == 3:
+                    consolidationValue = screener.validateConsolidation(
+                        processedData,
+                        screeningDictionary,
+                        saveDictionary,
+                        percentage=configManager.consolidationPercentage,
+                    )
+                    if ((consolidationValue == 0 or consolidationValue > configManager.consolidationPercentage)):
+                        return None
+                elif executeOption == 4:
                     isLowestVolume = screener.validateLowestVolume(
                         processedData, daysForLowestVolume
                     )
                     if not isLowestVolume:
                         return None
-                else:
-                    isLowestVolume = False
-                if executeOption == 4 and (not isLowestVolume):
-                    return None
-                
-                if executeOption == 5:
+                elif executeOption == 5:
                     isValidRsi = screener.validateRSI(
                         processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                     )
-                if executeOption == 5 and (not isValidRsi):
-                    return None
-
-                if newlyListedOnly:
-                    isIpoBase = screener.validateIpoBase(
-                        stock, fullData, screeningDictionary, saveDictionary
-                    )
-
-                if executeOption == 7:
+                    if not isValidRsi:
+                        return None
+                elif executeOption == 6:
+                    if reversalOption == 6:
+                        isNR = screener.validateNarrowRange(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary,
+                            nr=maLength if maLength is not None else 4,
+                        )
+                        if not isNR:
+                            return None
+                    elif reversalOption == 5:
+                        isVSA = screener.validateVolumeSpreadAnalysis(
+                            processedData, screeningDictionary, saveDictionary
+                        )
+                        if not isVSA:
+                            return None
+                    elif reversalOption == 4 and maLength is not None:
+                        isMaSupport = screener.findReversalMA(
+                            fullData, screeningDictionary, saveDictionary, maLength
+                        )
+                        if not isMaSupport:
+                            return None
+                    elif reversalOption == 7:
+                        if sys.version_info >= (3, 11):
+                            isLorentzian = screener.validateLorentzian(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
+                            )
+                            if not isLorentzian:
+                                return None
+                elif executeOption == 7:
                     if respChartPattern == 3:
                         isConfluence = screener.validateConfluence(
                             stock,
@@ -169,21 +231,20 @@ class StockScreener:
                         )
                         if not isConfluence:
                             return None
-
-                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                    if (executeOption == 6
-                        and reversalOption == 6
-                    ):
-                        isNR = screener.validateNarrowRange(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            nr=maLength if maLength is not None else 4,
+                    elif respChartPattern == 4:
+                        isVCP = screener.validateVCP(
+                            fullData, screeningDictionary, saveDictionary
                         )
-                        if not isNR:
+                        if not isVCP:
                             return None
-
-                if executeOption == 10:
+                    elif respChartPattern == 5:
+                        if Imports["scipy"]:
+                            isBuyingTrendline = screener.findTrendlines(
+                                fullData, screeningDictionary, saveDictionary
+                            )
+                            if not isBuyingTrendline:
+                                return None
+                elif executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
                         screener.validatePriceRisingByAtLeast2Percent(
                             processedData, screeningDictionary, saveDictionary
@@ -191,93 +252,7 @@ class StockScreener:
                     )
                     if not isPriceRisingByAtLeast2Percent:
                         return None
-
-                isVSA = False
-                if (executeOption == 6 and reversalOption == 5):
-                    isVSA = screener.validateVolumeSpreadAnalysis(
-                        processedData, screeningDictionary, saveDictionary
-                    )
-                    if not isVSA:
-                        return None
-                    
-                if executeOption == 6 and reversalOption == 4 and maLength is not None:
-                    isMaSupport = screener.findReversalMA(
-                        fullData, screeningDictionary, saveDictionary, maLength
-                    )
-                    if not isMaSupport:
-                        return None
-
-                isVCP = False
-                if executeOption == 7 and respChartPattern == 4:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        isVCP = screener.validateVCP(
-                            fullData, screeningDictionary, saveDictionary
-                        )
-                        if not isVCP:
-                            return None
-
-                isBuyingTrendline = False
-                if executeOption == 7 and respChartPattern == 5:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        if Imports["scipy"]:
-                            isBuyingTrendline = screener.findTrendlines(
-                                fullData, screeningDictionary, saveDictionary
-                            )
-                            if not isBuyingTrendline:
-                                return None
-                            
-                if executeOption == 6 and reversalOption == 7:
-                    if sys.version_info >= (3, 11):
-                        with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                            isLorentzian = screener.validateLorentzian(
-                                fullData,
-                                screeningDictionary,
-                                saveDictionary,
-                                lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
-                            )
-                            if executeOption == 6 and reversalOption == 7 and not isLorentzian:
-                                return None
-                    else:
-                        isLorentzian = False
-                
-                if executeOption in [1,2]:
-                    isBreaking = screener.findBreakoutValue(
-                        processedData,
-                        screeningDictionary,
-                        saveDictionary,
-                        daysToLookback=configManager.daysToLookback,
-                        alreadyBrokenout=(executeOption == 2),
-                    )
-                if executeOption == 1:
-                    isPotentialBreaking = screener.findPotentialBreakout(
-                        fullData,
-                        screeningDictionary,
-                        saveDictionary,
-                        daysToLookback=configManager.daysToLookback,
-                    )
-                    if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio:
-                        return None
-                elif executeOption == 2:
-                    if not (isBreaking) or not hasMinVolumeRatio:
-                        return None
-
-                if executeOption == 3:
-                    consolidationValue = screener.validateConsolidation(
-                        processedData,
-                        screeningDictionary,
-                        saveDictionary,
-                        percentage=configManager.consolidationPercentage,
-                    )
-                if ((executeOption == 3)
-                        and (
-                            consolidationValue == 0 or
-                            consolidationValue > configManager.consolidationPercentage
-                        )
-                    ):
-                    return None
-                
                 # Must-run, but only at the end
-                isCandlePattern = False
                 try:
                     # Only 'doji' and 'inside' is internally implemented by pandas_ta.
                     # Otherwise, for the rest of the candle patterns, they also need
@@ -302,27 +277,26 @@ class StockScreener:
                         return None
                 
                 try:
-                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        currentTrend = screener.findTrend(
-                            processedData,
-                            screeningDictionary,
-                            saveDictionary,
-                            daysToLookback=configManager.daysToLookback,
-                            stockName=stock,
-                        )
-                        if backtestDuration == 0:
-                            if executeOption == 21 and reversalOption in [3,5,6,7,8,9]:
-                                # Find general trend
-                                _,mfiStake,fairValueDiff = screener.findUptrend(
-                                    fullData,
-                                    screeningDictionary,
-                                    saveDictionary,
-                                    testbuild,
-                                    stock,
-                                    onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                                    hostData=data
-                                )
-                                hostRef.objectDictionary[stock] = data.to_dict("split")
+                    currentTrend = screener.findTrend(
+                        processedData,
+                        screeningDictionary,
+                        saveDictionary,
+                        daysToLookback=configManager.daysToLookback,
+                        stockName=stock,
+                    )
+                    if backtestDuration == 0:
+                        if executeOption == 21 and reversalOption in [3,5,6,7,8,9]:
+                            # Find general trend
+                            _,mfiStake,fairValueDiff = screener.findUptrend(
+                                fullData,
+                                screeningDictionary,
+                                saveDictionary,
+                                testbuild,
+                                stock,
+                                onlyMF=(executeOption == 21 and reversalOption in [5,6]),
+                                hostData=data
+                            )
+                            hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -333,8 +307,8 @@ class StockScreener:
                     isValidCci = screener.validateCCI(
                         processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                     )
-                if executeOption == 8 and not isValidCci:
-                    return None
+                    if not isValidCci:
+                        return None
 
                 if not (isConfluence or isShortTermBullish or isMaSupport):
                     isMaReversal = screener.validateMovingAverages(
@@ -361,6 +335,7 @@ class StockScreener:
                         return None
 
                 with hostRef.processingResultsCounter.get_lock():
+                    print(f"ExecuteOption:{executeOption}:{reversalOption}:{respChartPattern}:{maLength}. Elapsed: {time.time() - start_time}")
                     # hostRef.default_logger.info(
                     #     f"Processing results for {stock} in {hostRef.processingResultsCounter.value}th results counter"
                     # )
@@ -533,6 +508,8 @@ class StockScreener:
 
     def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
         isValid = True
+        if executeOption not in [11,12,13,14,15,16,1,18,19,20,23,24,25]:
+            return True
         if executeOption == 11:
             isValid = screener.validateShortTermBullish(
                 fullData, screeningDictionary, saveDictionary
@@ -617,7 +594,7 @@ class StockScreener:
             if portfolio:
                 data = data[::-1]
                 screener.validateLTPForPortfolioCalc(
-                        data, screeningDictionary, saveDictionary
+                        data, screeningDictionary, saveDictionary,requstedPeriod=backtestDuration
                     )
                 data = data[::-1]
         else:
@@ -634,7 +611,7 @@ class StockScreener:
                     # Let's get today's data
                 if portfolio:
                     screener.validateLTPForPortfolioCalc(
-                            data, screeningDictionary, saveDictionary
+                            data, screeningDictionary, saveDictionary,requstedPeriod=backtestDuration
                         )
                     # data has the last row from inputData at the top.
                 fullData, processedData = screener.preprocessData(
