@@ -51,7 +51,8 @@ def summariseAllStrategies(testing=False):
                 df_all = pd.concat([df_all, df], axis=0)
             else:
                 df_all = df
-    df_all = df_all.replace(np.nan, "-", regex=True)
+    if df_all is not None:
+        df_all = df_all.replace(np.nan, "-", regex=True)
     return df_all
 
 def getSavedBacktestReportNames(testing=False):
