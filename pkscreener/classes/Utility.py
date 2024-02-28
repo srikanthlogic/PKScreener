@@ -772,8 +772,10 @@ class tools:
                             + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
                             + colorText.END
                         )
-                    for stock in stockData:
-                        stockDict[stock] = stockData.get(stock)
+                    if len(stockDict) > 0:
+                        stockDict = stockDict | stockData
+                    else:
+                        stockDict = stockData
                     stockDataLoaded = True
                 except pickle.UnpicklingError as e:
                     default_logger().debug(e, exc_info=True)

@@ -266,16 +266,7 @@ class StockScreener:
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Pattern"] = ""
                     saveDictionary["Pattern"] = ""
-                if executeOption == 6:
-                    if reversalOption == 1 and not (str(saveDictionary["Pattern"]).split(",")[0]
-                                                                    in CandlePatterns.reversalPatternsBullish
-                                                                    or isMaReversal > 0):
-                        return None
-                    elif reversalOption == 2 and not (str(saveDictionary["Pattern"]).split(",")[0]
-                                                                    in CandlePatterns.reversalPatternsBearish
-                                                                    or isMaReversal < 0):
-                        return None
-                
+
                 try:
                     currentTrend = screener.findTrend(
                         processedData,
@@ -314,6 +305,15 @@ class StockScreener:
                     isMaReversal = screener.validateMovingAverages(
                         processedData, screeningDictionary, saveDictionary, maRange=1.25
                     )
+                if executeOption == 6:
+                    if reversalOption == 1 and not (str(saveDictionary["Pattern"]).split(",")[0]
+                                                                    in CandlePatterns.reversalPatternsBullish
+                                                                    or isMaReversal > 0):
+                        return None
+                    elif reversalOption == 2 and not (str(saveDictionary["Pattern"]).split(",")[0]
+                                                                    in CandlePatterns.reversalPatternsBearish
+                                                                    or isMaReversal < 0):
+                        return None
                 # validateInsideBar needs "Trend" to be already defined
                 # ValidateInsideBar also needs "MA-Signal" to be setup
                 if executeOption == 7 and respChartPattern < 3:
@@ -594,7 +594,7 @@ class StockScreener:
             if portfolio:
                 data = data[::-1]
                 screener.validateLTPForPortfolioCalc(
-                        data, screeningDictionary, saveDictionary,requstedPeriod=backtestDuration
+                        data, screeningDictionary, saveDictionary,requestedPeriod=backtestDuration
                     )
                 data = data[::-1]
         else:
@@ -611,7 +611,7 @@ class StockScreener:
                     # Let's get today's data
                 if portfolio:
                     screener.validateLTPForPortfolioCalc(
-                            data, screeningDictionary, saveDictionary,requstedPeriod=backtestDuration
+                            data, screeningDictionary, saveDictionary,requestedPeriod=backtestDuration
                         )
                     # data has the last row from inputData at the top.
                 fullData, processedData = screener.preprocessData(

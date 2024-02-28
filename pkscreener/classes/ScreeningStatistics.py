@@ -49,7 +49,7 @@ if Imports["scipy"]:
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.SuppressOutput import SuppressOutput
-from PKDevTools.classes.log import measure_time
+# from PKDevTools.classes.log import measure_time
 
 # Exception for only downloading stock data and not screening
 class DownloadDataOnly(Exception):
@@ -112,7 +112,7 @@ class ScreeningStatistics:
             )
         )
 
-    @measure_time
+    #@measure_time
     # Find stocks' 52 week high/low.
     def find52WeekHighLow(self, df, saveDict, screenDict):
         if df is None or len(df) == 0:
@@ -247,7 +247,7 @@ class ScreeningStatistics:
             and (recentCandleHeight >= 3 * (float(totalCandleHeight / candle)))
         )
 
-    @measure_time
+    #@measure_time
     # Find accurate breakout value
     def findBreakoutValue(
         self, df, screenDict, saveDict, daysToLookback, alreadyBrokenout=False
@@ -534,7 +534,7 @@ class ScreeningStatistics:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
-    @measure_time
+    #@measure_time
     def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None):
         # shouldProceed = True
         isUptrend = False
@@ -619,7 +619,7 @@ class ScreeningStatistics:
         screenDict["MFI"] = mf_inst_ownershipChange
         return isUptrend, mf_inst_ownershipChange, fairValueDiff
     
-    @measure_time
+    #@measure_time
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
         if df is None or len(df) == 0:
@@ -1202,7 +1202,7 @@ class ScreeningStatistics:
             )
         )
 
-    @measure_time
+    #@measure_time
     # validate if CCI is within given range
     def validateCCI(self, df, screenDict, saveDict, minCCI, maxCCI):
         data = df.copy()
@@ -1281,7 +1281,7 @@ class ScreeningStatistics:
                 (confFilter == 2 and isDeadCrossOver)
         return False
 
-    @measure_time
+    #@measure_time
     # Validate if share prices are consolidating
     def validateConsolidation(self, df, screenDict, saveDict, percentage=10):
         data = df.copy()
@@ -1347,7 +1347,7 @@ class ScreeningStatistics:
         )
         return higherHighs and higherLows and higherClose
 
-    @measure_time
+    #@measure_time
     # Validate 'Inside Bar' structure for recent days
     def validateInsideBar(
         self, df, screenDict, saveDict, chartPattern=1, daysToLookback=5
@@ -1438,7 +1438,7 @@ class ScreeningStatistics:
             return True
         return False
 
-    @measure_time
+    #@measure_time
     # Validate Lorentzian Classification signal
     def validateLorentzian(self, df, screenDict, saveDict, lookFor=3):
         data = df.copy()
@@ -1563,9 +1563,11 @@ class ScreeningStatistics:
         saveDict["LTP"] = round(ltp, 2)
         return ltpValid, verifyStageTwo
 
-    def validateLTPForPortfolioCalc(self, df, screenDict, saveDict,requstedPeriod=0):
+    def validateLTPForPortfolioCalc(self, df, screenDict, saveDict,requestedPeriod=0):
         data = df.copy()
         periods = self.configManager.periodsRange
+        if requestedPeriod > 0 and requestedPeriod not in periods:
+            periods.append(requestedPeriod)
         previous_recent = data.head(1)
         previous_recent.reset_index(inplace=True)
         calc_date = str(previous_recent.iloc[:, 0][0]).split(" ")[0]
@@ -1588,8 +1590,8 @@ class ScreeningStatistics:
                 )
                 saveDict[f"LTP{prd}"] = round(ltpTdy, 2)
                 saveDict[f"Growth{prd}"] = round(ltpTdy - prevLtp, 2)
-                if prd == (22 if requstedPeriod == 0 else requstedPeriod):
-                    changePercent = round(((prevLtp-ltpTdy) if requstedPeriod ==0 else (ltpTdy - prevLtp))*100/ltpTdy, 2)
+                if prd == 22 or (prd == requestedPeriod):
+                    changePercent = round(((prevLtp-ltpTdy) if requestedPeriod ==0 else (ltpTdy - prevLtp))*100/ltpTdy, 2)
                     saveDict[f"{prd}-Pd %"] = f"{changePercent}%"
                     screenDict[f"{prd}-Pd %"] = (colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END
                 screenDict["Date"] = calc_date
@@ -1609,7 +1611,7 @@ class ScreeningStatistics:
         macd = pktalib.MACD(data["Close"], 12, 26, 9)[2].tail(1)
         return macd.iloc[:1][0] < 0
 
-    @measure_time
+    #@measure_time
     # Find if stock gaining bullish momentum
     def validateMomentum(self, df, screenDict, saveDict):
         data = df.copy()
@@ -1666,7 +1668,7 @@ class ScreeningStatistics:
             self.default_logger.debug(e, exc_info=True)
             return False
 
-    @measure_time
+    #@measure_time
     # Validate Moving averages and look for buy/sell signals
     def validateMovingAverages(self, df, screenDict, saveDict, maRange=2.5):
         data = df.copy()
@@ -1851,7 +1853,7 @@ class ScreeningStatistics:
             return True and self.getCandleType(data.head(1))
         return False
 
-    @measure_time
+    #@measure_time
     # validate if RSI is within given range
     def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI):
         data = df.copy()

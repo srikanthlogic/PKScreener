@@ -48,7 +48,7 @@ from PKDevTools.classes import Archiver
 from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
-from PKDevTools.classes.log import default_logger, tracelog
+from PKDevTools.classes.log import default_logger #, tracelog
 from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.Telegram import (
@@ -636,7 +636,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
     return screenResults, saveResults
 
 
-@tracelog
+# @tracelog
 def main(userArgs=None):
     global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
@@ -1417,7 +1417,7 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
                 df_xray = p_df.copy()
             # Let's drop the columns no longer required for backtest report
 
-    removedUnusedColumns(None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"])
+    removedUnusedColumns(None, backtest_df, ["Consol.", "Breakout", "RSI", "Pattern", "CCI"], userArgs=userPassedArgs)
     df_xray = df_xray.replace(np.nan, "", regex=True)
     df_xray = PortfolioXRay.xRaySummary(df_xray)
     df_xray.loc[:, "Date"] = df_xray.loc[:, "Date"].apply(
@@ -1637,7 +1637,7 @@ def printNotifySaveScreenedResults(
     targetDateG10k = prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible)
     if saveResults is not None and "Date" in saveResults.columns and len(saveResults) > 0:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
-    removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"])
+    removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"],userArgs=userPassedArgs)
 
     tabulated_results = ""
     if screenResults is not None and len(screenResults) > 0:
@@ -1769,13 +1769,15 @@ def printNotifySaveScreenedResults(
 
 def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible):
     targetDateG10k = None
-    if selectedChoice["0"] == "G" or (userPassedArgs.backtestdaysago is not None and int(userPassedArgs.backtestdaysago) > 0 and "RUNNER" not in os.environ.keys()):
+    if selectedChoice["0"] == "G" or \
+        (userPassedArgs.backtestdaysago is not None and 
+         int(userPassedArgs.backtestdaysago) > 0 and 
+         "RUNNER" not in os.environ.keys()):
         if saveResults is not None and len(saveResults) > 0:
             df = PortfolioXRay.performXRay(saveResults, userPassedArgs,None, None)
             targetDateG10k = saveResults["Date"].iloc[0]
             if df is not None and len(df) > 0:
                 titleLabelG10k = f"For {userPassedArgs.backtestdaysago}-Period(s) from {targetDateG10k}, portfolio calculations in terms of Growth of 10k:"
-                print(f"\n\n{titleLabelG10k}\n")
                 g10kStyledTable = colorText.miniTabulator().tabulate(
                     df,
                     headers="keys",
@@ -1783,7 +1785,10 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
                     showindex=False,
                     maxcolwidths=Utility.tools.getMaxColumnWidths(df)
                 ).encode("utf-8").decode(STD_ENCODING)
-                print(g10kStyledTable)
+                # Show only if the configuration dicttates showing strategy data
+                if configManager.showPastStrategyData:
+                    print(f"\n\n{titleLabelG10k}\n")
+                    print(g10kStyledTable)
                 g10kUnStyledTable = Utility.tools.removeAllColorStyles(g10kStyledTable)
                 if not testing and eligible:
                     sendQuickScanResult(
@@ -1803,8 +1808,10 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
     return targetDateG10k
 
 
-def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
+def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], userArgs=None):
     periods = configManager.periodsRange
+    if userArgs is not None and userArgs.backtestdaysago is not None and int(userArgs.backtestdaysago) < 22:
+        dropAdditionalColumns.append("22-Pd %")
     for period in periods:
         if saveResults is not None:
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")
@@ -1823,8 +1830,8 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
 
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
-    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force):
-        return
+    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force) or not configManager.showPastStrategyData:
+        return None, None
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     summarydf, detaildf = getSummaryCorrectnessOfStrategy(saveResults)
