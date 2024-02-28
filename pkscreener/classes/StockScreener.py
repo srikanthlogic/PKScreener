@@ -137,6 +137,7 @@ class StockScreener:
                 isVSA = False
                 isCandlePattern = False
                 isLowestVolume = False
+                hasBbandsSqz = False
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
@@ -244,6 +245,11 @@ class StockScreener:
                             )
                             if not isBuyingTrendline:
                                 return None
+                    elif respChartPattern == 6:
+                        hasBbandsSqz = screener.findBbandsSqueeze(fullData, screeningDictionary, saveDictionary, filter=(maLength if maLength > 0 else 4))
+                        if not hasBbandsSqz:
+                            return None
+                        
                 elif executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
                         screener.validatePriceRisingByAtLeast2Percent(
@@ -378,11 +384,12 @@ class StockScreener:
                                                                 or (reversalOption == 6 and isNR)
                                                                 or (reversalOption == 7 and isLorentzian)
                                                                 ))
-                        or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar >0) 
+                        or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar > 0) 
                                                                   or (isConfluence)
                                                                   or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
                                                                   or (isVCP)
-                                                                  or (isBuyingTrendline)))
+                                                                  or (isBuyingTrendline))
+                                                                  or (respChartPattern == 6 and hasBbandsSqz))
                         or (executeOption == 8 and isValidCci)
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)

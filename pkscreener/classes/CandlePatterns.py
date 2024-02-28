@@ -63,7 +63,7 @@ class CandlePatterns:
         data = data[::-1]
         existingPattern = ''
         if "Pattern" in saveDict.keys():
-            existingPattern=f'{(", "+saveDict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
+            existingPattern=f'{(", "+dict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
             if existingPattern == ", ":
                 existingPattern = ""
         else:
@@ -74,7 +74,7 @@ class CandlePatterns:
         # TA-Lib.
         check = pktalib.CDLDOJI(data["Open"], data["High"], data["Low"], data["Close"])
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = colorText.BOLD + f"Doji{existingPattern}" + colorText.END
+            dict["Pattern"] = colorText.BOLD + f"Doji" + colorText.END + existingPattern
             saveDict["Pattern"] = f"Doji{existingPattern}"
             return True
 
@@ -83,7 +83,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"Morning Star{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"Morning Star" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Morning Star{existingPattern}"
             return True
@@ -93,7 +93,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"Morning Doji Star{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"Morning Doji Star" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Morning Doji Star{existingPattern}"
             return True
@@ -103,7 +103,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"Evening Star{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"Evening Star" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Evening Star{existingPattern}"
             return True
@@ -113,7 +113,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"Evening Doji Star{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"Evening Doji Star" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Evening Doji Star{existingPattern}"
             return True
@@ -124,12 +124,12 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"Bullish Ladder Bottom{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"Bullish Ladder Bottom" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"Bullish Ladder Bottom{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"Bearish Ladder Bottom{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"Bearish Ladder Bottom" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"Bearish Ladder Bottom{existingPattern}"
             return True
@@ -140,11 +140,11 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"3 Line Strike{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"3 Line Strike" + colorText.END + existingPattern
                 )
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"3 Line Strike{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"3 Line Strike" + colorText.END + existingPattern
                 )
             saveDict["Pattern"] = f"3 Line Strike{existingPattern}"
             return True
@@ -154,7 +154,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"3 Black Crows{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"3 Black Crows" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"3 Black Crows{existingPattern}"
             return True
@@ -165,12 +165,12 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"3 Inside Up{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"3 Inside Up" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"3 Inside Down{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"3 Inside Down" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"3 Inside Down{existingPattern}"
             return True
@@ -181,12 +181,12 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"3 Outside Up{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"3 Outside Up" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"3 Outside Down{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"3 Outside Down" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"3 Outside Down{existingPattern}"
             return True
@@ -196,7 +196,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"3 White Soldiers{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"3 White Soldiers" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"3 White Soldiers{existingPattern}"
             return True
@@ -207,12 +207,12 @@ class CandlePatterns:
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"Bullish Harami{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.GREEN + f"Bullish Harami" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"Bullish Harami{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"Bearish Harami{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"Bearish Harami" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"Bearish Harami{existingPattern}"
             return True
@@ -225,7 +225,7 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"Bullish Harami Cross{existingPattern}"
+                    + f"Bullish Harami Cross" + existingPattern
                     + colorText.END
                 )
                 saveDict["Pattern"] = f"Bullish Harami Cross{existingPattern}"
@@ -233,7 +233,7 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.FAIL
-                    + f"Bearish Harami Cross{existingPattern}"
+                    + f"Bearish Harami Cross" + existingPattern
                     + colorText.END
                 )
                 saveDict["Pattern"] = f"Bearish Harami Cross{existingPattern}"
@@ -247,13 +247,13 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"Bullish Marubozu{existingPattern}"
+                    + f"Bullish Marubozu" + existingPattern
                     + colorText.END
                 )
                 saveDict["Pattern"] = f"Bullish Marubozu{existingPattern}"
             else:
                 dict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + f"Bearish Marubozu{existingPattern}" + colorText.END
+                    colorText.BOLD + colorText.FAIL + f"Bearish Marubozu" + colorText.END + existingPattern
                 )
                 saveDict["Pattern"] = f"Bearish Marubozu{existingPattern}"
             return True
@@ -263,7 +263,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"Hanging Man{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"Hanging Man" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Hanging Man{existingPattern}"
             return True
@@ -273,7 +273,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"Hammer{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"Hammer" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Hammer{existingPattern}"
             return True
@@ -283,7 +283,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"Inverted Hammer{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"Inverted Hammer" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Inverted Hammer{existingPattern}"
             return True
@@ -293,7 +293,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"Shooting Star{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"Shooting Star" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Shooting Star{existingPattern}"
             return True
@@ -303,7 +303,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + f"Dragonfly Doji{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.GREEN + f"Dragonfly Doji" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Dragonfly Doji{existingPattern}"
             return True
@@ -313,7 +313,7 @@ class CandlePatterns:
         )
         if check is not None and check.tail(1).item() != 0:
             dict["Pattern"] = (
-                colorText.BOLD + colorText.FAIL + f"Gravestone Doji{existingPattern}" + colorText.END
+                colorText.BOLD + colorText.FAIL + f"Gravestone Doji" + colorText.END + existingPattern
             )
             saveDict["Pattern"] = f"Gravestone Doji{existingPattern}"
             return True
@@ -326,7 +326,7 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"Bullish Engulfing{existingPattern}"
+                    + f"Bullish Engulfing" + existingPattern
                     + colorText.END
                 )
                 saveDict["Pattern"] = f"Bullish Engulfing{existingPattern}"
@@ -334,7 +334,7 @@ class CandlePatterns:
                 dict["Pattern"] = (
                     colorText.BOLD
                     + colorText.FAIL
-                    + f"Bearish Engulfing{existingPattern}"
+                    + f"Bearish Engulfing" + existingPattern
                     + colorText.END
                 )
                 saveDict["Pattern"] = f"Bearish Engulfing{existingPattern}"

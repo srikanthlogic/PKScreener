@@ -15,6 +15,9 @@
 | Chart Patterns | CCI scanners | 2% scanners | Short-term bulls | NR4 / NR7 | Weekly Releases |
 | :------------: | :----------: | :---------: | :--------------: | :-------: | --------------- |
 
+| Fair Value | Mutual funds, FII data | TTM Squeeze | Golden Crossover | Death Crossover|
+| :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
+
 | RSI screening | MACD scanners | IPO Stocks | Momentum Gainers | Watchlist screening |
 | :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
 

@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240228.203] release
+* Support for TTM Squeeze for bollinger bands and Keltner's channel. Try X>12>7>6>
 * Support for Golden/Dead crossovers under MA confluence (Try X>12>7>3)
 * Support for portfolio calculations as part of backtests (by default disabled, but can be enabled in configuration)
 * Strategies menu is now enabled with various strategies that you can try out on your own alongside the scan types.

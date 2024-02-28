@@ -534,91 +534,84 @@ class ScreeningStatistics:
             saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
-    #@measure_time
-    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None):
-        # shouldProceed = True
-        isUptrend = False
-        isDowntrend = False
-        is50DMAUptrend = False
-        is50DMADowntrend = False
-        decision = ""
-        dma50decision = ""
-        fairValue = 0
-        fairValueDiff = 0
-        # if df is None or len(df) < 220 or testing:
-        #     shouldProceed = False
-        if df is not None:
-            try:
-                data = df.copy()
-                data = data[::-1]
-                today_sma = pktalib.SMA(data["Close"], timeperiod=50)
-                sma_minus9 = pktalib.SMA(data.head(len(data)-9)["Close"], timeperiod=50)
-                sma_minus14 = pktalib.SMA(data.head(len(data)-14)["Close"], timeperiod=50)
-                sma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=50)
-                today_lma = pktalib.SMA(data["Close"], timeperiod=200)
-                lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
-                lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
-                lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
-                today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
-                lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
-                lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
-                lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
-                today_sma = today_sma.iloc[len(today_sma)-1] if today_sma is not None else 0
-                sma_minus9 = sma_minus9.iloc[len(sma_minus9)-1] if sma_minus9 is not None else 0
-                sma_minus14 = sma_minus14.iloc[len(sma_minus14)-1] if sma_minus14 is not None else 0
-                sma_minus20 = sma_minus20.iloc[len(sma_minus20)-1] if sma_minus20 is not None else 0
-                isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
-                isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
-                is50DMAUptrend = (today_sma > sma_minus9) or (today_sma > sma_minus14) or (today_sma > sma_minus20)
-                is50DMADowntrend = (today_sma < sma_minus9) and (today_sma < sma_minus14) and (today_sma < sma_minus20)
-            except Exception:  # pragma: no cover
-                # self.default_logger.debug(e, exc_info=True)
-                pass
-        decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
-        dma50decision = 't:▲' if is50DMAUptrend else ('t:▼' if is50DMADowntrend else '')
-        mf_inst_ownershipChange = 0
-        change_millions =""
-        try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)))
-            roundOff = 2
-            millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            while float(millions) == 0 and roundOff <=5:
-                roundOff +=1
-                millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            change_millions = f"({millions}M)"
-        except Exception as e:  # pragma: no cover
-            self.default_logger.debug(e, exc_info=True)
-            pass
-        try:
-            #Let's get the fair value, either saved or fresh from service
-            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns))
-            if fairValue is not None and fairValue != 0:
-                ltp = saveDict["LTP"]
-                fairValueDiff = round(fairValue - ltp,0)
-                saveDict["FairValue"] = str(fairValue)
-                saveDict["FVDiff"] = fairValueDiff
-                screenDict["FVDiff"] = fairValueDiff
-                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + saveDict["FairValue"] + colorText.END
-        except Exception as e:  # pragma: no cover
-            self.default_logger.debug(e, exc_info=True)
-            pass
-        mf = ""
-        mfs = ""
-        if mf_inst_ownershipChange > 0:
-            mf = f"MFI:▲ {change_millions}"
-            mfs = colorText.GREEN + mf + colorText.END
-        elif mf_inst_ownershipChange < 0:
-            mf = f"MFI:▼ {change_millions}"
-            mfs = colorText.FAIL + mf + colorText.END
+    def findCurrentSavedValue(self, screenDict, saveDict, key):
+        existingScreen = screenDict.get(key)
+        existingSave = saveDict.get(key)
+        existingScreen = f"{existingScreen}, " if (existingScreen is not None and len(existingScreen) > 0) else ""
+        existingSave = f"{existingSave}, " if (existingSave is not None and len(existingSave) > 0) else ""
+        return existingScreen, existingSave
 
-        decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
-        dma50decision_scr = (colorText.GREEN if is50DMAUptrend else (colorText.FAIL if is50DMADowntrend else colorText.WARN)) + f"{dma50decision}" + colorText.END
-        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {dma50decision} {mf}"
-        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {dma50decision_scr} {mfs}"
-        saveDict["MFI"] = mf_inst_ownershipChange
-        screenDict["MFI"] = mf_inst_ownershipChange
-        return isUptrend, mf_inst_ownershipChange, fairValueDiff
-    
+    # @measure_time
+    def findBbandsSqueeze(self,fullData, screenDict, saveDict, filter=4):
+        """
+        The TTM Squeeze indicator measures the relationship between the 
+        Bollinger Bands and Keltner's Channel. When the volatility increases, 
+        so does the distance between the bands, and conversely, when the 
+        volatility declines, the distance also decreases. The Squeeze indicator 
+        finds sections of the Bollinger Bands study which fall inside the 
+        Keltner's Channels.
+        
+        At the moment this squeeze happens, a price breakout from the upper 
+        Bollinger Band would indicate the possibility of an uptrend in the 
+        future. This is backed by the fact that once the price starts breaking 
+        out of the bands, it would mean a relaxation of the squeeze and the 
+        possibility of high market volatility and price movement in the future. 
+        Similarly, a price breakout from the lower Bollinger Band after a squeeze 
+        would indicate the possibility of a downtrend in the future and an 
+        increased market volatility in the same direction. When the market 
+        finishes a move, the indicator turns off, which corresponds to bands 
+        having pushed well outside the range of Keltner's Channels.
+        """
+        if fullData is None or len(fullData) < 20:
+            return False
+        oldestRecordsFirst_df = fullData.head(30).copy()
+        latestRecordsFirst_df = oldestRecordsFirst_df[::-1].tail(30)
+        latestRecordsFirst_df = latestRecordsFirst_df.fillna(0)
+        latestRecordsFirst_df = latestRecordsFirst_df.replace([np.inf, -np.inf], 0)
+        # Bollinger bands
+        latestRecordsFirst_df.loc[:,'BBands-U'], latestRecordsFirst_df.loc[:,'BBands-M'], latestRecordsFirst_df.loc[:,'BBands-L'] = pktalib.BBANDS(latestRecordsFirst_df["Close"], 20)
+        # compute Keltner's channel
+        latestRecordsFirst_df['low_kel'], latestRecordsFirst_df['upp_kel'] = pktalib.KeltnersChannel(latestRecordsFirst_df["High"], latestRecordsFirst_df["Low"],latestRecordsFirst_df["Close"],20)
+        # squeeze indicator
+        def in_squeeze(df):
+            return df['low_kel'] < df['BBands-L'] < df['BBands-U'] < df['upp_kel']
+
+        latestRecordsFirst_df['squeeze'] = latestRecordsFirst_df.apply(in_squeeze, axis=1)
+
+        # Let's review just the previous 3 candles including today (at the end)
+        latestRecordsFirst_df = latestRecordsFirst_df.tail(3)
+        # stock is coming out of the squeeze
+        saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
+        candle3Sqz = latestRecordsFirst_df.iloc[-3]["squeeze"]
+        candle1Sqz = latestRecordsFirst_df.iloc[-1]["squeeze"]
+        candle2Sqz = latestRecordsFirst_df.iloc[-2]["squeeze"]
+        if candle3Sqz and not candle1Sqz:
+            # 3rd candle from the most recent one was in squeeze but the most recent one is not.
+            if filter not in [1,3,4]: # Buy/Sell/All
+                return False
+            # decide which action to take by comparing distances                
+            distance_to_upper = abs(latestRecordsFirst_df['BBands-U'].values[-1] - latestRecordsFirst_df['Close'].values[-1])
+            distance_to_lower = abs(latestRecordsFirst_df['BBands-L'].values[-1] - latestRecordsFirst_df['Close'].values[-1])
+            
+            action = False
+            if distance_to_upper < distance_to_lower:
+                if filter not in [1,4]: # Buy/All
+                    return False
+                action = True
+            elif filter not in [3,4]: # Sell/All
+                return False
+            screenDict["Pattern"] = saved[0] + colorText.BOLD + (colorText.GREEN if action else colorText.FAIL) + f"BBands-SQZ-{'Buy' if action else 'Sell'}" + colorText.END
+            saveDict["Pattern"] = saved[1] + f"TTM-SQZ-{'Buy' if action else 'Sell'}"
+            return True
+        elif candle3Sqz and candle2Sqz and candle1Sqz:
+            # Last 3 candles in squeeze
+            if filter not in [2,4]: # SqZ/All
+                return False
+            screenDict["Pattern"] = f'{saved[0]}{colorText.BOLD}{colorText.WARN}TTM-SQZ{colorText.END}'
+            saveDict["Pattern"] = f'{saved[1]}TTM-SQZ'
+            return True
+        return False
+        
     #@measure_time
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
@@ -743,12 +736,12 @@ class ScreeningStatistics:
 
         limit_upper = now["Support"].iloc[0] + (now["Support"].iloc[0] * percentage)
         limit_lower = now["Support"].iloc[0] - (now["Support"].iloc[0] * percentage)
-
+        saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
         if limit_lower < now["Close"].iloc[0] < limit_upper and slope > 0.15:
             screenDict["Pattern"] = (
-                colorText.BOLD + colorText.GREEN + "Trendline-Support" + colorText.END
+                saved[0] + colorText.BOLD + colorText.GREEN + "Trendline-Support" + colorText.END
             )
-            saveDict["Pattern"] = "Trendline-Support"
+            saveDict["Pattern"] = saved[1] + "Trendline-Support"
             return True
 
         """ Plots for debugging
@@ -770,6 +763,91 @@ class ScreeningStatistics:
         """
         return False
 
+    # @measure_time
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None):
+        # shouldProceed = True
+        isUptrend = False
+        isDowntrend = False
+        is50DMAUptrend = False
+        is50DMADowntrend = False
+        decision = ""
+        dma50decision = ""
+        fairValue = 0
+        fairValueDiff = 0
+        # if df is None or len(df) < 220 or testing:
+        #     shouldProceed = False
+        if df is not None:
+            try:
+                data = df.copy()
+                data = data[::-1]
+                today_sma = pktalib.SMA(data["Close"], timeperiod=50)
+                sma_minus9 = pktalib.SMA(data.head(len(data)-9)["Close"], timeperiod=50)
+                sma_minus14 = pktalib.SMA(data.head(len(data)-14)["Close"], timeperiod=50)
+                sma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=50)
+                today_lma = pktalib.SMA(data["Close"], timeperiod=200)
+                lma_minus20 = pktalib.SMA(data.head(len(data)-20)["Close"], timeperiod=200)
+                lma_minus80 = pktalib.SMA(data.head(len(data)-80)["Close"], timeperiod=200)
+                lma_minus100 = pktalib.SMA(data.head(len(data)-100)["Close"], timeperiod=200)
+                today_lma = today_lma.iloc[len(today_lma)-1] if today_lma is not None else 0
+                lma_minus20 = lma_minus20.iloc[len(lma_minus20)-1] if lma_minus20 is not None else 0
+                lma_minus80 = lma_minus80.iloc[len(lma_minus80)-1] if lma_minus80 is not None else 0
+                lma_minus100 = lma_minus100.iloc[len(lma_minus100)-1] if lma_minus100 is not None else 0
+                today_sma = today_sma.iloc[len(today_sma)-1] if today_sma is not None else 0
+                sma_minus9 = sma_minus9.iloc[len(sma_minus9)-1] if sma_minus9 is not None else 0
+                sma_minus14 = sma_minus14.iloc[len(sma_minus14)-1] if sma_minus14 is not None else 0
+                sma_minus20 = sma_minus20.iloc[len(sma_minus20)-1] if sma_minus20 is not None else 0
+                isUptrend = (today_lma > lma_minus20) or (today_lma > lma_minus80) or (today_lma > lma_minus100)
+                isDowntrend = (today_lma < lma_minus20) and (today_lma < lma_minus80) and (today_lma < lma_minus100)
+                is50DMAUptrend = (today_sma > sma_minus9) or (today_sma > sma_minus14) or (today_sma > sma_minus20)
+                is50DMADowntrend = (today_sma < sma_minus9) and (today_sma < sma_minus14) and (today_sma < sma_minus20)
+            except Exception:  # pragma: no cover
+                # self.default_logger.debug(e, exc_info=True)
+                pass
+        decision = 'T:▲' if isUptrend else ('T:▼' if isDowntrend else '')
+        dma50decision = 't:▲' if is50DMAUptrend else ('t:▼' if is50DMADowntrend else '')
+        mf_inst_ownershipChange = 0
+        change_millions =""
+        try:
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)))
+            roundOff = 2
+            millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            while float(millions) == 0 and roundOff <=5:
+                roundOff +=1
+                millions = round(mf_inst_ownershipChange/1000000,roundOff)
+            change_millions = f"({millions}M)"
+        except Exception as e:  # pragma: no cover
+            self.default_logger.debug(e, exc_info=True)
+            pass
+        try:
+            #Let's get the fair value, either saved or fresh from service
+            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns))
+            if fairValue is not None and fairValue != 0:
+                ltp = saveDict["LTP"]
+                fairValueDiff = round(fairValue - ltp,0)
+                saveDict["FairValue"] = str(fairValue)
+                saveDict["FVDiff"] = fairValueDiff
+                screenDict["FVDiff"] = fairValueDiff
+                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + saveDict["FairValue"] + colorText.END
+        except Exception as e:  # pragma: no cover
+            self.default_logger.debug(e, exc_info=True)
+            pass
+        mf = ""
+        mfs = ""
+        if mf_inst_ownershipChange > 0:
+            mf = f"MFI:▲ {change_millions}"
+            mfs = colorText.GREEN + mf + colorText.END
+        elif mf_inst_ownershipChange < 0:
+            mf = f"MFI:▼ {change_millions}"
+            mfs = colorText.FAIL + mf + colorText.END
+
+        decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
+        dma50decision_scr = (colorText.GREEN if is50DMAUptrend else (colorText.FAIL if is50DMADowntrend else colorText.WARN)) + f"{dma50decision}" + colorText.END
+        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {dma50decision} {mf}"
+        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {dma50decision_scr} {mfs}"
+        saveDict["MFI"] = mf_inst_ownershipChange
+        screenDict["MFI"] = mf_inst_ownershipChange
+        return isUptrend, mf_inst_ownershipChange, fairValueDiff
+    
     # Private method to find candle type
     # True = Bullish, False = Bearish
     def getCandleType(self, dailyData):
@@ -1354,6 +1432,7 @@ class ScreeningStatistics:
     ):
         data = df.copy()
         orgData = data
+        saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
         for i in range(daysToLookback, round(daysToLookback * 0.5) - 1, -1):
             if i == 2:
                 return 0  # Exit if only last 2 candles are left
@@ -1371,12 +1450,13 @@ class ScreeningStatistics:
                         and (len(data.Close[data.Close < refCandle.Low.item()]) == 0)
                     ):
                         screenDict["Pattern"] = (
-                            colorText.BOLD
+                            saved[0]
+                            + colorText.BOLD
                             + colorText.WARN
                             + ("Inside Bar (%d)" % i)
                             + colorText.END
                         )
-                        saveDict["Pattern"] = "Inside Bar (%d)" % i
+                        saveDict["Pattern"] = saved[1] + "Inside Bar (%d)" % i
                         return i
                 else:
                     return 0
@@ -1393,12 +1473,13 @@ class ScreeningStatistics:
                         and (len(data.Close[data.Close < refCandle.Low.item()]) == 0)
                     ):
                         screenDict["Pattern"] = (
-                            colorText.BOLD
+                            saved[0]
+                            + colorText.BOLD
                             + colorText.WARN
                             + ("Inside Bar (%d)" % i)
                             + colorText.END
                         )
-                        saveDict["Pattern"] = "Inside Bar (%d)" % i
+                        saveDict["Pattern"] = saved[1] + "Inside Bar (%d)" % i
                         return i
                 else:
                     return 0
@@ -1418,23 +1499,26 @@ class ScreeningStatistics:
             <= currentPrice
             <= (listingPrice + (listingPrice * percentage))
         ):
+            saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
             if away > 0:
                 screenDict["Pattern"] = (
-                    colorText.BOLD
+                    saved[0] 
+                    + colorText.BOLD
                     + colorText.GREEN
                     + f"IPO Base ({away} %)"
                     + colorText.END
                 )
             else:
                 screenDict["Pattern"] = (
-                    colorText.BOLD
+                    saved[0]
+                    + colorText.BOLD
                     + colorText.GREEN
                     + "IPO Base "
                     + colorText.FAIL
                     + f"({away} %)"
                     + colorText.END
                 )
-            saveDict["Pattern"] = f"IPO Base ({away} %)"
+            saveDict["Pattern"] = saved[1] + f"IPO Base ({away} %)"
             return True
         return False
 
@@ -1455,18 +1539,19 @@ class ScreeningStatistics:
         )
         try:
             lc = ata.LorentzianClassification(data=data)
+            saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
             if lc.df.iloc[-1]["isNewBuySignal"]:
                 screenDict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + "Lorentzian-Buy" + colorText.END
                 )
-                saveDict["Pattern"] = "Lorentzian-Buy"
+                saveDict["Pattern"] = saved[1] + "Lorentzian-Buy"
                 if lookFor != 2: # Not Sell
                     return True
             elif lc.df.iloc[-1]["isNewSellSignal"]:
                 screenDict["Pattern"] = (
-                    colorText.BOLD + colorText.FAIL + "Lorentzian-Sell" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.FAIL + "Lorentzian-Sell" + colorText.END
                 )
-                saveDict["Pattern"] = "Lorentzian-Sell"
+                saveDict["Pattern"] = saved[1] + "Lorentzian-Sell"
                 if lookFor != 1: # Not Buy
                     return True
         except Exception:  # pragma: no cover
@@ -1648,13 +1733,15 @@ class ScreeningStatistics:
                         self.default_logger.info(
                             f'Stock:{saveDict["Stock"]}, is a momentum-gainer because today-open ({to}) >= yesterday-close ({yc}) and yesterday-open({yo}) >= day-before-close({dyc})'
                         )
+                        saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
                         screenDict["Pattern"] = (
-                            colorText.BOLD
+                            saved[0]
+                            + colorText.BOLD
                             + colorText.GREEN
                             + "Momentum Gainer"
                             + colorText.END
                         )
-                        saveDict["Pattern"] = "Momentum Gainer"
+                        saveDict["Pattern"] = saved[1] + "Momentum Gainer"
                         return True
                     self.default_logger.info(
                         f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because either today-open ({to}) < yesterday-close ({yc}) or yesterday-open({yo}) < day-before-close({dyc})'
@@ -1775,6 +1862,7 @@ class ScreeningStatistics:
     # Find NRx range for Reversal
     def validateNarrowRange(self, df, screenDict, saveDict, nr=4):
         data = df.copy()
+        saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
         if PKDateUtilities.isTradingTime():
             rangeData = data.head(nr + 1)[1:]
             now_candle = data.head(1)
@@ -1789,18 +1877,18 @@ class ScreeningStatistics:
                     and now_candle["Close"].iloc[0] >= recent["Close"].iloc[0]
                 ):
                     screenDict["Pattern"] = (
-                        colorText.BOLD + colorText.GREEN + f"Buy-NR{nr}" + colorText.END
+                        saved[0] + colorText.BOLD + colorText.GREEN + f"Buy-NR{nr}" + colorText.END
                     )
-                    saveDict["Pattern"] = f"Buy-NR{nr}"
+                    saveDict["Pattern"] = saved[1] + f"Buy-NR{nr}"
                     return True
                 elif (
                     not self.getCandleType(recent)
                     and now_candle["Close"].iloc[0] <= recent["Close"].iloc[0]
                 ):
                     screenDict["Pattern"] = (
-                        colorText.BOLD + colorText.FAIL + f"Sell-NR{nr}" + colorText.END
+                        saved[0] + colorText.BOLD + colorText.FAIL + f"Sell-NR{nr}" + colorText.END
                     )
-                    saveDict["Pattern"] = f"Sell-NR{nr}"
+                    saveDict["Pattern"] = saved[1] + f"Sell-NR{nr}"
                     return True
             return False
         else:
@@ -1809,9 +1897,9 @@ class ScreeningStatistics:
             recent = rangeData.head(1)
             if recent["Range"].iloc[0] == rangeData.describe()["Range"]["min"]:
                 screenDict["Pattern"] = (
-                    colorText.BOLD + colorText.GREEN + f"NR{nr}" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + f"NR{nr}" + colorText.END
                 )
-                saveDict["Pattern"] = f"NR{nr}"
+                saveDict["Pattern"] = saved[1] + f"NR{nr}"
                 return True
             return False
 
@@ -2000,13 +2088,15 @@ class ScreeningStatistics:
                     and ltp < highestTop
                     and ltp > lowPoints[0]
                 ):
+                    saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
                     screenDict["Pattern"] = (
-                        colorText.BOLD
+                        saved[0] 
+                        + colorText.BOLD
                         + colorText.GREEN
                         + f"VCP (BO: {highestTop})"
                         + colorText.END
                     )
-                    saveDict["Pattern"] = f"VCP (BO: {highestTop})"
+                    saveDict["Pattern"] = saved[1] + f"VCP (BO: {highestTop})"
                     return True
         except Exception as e:  # pragma: no cover
             self.default_logger.debug(e, exc_info=True)
@@ -2028,7 +2118,7 @@ class ScreeningStatistics:
         if recent["VolMA"].iloc[0] == 0:  # Handles Divide by 0 warning
             saveDict["Volume"] = 0  # "Unknown"
             screenDict["Volume"] = 0
-            return True, hasMinimumVolume
+            return False, hasMinimumVolume
         ratio = round(recent["Volume"].iloc[0] / recent["VolMA"].iloc[0], 2)
         saveDict["Volume"] = ratio
         if ratio >= volumeRatio and ratio != np.nan and (not math.isinf(ratio)):
@@ -2056,6 +2146,7 @@ class ScreeningStatistics:
                     )
                     vol1 = data.iloc[1]["Volume"]
                     vol0 = data.iloc[0]["Volume"]
+                    saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
                     if (
                         spread0 > spread1
                         and vol0 < vol1
@@ -2065,12 +2156,13 @@ class ScreeningStatistics:
                         and data.iloc[0]["Volume"] <= int(data.iloc[1]["Volume"] * 0.75)
                     ):
                         screenDict["Pattern"] = (
-                            colorText.BOLD
+                            saved[0] 
+                            + colorText.BOLD
                             + colorText.GREEN
                             + "Supply Drought"
                             + colorText.END
                         )
-                        saveDict["Pattern"] = "Supply Drought"
+                        saveDict["Pattern"] = saved[1] + "Supply Drought"
                         return True
                     if (
                         spread0 < spread1
@@ -2079,12 +2171,13 @@ class ScreeningStatistics:
                         and data.iloc[0]["Close"] <= data.iloc[1]["Open"]
                     ):
                         screenDict["Pattern"] = (
-                            colorText.BOLD
+                            saved[0] 
+                            + colorText.BOLD
                             + colorText.GREEN
                             + "Demand Rise"
                             + colorText.END
                         )
-                        saveDict["Pattern"] = "Demand Rise"
+                        saveDict["Pattern"] = saved[1] + "Demand Rise"
                         return True
             except IndexError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
