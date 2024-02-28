@@ -1823,8 +1823,8 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[]):
 
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
-    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force):
-        return
+    if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force) or not configManager.showPastStrategyData:
+        return None, None
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     summarydf, detaildf = getSummaryCorrectnessOfStrategy(saveResults)

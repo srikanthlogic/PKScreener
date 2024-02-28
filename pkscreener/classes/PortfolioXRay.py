@@ -88,7 +88,7 @@ def getSavedBacktestReportNames(testing=False):
 def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
     dfs = []
     insights = None
-    if ("RUNNER" not in os.environ.keys()):
+    if ("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData:
         return None
     try:
         dfs = pd.read_html(

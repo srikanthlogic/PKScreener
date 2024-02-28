@@ -63,6 +63,7 @@ class tools:
         self.maxBacktestWindow = 30
         self.minVolume = 10000
         self.logger = None
+        self.showPastStrategyData = False
         # This determines how many days apart the backtest calculations are run.
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
@@ -147,6 +148,7 @@ class tools:
             )
             parser.set("config", "logsEnabled", "y" if self.logsEnabled else "n")
             parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
+            parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
             parser.set("config", "generalTimeout", str(self.generalTimeout))
             parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
@@ -243,6 +245,11 @@ class tools:
                     "[+] Enable calculating portfolio values? [Y/N]: "
                 )
             ).lower()
+            self.showPastStrategyData = str(
+                input(
+                    "[+] Enable showing past strategy data? [Y/N]: "
+                )
+            ).lower()
             self.generalTimeout = input(
                 "[+] General network timeout (in seconds)(Optimal = 2 for good networks): "
             )
@@ -279,6 +286,7 @@ class tools:
             parser.set("config", "useEMA", self.useEmaPrompt)
             parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
             parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
+            parser.set("config", "showPastStrategyData", self.showPastStrategyData)
             parser.set("config", "logsEnabled", self.logsEnabledPrompt)
             parser.set("config", "generalTimeout", self.generalTimeout)
             parser.set("config", "longTimeout", self.longTimeout)
@@ -366,6 +374,11 @@ class tools:
                 self.enablePortfolioCalculations = (
                     False
                     if "y" not in str(parser.get("config", "enablePortfolioCalculations")).lower()
+                    else True
+                )
+                self.showPastStrategyData = (
+                    False
+                    if "y" not in str(parser.get("config", "showPastStrategyData")).lower()
                     else True
                 )
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
