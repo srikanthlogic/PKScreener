@@ -76,6 +76,7 @@ from pkscreener.classes.MenuOptions import (
     level3_X_Reversal_MenuDict,
     level4_X_Lorenzian_MenuDict,
     level4_X_ChartPattern_Confluence_MenuDict,
+    level4_X_ChartPattern_BBands_SQZ_MenuDict,
     menus,
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
@@ -865,9 +866,20 @@ def main(userArgs=None):
                         insideBarToLookback,
                     ) = Utility.tools.promptChartPatterns(selectedMenu)
                 if maLength == 0:
-                    maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
+                    maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
             elif respChartPattern in [0, 4, 5, 6]:
                 insideBarToLookback = 0
+                if respChartPattern == 6:
+                    if len(options) >= 5:
+                        if str(options[4]).isnumeric():
+                            maLength = int(options[4])
+                        elif str(options[4]).upper() == "D":
+                            maLength = 1 # Bollinger Bands Squeeze-Buy
+                    elif defaultAnswer == "Y" and user is not None:
+                        # bot mode
+                        maLength = 4 # Bollinger Bands Squeeze- Any/All
+                    else:
+                        maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu,respChartPattern)
             else:
                 (
                     respChartPattern,
@@ -878,7 +890,7 @@ def main(userArgs=None):
                 selectedMenu
             )
             if maLength == 0:
-                maLength = Utility.tools.promptConfluenceSubMenu(selectedMenu, respChartPattern)
+                maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
         if (
             respChartPattern is None
             or insideBarToLookback is None
@@ -1590,6 +1602,11 @@ def updateMenuChoiceHierarchy():
             menuChoiceHierarchy
             + f'>{level4_X_ChartPattern_Confluence_MenuDict[selectedChoice["4"]].strip()}'
         )
+        elif len(selectedChoice) >= 5 and selectedChoice["3"] == "6":
+            menuChoiceHierarchy = (
+            menuChoiceHierarchy
+            + f'>{level4_X_ChartPattern_BBands_SQZ_MenuDict[selectedChoice["4"]].strip()}'
+        )
     elif selectedChoice["2"] == "21":
         menuChoiceHierarchy = (
             menuChoiceHierarchy
@@ -2052,7 +2069,7 @@ def runScanners(
                 progressbar.text(
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"{'Found' if menuOption in ['X'] else 'Analysed'} {screenResultsCounter.value} Stocks"
+                    + f"{'Found' if menuOption in ['X'] else 'Analysed'} {len(lstscreen)} Stocks"
                     + colorText.END
                 )
                 progressbar()
@@ -2410,7 +2427,7 @@ def takeBacktestInputs(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) periods."
+        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) or any other custom periods (< 450)."
     )
     try:
         if backtestPeriod == 0:

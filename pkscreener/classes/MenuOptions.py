@@ -122,6 +122,15 @@ level3_X_ChartPattern_MenuDict = {
     "3": "The Confluence (50 & 200 MA/EMA)",
     "4": "VCP (Experimental)",
     "5": "Buying at Trendline (Ideal for Swing/Mid/Long term)",
+    "6": "Bollinger Bands (TTM) Squeeze",
+    "0": "Cancel",
+}
+
+level4_X_ChartPattern_BBands_SQZ_MenuDict = {
+    "1": "TTM Squeeze-Buy",
+    "2": "TTM In-Squeeze",
+    "3": "TTM Squeeze-Sell",
+    "4": "All/Any",
     "0": "Cancel",
 }
 
@@ -368,6 +377,14 @@ class menus:
                         renderStyle=renderStyle,
                         parent=selectedMenu,
                     )
+                if selectedMenu.parent.menuKey == "7" and selectedMenu.menuKey == "6":
+                    return self.renderLevel4_X_ChartPattern_BBands_SQZ_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+                
 
     def find(self, key=None):
         if key is not None:
@@ -669,6 +686,39 @@ class menus:
                 + colorText.END
             )
             return menuText
+
+
+    def renderLevel4_X_ChartPattern_BBands_SQZ_Menus(
+        self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level4_X_ChartPattern_BBands_SQZ_MenuDict,
+            renderExceptionKeys=["0"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            print(
+                colorText.BOLD
+                + colorText.WARN
+                + "[+] Select an option: "
+                + colorText.END
+            )
+            print(
+                colorText.BOLD
+                + menuText
+                + """
+
+        """
+                + colorText.END
+            )
+            return menuText
+
 
     def renderLevel4_X_ChartPattern_Confluence_Menus(
         self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None

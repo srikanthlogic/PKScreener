@@ -70,12 +70,43 @@ class pktalib:
             return talib.EMA(close, timeperiod)
 
     @classmethod
+    def KeltnersChannel(self, high, low, close, timeperiod=20):
+        try:
+            low_kel = None
+            upp_kel = None
+            tr = pktalib.TRUERANGE(high, low, close)
+            atr = pktalib.ATR(high, low, close, timeperiod=timeperiod)
+            sma = pktalib.SMA(close=close, timeperiod=timeperiod)
+            low_kel = sma - atr * 1.5
+            upp_kel = sma + atr * 1.5
+            return low_kel, upp_kel
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return low_kel, upp_kel
+        
+    @classmethod
     def SMA(self, close, timeperiod):
         try:
             return talib.sma(close, timeperiod)
         except Exception:  # pragma: no cover
             # default_logger().debug(e, exc_info=True)
             return talib.SMA(close, timeperiod)
+
+    @classmethod
+    def ATR(self, high, low, close, timeperiod=14):
+        try:
+            return talib.atr(high, low, close, length= timeperiod)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return talib.ATR(high, low, close, timeperiod=timeperiod)
+        
+    @classmethod
+    def TRUERANGE(self, high, low, close):
+        try:
+            return talib.true_range(high, low, close)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return talib.TRANGE(high, low, close)
 
     @classmethod
     def MA(self, close, timeperiod):

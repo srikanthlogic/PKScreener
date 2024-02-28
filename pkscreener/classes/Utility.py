@@ -717,9 +717,9 @@ class tools:
             outputFolder = outputFolder.replace("results","actions-data-download")
             if not os.path.isdir(outputFolder):
                 os.makedirs(os.path.dirname(f"{outputFolder}{os.sep}"), exist_ok=True)
-        configManager.deleteFileWithPattern(excludeFile=fileName,rootDir=outputFolder)
+            configManager.deleteFileWithPattern(rootDir=outputFolder)
         cache_file = os.path.join(outputFolder, fileName)
-        if not os.path.exists(cache_file) or len(stockDict) > (loadCount + 1):
+        if not os.path.exists(cache_file) or (loadCount > 0 and len(stockDict) > (loadCount + 1)):
             try:
                 with open(cache_file, "wb") as f:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -1055,7 +1055,7 @@ class tools:
         m.level = menu.level if menu is not None else 0
         return m.renderForMenu(menu)
 
-    def promptConfluenceSubMenu(menu,respChartPattern):
+    def promptChartPatternSubMenu(menu,respChartPattern):
         m3 = menus()
         m3.renderForMenu(menu,asList=True)
         lMenu =  m3.find(str(respChartPattern))
