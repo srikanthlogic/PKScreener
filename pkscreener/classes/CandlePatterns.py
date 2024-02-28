@@ -26,7 +26,7 @@
 from PKDevTools.classes.ColorText import colorText
 
 from pkscreener.classes.Pktalib import pktalib
-
+from PKDevTools.classes.log import measure_time
 
 class CandlePatterns:
     reversalPatternsBullish = [
@@ -55,6 +55,7 @@ class CandlePatterns:
     def __init__(self):
         pass
 
+    @measure_time
     # Find candle-stick patterns
     # Arrange if statements with max priority from top to bottom
     def findPattern(self, data, dict, saveDict):

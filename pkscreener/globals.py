@@ -2462,7 +2462,7 @@ def terminateAllWorkers(consumers, tasks_queue, testing):
         try:
             _ = tasks_queue.get(False)
         except Exception as e:  # pragma: no cover
-            default_logger().debug(e, exc_info=True)
+            # default_logger().debug(e, exc_info=True)
             break
 
 
