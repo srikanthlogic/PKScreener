@@ -89,8 +89,9 @@ def getSavedBacktestReportNames(testing=False):
 def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
     dfs = []
     insights = None
-    if ("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData:
-        return None
+    if (("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData):
+        if "PKDevTools_Default_Log_Level" not in os.environ.keys():
+            return None
     try:
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(
@@ -386,8 +387,31 @@ def statScanCalculationForPatterns(*args, **kwargs):
             task.result = scanResults
     return scanResults
 
+def ensureColumnsExist(saveResults):
+    columns = ['Stock', 'Date', 'Volume', 'Trend', 'MA-Signal', 'LTP', '52Wk H',
+               '52Wk L', '1-Pd', '2-Pd', '3-Pd', '4-Pd', '5-Pd', '10-Pd', '15-Pd',
+               '22-Pd', '30-Pd', 'Consol.', 'Breakout', 'RSI', 'Pattern', 'CCI',
+               'LTP1', 'Growth1', 'LTP2', 'Growth2', 'LTP3', 'Growth3', 'LTP4',
+               'Growth4', 'LTP5', 'Growth5', 'LTP10', 'Growth10', 'LTP15', 'Growth15',
+               'LTP22', 'Growth22', 'LTP30', 'Growth30']
+    if saveResults is None:
+        saveResults = pd.DataFrame(columns=columns)
+    else:
+        for col in columns:
+            if col not in saveResults.columns:
+                if col == "Breakout":
+                    saveResults[col] = "BO: R: "
+                else:
+                    saveResults[col] = ""
+            elif col == "Breakout":
+                saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
+                    lambda x: "BO: 0 R: 0" if x == "" else x
+                )
+    return saveResults
+
 def cleanupData(savedResults):
     saveResults = savedResults.copy()
+    saveResults = ensureColumnsExist(saveResults)
     for col in saveResults.columns:
         saveResults.loc[:, col] = saveResults.loc[:, col].apply(
                 lambda x: Utility.tools.removeAllColorStyles(x)

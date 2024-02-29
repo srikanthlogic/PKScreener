@@ -494,6 +494,7 @@ class ScreeningStatistics:
         results = []
         hasReversals = False
         data = data[::-1]
+        saved = self.findCurrentSavedValue(screenDict,saveDict, "MA-Signal")
         for maLength in maRange:
             dataCopy = data
             if self.configManager.useEMA:
@@ -526,12 +527,13 @@ class ScreeningStatistics:
                 results.append(str(maLength))
         if hasReversals:
             screenDict["MA-Signal"] = (
-                colorText.BOLD
+                saved[0] 
+                + colorText.BOLD
                 + colorText.GREEN
                 + f"Reversal-[{','.join(results)}]MA"
                 + colorText.END
             )
-            saveDict["MA-Signal"] = f"Reversal-[{','.join(results)}]MA"
+            saveDict["MA-Signal"] = saved[1] + f"Reversal-[{','.join(results)}]MA"
         return hasReversals
 
     def findCurrentSavedValue(self, screenDict, saveDict, key):
@@ -625,6 +627,7 @@ class ScreeningStatistics:
         data = data.set_index(np.arange(len(data)))
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
         try:
             with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
                 data["tops"] = data["Close"].iloc[
@@ -651,9 +654,9 @@ class ScreeningStatistics:
             except np.linalg.LinAlgError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
                 )
-                saveDict["Trend"] = "Unknown"
+                saveDict["Trend"] = saved[1] + "Unknown"
                 return saveDict["Trend"]
             except Exception as e:  # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
@@ -661,40 +664,40 @@ class ScreeningStatistics:
             angle = np.rad2deg(np.arctan(slope))
             if angle == 0:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
                 )
-                saveDict["Trend"] = "Unknown"
+                saveDict["Trend"] = saved[1] + "Unknown"
             elif angle <= 30 and angle >= -30:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.WARN + "Sideways" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.WARN + "Sideways" + colorText.END
                 )
-                saveDict["Trend"] = "Sideways"
+                saveDict["Trend"] = saved[1] + "Sideways"
             elif angle >= 30 and angle < 61:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.GREEN + "Weak Up" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + "Weak Up" + colorText.END
                 )
-                saveDict["Trend"] = "Weak Up"
+                saveDict["Trend"] = saved[1] + "Weak Up"
             elif angle >= 60:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.GREEN + "Strong Up" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + "Strong Up" + colorText.END
                 )
-                saveDict["Trend"] = "Strong Up"
+                saveDict["Trend"] = saved[1] + "Strong Up"
             elif angle <= -30 and angle > -61:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.FAIL + "Weak Down" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.FAIL + "Weak Down" + colorText.END
                 )
-                saveDict["Trend"] = "Weak Down"
+                saveDict["Trend"] = saved[1] + "Weak Down"
             elif angle < -60:
                 screenDict["Trend"] = (
-                    colorText.BOLD + colorText.FAIL + "Strong Down" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.FAIL + "Strong Down" + colorText.END
                 )
-                saveDict["Trend"] = "Strong Down"
+                saveDict["Trend"] = saved[1] + "Strong Down"
         except np.linalg.LinAlgError as e: # pragma: no cover
             self.default_logger.debug(e, exc_info=True)
             screenDict["Trend"] = (
-                colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+                saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
             )
-            saveDict["Trend"] = "Unknown"
+            saveDict["Trend"] = saved[1] + "Unknown"
         return saveDict["Trend"]
 
     # Find stocks approching to long term trendlines
@@ -840,10 +843,11 @@ class ScreeningStatistics:
             mf = f"MFI:▼ {change_millions}"
             mfs = colorText.FAIL + mf + colorText.END
 
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
         decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
         dma50decision_scr = (colorText.GREEN if is50DMAUptrend else (colorText.FAIL if is50DMADowntrend else colorText.WARN)) + f"{dma50decision}" + colorText.END
-        saveDict["Trend"] = f"{saveDict['Trend']} {decision} {dma50decision} {mf}"
-        screenDict["Trend"] = f"{screenDict['Trend']} {decision_scr} {dma50decision_scr} {mfs}"
+        saveDict["Trend"] = f"{saved[1]} {decision} {dma50decision} {mf}"
+        screenDict["Trend"] = f"{saved[0]} {decision_scr} {dma50decision_scr} {mfs}"
         saveDict["MFI"] = mf_inst_ownershipChange
         screenDict["MFI"] = mf_inst_ownershipChange
         return isUptrend, mf_inst_ownershipChange, fairValueDiff
@@ -884,7 +888,7 @@ class ScreeningStatistics:
                             pass
                             # self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
-                    hostData["FairValue"] = fairValue
+                    hostData.loc[:"FairValue"] = fairValue
         return fairValue
 
     def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False):
@@ -931,17 +935,17 @@ class ScreeningStatistics:
         if needsFreshUpdate and force:
             netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
             if netChangeMF is not None:
-                hostData["MF"] = netChangeMF
+                hostData.loc[:"MF"] = netChangeMF
             else:
                 netChangeMF = 0
             if latest_mfdate is not None:
-                hostData["MF_Date"] = latest_mfdate
+                hostData.loc[:"MF_Date"] = latest_mfdate
             if netChangeInst is not None:
-                hostData["FII"] = netChangeInst
+                hostData.loc[:"FII"] = netChangeInst
             else:
                 netChangeInst = 0
             if latest_instdate is not None:
-                hostData["FII_Date"] = latest_instdate
+                hostData.loc[:"FII_Date"] = latest_instdate
         lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
         if onlyMF:
             return netChangeMF
@@ -1320,6 +1324,7 @@ class ScreeningStatistics:
             )
         saveDict["ConfDMADifference"] = difference
         screenDict["ConfDMADifference"] = difference
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
         # difference = abs(difference)
         confText = f"{'GoldenCrossover' if isGoldenCrossOver else ('DeadCrossover' if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
         if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
@@ -1327,20 +1332,22 @@ class ScreeningStatistics:
         ):
             if recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD
+                    saved[0] 
+                    + colorText.BOLD
                     + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
                     + f"{confText} ({difference}%)"
                     + colorText.END
                 )
-                saveDict["MA-Signal"] = f"{confText} ({difference}%)"
+                saveDict["MA-Signal"] = saved[1] + f"{confText} ({difference}%)"
             else:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD
+                    saved[0] 
+                    + colorText.BOLD
                     + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
                     + f"{confText} ({difference}%)"
                     + colorText.END
                 )
-                saveDict["MA-Signal"] = f"{confText} ({difference}%)"
+                saveDict["MA-Signal"] = saved[1] + f"{confText} ({difference}%)"
             return confFilter == 3 or \
                 (confFilter == 1 and (is50DMAUpTrend or (isGoldenCrossOver or 'Up' in confText))) or \
                 (confFilter == 2 and (is50DMADownTrend or isDeadCrossOver or 'Down' in confText))
@@ -1348,12 +1355,13 @@ class ScreeningStatistics:
         # the list if it's a golden crossover or dead crossover
         if isGoldenCrossOver or isDeadCrossOver:
             screenDict["MA-Signal"] = (
-                    colorText.BOLD
+                    saved[0] 
+                    + colorText.BOLD
                     + (colorText.GREEN if is50DMAUpTrend else (colorText.FAIL if is50DMADownTrend else colorText.WARN))
                     + f"{confText} ({difference}%)"
                     + colorText.END
                 )
-            saveDict["MA-Signal"] = f"{confText} ({difference}%)"
+            saveDict["MA-Signal"] = saved[1] + f"{confText} ({difference}%)"
             return confFilter == 3 or \
                 (confFilter == 1 and isGoldenCrossOver) or \
                 (confFilter == 2 and isDeadCrossOver)
@@ -1762,29 +1770,30 @@ class ScreeningStatistics:
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
         if (
             recent["SMA"].iloc[0] > recent["LMA"].iloc[0]
             and recent["Close"].iloc[0] > recent["SMA"].iloc[0]
         ):
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
+                saved[0] + colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
             )
-            saveDict["MA-Signal"] = "Bullish"
+            saveDict["MA-Signal"] = saved[1] + "Bullish"
         elif recent["SMA"].iloc[0] < recent["LMA"].iloc[0]:
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.FAIL + "Bearish" + colorText.END
+                saved[0] + colorText.BOLD + colorText.FAIL + "Bearish" + colorText.END
             )
-            saveDict["MA-Signal"] = "Bearish"
+            saveDict["MA-Signal"] = saved[1] + "Bearish"
         elif recent["SMA"].iloc[0] == 0:
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+                saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
             )
-            saveDict["MA-Signal"] = "Unknown"
+            saveDict["MA-Signal"] = saved[1] + "Unknown"
         else:
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.WARN + "Neutral" + colorText.END
+                saved[0] + colorText.BOLD + colorText.WARN + "Neutral" + colorText.END
             )
-            saveDict["MA-Signal"] = "Neutral"
+            saveDict["MA-Signal"] = saved[1] + "Neutral"
 
         smaDev = data["SMA"].iloc[0] * maRange / 100
         lmaDev = data["LMA"].iloc[0] * maRange / 100
@@ -1800,62 +1809,62 @@ class ScreeningStatistics:
         # Taking Support 50
         if close > sma and low <= (sma + smaDev):
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.GREEN + "50MA-Support" + colorText.END
+                saved[0] + colorText.BOLD + colorText.GREEN + "50MA-Support" + colorText.END
             )
-            saveDict["MA-Signal"] = "50MA-Support"
+            saveDict["MA-Signal"] = saved[1] + "50MA-Support"
             maReversal = 1
         # Validating Resistance 50
         elif close < sma and high >= (sma - smaDev):
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.FAIL + "50MA-Resist" + colorText.END
+                saved[0] + colorText.BOLD + colorText.FAIL + "50MA-Resist" + colorText.END
             )
-            saveDict["MA-Signal"] = "50MA-Resist"
+            saveDict["MA-Signal"] = saved[1] + "50MA-Resist"
             maReversal = -1
         # Taking Support 200
         elif close > lma and low <= (lma + lmaDev):
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.GREEN + "200MA-Support" + colorText.END
+                saved[0] + colorText.BOLD + colorText.GREEN + "200MA-Support" + colorText.END
             )
-            saveDict["MA-Signal"] = "200MA-Support"
+            saveDict["MA-Signal"] = saved[1] + "200MA-Support"
             maReversal = 1
         # Validating Resistance 200
         elif close < lma and high >= (lma - lmaDev):
             screenDict["MA-Signal"] = (
-                colorText.BOLD + colorText.FAIL + "200MA-Resist" + colorText.END
+                saved[0] + colorText.BOLD + colorText.FAIL + "200MA-Resist" + colorText.END
             )
-            saveDict["MA-Signal"] = "200MA-Resist"
+            saveDict["MA-Signal"] = saved[1] + "200MA-Resist"
             maReversal = -1
         # For a Bullish Candle
         if self.getCandleType(data):
             # Crossing up 50
             if open < sma and close > sma:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD + colorText.GREEN + "BullCross-50MA" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + "BullCross-50MA" + colorText.END
                 )
-                saveDict["MA-Signal"] = "BullCross-50MA"
+                saveDict["MA-Signal"] = saved[1] + "BullCross-50MA"
                 maReversal = 1
             # Crossing up 200
             elif open < lma and close > lma:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD + colorText.GREEN + "BullCross-200MA" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.GREEN + "BullCross-200MA" + colorText.END
                 )
-                saveDict["MA-Signal"] = "BullCross-200MA"
+                saveDict["MA-Signal"] = saved[1] + "BullCross-200MA"
                 maReversal = 1
         # For a Bearish Candle
         elif not self.getCandleType(data):
             # Crossing down 50
             if open > sma and close < sma:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD + colorText.FAIL + "BearCross-50MA" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.FAIL + "BearCross-50MA" + colorText.END
                 )
-                saveDict["MA-Signal"] = "BearCross-50MA"
+                saveDict["MA-Signal"] = saved[1] + "BearCross-50MA"
                 maReversal = -1
             # Crossing up 200
             elif open > lma and close < lma:
                 screenDict["MA-Signal"] = (
-                    colorText.BOLD + colorText.FAIL + "BearCross-200MA" + colorText.END
+                    saved[0] + colorText.BOLD + colorText.FAIL + "BearCross-200MA" + colorText.END
                 )
-                saveDict["MA-Signal"] = "BearCross-200MA"
+                saveDict["MA-Signal"] = saved[1] + "BearCross-200MA"
                 maReversal = -1
         return maReversal
 
@@ -2018,10 +2027,11 @@ class ScreeningStatistics:
                         and recent["Close"].iloc[0] > recent["SSMA"].iloc[0]
                         and recent["Close"].iloc[0] > recent["LMA"].iloc[0]
                     ):
+                        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
                         screenDict["MA-Signal"] = (
-                            colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
+                            saved[0] + colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
                         )
-                        saveDict["MA-Signal"] = "Bullish"
+                        saveDict["MA-Signal"] = saved[1] + "Bullish"
                         return True
         return False
 
