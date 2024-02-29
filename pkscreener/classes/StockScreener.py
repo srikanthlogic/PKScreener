@@ -341,10 +341,7 @@ class StockScreener:
                         return None
 
                 with hostRef.processingResultsCounter.get_lock():
-                    print(f"ExecuteOption:{executeOption}:{reversalOption}:{respChartPattern}:{maLength}. Elapsed: {time.time() - start_time}")
-                    # hostRef.default_logger.info(
-                    #     f"Processing results for {stock} in {hostRef.processingResultsCounter.value}th results counter"
-                    # )
+                    hostRef.default_logger.debug(f"ExecuteOption:{executeOption}:{reversalOption}:{respChartPattern}:{maLength}. Elapsed: {time.time() - start_time}")
                     if (
                         (executeOption == 0)
                         or ((

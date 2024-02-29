@@ -89,8 +89,9 @@ def getSavedBacktestReportNames(testing=False):
 def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLargestDatasets=False):
     dfs = []
     insights = None
-    if ("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData:
-        return None
+    if (("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData):
+        if "PKDevTools_Default_Log_Level" not in os.environ.keys():
+            return None
     try:
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(

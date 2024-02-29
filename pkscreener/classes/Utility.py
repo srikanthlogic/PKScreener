@@ -80,18 +80,18 @@ PPPPPPPPPPPPPPPPP   KKKKKKKKK    KKKKKKK   SSSSSSSSSSSSSSS                      
 UPI:8007162973@APL  K:::::::K    K:::::K SS:::::::::::::::S
 P::::::PPPPPP:::::P K:::::::K    K:::::KS:::::SSSSSS::::::S
 PP:::::P     P:::::PK:::::::K   K::::::KS:::::S     SSSSSSS
-  P::::P     P:::::PKK::::::K  K:::::KKKS:::::S                ccccccccccccccccrrrrr   rrrrrrrrr       eeeeeeeeeeee        eeeeeeeeeeee    nnnn  nnnnnnnn        eeeeeeeeeeee    rrrrr   rrrrrrrrr
-  P::::P     P:::::P  K:::::K K:::::K   S:::::S              cc:::::::::::::::cr::::rrr:::::::::r    ee::::::::::::ee    ee::::::::::::ee  n:::nn::::::::nn    ee::::::::::::ee  r::::rrr:::::::::r
-  P::::PPPPPP:::::P   K::::::K:::::K     S::::SSSS          c:::::::::::::::::cr:::::::::::::::::r  e::::::eeeee:::::ee e::::::eeeee:::::een::::::::::::::nn  e::::::eeeee:::::eer:::::::::::::::::r
+  P::::P     P:::::P K::::::K  K:::::K  S:::::S                ccccccccccccccccrrrrr   rrrrrrrrr       eeeeeeeeeeee        eeeeeeeeeeee    nnnn  nnnnnnnn        eeeeeeeeeeee    rrrrr   rrrrrrrrr
+  P::::P     P:::::P  K:::::K K:::::K   S:::::S              cc::::MADE:::::::cr::::rrr::WITH::::r    ee::::LOVE::::ee    ee:::::IN:::::ee  n:::nn:INDIA:nn    ee::::::::::::ee  r::::rrr:::::::::r
+  P::::PPPPPP:::::P   K::::::K:::::K     S::::SSSS          c:::::::::::::::::cr:::::::::::::::::r  e::::::eeeee:::::ee e::::::eeeee:::::een::::::::::::::nn  e::::::eeeee:::::eer::::©PKJMESRA::::r
   P:::::::::::::PP    K:::::::::::K       SS::::::SSSSS    c:::::::cccccc:::::crr::::::rrrrr::::::re::::::e     e:::::ee::::::e     e:::::enn:::::::::::::::ne::::::e     e:::::err::::::rrrrr::::::r
   P::::PPPPPPPPP      K:::::::::::K         SSS::::::::SS  c::::::c     ccccccc r:::::r     r:::::re:::::::eeeee::::::ee:::::::eeeee::::::e  n:::::nnnn:::::ne:::::::eeeee::::::e r:::::r     r:::::r
   P::::P              K::::::K:::::K           SSSSSS::::S c:::::c              r:::::r     rrrrrrre:::::::::::::::::e e:::::::::::::::::e   n::::n    n::::ne:::::::::::::::::e  r:::::r     rrrrrrr
   P::::P              K:::::K K:::::K               S:::::Sc:::::c              r:::::r            e::::::eeeeeeeeeee  e::::::eeeeeeeeeee    n::::n    n::::ne::::::eeeeeeeeeee   r:::::r
-  P::::P            KK::::::K  K:::::KKK            S:::::Sc::::::c     ccccccc r:::::r            e:::::::e           e:::::::e             n::::n    n::::ne:::::::e            r:::::r
-PP::::::PP          K:::::::K   K::::::KSSSSSSS     S:::::Sc:::::::cccccc:::::c r:::::r            e::::::::e          e::::::::e            n::::n    n::::ne::::::::e           r:::::r
-P::::::::P          K:::::::K    K:::::KS::::::SSSSSS:::::S c:::::::::::::::::c r:::::r             e::::::::eeeeeeee   e::::::::eeeeeeee    n::::n    n::::n e::::::::eeeeeeee   r:::::r
-P::::::::P          K:::::::K    K:::::KS:::::::::::::::SS   cc:::::::::::::::c r:::::r              ee:::::::::::::e    ee:::::::::::::e    n::::n    n::::n  ee:::::::::::::e   r:::::r
-PPPPPPPPPP          KKKKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc rrrrrrr                eeeeeeeeeeeeee      eeeeeeeeeeeeee    nnnnnn    nnnnnn    eeeeeeeeeeeeee   rrrrrrr
+  P::::P              K:::::K  K:::::K              S:::::Sc::::::c     ccccccc r:::::r            e:::::::e           e:::::::e             n::::n    n::::ne:::::::e            r:::::r
+PP::::::PP            K:::::K   K::::::KSSSSSSS     S:::::Sc:::::::cccccc:::::c r:::::r            e::::::::e          e::::::::e            n::::n    n::::ne::::::::e           r:::::r
+P::::::::P            K:::::K    K:::::KS::::::SSSSSS:::::S c:::::::::::::::::c r:::::r             e::::::::eeeeeeee   e::::::::eeeeeeee    n::::n    n::::n e::::::::eeeeeeee   r:::::r
+P::::::::P            K:::::K    K:::::KS:::::::::::::::S    cc:::::::::::::::c r:::::r              ee:::::::::::::e    ee:::::::::::::e    n::::n    n::::n  ee:::::::::::::e   r:::::r
+PPPPPPPPPP            KKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc rrrrrrr                eeeeeeeeeeeeee      eeeeeeeeeeeeee    nnnnnn    nnnnnn    eeeeeeeeeeeeee   rrrrrrr
 """
 artText = f"{artText}\nv{VERSION}"
 
@@ -372,7 +372,7 @@ class tools:
         coloredStyledValues = cleanedUpStyledValue.split(colorText.END)
         for cleanedUpStyledValue in coloredStyledValues:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(colorText.END,"")
-            if cleanedUpStyledValue.strip() == "":
+            if cleanedUpStyledValue.strip() in ["", ","]:
                 if len(cleanedUpStyledValues) > 0:
                     cleanedUpStyledValues[len(cleanedUpStyledValues)-1] = f"{cleanedUpStyledValues[len(cleanedUpStyledValues)-1]}{cleanedUpStyledValue}"
                 else:
