@@ -1182,6 +1182,7 @@ def main(userArgs=None):
                     pass
                 moreItems = [
                     (
+                        menuOption,
                         executeOption,
                         reversalOption,
                         maLength,
