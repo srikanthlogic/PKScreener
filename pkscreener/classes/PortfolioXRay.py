@@ -399,14 +399,7 @@ def ensureColumnsExist(saveResults):
     else:
         for col in columns:
             if col not in saveResults.columns:
-                if col == "Breakout":
-                    saveResults[col] = "BO: R: "
-                else:
-                    saveResults[col] = ""
-            elif col == "Breakout":
-                saveResults.loc[:, "Breakout"] = saveResults.loc[:, "Breakout"].apply(
-                    lambda x: "BO: 0 R: 0" if x == "" else x
-                )
+                saveResults[col] = ""
     return saveResults
 
 def cleanupData(savedResults):
@@ -442,7 +435,7 @@ def cleanupData(savedResults):
         )
     saveResults.loc[:, "Resistance"] = saveResults.loc[
             :, "Resistance"
-        ].apply(lambda x: x.replace("(Potential)", ""))
+        ].apply(lambda x: x.replace("(Potential)", "") if x is not None else x)
     saveResults["Volume"] = saveResults["Volume"].astype(float).fillna(0.0)
     saveResults[f"Consol."] = (
             saveResults[f"Consol."].astype(float).fillna(0.0)

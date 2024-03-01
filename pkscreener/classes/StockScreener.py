@@ -52,6 +52,7 @@ class StockScreener:
     # @tracelog
     def screenStocks(
         self,
+        menuOption,
         executeOption,
         reversalOption,
         maLength,
@@ -102,7 +103,7 @@ class StockScreener:
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
             def returnLegibleData():
-                if backtestDuration == 0:
+                if backtestDuration == 0 or menuOption not in ["B"]:
                     return None
                 elif (backtestDuration > 0 and backtestDuration <= configManager.maxBacktestWindow):
                     screener.validateMovingAverages(
@@ -804,8 +805,8 @@ class StockScreener:
             "RSI": 0,
             "Volume": "",
             "22-Pd %": "",
-            "Consol.": "",
-            "Breakout": "",
+            "Consol.": "Range:0%",
+            "Breakout": "BO: 0 R: 0",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
@@ -821,8 +822,8 @@ class StockScreener:
             "RSI": 0,
             "Volume": "",
             "22-Pd %": "",
-            "Consol.": "",
-            "Breakout": "",
+            "Consol.": "Range:0%",
+            "Breakout": "BO: 0 R: 0",
             "MA-Signal": "",
             "Trend": "",
             "Pattern": "",
