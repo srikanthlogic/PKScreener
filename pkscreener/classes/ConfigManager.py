@@ -418,7 +418,12 @@ class tools:
             self.cacheEnabled = True
         if self.isIntradayConfig():
             self.duration = candleDuration if candleDuration[-1] in ["m", "h"] else "1m"
-            self.daysToLookback = 120  # At least the past 2 hours
+            candleType = candleDuration.replace("m","").replace("h","")
+            if candleDuration[-1] in ["m"]:
+                lookback = int(60/int(candleType)) * 6 # 6 hours
+            elif candleDuration[-1] in ["h"]:
+                lookback = (int(24/int(candleType)) + 1 )*2 #  at least 24 hours
+            self.daysToLookback = lookback  # At least the past 6 to 24 hours
         else:
             self.duration = candleDuration if candleDuration[-1] == "d" else "1d"
             self.daysToLookback = 22  # At least the past 1.5 month
