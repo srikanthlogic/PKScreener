@@ -83,6 +83,7 @@ jobs:
     - name: Restore Dependencies from Windows Cache
       if: startsWith(runner.os, 'Windows')
       uses: actions/cache@v2
+      continue-on-error: true
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -91,6 +92,7 @@ jobs:
 
     - name: Load Cache for Linux Dependencies
       uses: actions/cache@v2
+      continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       with:
         path: |
