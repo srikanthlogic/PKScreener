@@ -564,11 +564,13 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
         if index not in skip1List:
             for option in runForOptions:
                 if option not in skip2List:
+                    skip2ListStr = ",".join(skip2List)
+                    skip1ListStr = ",".join(skip1List)
                     postdata = (
                                 '{"ref":"'
                                 + branch
                                 + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
-                                + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} -s4 {str(0)} --branchname actions-data-download --scans --local -f","name":"X_{index}_{option}"'
+                                + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2ListStr} -s1 {skip1ListStr} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} -s4 {str(0)} --branchname actions-data-download --scans --local -f","name":"X_{index}_{option}"'
                                 + ',"cleanuphistoricalscans":"N"}'
                                 + '}'
                                 )
