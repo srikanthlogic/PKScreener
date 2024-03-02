@@ -569,7 +569,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
                                 + branch
                                 + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
                                 + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2List} -s1 {skip1List} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} -s4 {str(0)} --branchname actions-data-download --scans --local -f","name":"X_{index}_{option}"'
-                                + (',"cleanuphistoricalscans":"Y"}' if (index == runForIndices[-1] and option==runForOptions[-1]) else "}")
+                                + ',"cleanuphistoricalscans":"N"}'
                                 + '}'
                                 )
                     resp = run_workflow("w9-workflow-download-data.yml", postdata,f"X_{index}_{option}")
