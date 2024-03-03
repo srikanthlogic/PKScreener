@@ -54,14 +54,21 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         printCounter=False,
         start=None, 
         end=None,
+        exchangeSuffix=".NS"
     ):
+        if isinstance(stockCode,list):
+            stockCode = [f"{x}{exchangeSuffix}" for x in stockCode]
+        elif isinstance(stockCode,str):
+            stockCode = [f"{x}{exchangeSuffix}" for x in stockCode]
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
             data = yf.download(
-                tickers=stockCode + ".NS",
+                tickers=stockCode,
                 period=period,
                 interval=duration,
                 proxy=proxyServer,
                 progress=False,
+                rounding = True,
+                group_by='ticker',
                 timeout=self.configManager.longTimeout,
                 start=start,
                 end=end
