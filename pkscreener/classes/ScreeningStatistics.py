@@ -867,7 +867,7 @@ class ScreeningStatistics:
         # Let's look for fair values
         fairValue = 0
         if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday() <= 4:
-            fairValue = hostData["FairValue"].iloc[0]
+            fairValue = hostData[hostData.index[-1],"FairValue"]
         else:
             if PKDateUtilities.currentDateTime().weekday() >= 5 or force:
                 security = None
@@ -888,7 +888,7 @@ class ScreeningStatistics:
                             pass
                             # self.default_logger.debug(f"{e}\nResponse:fv:\n{fv}", exc_info=True)
                     fairValue = round(float(fairValue),1)
-                    hostData.loc[:"FairValue"] = fairValue
+                    hostData.loc[hostData.index[-1],"FairValue"] = fairValue
         return fairValue
 
     def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False):
@@ -904,19 +904,19 @@ class ScreeningStatistics:
         if hostData is not None and len(hostData) > 0:
             if "MF" in hostData.columns or "FII" in hostData.columns:
                 try:
-                    netChangeMF = hostData["MF"].iloc[0]
+                    netChangeMF = hostData[hostData.index[-1],"MF"]
                 except KeyError:
                     pass
                 try:
-                    netChangeInst = hostData["FII"].iloc[0]
+                    netChangeInst = hostData[hostData.index[-1],"FII"]
                 except KeyError:
                     pass
                 try:
-                    latest_mfdate = hostData["MF_Date"].iloc[0]
+                    latest_mfdate = hostData[hostData.index[-1],"MF_Date"]
                 except KeyError:
                     pass
                 try:
-                    latest_instdate = hostData["FII_Date"].iloc[0]
+                    latest_instdate = hostData[hostData.index[-1],"FII_Date"]
                 except KeyError:
                     pass
                 if latest_mfdate is not None:
@@ -935,17 +935,17 @@ class ScreeningStatistics:
         if needsFreshUpdate and force:
             netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
             if netChangeMF is not None:
-                hostData.loc[:"MF"] = netChangeMF
+                hostData.loc[hostData.index[-1],"MF"] = netChangeMF
             else:
                 netChangeMF = 0
             if latest_mfdate is not None:
-                hostData.loc[:"MF_Date"] = latest_mfdate
+                hostData.loc[hostData.index[-1],"MF_Date"] = latest_mfdate
             if netChangeInst is not None:
-                hostData.loc[:"FII"] = netChangeInst
+                hostData.loc[hostData.index[-1],"FII"] = netChangeInst
             else:
                 netChangeInst = 0
             if latest_instdate is not None:
-                hostData.loc[:"FII_Date"] = latest_instdate
+                hostData.loc[hostData.index[-1],"FII_Date"] = latest_instdate
         lastDayLastMonth = lastDayLastMonth.strftime("%Y-%m-%dT00:00:00.000")
         if onlyMF:
             return netChangeMF
