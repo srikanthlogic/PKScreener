@@ -768,6 +768,7 @@ class tools:
             if task.result is not None:
                 for stock in task.userData:
                     stockDict[stock] = task.result[f"{stock}{exchangeSuffix}"].to_dict("split")
+        return stockDict
 
     def loadStockData(
         stockDict,
@@ -783,11 +784,10 @@ class tools:
         exists, cache_file = tools.afterMarketStockDataExists(
             isIntraday, forceLoad=forceLoad
         )
-        if PKDateUtilities.isTradingTime() or downloadOnly or not exists:
-            tools.downloadLatestData(stockDict,configManager,stockCodes)
-            return
-        if downloadOnly:
-            return
+        if PKDateUtilities.isTradingTime() or downloadOnly:
+            stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes)
+            return stockDict
+
         default_logger().info(
             f"Stock data cache file:{cache_file} exists ->{str(exists)}"
         )

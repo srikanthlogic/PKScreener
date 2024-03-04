@@ -1050,7 +1050,7 @@ def main(userArgs=None):
                     stockCodes = listStockCodes
             )
             loadedStockData = True
-        loadCount = len(stockDict)
+        loadCount = len(stockDict) if stockDict is not None else 0
 
         if downloadOnly:
             print(

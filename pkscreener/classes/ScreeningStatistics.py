@@ -868,7 +868,7 @@ class ScreeningStatistics:
         fairValue = 0
         if "FairValue" in hostData.columns and PKDateUtilities.currentDateTime().weekday() <= 4:
             try:
-                fairValue = hostData[hostData.index[-1],"FairValue"]
+                fairValue = hostData.loc[hostData.index[-1],"FairValue"]
             except (KeyError,IndexError):
                     pass
         else:
@@ -910,19 +910,19 @@ class ScreeningStatistics:
         if hostData is not None and len(hostData) > 0:
             if "MF" in hostData.columns or "FII" in hostData.columns:
                 try:
-                    netChangeMF = hostData[hostData.index[-1],"MF"]
+                    netChangeMF = hostData.loc[hostData.index[-1],"MF"]
                 except (KeyError,IndexError):
                     pass
                 try:
-                    netChangeInst = hostData[hostData.index[-1],"FII"]
+                    netChangeInst = hostData.loc[hostData.index[-1],"FII"]
                 except (KeyError,IndexError):
                     pass
                 try:
-                    latest_mfdate = hostData[hostData.index[-1],"MF_Date"]
+                    latest_mfdate = hostData.loc[hostData.index[-1],"MF_Date"]
                 except (KeyError,IndexError):
                     pass
                 try:
-                    latest_instdate = hostData[hostData.index[-1],"FII_Date"]
+                    latest_instdate = hostData.loc[hostData.index[-1],"FII_Date"]
                 except (KeyError,IndexError):
                     pass
                 if latest_mfdate is not None:
