@@ -36,11 +36,29 @@ from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
+from pkscreener.classes.PKTask import PKTask
 
 # This Class Handles Fetching of Stock Data over the internet
 
 
 class screenerStockDataFetcher(nseStockDataFetcher):
+    def fetchStockDataWithArgs(self, *args):
+        task = None
+        if isinstance(args[0], PKTask):
+            task = args[0]
+            stockCode,period,duration = task.long_running_fn_args
+        else:
+            stockCode,period,duration = args[0],args[1],args[2]
+        result = self.fetchStockData(stockCode,period,duration,None,0,0,0)
+        if task is not None:
+            if task.taskId > 0:
+                task.progressStatusDict[task.taskId] = {'progress': 0, 'total': 1}
+                task.resultsDict[task.taskId] = result
+                task.progressStatusDict[task.taskId] = {'progress': 1, 'total': 1}
+            else:
+                task.result = result
+        return result
+    
     # Fetch stock price data from Yahoo finance
     def fetchStockData(
         self,
