@@ -228,7 +228,28 @@ class PKScanRunner:
         choices = f"{choices}{'_i' if isIntraday else ''}"
         return choices
 
-    def PrepareAndRunScan(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb):
+    def runScanWithParams(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb):
+        tasks_queue, results_queue, scr, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
+        screenResults, saveResults, backtest_df = scanningCb(
+                    menuOption,
+                    items,
+                    tasks_queue,
+                    results_queue,
+                    len(items),
+                    backtestPeriod,
+                    samplingDuration - 1,
+                    consumers,
+                    screenResults,
+                    saveResults,
+                    backtest_df,
+                    testing=testing,
+                )
+
+        print(colorText.END)
+        PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
+        return screenResults, saveResults,backtest_df,scr
+
+    def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDict, items):
         tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
         consumers = [
@@ -250,24 +271,7 @@ class PKScanRunner:
                     for _ in range(totalConsumers)
                 ]
         PKScanRunner.startWorkers(consumers)
-        screenResults, saveResults, backtest_df = scanningCb(
-                    menuOption,
-                    items,
-                    tasks_queue,
-                    results_queue,
-                    len(items),
-                    backtestPeriod,
-                    samplingDuration - 1,
-                    consumers,
-                    screenResults,
-                    saveResults,
-                    backtest_df,
-                    testing=testing,
-                )
-
-        print(colorText.END)
-        PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
-        return screenResults, saveResults,backtest_df,scr
+        return tasks_queue,results_queue,scr,consumers
     
     def startWorkers(consumers):
         try:

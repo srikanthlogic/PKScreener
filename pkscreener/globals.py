@@ -1109,7 +1109,7 @@ def main(userArgs=None):
                     progressbar()
         sys.stdout.write(f"\x1b[1A")
         if not keyboardInterruptEventFired:
-            screenResults, saveResults, backtest_df, scr = PKScanRunner.PrepareAndRunScan(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
+            screenResults, saveResults, backtest_df, scr = PKScanRunner.runScanWithParams(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
             if menuOption in ["C"]:
                 PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults)
             if downloadOnly and menuOption in ["X"]:
