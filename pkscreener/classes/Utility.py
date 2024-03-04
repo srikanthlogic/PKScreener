@@ -22,7 +22,7 @@
     SOFTWARE.
 
 """
-
+import copy
 import datetime
 import glob
 import math
@@ -896,7 +896,7 @@ class tools:
                     )
                 if not retrial and not stockDataLoaded:
                     # Don't try for more than once.
-                    tools.loadStockData(
+                    stockDict = tools.loadStockData(
                         stockDict,
                         configManager,
                         downloadOnly,
@@ -911,6 +911,7 @@ class tools:
                 + "[+] Cache unavailable on pkscreener server, Continuing.."
                 + colorText.END
             )
+        return stockDict
 
     # Save screened results to excel
     def promptSaveResults(df, defaultAnswer=None):

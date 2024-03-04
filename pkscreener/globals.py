@@ -544,8 +544,11 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         elif executeOption == 23:
             sortKey = ["bbands_ulr_ratio_max5"]
             ascending = [False]
-        screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
-        saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        try:
+            screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+            saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
+        except:
+            pass
         columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5"]
         for column in columnsToBeDeleted:
             if column in saveResults.columns:
@@ -1038,7 +1041,7 @@ def main(userArgs=None):
             and not testing
         ):
             if menuOption not in ["C"]:
-                Utility.tools.loadStockData(
+                stockDict = Utility.tools.loadStockData(
                     stockDict,
                     configManager,
                     downloadOnly=downloadOnly,
