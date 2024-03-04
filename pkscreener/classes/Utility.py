@@ -70,7 +70,7 @@ from pkscreener.classes.MenuOptions import menus
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 from pkscreener.classes.PKTask import PKTask
 from pkscreener.classes.MarketStatus import MarketStatus
-# from pkscreener.classes.PKScheduler import scheduleTasks
+from pkscreener.classes.PKScheduler import PKScheduler
 
 nseFetcher = nseStockDataFetcher()
 fetcher = Fetcher.screenerStockDataFetcher(ConfigManager.tools())
@@ -692,8 +692,11 @@ class tools:
         cache_date = curr  # for monday to friday
         weekday = curr.weekday()
         isTrading = PKDateUtilities.isTradingTime()
+        if (forceLoad and isTrading) or isTrading:
+            #curr = PKDateUtilities.tradingDate()
+            cache_date = curr
         # for monday to friday before 9:15 or between 9:15am to 3:30pm, we're backtesting
-        if curr < openTime or (forceLoad and isTrading) or isTrading:
+        if curr < openTime:
             cache_date = curr - datetime.timedelta(1)
         if weekday == 0 and curr < openTime:  # for monday before 9:15
             cache_date = curr - datetime.timedelta(3)
@@ -742,6 +745,30 @@ class tools:
                 colorText.BOLD + colorText.GREEN + "=> Already Cached." + colorText.END
             )
 
+    def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS"):
+        numStocksPerIteration = int(len(stockCodes)/5) + 1
+        queueCounter = 0
+        iterations = int(len(stockCodes)/numStocksPerIteration) + 1
+        tasksList = []
+        while queueCounter < iterations:
+            stocks = []
+            if queueCounter < iterations:
+                stocks = stockCodes[numStocksPerIteration* queueCounter : numStocksPerIteration* (queueCounter + 1)]
+            else:
+                stocks = ["DUMMYStock"]#stockCodes[numStocksPerIteration* queueCounter :]
+            fn_args = (stocks, configManager.period, configManager.duration)
+            task = PKTask(f"DataDownload-{queueCounter}",long_running_fn=fetcher.fetchStockDataWithArgs,long_running_fn_args=fn_args)
+            task.userData = stocks
+            if len(stocks) > 0:
+                tasksList.append(task)
+            queueCounter += 1
+        
+        PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data (Total={len(tasksList)})")
+        for task in tasksList:
+            if task.result is not None:
+                for stock in task.userData:
+                    stockDict[stock] = task.result[f"{stock}{exchangeSuffix}"].to_dict("split")
+
     def loadStockData(
         stockDict,
         configManager,
@@ -749,13 +776,18 @@ class tools:
         defaultAnswer=None,
         retrial=False,
         forceLoad=False,
+        stockCodes=[],
+        exchangeSuffix=".NS"
     ):
-        if downloadOnly:
-            return
         isIntraday = configManager.isIntradayConfig()
         exists, cache_file = tools.afterMarketStockDataExists(
             isIntraday, forceLoad=forceLoad
         )
+        if PKDateUtilities.isTradingTime() or downloadOnly or not exists:
+            tools.downloadLatestData(stockDict,configManager,stockCodes)
+            return
+        if downloadOnly:
+            return
         default_logger().info(
             f"Stock data cache file:{cache_file} exists ->{str(exists)}"
         )
@@ -810,13 +842,13 @@ class tools:
             print(
                     colorText.BOLD
                     + colorText.FAIL
-                    + "[+] After-Market Stock Data is not cached.."
+                    + "[+] Market Stock Data is not cached.."
                     + colorText.END
                 )
             print(
                 colorText.BOLD
                 + colorText.GREEN
-                + "[+] Downloading cache from pkscreener server for faster processing, Please Wait.."
+                + "[+] Downloading cache from server for faster processing, Please Wait.."
                 + colorText.END
             )
             cache_url = (

@@ -39,6 +39,7 @@ level0MenuDict = {
     "T": "~",
     "E": "Edit user configuration",
     "Y": "View your user configuration",
+    "C": "Analyse morning vs close outcomes",
     "U": "Check for software update",
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",
