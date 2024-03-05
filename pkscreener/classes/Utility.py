@@ -1292,7 +1292,7 @@ class tools:
                     )
                 )
                 return (resp, percent / 100.0)
-            if resp >= 0 and resp <= 6:
+            if resp >= 0 and resp <= 7:
                 return resp, 0
             raise ValueError
         except ValueError as e:  # pragma: no cover

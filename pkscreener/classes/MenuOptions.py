@@ -125,6 +125,7 @@ level3_X_ChartPattern_MenuDict = {
     "4": "VCP (Experimental)",
     "5": "Buying at Trendline (Ideal for Swing/Mid/Long term)",
     "6": "Bollinger Bands (TTM) Squeeze",
+    "7": "Candle-stick Patterns",
     "0": "Cancel",
 }
 

@@ -55,6 +55,13 @@ class CandlePatterns:
     def __init__(self):
         pass
 
+    def findCurrentSavedValue(self, screenDict, saveDict, key):
+        existingScreen = screenDict.get(key)
+        existingSave = saveDict.get(key)
+        existingScreen = f"{existingScreen}, " if (existingScreen is not None and len(existingScreen) > 0) else ""
+        existingSave = f"{existingSave}, " if (existingSave is not None and len(existingSave) > 0) else ""
+        return existingScreen, existingSave
+
     #@measure_time
     # Find candle-stick patterns
     # Arrange if statements with max priority from top to bottom
@@ -62,6 +69,7 @@ class CandlePatterns:
         data = data.head(4)
         data = data[::-1]
         existingPattern = ''
+        hasCandleStickPattern = False
         if "Pattern" in saveDict.keys():
             existingPattern=f'{(", "+dict["Pattern"]) if saveDict["Pattern"] is not None else ""}'
             if existingPattern == ", ":
@@ -74,270 +82,271 @@ class CandlePatterns:
         # TA-Lib.
         check = pktalib.CDLDOJI(data["Open"], data["High"], data["Low"], data["Close"])
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = colorText.BOLD + f"Doji" + colorText.END + existingPattern
-            saveDict["Pattern"] = f"Doji{existingPattern}"
-            return True
+            dict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + colorText.BOLD + f"Doji" + colorText.END + existingPattern
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Doji{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLMORNINGSTAR(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"Morning Star" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Morning Star{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Morning Star{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLMORNINGDOJISTAR(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"Morning Doji Star" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Morning Doji Star{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Morning Doji Star{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLEVENINGSTAR(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"Evening Star" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Evening Star{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Evening Star{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLEVENINGDOJISTAR(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"Evening Doji Star" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Evening Doji Star{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Evening Doji Star{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLLADDERBOTTOM(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.GREEN + f"Bullish Ladder Bottom" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"Bullish Ladder Bottom{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bullish Ladder Bottom{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.FAIL + f"Bearish Ladder Bottom" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"Bearish Ladder Bottom{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bearish Ladder Bottom{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDL3LINESTRIKE(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.GREEN + f"3 Line Strike" + colorText.END + existingPattern
                 )
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.FAIL + f"3 Line Strike" + colorText.END + existingPattern
                 )
-            saveDict["Pattern"] = f"3 Line Strike{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Line Strike{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDL3BLACKCROWS(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"3 Black Crows" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"3 Black Crows{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Black Crows{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDL3INSIDE(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.GREEN + f"3 Inside Up" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Outside Up{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.FAIL + f"3 Inside Down" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"3 Inside Down{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Inside Down{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDL3OUTSIDE(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.GREEN + f"3 Outside Up" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"3 Outside Up{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Outside Up{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.FAIL + f"3 Outside Down" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"3 Outside Down{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 Outside Down{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDL3WHITESOLDIERS(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"3 White Soldiers" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"3 White Soldiers{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"3 White Soldiers{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLHARAMI(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.GREEN + f"Bullish Harami" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"Bullish Harami{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bullish Harami{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD + colorText.FAIL + f"Bearish Harami" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"Bearish Harami{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bearish Harami{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLHARAMICROSS(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD
                     + colorText.GREEN
                     + f"Bullish Harami Cross" + existingPattern
                     + colorText.END
                 )
-                saveDict["Pattern"] = f"Bullish Harami Cross{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bullish Harami Cross{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD
                     + colorText.FAIL
                     + f"Bearish Harami Cross" + existingPattern
                     + colorText.END
                 )
-                saveDict["Pattern"] = f"Bearish Harami Cross{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bearish Harami Cross{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLMARUBOZU(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD
                     + colorText.GREEN
                     + f"Bullish Marubozu" + existingPattern
                     + colorText.END
                 )
-                saveDict["Pattern"] = f"Bullish Marubozu{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bullish Marubozu{existingPattern}"
             else:
                 dict["Pattern"] = (
                     colorText.BOLD + colorText.FAIL + f"Bearish Marubozu" + colorText.END + existingPattern
                 )
-                saveDict["Pattern"] = f"Bearish Marubozu{existingPattern}"
-            return True
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bearish Marubozu{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLHANGINGMAN(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"Hanging Man" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Hanging Man{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Hanging Man{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLHAMMER(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"Hammer" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Hammer{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Hammer{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLINVERTEDHAMMER(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"Inverted Hammer" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Inverted Hammer{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Inverted Hammer{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLSHOOTINGSTAR(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"Shooting Star" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Shooting Star{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Shooting Star{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLDRAGONFLYDOJI(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.GREEN + f"Dragonfly Doji" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Dragonfly Doji{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Dragonfly Doji{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLGRAVESTONEDOJI(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
-            dict["Pattern"] = (
+            dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                 colorText.BOLD + colorText.FAIL + f"Gravestone Doji" + colorText.END + existingPattern
             )
-            saveDict["Pattern"] = f"Gravestone Doji{existingPattern}"
-            return True
+            saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Gravestone Doji{existingPattern}"
+            hasCandleStickPattern = True
 
         check = pktalib.CDLENGULFING(
             data["Open"], data["High"], data["Low"], data["Close"]
         )
         if check is not None and check.tail(1).item() != 0:
             if check.tail(1).item() > 0:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD
                     + colorText.GREEN
                     + f"Bullish Engulfing" + existingPattern
                     + colorText.END
                 )
-                saveDict["Pattern"] = f"Bullish Engulfing{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bullish Engulfing{existingPattern}"
             else:
-                dict["Pattern"] = (
+                dict["Pattern"] = (self.findCurrentSavedValue(dict,saveDict,"Pattern")[0] + 
                     colorText.BOLD
                     + colorText.FAIL
                     + f"Bearish Engulfing" + existingPattern
                     + colorText.END
                 )
-                saveDict["Pattern"] = f"Bearish Engulfing{existingPattern}"
+                saveDict["Pattern"] = self.findCurrentSavedValue(dict,saveDict,"Pattern")[1] +  f"Bearish Engulfing{existingPattern}"
+            hasCandleStickPattern = True
+        if hasCandleStickPattern:
             return True
-
         return False

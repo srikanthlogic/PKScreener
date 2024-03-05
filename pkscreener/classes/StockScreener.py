@@ -274,6 +274,11 @@ class StockScreener:
                         hasBbandsSqz = screener.findBbandsSqueeze(fullData, screeningDictionary, saveDictionary, filter=(maLength if maLength > 0 else 4))
                         if not hasBbandsSqz:
                             return returnLegibleData()
+                    elif respChartPattern == 7:
+                        isCandlePattern = candlePatterns.findPattern(
+                        processedData, screeningDictionary, saveDictionary)
+                        if not isCandlePattern:
+                            return returnLegibleData()
                         
                 elif executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
@@ -285,14 +290,15 @@ class StockScreener:
                         return returnLegibleData()
                 # Must-run, but only at the end
                 try:
+                    if executeOption != 7 or (executeOption == 7 and respChartPattern != 7):
                     # Only 'doji' and 'inside' is internally implemented by pandas_ta.
                     # Otherwise, for the rest of the candle patterns, they also need
                     # TA-Lib. So if TA-Lib is not available, it will throw exception
                     # We can live with no-patterns if user has not installed ta-lib
                     # yet. If ta-lib is available, PKTalib will load it automatically.
-                    isCandlePattern = candlePatterns.findPattern(
-                        processedData, screeningDictionary, saveDictionary
-                    )
+                        isCandlePattern = candlePatterns.findPattern(
+                            processedData, screeningDictionary, saveDictionary
+                        )
                 except Exception as e:  # pragma: no cover
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Pattern"] = ""
@@ -412,7 +418,8 @@ class StockScreener:
                                                                   or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
                                                                   or (isVCP)
                                                                   or (isBuyingTrendline))
-                                                                  or (respChartPattern == 6 and hasBbandsSqz))
+                                                                  or (respChartPattern == 6 and hasBbandsSqz)
+                                                                  or (respChartPattern == 7 and isCandlePattern))
                         or (executeOption == 8 and isValidCci)
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)

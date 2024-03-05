@@ -668,6 +668,16 @@ def main(userArgs=None):
                 print(colorText.END, end="")
                 if userOption == "":
                     userOption = "37" # NoFilter
+                elif userOption == "38":
+                    userOption = input(
+                            colorText.BOLD + colorText.FAIL + "[+] Enter Exact Pattern name:"
+                        )
+                    print(colorText.END, end="")
+                    if userOption == "":
+                        userOption = "37" # NoFilter
+                    else:
+                        strategyFilter.append(f"[P]{userOption}")
+                        userOption = "38"
             except EOFError:  # pragma: no cover
                 userOption = "37"  # NoFilter
                 pass
@@ -817,7 +827,7 @@ def main(userArgs=None):
                     ) = Utility.tools.promptChartPatterns(selectedMenu)
                 if maLength == 0:
                     maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
-            elif respChartPattern in [0, 4, 5, 6]:
+            elif respChartPattern in [0, 4, 5, 6, 7]:
                 insideBarToLookback = 0
                 if respChartPattern == 6:
                     if len(options) >= 5:
@@ -839,13 +849,13 @@ def main(userArgs=None):
             respChartPattern, insideBarToLookback = Utility.tools.promptChartPatterns(
                 selectedMenu
             )
-            if maLength == 0:
+            if maLength == 0 and respChartPattern in [1, 2, 3, 6]:
                 maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
         if (
             respChartPattern is None
             or insideBarToLookback is None
             or respChartPattern == 0
-            or maLength == 0
+            or (maLength == 0 and respChartPattern in [1, 2, 3, 6])
         ):
             return
         else:
@@ -1302,7 +1312,7 @@ def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption
     if not downloadOnly:
         updateMenuChoiceHierarchy()
     if listStockCodes is None or len(listStockCodes) == 0:
-        if indexOption > 0 and indexOption <= 14:
+        if indexOption >= 0 and indexOption <= 14:
             listStockCodes = fetcher.fetchStockCodes(
                             indexOption, stockCode=None
                         )
