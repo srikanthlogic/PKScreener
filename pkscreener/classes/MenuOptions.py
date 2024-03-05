@@ -218,7 +218,7 @@ class menu:
             )
             return f"{cmdText}"
 
-    def render(self):
+    def render(self,coloredValues=[]):
         t = ""
         if self.isException:
             if self.menuText.startswith("~"):
@@ -233,6 +233,8 @@ class menu:
                 t = f"\n{spaces}{self.keyTextLabel()}"
             else:
                 t = f"\t{self.keyTextLabel()}"
+        if coloredValues is not None and str(self.menuKey) in coloredValues:
+            t = f"{colorText.FAIL}{t}{colorText.END}"
         return t
 
     def renderSpecial(self, menuKey):
@@ -289,14 +291,14 @@ class menus:
             self.menuDict[str(key).upper()] = m
         return self
 
-    def render(self, asList=False):
+    def render(self, asList=False, coloredValues=[]):
         menuText = [] if asList else ""
         for k in self.menuDict.keys():
             m = self.menuDict[k]
             if asList:
                 menuText.append(m)
             else:
-                menuText = menuText + m.render()
+                menuText = menuText + m.render(coloredValues=([] if asList else coloredValues))
         return menuText
 
     def renderForMenu(self, selectedMenu=None, skip=[], asList=False, renderStyle=None):
@@ -474,13 +476,13 @@ class menus:
     ):
         menuText = self.fromDictionary(
             level1_X_MenuDict,
-            renderExceptionKeys=["W", "0", "M"],
+            renderExceptionKeys=["W", "0", "M", "15"],
             renderStyle=renderStyle
             if renderStyle is not None
             else MenuRenderStyle.THREE_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["15"])
         if asList:
             return menuText
         else:
@@ -497,7 +499,7 @@ class menus:
 
     Enter your choice > (default is """
                 + colorText.WARN
-                + self.find("12").keyTextLabel()
+                + self.find(str(configManager.defaultIndex)).keyTextLabel()
                 + ")  "
                 "" + colorText.END
             )

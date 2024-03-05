@@ -72,8 +72,10 @@ from pkscreener.classes.PKTask import PKTask
 from pkscreener.classes.MarketStatus import MarketStatus
 from pkscreener.classes.PKScheduler import PKScheduler
 
+configManager = ConfigManager.tools()
+configManager.getConfig(ConfigManager.parser)
 nseFetcher = nseStockDataFetcher()
-fetcher = Fetcher.screenerStockDataFetcher(ConfigManager.tools())
+fetcher = Fetcher.screenerStockDataFetcher()
 
 artText = """
 PPPPPPPPPPPPPPPPP   KKKKKKKKK    KKKKKKK   SSSSSSSSSSSSSSS                                                                                                                                         TM
@@ -146,7 +148,7 @@ def marketStatus():
     lngStatus = MarketStatus().marketStatus
     # scheduleTasks(tasksList=[task])
     if lngStatus == "":
-        lngStatus = MarketStatus().getMarketStatus()
+        lngStatus = MarketStatus().getMarketStatus(exchangeSymbol="^IXIC" if configManager.defaultIndex == 15 else "^NSEI")
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
 art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"

@@ -75,9 +75,11 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         exchangeSuffix=".NS"
     ):
         if isinstance(stockCode,list):
-            stockCode = [(f"{x}{exchangeSuffix}" if not x.endswith(exchangeSuffix) else x) for x in stockCode]
+            if len(exchangeSuffix) > 0:
+                stockCode = [(f"{x}{exchangeSuffix}" if not x.endswith(exchangeSuffix) else x) for x in stockCode]
         elif isinstance(stockCode,str):
-            stockCode = f"{stockCode}{exchangeSuffix}" if not stockCode.endswith(exchangeSuffix) else stockCode
+            if len(exchangeSuffix) > 0:
+                stockCode = f"{stockCode}{exchangeSuffix}" if not stockCode.endswith(exchangeSuffix) else stockCode
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
             data = yf.download(
                 tickers=stockCode,

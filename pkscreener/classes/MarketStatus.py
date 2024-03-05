@@ -45,12 +45,12 @@ class MarketStatus(SingletonMixin, metaclass=SingletonType):
     def marketStatus(self, status):
         self.attributes["marketStatus"] = status
 
-    def getMarketStatus(self, progress=None, task_id=0):
+    def getMarketStatus(self, progress=None, task_id=0, exchangeSymbol="^NSEI"):
         lngStatus = ""
         try:
             if progress:
                 progress[task_id] = {"progress": 0, "total": 1}
-            _,lngStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus()
+            _,lngStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus(exchange=exchangeSymbol)
             if progress:
                 progress[task_id] = {"progress": 1, "total": 1}
         except Exception as e:# pragma: no cover

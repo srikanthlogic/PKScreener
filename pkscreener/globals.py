@@ -446,7 +446,7 @@ def initPostLevel0Execution(
             )
             print(colorText.END, end="")
         if indexOption == "" or indexOption is None:
-            indexOption = 12
+            indexOption = int(configManager.defaultIndex)
         # elif indexOption == 'W' or indexOption == 'w' or indexOption == 'N' or indexOption == 'n' or indexOption == 'E' or indexOption == 'e':
         elif not str(indexOption).isnumeric():
             indexOption = indexOption.upper()
@@ -1050,7 +1050,7 @@ def main(userArgs=None):
                     defaultAnswer=defaultAnswer,
                     forceLoad=(menuOption in ["X", "B", "G", "S"]),
                     stockCodes = listStockCodes,
-                    exchangeSuffix = ".NS" if indexOption < 15 else ""
+                    exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
             )
             loadedStockData = True
         loadCount = len(stockDict) if stockDict is not None else 0
@@ -1098,7 +1098,7 @@ def main(userArgs=None):
                     )
                 except Exception:
                     pass
-                exchangeName = "INDIA" if indexOption <= 14 else "NASDAQ"
+                exchangeName = "NASDAQ" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else "INDIA"
                 PKScanRunner.addStocksToItemList(userPassedArgs, testing, testBuild, newlyListedOnly, downloadOnly, minRSI, maxRSI, insideBarToLookback, respChartPattern, daysForLowestVolume, backtestPeriod, reversalOption, maLength, listStockCodes, menuOption,exchangeName,executeOption, volumeRatio, items, daysInPast)
                 if savedStocksCount > 0:
                     progressbar.text(

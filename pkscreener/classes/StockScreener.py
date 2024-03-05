@@ -22,6 +22,7 @@
     SOFTWARE.
 
 """
+import os
 import logging
 import sys
 import time
@@ -34,6 +35,7 @@ warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 # from PKDevTools.classes.log import tracelog
 # from PKDevTools.classes.PKTimer import PKTimer
+from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.SuppressOutput import SuppressOutput
@@ -98,7 +100,7 @@ class StockScreener:
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData)
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData,exchangeName)
             if len(data) == 0 or len(data) < backtestDuration:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
@@ -653,7 +655,7 @@ class StockScreener:
                 
         return fullData,processedData,data
 
-    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData=None):
+    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData=None,exchangeName="INDIA"):
         hostData = hostRef.objectDictionary.get(stock)
         data = None
         start = None
@@ -678,7 +680,8 @@ class StockScreener:
                         hostRef.processingCounter,
                         totalSymbols,
                         start=start,
-                        end=start
+                        end=start,
+                        exchangeSuffix=".NS" if exchangeName == "INDIA" else ""
                     )
                 if hostData is not None and data is not None:
                     # During the market trading hours, we don't want to go for MFI/FV value fetching
@@ -771,10 +774,13 @@ class StockScreener:
         # of the parent logger.
         if hostRef.default_logger.level > 0:
             return
+        else:
+            hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
         hostRef.default_logger.level = logLevel
         screener.default_logger.level = logLevel
-        hostRef.default_logger.addHandlers(log_file_path=None, levelname=logLevel)
-        screener.default_logger.addHandlers(log_file_path=None, levelname=logLevel)
+        log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
+        hostRef.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
+        screener.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
         hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
 
     def initResultDictionaries(self):

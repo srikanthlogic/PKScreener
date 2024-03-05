@@ -57,6 +57,7 @@ class tools:
         self.enablePortfolioCalculations = False
         self.logsEnabled = False
         self.generalTimeout = 2
+        self.defaultIndex = 12
         self.longTimeout = 4
         self.maxNetworkRetryCount = 10
         self.backtestPeriod = 120
@@ -152,6 +153,7 @@ class tools:
             parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
             parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
             parser.set("config", "generalTimeout", str(self.generalTimeout))
+            parser.set("config", "defaultIndex", str(self.defaultIndex))
             parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
@@ -263,6 +265,9 @@ class tools:
             self.maxNetworkRetryCount = input(
                 "[+] Maximum number of retries in case of network timeout(in seconds)(Optimal = 10 for slow networks): "
             )
+            self.defaultIndex = input(
+                "[+] Default Index(NSE=12, NASDAQ=15): "
+            )
             self.backtestPeriod = input(
                 "[+] Number of days in the past for backtesting(in days)(Optimal = 30): "
             )
@@ -299,6 +304,7 @@ class tools:
             parser.set("config", "showPastStrategyData", self.showPastStrategyData)
             parser.set("config", "logsEnabled", self.logsEnabledPrompt)
             parser.set("config", "generalTimeout", self.generalTimeout)
+            parser.set("config", "defaultIndex", self.defaultIndex)
             parser.set("config", "longTimeout", self.longTimeout)
             parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
@@ -394,6 +400,7 @@ class tools:
                     else True
                 )
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
+                self.defaultIndex = int(parser.get("config", "defaultIndex"))
                 self.longTimeout = float(parser.get("config", "longTimeout"))
                 self.maxNetworkRetryCount = int(
                     parser.get("config", "maxNetworkRetryCount")
