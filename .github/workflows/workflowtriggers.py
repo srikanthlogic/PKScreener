@@ -172,8 +172,8 @@ original__stdout = sys.__stdout__
 # args.scanDaysInPast = 7
 # args.reScanForZeroSize = True
 # args.user = "-1001785195297"
-# args.skiplistlevel0 = "S,T,E,U,Z,H,Y,B,G"
-# args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
+# args.skiplistlevel0 = "S,T,E,U,Z,H,Y,B,G,C"
+# args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15"
 # args.skiplistlevel2 = "0,22,26,27,28,29,30,31,42,M,Z"
 # args.skiplistlevel3 = "0"
 # args.skiplistlevel4 = "0"
@@ -208,9 +208,9 @@ noActionableArguments = not args.report and \
                         not args.cleanuphistoricalscans and \
                         not args.updateholidays
 if args.skiplistlevel0 is None:
-    args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G"])
+    args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G", "C"])
 if args.skiplistlevel1 is None:
-    args.skiplistlevel1 = ",".join(["W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13"])
+    args.skiplistlevel1 = ",".join(["W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,15"])
 if args.skiplistlevel2 is None:
     args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,42,M,Z"])
 if args.skiplistlevel3 is None:
@@ -221,8 +221,8 @@ if args.skiplistlevel4 is None:
 if noActionableArguments:
     # By default, just generate the report
     args.report = True
-    args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G" 
-    args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13"
+    args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G,C" 
+    args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15"
     args.skiplistlevel2 = "0,21,22,26,27,28,29,30,42,M,Z"
     args.skiplistlevel3 = "0"
     args.skiplistlevel4 = "0"
@@ -549,7 +549,7 @@ def triggerRemoteScanAlertWorkflow(scanOptions, branch):
     return resp
 
 def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
-    defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13" if args.skiplistlevel1 is None else args.skiplistlevel1
+    defaultS1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15" if args.skiplistlevel1 is None else args.skiplistlevel1
     defaultS2 = "42,0,22,26,27,28,29,30,31,M,Z" if args.skiplistlevel2 is None else args.skiplistlevel2
     runForIndices = [12,5,8,1,11,14]
     runForOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25]
@@ -570,7 +570,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
                                 '{"ref":"'
                                 + branch
                                 + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
-                                + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2ListStr} -s1 {skip1ListStr} -s0 S,T,E,U,Z,H,Y,B,G -s3 {str(0)} -s4 {str(0)} --branchname actions-data-download --scans --local -f","name":"X_{index}_{option}"'
+                                + f'--scanDaysInPast {scanDaysInPast} -s2 {skip2ListStr} -s1 {skip1ListStr} -s0 S,T,E,U,Z,H,Y,B,G,C -s3 {str(0)} -s4 {str(0)} --branchname actions-data-download --scans --local -f","name":"X_{index}_{option}"'
                                 + ',"cleanuphistoricalscans":"N"}'
                                 + '}'
                                 )
@@ -584,7 +584,7 @@ def triggerHistoricalScanWorkflowActions(scanDaysInPast=0):
         '{"ref":"'
         + branch
         + '","inputs":{"installtalib":"N","skipDownload":"Y","scanOptions":"'
-        + '--scanDaysInPast 251 -s0 S,T,E,U,Z,H,Y,B,G -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13 -s2 0,22,26,27,28,29,30,42,M,Z -s3 0 -s4 0 --branchname actions-data-download","name":"X_Cleanup"'
+        + '--scanDaysInPast 251 -s0 S,T,E,U,Z,H,Y,B,G,C -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s2 0,22,26,27,28,29,30,42,M,Z -s3 0 -s4 0 --branchname actions-data-download","name":"X_Cleanup"'
         + (',"cleanuphistoricalscans":"Y"}')
         + '}'
         )

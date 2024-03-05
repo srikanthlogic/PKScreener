@@ -97,14 +97,14 @@ jobs:
     - name: Trigger Backtests
       timeout-minutes: 180
       run: |
-        python3 .github/workflows/workflowtriggers.py -b -f -u "-1001785195297" -s0 "S,T,E,U,Z,H,Y,X,G" -s1 "W,N,E,M,Z,0,2,3,4,6,7,9,10,13" -s2 "0,22,26,27,28,29,30,42,M,Z" -s3 "0" -s4 "0" --branchname gh-pages
+        python3 .github/workflows/workflowtriggers.py -b -f -u "-1001785195297" -s0 "S,T,E,U,Z,H,Y,X,G,C" -s1 "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15" -s2 "0,22,26,27,28,29,30,42,M,Z" -s3 "0" -s4 "0" --branchname gh-pages
       shell: bash
       env:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
 
     # - name: Trigger Intraday Backtests
     #   run: |
-    #     python3 .github/workflows/workflowtriggers.py -b -i -u "-1001785195297" -s0 "S,T,E,U,Z,H,Y,X" -s1 "W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13" -s2 "0,21,22,26,27,28,29,30,42,M,Z" -s3 "0"
+    #     python3 .github/workflows/workflowtriggers.py -b -i -u "-1001785195297" -s0 "S,T,E,U,Z,H,Y,X,C" -s1 "W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13" -s2 "0,21,22,26,27,28,29,30,42,M,Z" -s3 "0"
     #   shell: bash
     #   env:
     #     GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
