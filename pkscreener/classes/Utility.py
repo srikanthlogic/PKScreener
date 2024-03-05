@@ -787,7 +787,7 @@ class tools:
         exists, cache_file = tools.afterMarketStockDataExists(
             isIntraday, forceLoad=forceLoad
         )
-        if not PKDateUtilities.isTradingTime() or downloadOnly:
+        if PKDateUtilities.isTradingTime() or downloadOnly:
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
 
