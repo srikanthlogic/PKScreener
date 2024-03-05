@@ -523,6 +523,8 @@ class StockScreener:
         except Exception as e:  # pragma: no cover
             hostRef.default_logger.debug(e, exc_info=True)
             if testbuild or printCounter:
+                import traceback
+                traceback.print_exc()
                 print(e)
                 print(
                     colorText.FAIL

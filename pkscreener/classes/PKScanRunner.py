@@ -24,6 +24,7 @@
 """
 import os
 import sys
+import time
 import pandas as pd
 import multiprocessing
 from time import sleep
@@ -291,9 +292,13 @@ class PKScanRunner:
             + f"[+] Using Period:{PKScanRunner.configManager.period} and Duration:{PKScanRunner.configManager.duration} for scan! You can change this in user config."
             + colorText.END
         )
+        start_time = time.time()
         for worker in consumers:
+            sys.stdout.write(f"{round(time.time() - start_time)}.")
             worker.daemon = True
             worker.start()
+        print(f"Started all workers in {time.time() - start_time}s")
+        sys.stdout.write("\x1b[1A")
 
     def terminateAllWorkers(consumers, tasks_queue, testing):
         # Exit all processes. Without this, it threw error in next screening session

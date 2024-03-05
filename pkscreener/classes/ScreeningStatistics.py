@@ -1660,8 +1660,8 @@ class ScreeningStatistics:
         ltp = round(recent["Close"].iloc[0], 2)
         verifyStageTwo = True
         if len(data) > 250:
-            yearlyLow = data.head(250).min()["Close"]
-            yearlyHigh = data.head(250).max()["Close"]
+            yearlyLow = data.head(250)["Close"].min()
+            yearlyHigh = data.head(250)["Close"].max()
             if ltp < (2 * yearlyLow) and ltp < (0.75 * yearlyHigh):
                 verifyStageTwo = False
                 screenDict["Stock"] = colorText.FAIL + saveDict["Stock"] + colorText.END
