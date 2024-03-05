@@ -117,10 +117,11 @@ class PKScanRunner:
         actualHistoricalDuration = (samplingDuration - fillerPlaceHolder)
         return samplingDuration,fillerPlaceHolder,actualHistoricalDuration
 
-    def addStocksToItemList(userArgs, testing, testBuild, newlyListedOnly, downloadOnly, minRSI, maxRSI, insideBarToLookback, respChartPattern, daysForLowestVolume, backtestPeriod, reversalOption, maLength, listStockCodes, menuOption, executeOption, volumeRatio, items, daysInPast):
+    def addStocksToItemList(userArgs, testing, testBuild, newlyListedOnly, downloadOnly, minRSI, maxRSI, insideBarToLookback, respChartPattern, daysForLowestVolume, backtestPeriod, reversalOption, maLength, listStockCodes, menuOption, exchangeName,executeOption, volumeRatio, items, daysInPast):
         moreItems = [
                         (
                             menuOption,
+                            exchangeName,
                             executeOption,
                             reversalOption,
                             maLength,

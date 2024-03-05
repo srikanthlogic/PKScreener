@@ -53,6 +53,7 @@ class StockScreener:
     def screenStocks(
         self,
         menuOption,
+        exchangeName,
         executeOption,
         reversalOption,
         maLength,
@@ -313,7 +314,8 @@ class StockScreener:
                                 testbuild,
                                 stock,
                                 onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                                hostData=data
+                                hostData=data,
+                                exchangeName=exchangeName
                             )
                             hostRef.objectDictionary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
@@ -467,7 +469,8 @@ class StockScreener:
                                 testbuild,
                                 stock,
                                 onlyMF=(executeOption == 21 and reversalOption in [5,6]),
-                                hostData=data
+                                hostData=data,
+                                exchangeName=exchangeName
                             )
                             hostRef.objectDictionary[stock] = data.to_dict("split")
 
@@ -500,13 +503,13 @@ class StockScreener:
                 data = hostRef.objectDictionary.get(stock)
                 if data is not None:
                     data = pd.DataFrame(data["data"], columns=data["columns"], index=data["index"])
-                    screener.getMutualFundStatus(stock, hostData=data, force=True)
+                    screener.getMutualFundStatus(stock, hostData=data, force=True, exchangeName=exchangeName)
                     hostRef.objectDictionary[stock] = data.to_dict("split")
             except Exception as ex:
                 hostRef.default_logger.debug(f"MFIStatus: {stock}:\n{ex}", exc_info=True)
                 pass
             try:
-                screener.getFairValue(stock,hostData=data, force=True)
+                screener.getFairValue(stock,hostData=data, force=True,exchangeName=exchangeName)
                 hostRef.objectDictionary[stock] = data.to_dict("split")
             except Exception as ex:
                 hostRef.default_logger.debug(f"FairValue: {stock}:\n{ex}", exc_info=True)

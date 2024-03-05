@@ -767,7 +767,7 @@ class ScreeningStatistics:
         return False
 
     # @measure_time
-    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None):
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None,exchangeName="INDIA"):
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
@@ -811,7 +811,7 @@ class ScreeningStatistics:
         mf_inst_ownershipChange = 0
         change_millions =""
         try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)))
+            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
             roundOff = 2
             millions = round(mf_inst_ownershipChange/1000000,roundOff)
             while float(millions) == 0 and roundOff <=5:
@@ -823,7 +823,7 @@ class ScreeningStatistics:
             pass
         try:
             #Let's get the fair value, either saved or fresh from service
-            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns))
+            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns),exchangeName=exchangeName)
             if fairValue is not None and fairValue != 0:
                 ltp = saveDict["LTP"]
                 fairValueDiff = round(fairValue - ltp,0)
@@ -861,7 +861,7 @@ class ScreeningStatistics:
         bodyHeight = dailyData["Close"].iloc[0] - dailyData["Open"].iloc[0]
         return bodyHeight
 
-    def getFairValue(self, stock, hostData=None, force=False):
+    def getFairValue(self, stock, hostData=None, force=False,exchangeName="INDIA"):
         if hostData is None or len(hostData) < 1:
             hostData = pd.DataFrame()
         # Let's look for fair values
@@ -876,7 +876,7 @@ class ScreeningStatistics:
                 security = None
                 # Refresh each saturday or sunday or when not found in saved data
                 try:
-                    security = Stock(stock)
+                    security = Stock(stock,exchange=exchangeName)
                 except ValueError: # pragma: no cover
                     # We did not find the stock? It's okay. Move on to the next one.
                     pass
@@ -897,7 +897,7 @@ class ScreeningStatistics:
                         pass
         return fairValue
 
-    def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False):
+    def getMutualFundStatus(self, stock,onlyMF=False, hostData=None, force=False,exchangeName="INDIA"):
         if hostData is None or len(hostData) < 1:
             hostData = pd.DataFrame()
         
@@ -939,7 +939,7 @@ class ScreeningStatistics:
                 needsFreshUpdate = True
 
         if needsFreshUpdate and force:
-            netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock)
+            netChangeMF, netChangeInst, latest_mfdate, latest_instdate = self.getFreshMFIStatus(stock,exchangeName=exchangeName)
             if netChangeMF is not None:
                 try:
                     hostData.loc[hostData.index[-1],"MF"] = netChangeMF
@@ -981,7 +981,7 @@ class ScreeningStatistics:
                 latest_instdate = PKDateUtilities.dateFromYmdString(latest_instdate.split("T")[0])
             return netChangeMF if ((latest_mfdate is not None) and latest_mfdate > (latest_instdate if latest_instdate is not None else (latest_mfdate - datetime.timedelta(1)))) else netChangeInst
 
-    def getFreshMFIStatus(self, stock):
+    def getFreshMFIStatus(self, stock,exchangeName="INDIA"):
         changeStatusDataMF = None
         changeStatusDataInst = None
         netChangeMF = 0
@@ -990,7 +990,7 @@ class ScreeningStatistics:
         latest_instdate = None
         security = None
         try:
-            security = Stock(stock)
+            security = Stock(stock,exchange=exchangeName)
         except ValueError:
             # We did not find the stock? It's okay. Move on to the next one.
             pass

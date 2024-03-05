@@ -46,10 +46,10 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         task = None
         if isinstance(args[0], PKTask):
             task = args[0]
-            stockCode,period,duration = task.long_running_fn_args
+            stockCode,period,duration,exchangeSuffix = task.long_running_fn_args
         else:
-            stockCode,period,duration = args[0],args[1],args[2]
-        result = self.fetchStockData(stockCode,period,duration,None,0,0,0)
+            stockCode,period,duration,exchangeSuffix = args[0],args[1],args[2],args[3]
+        result = self.fetchStockData(stockCode,period,duration,None,0,0,0,exchangeSuffix=exchangeSuffix)
         if task is not None:
             if task.taskId > 0:
                 task.progressStatusDict[task.taskId] = {'progress': 0, 'total': 1}

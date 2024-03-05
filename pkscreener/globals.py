@@ -25,6 +25,7 @@
 """
 # Keep module imports prior to classes
 import os
+import random
 import warnings
 warnings.simplefilter("ignore", UserWarning,append=True)
 os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
@@ -54,6 +55,7 @@ from PKDevTools.classes.Telegram import (
     send_message,
 )
 from PKNSETools.morningstartools.PKMorningstarDataFetcher import morningstarDataFetcher
+from PKNSETools.Nasdaq.PKNasdaqIndex import PKNasdaqIndexFetcher
 from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -452,7 +454,7 @@ def initPostLevel0Execution(
                 return indexOption, 0
         else:
             indexOption = int(indexOption)
-            if indexOption < 0 or indexOption > 14:
+            if indexOption < 0 or indexOption > 15:
                 raise ValueError
             elif indexOption == 13:
                 newlyListedOnly = True
@@ -970,7 +972,7 @@ def main(userArgs=None):
         not str(indexOption).isnumeric() and indexOption in ["W", "E", "M", "N", "Z"]
     ) or (
         str(indexOption).isnumeric()
-        and (int(indexOption) >= 0 and int(indexOption) < 15)
+        and (int(indexOption) >= 0 and int(indexOption) < 16)
     ):
         configManager.getConfig(ConfigManager.parser)
         try:
@@ -1047,7 +1049,8 @@ def main(userArgs=None):
                     downloadOnly=downloadOnly,
                     defaultAnswer=defaultAnswer,
                     forceLoad=(menuOption in ["X", "B", "G", "S"]),
-                    stockCodes = listStockCodes
+                    stockCodes = listStockCodes,
+                    exchangeSuffix = ".NS" if indexOption < 15 else ""
             )
             loadedStockData = True
         loadCount = len(stockDict) if stockDict is not None else 0
@@ -1095,7 +1098,8 @@ def main(userArgs=None):
                     )
                 except Exception:
                     pass
-                PKScanRunner.addStocksToItemList(userPassedArgs, testing, testBuild, newlyListedOnly, downloadOnly, minRSI, maxRSI, insideBarToLookback, respChartPattern, daysForLowestVolume, backtestPeriod, reversalOption, maLength, listStockCodes, menuOption, executeOption, volumeRatio, items, daysInPast)
+                exchangeName = "INDIA" if indexOption <= 14 else "NASDAQ"
+                PKScanRunner.addStocksToItemList(userPassedArgs, testing, testBuild, newlyListedOnly, downloadOnly, minRSI, maxRSI, insideBarToLookback, respChartPattern, daysForLowestVolume, backtestPeriod, reversalOption, maLength, listStockCodes, menuOption,exchangeName,executeOption, volumeRatio, items, daysInPast)
                 if savedStocksCount > 0:
                     progressbar.text(
                         colorText.BOLD
@@ -1297,15 +1301,38 @@ def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption
     if not downloadOnly:
         updateMenuChoiceHierarchy()
     if listStockCodes is None or len(listStockCodes) == 0:
-        listStockCodes = fetcher.fetchStockCodes(
-                        indexOption, stockCode=None
+        if indexOption > 0 and indexOption <= 14:
+            listStockCodes = fetcher.fetchStockCodes(
+                            indexOption, stockCode=None
+                        )
+        elif indexOption == 15:
+            print(colorText.BOLD + "[+] Getting Stock Codes From NASDAQ... ", end="")
+            nasdaq = PKNasdaqIndexFetcher(configManager)
+            listStockCodes = nasdaq.fetchNasdaqIndexConstituents()
+            if len(listStockCodes) > 10:
+                print(
+                    colorText.GREEN
+                    + ("=> Done! Fetched %d stock codes." % len(listStockCodes))
+                    + colorText.END
+                )
+                if configManager.shuffleEnabled:
+                    random.shuffle(listStockCodes)
+                    print(
+                        colorText.BLUE
+                        + "[+] Stock shuffling is active."
+                        + colorText.END
                     )
+            else:
+                print(
+                    colorText.FAIL
+                    + ("=> Failed! Could not fetch stock codes from NASDAQ!")
+                    + colorText.END
+                )
         if (listStockCodes is None or len(listStockCodes) == 0) and testing:
-            listStockCodes = [TEST_STKCODE]
+            listStockCodes = [TEST_STKCODE if indexOption < 15 else "AMD"]
     if indexOption == 0:
         selectedChoice["3"] = ".".join(listStockCodes)
     if testing:
-        import random
         listStockCodes = [random.choice(listStockCodes)]
     return listStockCodes
 

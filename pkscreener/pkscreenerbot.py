@@ -125,7 +125,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
     cmds = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z"],
+        skip=["S", "T", "E", "U", "Z","C"],
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -883,7 +883,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if len(selection) == 2:
             m0.renderForMenu(
                 selectedMenu=None,
-                skip=["S", "T", "E", "U", "Z"],
+                skip=["S", "T", "E", "U", "Z", "C"],
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
@@ -942,7 +942,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         elif len(selection) == 3:
             m0.renderForMenu(
                 selectedMenu=None,
-                skip=["S", "T", "E", "U", "Z"],
+                skip=["S", "T", "E", "U", "Z","C"],
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
@@ -1069,7 +1069,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     cmds = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z"],
+        skip=["S", "T", "E", "U", "Z","C"],
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -1123,7 +1123,7 @@ def _shouldAvoidResponse(update):
 def addCommandsForMenuItems(application):
     cmds0 = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z"],
+        skip=["S", "T", "E", "U", "Z","C"],
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )

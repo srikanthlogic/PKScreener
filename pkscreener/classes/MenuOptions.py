@@ -68,6 +68,7 @@ level1_X_MenuDict = {
     "12": "Nifty (All Stocks)",
     "13": "Newly Listed (IPOs in last 2 Year)        ",
     "14": "F&O Stocks Only",
+    "15": "NASDAQ",
     "M": "Back to the Top/Main menu",
     "Z": "Exit (Ctrl + C)",
 }
