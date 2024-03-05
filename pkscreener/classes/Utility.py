@@ -787,6 +787,7 @@ class tools:
         exists, cache_file = tools.afterMarketStockDataExists(
             isIntraday, forceLoad=forceLoad
         )
+        initialLoadCount = len(stockDict)
         if PKDateUtilities.isTradingTime() or downloadOnly:
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
@@ -977,6 +978,8 @@ class tools:
                 + "[+] Cache unavailable on pkscreener server, Continuing.."
                 + colorText.END
             )
+        # See if we need to save stock data
+        tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly)
         return stockDict
 
     # Save screened results to excel

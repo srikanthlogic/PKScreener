@@ -1310,14 +1310,14 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         cci = int(data.head(1)["CCI"].iloc[0])
         saveDict["CCI"] = cci
-        if (cci <= minCCI or cci >= maxCCI):
+        if (cci >= minCCI and cci <= maxCCI):
             if ("Up" in saveDict["Trend"]):
                 screenDict["CCI"] = (
-                    colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
+                    (colorText.BOLD if ("Strong" in saveDict["Trend"]) else "") + colorText.GREEN + str(cci) + colorText.END
                 )
             else:
                 screenDict["CCI"] = (
-                    colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
+                    (colorText.BOLD if ("Strong" in saveDict["Trend"]) else "") + colorText.FAIL + str(cci) + colorText.END
                 )
             return True
         screenDict["CCI"] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END

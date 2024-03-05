@@ -749,8 +749,8 @@ def main(userArgs=None):
                 maxRSI = int(options[4])
             elif str(options[3]).upper() == "D":
                 # Use a default value
-                minRSI = 30
-                maxRSI = 70
+                minRSI = 55
+                maxRSI = 100
         else:
             minRSI, maxRSI = Utility.tools.promptRSIValues()
         if not minRSI and not maxRSI:
@@ -853,12 +853,13 @@ def main(userArgs=None):
             selectedChoice["4"] = str(maLength)
     if executeOption == 8:
         if len(options) >= 5:
-            if str(options[3]).isnumeric():
+            if "".join(str(options[3]).split(".")).isdecimal():
                 minRSI = int(options[3])
+            if "".join(str(options[4]).split(".")).isdecimal():
                 maxRSI = int(options[4])
-            elif str(options[3]).upper() == "D":
-                minRSI = -100
-                maxRSI = 150
+            if str(options[3]).upper() == "D":
+                minRSI = -300
+                maxRSI = 550
         else:
             minRSI, maxRSI = Utility.tools.promptCCIValues()
         if not minRSI and not maxRSI:
@@ -2054,7 +2055,7 @@ def sendMessageToTelegramChannel(
         caption = f"{caption.replace('&','n')}."
     if message is not None:
         try:
-            message = message.replace("&", "n")
+            message = message.replace("&", "n").replace("<","*")
             send_message(message, userID=user)
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
