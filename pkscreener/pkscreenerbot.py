@@ -53,7 +53,7 @@ start_time = datetime.now()
 MINUTES_5_IN_SECONDS = 300
 
 from PKDevTools.classes.Telegram import get_secrets
-
+from PKDevTools.classes.ColorText import colorText
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menu, menus
 from pkscreener.classes.WorkflowManager import run_workflow
 from pkscreener.globals import showSendConfigInfo, showSendHelpInfo
@@ -177,6 +177,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         .replace("     ", "")
         .replace("    ", "")
         .replace("\t", "")
+        .replace(colorText.FAIL,"").replace(colorText.END,"")
     )
     mns = m1.renderForMenu(
         m0.find(data),
@@ -630,7 +631,7 @@ def default_markup(inlineMenus):
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup):
     try:
         await update.callback_query.edit_message_text(
-            text=menuText.replace("     ", "").replace("    ", "").replace("\t", ""),
+            text=menuText.replace("     ", "").replace("    ", "").replace("\t", "").replace(colorText.FAIL,"").replace(colorText.END,""),
             reply_markup=reply_markup,
         )
     except Exception:# pragma: no cover
