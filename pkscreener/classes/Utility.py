@@ -756,7 +756,7 @@ class tools:
                 stocks = stockCodes[numStocksPerIteration* queueCounter : numStocksPerIteration* (queueCounter + 1)]
             else:
                 stocks = ["DUMMYStock"]#stockCodes[numStocksPerIteration* queueCounter :]
-            fn_args = (stocks, configManager.period, configManager.duration)
+            fn_args = (stocks, configManager.period, configManager.duration,exchangeSuffix)
             task = PKTask(f"DataDownload-{queueCounter}",long_running_fn=fetcher.fetchStockDataWithArgs,long_running_fn_args=fn_args)
             task.userData = stocks
             if len(stocks) > 0:
@@ -764,7 +764,7 @@ class tools:
             queueCounter += 1
         
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data (Total={len(tasksList)})")
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading {'latest' if len(stockCodes)<2000 else (len(stockCodes) +' stocks ')} data (Total={len(tasksList)}){'Be Patient!' if len(stockCodes)> 2000 else ''}")
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
@@ -813,10 +813,12 @@ class tools:
                             # we'd have received a multiindex dataframe
                             listStockCodes = multiIndex.get_level_values(0)
                             listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
-                            listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
                         else:
                             listStockCodes = list(stockData.keys())
-                            listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
                         for stock in listStockCodes:
                             df_or_dict = stockData.get(stock)
                             df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
@@ -921,10 +923,12 @@ class tools:
                                 # we'd have received a multiindex dataframe
                                 listStockCodes = multiIndex.get_level_values(0)
                                 listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
-                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                                if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                    listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
                             else:
                                 listStockCodes = list(stockData.keys())
-                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                                if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                    listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
                             for stock in listStockCodes:
                                 df_or_dict = stockData.get(stock)
                                 df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
