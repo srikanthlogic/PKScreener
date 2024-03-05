@@ -828,7 +828,11 @@ class tools:
                             # just now and also copy the additional data like, MF/FII,FairValue
                             # etc. data, from yesterday's saved data.
                             try:
-                                stockDict[stock] = df_or_dict | stockDict.get(stock)
+                                existingPreLoadedData = stockDict.get(stock)
+                                if existingPreLoadedData is not None:
+                                    stockDict[stock] = df_or_dict | existingPreLoadedData
+                                else:
+                                    stockDict[stock] = df_or_dict
                             except:
                                 # Probably, the "stock" got removed from the latest download
                                 # and so, was not found in stockDict
@@ -938,7 +942,11 @@ class tools:
                                 # just now and also copy the additional data like, MF/FII,FairValue
                                 # etc. data, from yesterday's saved data.
                                 try:
-                                    stockDict[stock] = df_or_dict | stockDict.get(stock)
+                                    existingPreLoadedData = stockDict.get(stock)
+                                    if existingPreLoadedData is not None:
+                                        stockDict[stock] = df_or_dict | existingPreLoadedData
+                                    else:
+                                        stockDict[stock] = df_or_dict
                                 except:
                                     # Probably, the "stock" got removed from the latest download
                                     # and so, was not found in stockDict
