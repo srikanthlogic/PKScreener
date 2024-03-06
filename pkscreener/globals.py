@@ -588,7 +588,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
 
 
 # @tracelog
-def main(userArgs=None):
+def main(userArgs=None,optionalFinalOutcome_df=None):
     global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     elapsed_time = 0
@@ -1126,7 +1126,8 @@ def main(userArgs=None):
         if not keyboardInterruptEventFired:
             screenResults, saveResults, backtest_df, scr = PKScanRunner.runScanWithParams(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
             if menuOption in ["C"]:
-                PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults)
+                runOptionName = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
+                PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults,runOptionName=runOptionName)
             if downloadOnly and menuOption in ["X"]:
                 scr.getFreshMFIStatus(stock="LatestCheckedOnDate")
                 scr.getFairValue(stock="LatestCheckedOnDate", force=True)
@@ -1188,10 +1189,19 @@ def main(userArgs=None):
         elif menuOption == "G":
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
-        newlyListedOnly = False
-    
+    newlyListedOnly = False
     # Change the config back to usual
     resetConfigToDefault()
+    if userPassedArgs.runintradayanalysis:
+        analysis_df = screenResults.copy()
+        analysis_df.reset_index(inplace=True)
+        if 'index' in analysis_df.columns:
+            analysis_df.drop('index', axis=1, inplace=True, errors="ignore")
+        if optionalFinalOutcome_df is None:
+            optionalFinalOutcome_df = analysis_df
+        else:
+            optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
+        return optionalFinalOutcome_df
 
 def FinishBacktestDataCleanup(backtest_df, df_xray):
     showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
@@ -1854,7 +1864,7 @@ def runScanners(
         )
         if not userPassedArgs.download:
             print(colorText.WARN
-                + f"[+] Starting Stock {'Screening' if menuOption=='X' else 'Backtesting.'}. Press Ctrl+C to stop!"
+                + f"[+] Starting {'Stock' if menuOption not in ['C'] else 'Intraday'} {'Screening' if menuOption=='X' else ('Analysis' if menuOption == 'C' else 'Backtesting.')}. Press Ctrl+C to stop!"
                 + colorText.END
             )
         bar, spinner = Utility.tools.getProgressbarStyle()

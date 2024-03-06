@@ -42,6 +42,7 @@ from pkscreener.classes.ConfigManager import parser, tools
 
 import pkscreener.classes.Fetcher as Fetcher
 import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
+import pkscreener.classes.Utility as Utility
 
 class PKScanRunner:
     configManager = tools()
@@ -254,6 +255,7 @@ class PKScanRunner:
     def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDict, items):
         tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
+        exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=PKScanRunner.configManager.isIntradayConfig())
         consumers = [
                     PKMultiProcessorClient(
                         StockScreener().screenStocks,
@@ -261,7 +263,7 @@ class PKScanRunner:
                         results_queue,
                         screenCounter,
                         screenResultsCounter,
-                        stockDict,
+                        cache_file if exists else stockDict,
                         PKScanRunner.fetcher.proxyServer,
                         keyboardInterruptEvent,
                         default_logger(),

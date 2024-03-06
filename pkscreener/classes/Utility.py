@@ -783,14 +783,16 @@ class tools:
         retrial=False,
         forceLoad=False,
         stockCodes=[],
-        exchangeSuffix=".NS"
+        exchangeSuffix=".NS",
+        isIntraday = False,
+        forceRedownload=False
     ):
-        isIntraday = configManager.isIntradayConfig()
+        isIntraday = isIntraday or configManager.isIntradayConfig()
         exists, cache_file = tools.afterMarketStockDataExists(
             isIntraday, forceLoad=forceLoad
         )
         initialLoadCount = len(stockDict)
-        if PKDateUtilities.isTradingTime() or downloadOnly:
+        if (stockCodes is not None and len(stockCodes) > 0) and (PKDateUtilities.isTradingTime() or downloadOnly):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
 
@@ -798,7 +800,7 @@ class tools:
             f"Stock data cache file:{cache_file} exists ->{str(exists)}"
         )
         stockDataLoaded = False
-        if exists:
+        if exists and not forceRedownload:
             with open(
                 os.path.join(Archiver.get_user_outputs_dir(), cache_file), "rb"
             ) as f:
@@ -873,7 +875,7 @@ class tools:
             == configManager.period
             and ("1m" if isIntraday else ConfigManager.default_duration)
             == configManager.duration
-        ):
+        ) or forceRedownload:
             print(
                     colorText.BOLD
                     + colorText.FAIL

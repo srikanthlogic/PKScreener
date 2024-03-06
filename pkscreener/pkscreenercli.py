@@ -169,6 +169,12 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--runintradayanalysis",
+    action="store_true",
+    help="Run analysis for morning vs EoD LTP values",
+    required=False,
+)
+argParser.add_argument(
     "-t",
     "--testbuild",
     action="store_true",
@@ -264,8 +270,48 @@ def runApplication():
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
     args = argsv[0]
-
-    main(userArgs=args)
+    if args.runintradayanalysis:
+        menuOptions = ["C"]
+        indexOptions =[12]
+        scanOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25]
+        scanSubOptions = {6:[1,2,3,4,5,6,{7:[1,2]}], 
+                          7:[1,2,{3:[1,2]},4,5,{6:[1,2,3]},7],
+                         21:[3,5,6,7,8,9]}
+        optionalFinalOutcome_df = None
+        runOptions = []
+        for menuOption in menuOptions:
+            for indexOption in indexOptions:
+                for scanOption in scanOptions:
+                    if scanOption in scanSubOptions.keys():
+                        for scanSubOption in scanSubOptions[scanOption]:
+                            if isinstance(scanSubOption, dict):
+                                for childLevelOption in scanSubOption.keys():
+                                    for value in scanSubOption[childLevelOption]:
+                                        runOption = f"{menuOption}:{indexOption}:{scanOption}:{childLevelOption}:{value}:D:D:D:D:D"
+                                        runOptions.append(runOption)
+                            else:
+                                runOption = f"{menuOption}:{indexOption}:{scanOption}:{scanSubOption}:D:D:D:D:D"
+                                runOptions.append(runOption)
+                    else:
+                        runOption = f"{menuOption}:{indexOption}:{scanOption}:D:D:D:D:D"
+                        runOptions.append(runOption)
+        
+        for runOption in runOptions:
+            args.options = runOption
+            try:
+                optionalFinalOutcome_df = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+            except Exception as e:
+                print(e)
+                if args.log:
+                    import traceback
+                    traceback.print_exc()
+        if optionalFinalOutcome_df is not None:
+            df_grouped = optionalFinalOutcome_df.groupby("Stock")
+            for stock, df_group in df_grouped:
+                if stock == "PORTFOLIO":
+                    print(df_group)
+    else:
+        main(userArgs=args)
 
 
 def pkscreenercli():
