@@ -383,7 +383,9 @@ class tools:
                 for style in mainStyles:
                     if style in cleanedUpStyledValue:
                         cellFillColors.append(colorsDict[style])
-                        cleanedUpStyledValues.append(prefix + cleanedUpStyledValue.replace(style, ""))
+                        for style in mainStyles:
+                            cleanedUpStyledValue = cleanedUpStyledValue.replace(style, "")
+                        cleanedUpStyledValues.append(prefix + cleanedUpStyledValue)
                         prefix = ""
                 
         if len(cellFillColors) == 0:
