@@ -240,8 +240,8 @@ class PKMarketOpenCloseAnalyser:
                 diff.append(round(endOfDayLTP - morningLTP,2))
                 index += 1
             except:
-                eodLTPs.append("-")
-                diff.append("-")
+                eodLTPs.append("0")
+                diff.append("0")
                 continue
         save_df["EoDLTP"] = eodLTPs
         screen_df["EoDLTP"] = eodLTPs

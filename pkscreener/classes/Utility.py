@@ -768,7 +768,7 @@ class tools:
             queueCounter += 1
         
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading {'latest' if len(stockCodes)<2000 else (len(stockCodes) +' stocks ')} data (Total={len(tasksList)}){'Be Patient!' if len(stockCodes)> 2000 else ''}")
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}")
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
@@ -913,7 +913,7 @@ class tools:
                 MB = KB * 1024
                 chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
                 filesize = int( serverBytes / chunksize)
-                if filesize > 0:
+                if filesize > 0 and chunksize != MB: # Saved data can't be in KBs. Something definitely went wrong.
                     bar, spinner = tools.getProgressbarStyle()
                     try:
                         f = open(
@@ -991,6 +991,10 @@ class tools:
                         defaultAnswer,
                         retrial=True,
                         forceLoad=forceLoad,
+                        stockCodes=stockCodes,
+                        exchangeSuffix=exchangeSuffix,
+                        isIntraday = isIntraday,
+                        forceRedownload=forceRedownload
                     )
         if not stockDataLoaded:
             print(
@@ -1000,7 +1004,8 @@ class tools:
                 + colorText.END
             )
         # See if we need to save stock data
-        tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly, forceSave=stockDataLoaded)
+        if stockDataLoaded:
+            tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly, forceSave=stockDataLoaded)
         return stockDict
 
     # Save screened results to excel
