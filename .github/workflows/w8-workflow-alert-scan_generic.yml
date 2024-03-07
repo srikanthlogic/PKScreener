@@ -183,6 +183,8 @@ jobs:
       if: startsWith(runner.os, 'Windows')
       env:
         RUNNER : "GitHub_Actions"
+        GSHEET_SERVICE_ACCOUNT_DEV: ${{secrets.GSHEET_SERVICE_ACCOUNT_DEV}}
+        GSHEET_VIEWONLY_LINK: ${{secrets.GSHEET_VIEWONLY_LINK}}
       run: |
         ${{ inputs.prerequisites }}
         pkscreenercli.exe ${{ inputs.params }} --maxdisplayresults 100
@@ -193,6 +195,8 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       env:
         RUNNER : "GitHub_Actions"
+        GSHEET_SERVICE_ACCOUNT_DEV: ${{secrets.GSHEET_SERVICE_ACCOUNT_DEV}}
+        GSHEET_VIEWONLY_LINK: ${{secrets.GSHEET_VIEWONLY_LINK}}
       run: |
         ${{ inputs.prerequisites }}
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin ${{ inputs.params }} --maxdisplayresults 100

@@ -271,31 +271,9 @@ def runApplication():
     argsv = argParser.parse_known_args()
     args = argsv[0]
     if args.runintradayanalysis:
-        menuOptions = ["C"]
-        indexOptions =[12]
-        scanOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25]
-        scanSubOptions = {6:[1,2,3,4,5,6,{7:[1,2]}], 
-                          7:[1,2,{3:[1,2]},4,5,{6:[1,2,3]},7],
-                         21:[3,5,6,7,8,9]}
+        from pkscreener.classes.MenuOptions import menus
+        runOptions = menus.allMenus(topLevel="C", index=12)
         optionalFinalOutcome_df = None
-        runOptions = []
-        for menuOption in menuOptions:
-            for indexOption in indexOptions:
-                for scanOption in scanOptions:
-                    if scanOption in scanSubOptions.keys():
-                        for scanSubOption in scanSubOptions[scanOption]:
-                            if isinstance(scanSubOption, dict):
-                                for childLevelOption in scanSubOption.keys():
-                                    for value in scanSubOption[childLevelOption]:
-                                        runOption = f"{menuOption}:{indexOption}:{scanOption}:{childLevelOption}:{value}:D:D:D:D:D"
-                                        runOptions.append(runOption)
-                            else:
-                                runOption = f"{menuOption}:{indexOption}:{scanOption}:{scanSubOption}:D:D:D:D:D"
-                                runOptions.append(runOption)
-                    else:
-                        runOption = f"{menuOption}:{indexOption}:{scanOption}:D:D:D:D:D"
-                        runOptions.append(runOption)
-        
         for runOption in runOptions:
             args.options = runOption
             try:

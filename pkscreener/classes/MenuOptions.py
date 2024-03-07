@@ -260,6 +260,34 @@ class menu:
 
 # This Class manages application menus
 class menus:
+    
+    @staticmethod
+    def allMenus(topLevel="X",index=12):
+        menuOptions = [topLevel]
+        indexOptions =[index]
+        scanOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25]
+        scanSubOptions = {6:[1,2,3,4,5,6,{7:[1,2]}], 
+                          7:[1,2,{3:[1,2]},4,5,{6:[1,2,3]},7],
+                         21:[3,5,6,7,8,9]}
+        runOptions = []
+        for menuOption in menuOptions:
+            for indexOption in indexOptions:
+                for scanOption in scanOptions:
+                    if scanOption in scanSubOptions.keys():
+                        for scanSubOption in scanSubOptions[scanOption]:
+                            if isinstance(scanSubOption, dict):
+                                for childLevelOption in scanSubOption.keys():
+                                    for value in scanSubOption[childLevelOption]:
+                                        runOption = f"{menuOption}:{indexOption}:{scanOption}:{childLevelOption}:{value}:D:D:D:D:D"
+                                        runOptions.append(runOption)
+                            else:
+                                runOption = f"{menuOption}:{indexOption}:{scanOption}:{scanSubOption}:D:D:D:D:D"
+                                runOptions.append(runOption)
+                    else:
+                        runOption = f"{menuOption}:{indexOption}:{scanOption}:D:D:D:D:D"
+                        runOptions.append(runOption)
+        return runOptions
+
     def __init__(self):
         self.level = 0
         self.menuDict = {}

@@ -65,6 +65,7 @@ import pkscreener.classes.Utility as Utility
 from pkscreener.classes.Utility import STD_ENCODING
 from pkscreener.classes import VERSION, PortfolioXRay
 from pkscreener.classes.Backtest import backtest, backtestSummary
+from pkscreener.classes.PKSpreadsheets import PKSpreadsheets
 
 from pkscreener.classes.MenuOptions import (
     level0MenuDict,
@@ -1192,6 +1193,17 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     newlyListedOnly = False
     # Change the config back to usual
     resetConfigToDefault()
+    try:
+        creds = None
+        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys():
+            creds = os.environ["GSHEET_SERVICE_ACCOUNT_DEV"]
+            print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
+            gClient = PKSpreadsheets(credentialDictStr=creds)
+            runOption = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
+            gClient.df_to_sheet(df=saveResults,sheetName=runOption)
+            print(f"{colorText.GREEN} => Done{colorText.END}")
+    except:
+        pass
     if userPassedArgs.runintradayanalysis:
         analysis_df = screenResults.copy()
         analysis_df.reset_index(inplace=True)

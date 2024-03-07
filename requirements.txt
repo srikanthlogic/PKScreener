@@ -1,6 +1,8 @@
 advanced_ta
 alive-progress==1.6.2
 bs4
+gspread
+gspread_pandas
 joblib
 keras
 lxml==4.9.4 # 5.0.0 or above causes problems.
