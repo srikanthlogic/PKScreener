@@ -716,7 +716,7 @@ class tools:
                 break
         return exists, cache_file
 
-    def saveStockData(stockDict, configManager, loadCount, intraday=False, downloadOnly=False):
+    def saveStockData(stockDict, configManager, loadCount, intraday=False, downloadOnly=False, forceSave=False):
         exists, fileName = tools.afterMarketStockDataExists(
             configManager.isIntradayConfig() or intraday
         )
@@ -727,7 +727,7 @@ class tools:
                 os.makedirs(os.path.dirname(f"{outputFolder}{os.sep}"), exist_ok=True)
             configManager.deleteFileWithPattern(rootDir=outputFolder)
         cache_file = os.path.join(outputFolder, fileName)
-        if not os.path.exists(cache_file) or (loadCount > 0 and len(stockDict) > (loadCount + 1)):
+        if not os.path.exists(cache_file) or forceSave or (loadCount > 0 and len(stockDict) > (loadCount + 1)):
             try:
                 with open(cache_file, "wb") as f:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -792,7 +792,8 @@ class tools:
             isIntraday, forceLoad=forceLoad
         )
         initialLoadCount = len(stockDict)
-        if (stockCodes is not None and len(stockCodes) > 0) and (PKDateUtilities.isTradingTime() or downloadOnly):
+        isTrading = PKDateUtilities.isTradingTime()
+        if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
 
@@ -835,9 +836,17 @@ class tools:
                             try:
                                 existingPreLoadedData = stockDict.get(stock)
                                 if existingPreLoadedData is not None:
-                                    stockDict[stock] = df_or_dict | existingPreLoadedData
+                                    if isTrading:
+                                        # Only copy the MF/FII/FairValue data and leave the stock prices as is.
+                                        cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
+                                        for col in cols:
+                                            existingPreLoadedData[col] = df_or_dict.get(col)
+                                        stockDict[stock] = existingPreLoadedData
+                                    else:
+                                        stockDict[stock] = df_or_dict | existingPreLoadedData
                                 else:
-                                    stockDict[stock] = df_or_dict
+                                    if not isTrading:
+                                        stockDict[stock] = df_or_dict
                             except:
                                 # Probably, the "stock" got removed from the latest download
                                 # and so, was not found in stockDict
@@ -949,9 +958,17 @@ class tools:
                                 try:
                                     existingPreLoadedData = stockDict.get(stock)
                                     if existingPreLoadedData is not None:
-                                        stockDict[stock] = df_or_dict | existingPreLoadedData
+                                        if isTrading:
+                                            # Only copy the MF/FII/FairValue data and leave the stock prices as is.
+                                            cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
+                                            for col in cols:
+                                                existingPreLoadedData[col] = df_or_dict.get(col)
+                                            stockDict[stock] = existingPreLoadedData
+                                        else:
+                                            stockDict[stock] = df_or_dict | existingPreLoadedData
                                     else:
-                                        stockDict[stock] = df_or_dict
+                                        if not isTrading:
+                                            stockDict[stock] = df_or_dict
                                 except:
                                     # Probably, the "stock" got removed from the latest download
                                     # and so, was not found in stockDict
@@ -983,7 +1000,7 @@ class tools:
                 + colorText.END
             )
         # See if we need to save stock data
-        tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly)
+        tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly, forceSave=stockDataLoaded)
         return stockDict
 
     # Save screened results to excel
