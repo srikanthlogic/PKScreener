@@ -46,7 +46,7 @@ on:
       scanOptions:
         description: 'Scan options for historical scans'
         required: false
-        default: '--reScanForZeroSize --scanDaysInPast 250 --triggerRemotely --scans -f'
+        default: '--reScanForZeroSize --scanDaysInPast 7 --triggerRemotely --scans -s2 0,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G,C -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s3 "0" -s4 "0" --branchname actions-data-download -f'
 
   schedule:
   - cron: '30 10 * * 0-6'
@@ -166,7 +166,7 @@ jobs:
       continue-on-error: true
       if: startsWith(runner.os, 'Linux')
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 7 --triggerRemotely --scans --reScanForZeroSize -f' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scanDaysInPast 7 --triggerRemotely --scans -s2 0,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G,C -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s3 "0" -s4 "0" --branchname actions-data-download -f' }}
 
     - name: Run Historical Scan on Windows
       continue-on-error: true
@@ -175,7 +175,7 @@ jobs:
       env:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
       run: |
-        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--scanDaysInPast 7 --triggerRemotely --scans --reScanForZeroSize -f' }}
+        python3 .github/workflows/workflowtriggers.py ${{ inputs.scanOptions  || '--reScanForZeroSize --scanDaysInPast 7 --triggerRemotely --scans -s2 0,22,26,27,28,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G,C -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s3 "0" -s4 "0" --branchname actions-data-download -f' }}
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04
