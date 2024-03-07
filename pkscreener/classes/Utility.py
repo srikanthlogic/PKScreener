@@ -71,6 +71,7 @@ from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 from pkscreener.classes.PKTask import PKTask
 from pkscreener.classes.MarketStatus import MarketStatus
 from pkscreener.classes.PKScheduler import PKScheduler
+from PKDevTools.classes.Utils import random_user_agent
 
 configManager = ConfigManager.tools()
 configManager.getConfig(ConfigManager.parser)
@@ -898,12 +899,27 @@ class tools:
                 + colorText.END
             )
             cache_url = (
-                "https://raw.github.com/pkjmesra/PKScreener/actions-data-download/actions-data-download/"
+                "https://raw.githubusercontent.com/pkjmesra/PKScreener/actions-data-download/actions-data-download/"
                 + cache_file  # .split(os.sep)[-1]
             )
-            resp = fetcher.fetchURL(cache_url, stream=True)
+            headers = {
+                    'authority': 'raw.githubusercontent.com',
+                    'accept': '*/*',
+                    'accept-language': 'en-US,en;q=0.9',
+                    'dnt': '1',
+                    'sec-ch-ua-mobile': '?0',
+                    # 'sec-ch-ua-platform': '"macOS"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'cross-site',                  
+                    'origin': 'https://github.com',
+                    'referer': f'https://github.com/pkjmesra/PKScreener/blob/actions-data-download/actions-data-download/{cache_file}',
+                    'user-agent': f'{random_user_agent()}' 
+                    #'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36
+            }
+            resp = fetcher.fetchURL(cache_url, headers=headers, stream=True)
             if resp is not None:
-                default_logger().info(
+                default_logger().debug(
                     f"Stock data cache file:{cache_file} request status ->{resp.status_code}"
                 )
             if resp is not None and resp.status_code == 200:
@@ -913,7 +929,7 @@ class tools:
                 MB = KB * 1024
                 chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
                 filesize = int( serverBytes / chunksize)
-                if filesize > 0 and chunksize != MB: # Saved data can't be in KBs. Something definitely went wrong.
+                if filesize > 0 and chunksize == MB: # Saved data can't be in KBs. Something definitely went wrong.
                     bar, spinner = tools.getProgressbarStyle()
                     try:
                         f = open(
@@ -980,7 +996,7 @@ class tools:
                         print("[!] Download Error - " + str(e))
                 else:
                     default_logger().debug(
-                        f"Stock data cache file:{cache_file} on server has length ->{filesize}"
+                        f"Stock data cache file:{cache_file} on server has length ->{filesize}{chunksize}"
                     )
                 if not retrial and not stockDataLoaded:
                     # Don't try for more than once.
@@ -1347,8 +1363,8 @@ class tools:
         model = None
         pkl = None
         urls = [
-            "https://raw.github.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.h5",
-            "https://raw.github.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.pkl",
+            "https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.h5",
+            "https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/ml/nifty_model_v2.pkl",
         ]
         if os.path.isfile(files[0]) and os.path.isfile(files[1]):
             file_age = (time.time() - os.path.getmtime(files[0])) / 604800
