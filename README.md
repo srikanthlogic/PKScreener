@@ -75,6 +75,7 @@ Screening options to choose from:
 * Nifty (All Stocks)
 * Newly Listed (IPOs in last 2 Year)
 * F&O Stocks Only
+* NASDAQ
 
 Followin scanners are already implemented. Others are `In Progress`
 ```

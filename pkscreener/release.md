@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240308.233] release
+* Google spreadsheets integration with results outputs saved into Google Drive.
 * Support for TTM Squeeze for bollinger bands and Keltner's channel. Try X>12>7>6>
 * Support for Golden/Dead crossovers under MA confluence (Try X>12>7>3)
 * Support for portfolio calculations as part of backtests (by default disabled, but can be enabled in configuration)
