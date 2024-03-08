@@ -760,8 +760,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 maxRSI = int(options[4])
             elif str(options[3]).upper() == "D":
                 # Use a default value
-                minRSI = 55
-                maxRSI = 100
+                minRSI = 60
+                maxRSI = 75
         else:
             minRSI, maxRSI = Utility.tools.promptRSIValues()
         if not minRSI and not maxRSI:
@@ -869,8 +869,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             if "".join(str(options[4]).split(".")).isdecimal():
                 maxRSI = int(options[4])
             if str(options[3]).upper() == "D":
-                minRSI = -300
-                maxRSI = 550
+                minRSI = -150
+                maxRSI = 250
         else:
             minRSI, maxRSI = Utility.tools.promptCCIValues()
         if not minRSI and not maxRSI:
@@ -1195,12 +1195,14 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     resetConfigToDefault()
     try:
         creds = None
-        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys():
-            creds = os.environ["GSHEET_SERVICE_ACCOUNT_DEV"]
+        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys():# or userPassedArgs.log:
+            creds = os.environ.get("GSHEET_SERVICE_ACCOUNT_DEV")
             print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
             gClient = PKSpreadsheets(credentialDictStr=creds)
             runOption = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
-            gClient.df_to_sheet(df=saveResults,sheetName=runOption)
+            df = saveResults.copy()
+            df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDict)
+            gClient.df_to_sheet(df=df,sheetName=runOption)
             print(f"{colorText.GREEN} => Done{colorText.END}")
     except:
         pass
@@ -1214,6 +1216,25 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
         return optionalFinalOutcome_df
+
+def getLatestTradeDateTime(stockDict):
+    stocks = list(stockDict.keys())
+    stock = stocks[0]
+    try:
+        lastTradeDate = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
+        lastTradeTime = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
+        df = pd.DataFrame(data=stockDict[stock]["data"],
+                        columns=stockDict[stock]["columns"],
+                        index=stockDict[stock]["index"])
+        ts = df.index[-1]
+        lastTraded = pd.to_datetime(ts, unit='s', utc=True) #.tz_convert("Asia/Kolkata")
+        lastTradeDate = lastTraded.strftime("%Y-%m-%d")
+        lastTradeTime = lastTraded.strftime("%H:%M:%S")
+        if lastTradeTime == "00:00:00":
+            lastTradeTime = "15:30:00"
+    except:
+        pass
+    return lastTradeDate, lastTradeTime
 
 def FinishBacktestDataCleanup(backtest_df, df_xray):
     showBacktestResults(df_xray, sortKey="Date", optionalName="Insights")
