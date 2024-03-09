@@ -973,10 +973,19 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             return
         else:
             listStockCodes = ",".join(list(screenResults.index))
+    if executeOption == 26:
+        dividend_df, bonus_df, stockSplit_df = mstarFetcher.getCorporateActions()
+        ca_dfs = [dividend_df, bonus_df, stockSplit_df]
+        listStockCodes = []
+        for df in ca_dfs:
+            df = df[
+                df["Stock"].astype(str).str.contains("BSE:") == False
+            ]
+            listStockCodes.extend(list(df["Stock"]))
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
         return
-    if executeOption >= 26 and executeOption <= 41:
+    if executeOption >= 27 and executeOption <= 41:
         print(
             colorText.BOLD
             + colorText.FAIL
@@ -1160,14 +1169,55 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     if df_screenResults is None or len(df_screenResults) == 0:
                         print(colorText.FAIL + f"[+] Of the {len(screenResults)} stocks, no results matching the selected strategies!" + colorText.END)
                     screenResults = df_screenResults
-                printNotifySaveScreenedResults(
-                    screenResults,
-                    saveResults,
-                    selectedChoice,
-                    menuChoiceHierarchy,
-                    testing,
-                    user=user,
-                )
+                if executeOption == 26:
+                    removedUnusedColumns(screenResults, saveResults, ["Date"],userArgs=userPassedArgs)
+                    screen_copy = screenResults.copy()
+                    screen_copy.reset_index(inplace=True)
+                    dividend_df = pd.merge(screen_copy, dividend_df, on='Stock')
+                    bonus_df = pd.merge(screen_copy, bonus_df, on='Stock')
+                    stockSplit_df = pd.merge(screen_copy, stockSplit_df, on='Stock')
+                    corp_dfs = [dividend_df, bonus_df, stockSplit_df]
+                    shareable_strings = []
+                    shouldSend = False
+                    for corp_df in corp_dfs:
+                        corp_df.set_index("Stock", inplace=True)
+                        tab_results = ""
+                        if corp_df is not None and len(corp_df) > 0:
+                            tab_results = colorText.miniTabulator().tabulate(
+                                corp_df,
+                                headers="keys",
+                                tablefmt=colorText.No_Pad_GridFormat,
+                                # showindex = False,
+                                maxcolwidths=Utility.tools.getMaxColumnWidths(dividend_df)
+                            ).encode("utf-8").decode(STD_ENCODING)
+                            shouldSend = True
+                        shareable_strings.append(tab_results)
+                        print(tab_results)
+                    if shouldSend:
+                        sendQuickScanResult(
+                            menuChoiceHierarchy,
+                            user,
+                            shareable_strings[0],
+                            Utility.tools.removeAllColorStyles(shareable_strings[0]),
+                            "NSE Stocks with dividends/bonus/splits soon",
+                            f"PKS_X_12_26_{PKDateUtilities.currentDateTime().strftime('%Y-%m-%d_%H:%M:%S')}",
+                            ".png",
+                            addendum=shareable_strings[1],
+                            addendumLabel="NSE Stocks giving bonus:",
+                            backtestSummary=shareable_strings[2],
+                            backtestDetail="",
+                            summaryLabel = "NSE Stocks with corporate action type stock split:",
+                            detailLabel = None,
+                            )
+                else:
+                    printNotifySaveScreenedResults(
+                        screenResults,
+                        saveResults,
+                        selectedChoice,
+                        menuChoiceHierarchy,
+                        testing,
+                        user=user,
+                    )
         if menuOption in ["X","C"]:
             finishScreening(
                 downloadOnly,
@@ -1797,6 +1847,10 @@ def sendQuickScanResult(
     pngExtension,
     addendum=None,
     addendumLabel=None,
+    backtestSummary="",
+    backtestDetail="",
+    summaryLabel = None,
+    detailLabel = None,
 ):
     if "PKDevTools_Default_Log_Level" not in os.environ.keys():
         if (("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
@@ -1807,10 +1861,12 @@ def sendQuickScanResult(
             tabulated_results,
             pngName + pngExtension,
             menuChoiceHierarchy,
-            backtestSummary="",
-            backtestDetail="",
+            backtestSummary=backtestSummary,
+            backtestDetail=backtestDetail,
             addendum=addendum,
             addendumLabel=addendumLabel,
+            summaryLabel = summaryLabel,
+            detailLabel = detailLabel
         )
         sendMessageToTelegramChannel(
             message=None,

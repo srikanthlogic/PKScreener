@@ -404,6 +404,8 @@ class tools:
         backtestDetail=None,
         addendum=None,
         addendumLabel=None,
+        summaryLabel = None,
+        detailLabel = None
     ):
         if "PKDevTools_Default_Log_Level" not in os.environ.keys():
             if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
@@ -421,15 +423,17 @@ class tools:
         reportTitle = f"[+] As of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H.%M.%S')} IST > You chose {label}"
         titleLabels = [
             f"[+] Scan results for {label} :",
-            "[+] For chosen scan, summary of correctness from past: [Example, 70% of (100) under 1-Pd, means out of 100 stocks that were in the scan result in the past, 70% of them gained next day.)",
-            "[+] 1 to 30 period gain/loss % for matching stocks on respective date from earlier predictions:[Example, 5% under 1-Pd, means the stock price actually gained 5% the next day from given date.]",
+            summaryLabel if summaryLabel is not None else "[+] For chosen scan, summary of correctness from past: [Example, 70% of (100) under 1-Pd, means out of 100 stocks that were in the scan result in the past, 70% of them gained next day.)",
+            detailLabel if detailLabel is not None else "[+] 1 to 30 period gain/loss % for matching stocks on respective date from earlier predictions:[Example, 5% under 1-Pd, means the stock price actually gained 5% the next day from given date.]",
         ]
 
         artfont_arttext_width, artfont_arttext_height = artfont.getsize_multiline(artText+ f" | {marketStatus()}")
         stdFont_oneLinelabel_width, stdFont_oneLinelabel_height = stdfont.getsize_multiline(label)
         stdFont_scanResulttext_width, stdFont_scanResulttext_height = stdfont.getsize_multiline(table) if len(table) > 0 else (0,0)
-        stdFont_backtestSummary_text_width,stdFont_backtestSummary_text_height= stdfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
-        stdFont_backtestDetail_text_width, stdFont_backtestDetail_text_height = stdfont.getsize_multiline(backtestDetail) if len(backtestDetail) > 0 else (0,0)
+        unstyled_backtestsummary = tools.removeAllColorStyles(backtestSummary)
+        unstyled_backtestDetail = tools.removeAllColorStyles(backtestDetail)
+        stdFont_backtestSummary_text_width,stdFont_backtestSummary_text_height= stdfont.getsize_multiline(unstyled_backtestsummary) if len(unstyled_backtestsummary) > 0 else (0,0)
+        stdFont_backtestDetail_text_width, stdFont_backtestDetail_text_height = stdfont.getsize_multiline(unstyled_backtestDetail) if len(unstyled_backtestDetail) > 0 else (0,0)
         artfont_scanResultText_width, _ = artfont.getsize_multiline(table) if len(table) > 0 else (0,0)
         artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
         stdfont_addendumtext_height = 0
@@ -815,7 +819,7 @@ class tools:
                             + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
                             + colorText.END
                         )
-                    if len(stockData) > 0:
+                    if stockData is not None and len(stockData) > 0:
                         multiIndex = stockData.keys()
                         if isinstance(multiIndex, pd.MultiIndex):
                             # If we requested for multiple stocks from yfinance
@@ -856,7 +860,7 @@ class tools:
                     #     stockDict = stockDict | stockData
                     # else:
                     #     stockDict = stockData
-                    stockDataLoaded = True
+                        stockDataLoaded = True
                 except pickle.UnpicklingError as e:
                     default_logger().debug(e, exc_info=True)
                     f.close()
@@ -989,7 +993,7 @@ class tools:
                                     # Probably, the "stock" got removed from the latest download
                                     # and so, was not found in stockDict
                                     continue
-                        stockDataLoaded = True
+                            stockDataLoaded = True
                     except Exception as e:  # pragma: no cover
                         default_logger().debug(e, exc_info=True)
                         f.close()

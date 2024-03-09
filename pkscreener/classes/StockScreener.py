@@ -137,7 +137,7 @@ class StockScreener:
                 return returnLegibleData()
             
             with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
-                self.updateStock(stock, screeningDictionary, saveDictionary)
+                self.updateStock(stock, screeningDictionary, saveDictionary, executeOption)
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener)
                 hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
@@ -429,6 +429,7 @@ class StockScreener:
                         or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
                         or (executeOption == 21 and (fairValueDiff < 0 and reversalOption in [9]))
+                        or (executeOption == 26)
                     ):
                         # Now screen for common ones to improve performance
                         if not (executeOption == 6 and reversalOption == 7):
@@ -616,14 +617,14 @@ class StockScreener:
         if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
             raise ScreeningStatistics.NotAStageTwoStock
 
-    def updateStock(self, stock, screeningDictionary, saveDictionary):
+    def updateStock(self, stock, screeningDictionary, saveDictionary, executeOption=0):
         screeningDictionary["Stock"] = (
                     colorText.WHITE
                     + (
                         f"\x1B]8;;https://in.tradingview.com/chart?symbol=NSE%3A{stock}\x1B\\{stock}\x1B]8;;\x1B\\"
                     )
                     + colorText.END
-                )
+                ) if executeOption != 26 else stock
         saveDictionary["Stock"] = stock
 
     def getCleanedDataForDuration(self, backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data):
