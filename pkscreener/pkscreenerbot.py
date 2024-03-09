@@ -475,7 +475,6 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "18",
                     "19",
                     "22",
-                    "26",
                     "27",
                     "28",
                     "29",
@@ -511,7 +510,6 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "18",
                     "19",
                     "22",
-                    "26",
                     "27",
                     "28",
                     "29",
@@ -921,7 +919,6 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 selectedMenu=selectedMenu,
                 skip=[
                     "22",
-                    "26",
                     "27",
                     "28",
                     "29",
@@ -962,7 +959,6 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 selectedMenu=selectedMenu,
                 skip=[
                     "22",
-                    "26",
                     "27",
                     "28",
                     "29",
@@ -1154,7 +1150,6 @@ def addCommandsForMenuItems(application):
                 selectedMenu=selectedMenu,
                 skip=[
                     "22",
-                    "26",
                     "27",
                     "28",
                     "29",

@@ -2342,7 +2342,6 @@ def takeBacktestInputs(
         executeOption=executeOption,
         skip=[
             "0",
-            "26",
             "27",
             "28",
             "29",
