@@ -31,7 +31,7 @@ import sys
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
-
+from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 parser = configparser.ConfigParser(strict=False)
 
 # Default attributes for Downloading Cache from Git repo
@@ -41,8 +41,9 @@ default_timeout = 2
 
 
 # This Class manages read/write of user configuration
-class tools:
+class tools(SingletonMixin, metaclass=SingletonType):
     def __init__(self):
+        super(tools, self).__init__()
         self.consolidationPercentage = 10
         self.volumeRatio = 2.5
         self.minLTP = 20.0
