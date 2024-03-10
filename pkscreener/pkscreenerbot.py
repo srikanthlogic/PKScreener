@@ -564,6 +564,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "23",
                     "24",
                     "25",
+                    "26"
                 ]:  # Vol gainer ratio
                     selection.extend(["", ""])
     elif len(selection) == 4:
