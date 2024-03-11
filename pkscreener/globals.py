@@ -1250,7 +1250,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     resetConfigToDefault()
     try:
         creds = None
-        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys():# or userPassedArgs.log:
+        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys() and (userPassedArgs.backtestdaysago is None):# or userPassedArgs.log:
             creds = os.environ.get("GSHEET_SERVICE_ACCOUNT_DEV")
             print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
             gClient = PKSpreadsheets(credentialDictStr=creds)
