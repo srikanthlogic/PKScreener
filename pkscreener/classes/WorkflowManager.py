@@ -22,6 +22,7 @@
     SOFTWARE.
 
 """
+import os
 from PKDevTools.classes.Telegram import get_secrets
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -31,7 +32,9 @@ configManager = ConfigManager.tools()
 
 
 def run_workflow(command, user, options, workflowType="B"):
-    branch, owner, repo = "main", "pkjmesra", "PKScreener"
+    owner = os.popen('git ls-remote --get-url origin | cut -d/ -f4').read().replace("\n","")
+    repo = os.popen('git ls-remote --get-url origin | cut -d/ -f5').read().replace(".git","").replace("\n","")
+    branch = "main"
     if workflowType == "B":
         workflow_name = "w13-workflow-backtest_generic.yml"
         options = f'{options.replace("B:","")}:D:D:D:D:D'.replace("::",":")
@@ -88,4 +91,4 @@ def run_workflow(command, user, options, workflowType="B"):
     return resp
 
 
-# resp = run_workflow("B_12_1","-1001785195297")
+# resp = run_workflow("B_12_1","-1001785195297","B:12:1")
