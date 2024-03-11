@@ -551,7 +551,7 @@ class StockScreener:
 
     def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
         isValid = True
-        if executeOption not in [11,12,13,14,15,16,1,18,19,20,23,24,25]:
+        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25]:
             return True
         if executeOption == 11:
             isValid = screener.validateShortTermBullish(
