@@ -514,7 +514,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 if not scanResultExists(options,daysInPast,args.reScanForZeroSize)[0]:
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     os.system("export RUNNER='LOCAL_RUN_SCANNER'")
-                    stringArgs = f"-a Y -e -p -o {options} --backtestdaysagoc {daysInPast} --maxdisplayresults 500 -v"
+                    stringArgs = f"-a Y -e -o {options} --backtestdaysagoc {daysInPast} --maxdisplayresults 500 -v"
                     os.system(f"python3 pkscreener/pkscreenercli.py {stringArgs}")
                     # ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     # pkscreenercli.args = ag
