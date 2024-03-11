@@ -1277,7 +1277,7 @@ def getLatestTradeDateTime(stockDict):
     stock = stocks[0]
     try:
         lastTradeDate = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
-        lastTradeTime = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
+        lastTradeTime_ist = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
         df = pd.DataFrame(data=stockDict[stock]["data"],
                         columns=stockDict[stock]["columns"],
                         index=stockDict[stock]["index"])
@@ -1286,7 +1286,7 @@ def getLatestTradeDateTime(stockDict):
         lastTradeDate = lastTraded.strftime("%Y-%m-%d")
         lastTradeTime = lastTraded.strftime("%H:%M:%S")
         if lastTradeTime == "00:00:00":
-            lastTradeTime = "15:30:00"
+            lastTradeTime = lastTradeTime_ist
     except:
         pass
     return lastTradeDate, lastTradeTime
