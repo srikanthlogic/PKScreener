@@ -1153,7 +1153,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     screenResults, saveResults = labelDataForPrinting(
                         screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
                     )
-                if not newlyListedOnly and not configManager.showunknowntrends and len(screenResults) > 0:
+                if not newlyListedOnly and not configManager.showunknowntrends and screenResults is not None and len(screenResults) > 0:
                     screenResults, saveResults = removeUnknowns(screenResults, saveResults)
                     print(colorText.FAIL + f"[+] Configuration to remove unknown cell values resulted into removing all rows!" + colorText.END)
                 if len(strategyFilter) > 0 and saveResults is not None and len(saveResults) > 0:
@@ -1167,7 +1167,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                         df_screenResults_filter = screenResults[screenResults.index.astype(str).str.contains(f"NSE%3A{stk}") == True]
                         df_screenResults = pd.concat([df_screenResults, df_screenResults_filter], axis=0)
                     if df_screenResults is None or len(df_screenResults) == 0:
-                        print(colorText.FAIL + f"[+] Of the {len(screenResults)} stocks, no results matching the selected strategies!" + colorText.END)
+                        print(colorText.FAIL + f"[+] Of the {len(screenResults) if screenResults is not None else 0} stocks, no results matching the selected strategies!" + colorText.END)
                     screenResults = df_screenResults
                 if executeOption == 26:
                     removedUnusedColumns(screenResults, saveResults, ["Date"],userArgs=userPassedArgs)
@@ -1722,7 +1722,7 @@ def printNotifySaveScreenedResults(
             print(
                 colorText.BOLD
                 + colorText.GREEN
-                + f"[+] Found {len(screenResults)} Stocks in {str('{:.2f}'.format(elapsed_time))} sec."
+                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec."
                 + colorText.END
             )
     elif user is not None:
@@ -2150,7 +2150,7 @@ def saveNotifyResultsFile(
     print(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] Screening Completed. Found {len(screenResults)} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
+        + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
         + colorText.END
     )
     if defaultAnswer is None:
@@ -2203,9 +2203,9 @@ def sendMessageToTelegramChannel(
 
 
 def sendTestStatus(screenResults, label, user=None):
-    msg = "<b>SUCCESS</b>" if len(screenResults) >= 1 else "<b>FAIL</b>"
+    msg = "<b>SUCCESS</b>" if (screenResults is not None and len(screenResults) >= 1) else "<b>FAIL</b>"
     sendMessageToTelegramChannel(
-        message=f"{msg}: Found {len(screenResults)} Stocks for {label}", user=user
+        message=f"{msg}: Found {len(screenResults) if screenResults is not None else 0} Stocks for {label}", user=user
     )
 
 
