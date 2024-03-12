@@ -1251,6 +1251,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     try:
         creds = None
         if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys() and (userPassedArgs.backtestdaysago is None):# or userPassedArgs.log:
+            begin = time.time()
             creds = os.environ.get("GSHEET_SERVICE_ACCOUNT_DEV")
             print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
             gClient = PKSpreadsheets(credentialDictStr=creds)
@@ -1258,7 +1259,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             df = saveResults.copy()
             df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDict)
             gClient.df_to_sheet(df=df,sheetName=runOption)
-            print(f"{colorText.GREEN} => Done{colorText.END}")
+            print(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
         pass
     if userPassedArgs.runintradayanalysis:
