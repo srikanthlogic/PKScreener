@@ -1040,7 +1040,8 @@ class ScreeningStatistics:
             data = data.iloc[-1]
             ###
             data = pkl["scaler"].transform([data])
-            pred = model.predict(data)[0]
+            with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
+                pred = model.predict(data)[0]
         if pred > 0.5:
             outText = "BEARISH"
             out = (
