@@ -96,6 +96,7 @@ jobs:
       shell: bash
       env:
         GITHUB_TOKEN : ${{secrets.GITHUB_TOKEN}}
+        ALERT_TRIGGER : 'Y'
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04

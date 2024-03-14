@@ -515,7 +515,7 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
                 if not scanResultExists(options,daysInPast,args.reScanForZeroSize)[0]:
                     os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
                     os.system("export RUNNER='LOCAL_RUN_SCANNER'")
-                    stringArgs = f"-a Y -e -o {options} --backtestdaysagoc {daysInPast} --maxdisplayresults 500 -v"
+                    stringArgs = f"-a Y -e -o {options} --backtestdaysago {daysInPast} --maxdisplayresults 500 -v"
                     os.system(f"python3 pkscreener/pkscreenercli.py {stringArgs}")
                     # ag = agp.parse_known_args(args=["-p","-e", "-a", "Y", "-o", options, "--backtestdaysago",str(daysInPast),"--maxdisplayresults","500","-v"])[0]
                     # pkscreenercli.args = ag
@@ -533,6 +533,10 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
 
 def triggerRemoteScanAlertWorkflow(scanOptions, branch):
     cmd_options = scanOptions.replace("_",":")
+    if 'ALERT_TRIGGER' in os.environ.keys() and os.environ["ALERT_TRIGGER"] == 'Y':
+        alertTrigger = 'Y'
+    else:
+        alertTrigger = 'N'
     if args.user is None or len(args.user) == 0:
         args.user = ""
         postdata = (
@@ -542,7 +546,9 @@ def triggerRemoteScanAlertWorkflow(scanOptions, branch):
                     + f"{args.user}"
                     + '","params":"'
                     + f'-a Y -e -p -o {cmd_options}'
-                    + '","ref":"main"}}'
+                    + f'","ref":"main","alertTrigger":"'
+                    + f"{alertTrigger}"
+                    + '"}}'
                 )
     else:
         postdata = (
@@ -552,7 +558,9 @@ def triggerRemoteScanAlertWorkflow(scanOptions, branch):
                     + f"{args.user}"
                     + '","params":"'
                     + f'-a Y -e -p -u {args.user} -o {cmd_options}'
-                    + '","ref":"main"}}'
+                    + '","ref":"main","alertTrigger":"'
+                    + f"{alertTrigger}"
+                    + '"}}'
                 )
 
     resp = run_workflow("w8-workflow-alert-scan_generic.yml", postdata,cmd_options)

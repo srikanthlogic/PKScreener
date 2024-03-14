@@ -1250,16 +1250,18 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     resetConfigToDefault()
     try:
         creds = None
-        if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys() and (userPassedArgs.backtestdaysago is None):# or userPassedArgs.log:
-            begin = time.time()
-            creds = os.environ.get("GSHEET_SERVICE_ACCOUNT_DEV")
-            print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
-            gClient = PKSpreadsheets(credentialDictStr=creds)
-            runOption = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
-            df = saveResults.copy()
-            df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDict)
-            gClient.df_to_sheet(df=df,sheetName=runOption)
-            print(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
+        # Write into sheet only if it's the reglar scan alert trigger in the morning and evening
+        if 'ALERT_TRIGGER' in os.environ.keys() and os.environ["ALERT_TRIGGER"] == 'Y':
+            if "GSHEET_SERVICE_ACCOUNT_DEV" in os.environ.keys() and (userPassedArgs.backtestdaysago is None):# or userPassedArgs.log:
+                begin = time.time()
+                creds = os.environ.get("GSHEET_SERVICE_ACCOUNT_DEV")
+                print(f"{colorText.GREEN}[+] Saving data to Google Spreadsheets now...{colorText.END}")
+                gClient = PKSpreadsheets(credentialDictStr=creds)
+                runOption = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
+                df = saveResults.copy()
+                df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDict)
+                gClient.df_to_sheet(df=df,sheetName=runOption)
+                print(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
         pass
     if userPassedArgs.runintradayanalysis:
