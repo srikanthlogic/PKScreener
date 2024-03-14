@@ -163,6 +163,9 @@ jobs:
       continue-on-error: true
       if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
       run: |
+        rm -rf actions-data-download/*stock_data_*.pkl
+        rm -rf results/*stock_data_*.pkl
+        git ls-files --deleted -z | xargs -0 git rm
         rm -rf actions-data-download
         mkdir actions-data-download
         rm -rf results
@@ -174,6 +177,7 @@ jobs:
         cp results/stock_data_*.pkl actions-data-download
         ls -l results
         ls -l actions-data-download
+        git status
 
     - name: Download 52 week Stock Data on Windows
       continue-on-error: true
