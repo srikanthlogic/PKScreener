@@ -95,21 +95,21 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
         recent = data.head(1)["High"].iloc[0]
-        last1Week = data.head(one_week)
-        last2Week = data.head(2 * one_week)
-        previousWeek = last2Week.tail(one_week)
+        # last1Week = data.head(one_week)
+        # last2Week = data.head(2 * one_week)
+        # previousWeek = last2Week.tail(one_week)
         full52Week = data.head(50 * one_week)
-        last1WeekHigh = last1Week["High"].max()
-        previousWeekHigh = previousWeek["High"].max()
+        # last1WeekHigh = last1Week["High"].max()
+        # previousWeekHigh = previousWeek["High"].max()
         full52WeekHigh = full52Week["High"].max()
         return (
             (recent >= full52WeekHigh)
-            or (last1WeekHigh >= max(full52WeekHigh, last1WeekHigh))
-            or (
-                last1WeekHigh
-                >= previousWeekHigh
-                >= max(full52WeekHigh, previousWeekHigh)
-            )
+            # or (last1WeekHigh >= max(full52WeekHigh, last1WeekHigh))
+            # or (
+            #     last1WeekHigh
+            #     >= previousWeekHigh
+            #     >= max(full52WeekHigh, previousWeekHigh)
+            # )
         )
 
     #@measure_time
@@ -157,17 +157,17 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
         recent = data.head(1)["Low"].iloc[0]
-        last1Week = data.head(one_week)
-        last2Week = data.head(2 * one_week)
-        previousWeek = last2Week.tail(one_week)
+        # last1Week = data.head(one_week)
+        # last2Week = data.head(2 * one_week)
+        # previousWeek = last2Week.tail(one_week)
         full52Week = data.head(50 * one_week)
-        last1WeekLow = last1Week["Low"].min()
-        previousWeekLow = previousWeek["Low"].min()
+        # last1WeekLow = last1Week["Low"].min()
+        # previousWeekLow = previousWeek["Low"].min()
         full52WeekLow = full52Week["Low"].min()
         return (
             (recent <= full52WeekLow)
-            or (last1WeekLow <= min(full52WeekLow, last1WeekLow))
-            or (last1WeekLow <= previousWeekLow <= min(full52WeekLow, previousWeekLow))
+            # or (last1WeekLow <= min(full52WeekLow, last1WeekLow))
+            # or (last1WeekLow <= previousWeekLow <= min(full52WeekLow, previousWeekLow))
         )
 
         # Find stocks that have broken through 52 week low.
