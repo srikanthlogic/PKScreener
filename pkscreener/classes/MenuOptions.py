@@ -98,7 +98,7 @@ level2_X_MenuDict = {
     "22": "View Stock Performance         ",
     "23": "Breaking out now               ",
     "24": "Higher Highs,Lows & Close (SuperTrend)",
-    "25": "Lower Highs,Lows (Sell or Watch for Reversal)",
+    "25": "Lower Highs,Lows (Sell/Watch for Rev.)",
     "26": "Stocks with stock-split/bonus/dividends",
     # "26": "RSI above 30 and price > psar      ",
     # "27": "Intraday Momentum Build-up      ",

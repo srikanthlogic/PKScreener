@@ -1649,6 +1649,8 @@ class ScreeningStatistics:
         recent = data.head(1)
 
         pct_change = (data[::-1]["Close"].pct_change() * 100).iloc[-1]
+        if pct_change == np.inf or pct_change == -np.inf:
+            pct_change = 0
         pct_save = "%.1f%%" % pct_change
         if pct_change > 0.2:
             pct_change = colorText.GREEN + ("%.1f%%" % pct_change) + colorText.END
