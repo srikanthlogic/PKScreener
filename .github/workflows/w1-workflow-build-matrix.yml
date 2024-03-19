@@ -231,12 +231,12 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.targetPythonVersion }}
 
       - name: Load Cache for Linux Dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         if: startsWith(runner.os, 'Linux')
         with:
           path: |
