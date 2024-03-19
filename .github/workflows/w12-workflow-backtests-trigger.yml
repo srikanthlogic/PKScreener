@@ -56,7 +56,7 @@ jobs:
       runIdentifier: ${{ github.event.inputs.id }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: gh-pages
 
@@ -113,7 +113,7 @@ jobs:
   #   needs: [Backtests_Trigger]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
 

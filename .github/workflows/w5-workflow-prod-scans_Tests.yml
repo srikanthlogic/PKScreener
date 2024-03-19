@@ -57,7 +57,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.branch-name }}
 
@@ -210,7 +210,7 @@ jobs:
   #   needs: [Prod_Scan_Tests_OnDev]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           

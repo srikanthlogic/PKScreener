@@ -65,7 +65,7 @@ jobs:
     needs: [stale]
     name: Delete workflow run
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: main
           

@@ -55,7 +55,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       # run: echo "'${{ github.ref_name }}' was pushed by '${{ github.event.pusher.name }}'"
       with:
         ref: ${{ inputs.branch-name || github.ref_name }}
@@ -103,7 +103,7 @@ jobs:
 
     steps:
     - name: Checkout Repo before PR
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ inputs.branch-name }}
     
@@ -140,7 +140,7 @@ jobs:
   #   needs: [Test-Source]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           

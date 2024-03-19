@@ -140,7 +140,7 @@ jobs:
               pytest -vv --durations-min=0.005 --cov-config=.coveragerc --durations=0
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch-name }}
 
@@ -194,7 +194,7 @@ jobs:
   #   needs: [Build]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           

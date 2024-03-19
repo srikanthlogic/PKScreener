@@ -66,7 +66,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: main
       - name: print latest_commit
@@ -177,7 +177,7 @@ jobs:
             FILE_NAME: pkscreenercli.run
           
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch-name }}
 
@@ -308,7 +308,7 @@ jobs:
     needs: [Build]
     name: Updates latest README file
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: main
 
@@ -346,7 +346,7 @@ jobs:
   #   needs: [Build,README_Update]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           

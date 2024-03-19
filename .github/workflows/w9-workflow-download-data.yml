@@ -71,7 +71,7 @@ jobs:
     outputs:
       should_clean: ${{ inputs.scanOptions }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: actions-data-download
 
@@ -353,7 +353,7 @@ jobs:
   #   if: ${{ needs.Download_Stock_Data.outputs.should_clean == ''}}
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           

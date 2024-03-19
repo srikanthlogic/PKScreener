@@ -89,7 +89,7 @@ jobs:
       outputs:
         should_run: ${{ steps.should_run.outputs.should_run }}
       steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v4
           with:
             ref: main
         - name: print latest_commit
@@ -107,7 +107,7 @@ jobs:
     runs-on: windows-latest
     needs: check_should_run
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.branch-name }}
 
@@ -240,7 +240,7 @@ jobs:
   #   needs: [deploy]
   #   name: Delete workflow run
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
   #       with:
   #         ref: main
           
