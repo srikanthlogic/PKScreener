@@ -90,7 +90,7 @@ level2_X_MenuDict = {
     "14": "NR4 Daily Today",
     "15": "52 week low breakout(today)(Sell)",
     "16": "10 days low breakout(Sell)",
-    "17": "52 week high breakout(today)",
+    "17": "52 week high breakout(today)"   ,
     "18": "Bullish Aroon(14) Crossover",
     "19": "MACD Histogram x below 0 (Sell) ",
     "20": "Bullish for next day",
