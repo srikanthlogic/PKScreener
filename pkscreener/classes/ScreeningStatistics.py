@@ -1214,6 +1214,7 @@ class ScreeningStatistics:
     # Preprocess the acquired data
     def preprocessData(self, df, daysToLookback=None):
         data = df.copy()
+        data = data.replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna(how="all")
         self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
