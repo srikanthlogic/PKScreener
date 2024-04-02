@@ -231,13 +231,13 @@ jobs:
         git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
         git remote update
         git fetch
-        git add actions-data-download/*DB.pkl --force
-        git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
-        git push -v -u origin +actions-data-download
         git add results/*DB.pkl --force
         git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
         git push -v -u origin +actions-data-download
-
+        git add actions-data-download/*DB.pkl --force
+        git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
+        git push -v -u origin +actions-data-download
+        
     - name: Squash Commits (Python)
       if: ${{ inputs.skipDownload == '' }}
       shell: bash
