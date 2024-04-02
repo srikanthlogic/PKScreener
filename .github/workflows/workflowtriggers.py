@@ -737,7 +737,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             else:
                 break
         deploymentCounter += 1
-        if deploymentCounter >= 35:
+        if deploymentCounter >= 100:
             deploymentCounter = 0
             triggerGithubPagesDeploymentAction()
 
