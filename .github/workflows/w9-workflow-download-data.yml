@@ -168,8 +168,6 @@ jobs:
         git ls-files --deleted -z | xargs -0 git rm
         rm -rf actions-data-download
         mkdir actions-data-download
-        rm -rf results
-        mkdir results
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y -i 1m
         rm -rf results/*.lck
