@@ -117,6 +117,7 @@ level3_X_Reversal_MenuDict = {
     "5": "Volume Spread Analysis (Bullish VSA Reversal)",
     "6": "Narrow Range (NRx) Reversal",
     "7": "Lorentzian Classifier (Machine Learning based indicator)",
+    "8": "PSAR and RSI reversal",
     "0": "Cancel",
 }
 level3_X_ChartPattern_MenuDict = {

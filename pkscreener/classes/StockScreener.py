@@ -151,6 +151,7 @@ class StockScreener:
                 isVCP = False
                 isVSA = False
                 isNR = False
+                hasPsarRSIReversal = False
                 isValidRsi = False
                 isBuyingTrendline = False
                 isMomentum = False
@@ -214,7 +215,16 @@ class StockScreener:
                     if not isValidRsi:
                         return returnLegibleData()
                 elif executeOption == 6:
-                    if reversalOption == 6:
+                    if reversalOption == 8:
+                        hasPsarRSIReversal = screener.findPSARReversalWithRSI(
+                            processedData,
+                            screeningDictionary,
+                            saveDictionary
+                            # minRSI=maLength if maLength is not None else 40,
+                        )
+                        if not hasPsarRSIReversal:
+                            return returnLegibleData()
+                    elif reversalOption == 6:
                         isNR = screener.validateNarrowRange(
                             processedData,
                             screeningDictionary,
@@ -412,6 +422,7 @@ class StockScreener:
                                                                 ))
                                                                 or (reversalOption == 6 and isNR)
                                                                 or (reversalOption == 7 and isLorentzian)
+                                                                or (reversalOption == 8 and hasPsarRSIReversal)
                                                                 ))
                         or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar > 0) 
                                                                   or (isConfluence)
@@ -614,7 +625,7 @@ class StockScreener:
                 )
         if not isLtpValid:
             raise ScreeningStatistics.LTPNotInConfiguredRange
-        if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
+        if configManager.stageTwo and not verifyStageTwo and executeOption not in (0):
             raise ScreeningStatistics.NotAStageTwoStock
 
     def updateStock(self, stock, screeningDictionary, saveDictionary, executeOption=0):

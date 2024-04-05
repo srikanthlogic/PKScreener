@@ -487,6 +487,47 @@ class ScreeningStatistics:
             return True
         return False
 
+    # Find stocks with reversing PSAR and RSI
+    def findPSARReversalWithRSI(self, df, screenDict, saveDict,minRSI=50):
+        data = df.copy()
+        data = data[::-1]
+        psar = pktalib.psar(data["High"],data["Low"])
+        if len(psar) < 3:
+            return False
+        psar = psar.tail(3)
+        data = data.tail(3)
+        # dayMinus2Psar = psar.iloc[0]
+        dayMinus1Psar = psar.iloc[1]
+        dayPSAR = psar.iloc[2]
+        # dayMinus2Close = data["Close"].iloc[0]
+        dayMinus1Close = data["Close"].iloc[1]
+        dayClose = data["Close"].iloc[2]
+        # dayMinus2RSI = data["RSI"].iloc[0]
+        dayMinus1RSI = data["RSI"].iloc[1]
+        dayRSI = data["RSI"].iloc[2]
+        
+        hasReversal= (((dayMinus1Psar >= dayMinus1Close) and \
+                    (dayClose >= dayPSAR)) and \
+                    (dayMinus1RSI <= minRSI) and \
+                    (dayRSI >= dayMinus1RSI))
+        if hasReversal:
+            saved = self.findCurrentSavedValue(screenDict,saveDict, "Pattern")
+            screenDict["Pattern"] = (
+                saved[0] 
+                + colorText.BOLD
+                + colorText.GREEN
+                + f"PSAR-RSI-Rev"
+                + colorText.END
+            )
+            saveDict["Pattern"] = saved[1] + f"PSAR-RSI-Rev"
+                # (((dayMinus2Psar >= dayMinus2Close) and \
+                # ((dayMinus1Close >= dayMinus1Psar) and \
+                # (dayClose >= dayPSAR))) and \
+                # (dayMinus2RSI >= minRSI) and \
+                # (dayMinus1RSI >= dayMinus2RSI) and \
+                # (dayRSI >= dayMinus1RSI)) or \
+        return hasReversal
+
     # Find stock reversing at given MA
     def findReversalMA(self, df, screenDict, saveDict, maLength, percentage=0.02):
         data = df.copy()
