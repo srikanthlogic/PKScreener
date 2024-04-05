@@ -31,6 +31,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.log import default_logger
@@ -42,6 +43,7 @@ from pkscreener.classes.PKTask import PKTask
 
 
 class screenerStockDataFetcher(nseStockDataFetcher):
+    _tickersInfoDict={}
     def fetchStockDataWithArgs(self, *args):
         task = None
         if isinstance(args[0], PKTask):
@@ -58,7 +60,21 @@ class screenerStockDataFetcher(nseStockDataFetcher):
             else:
                 task.result = result
         return result
-    
+
+    def get_stats(self,ticker):
+        info = yf.Tickers(ticker).tickers[ticker].fast_info
+        screenerStockDataFetcher._tickersInfoDict[ticker] = {"marketCap":info.market_cap}
+
+    def fetchAdditionalTickerInfo(self,ticker_list,exchangeSuffix=".NS"):
+        if not isinstance(ticker_list,list):
+            raise TypeError("ticker_list must be a list")
+        if len(exchangeSuffix) > 0:
+            ticker_list = [(f"{x}{exchangeSuffix}" if not x.endswith(exchangeSuffix) else x) for x in ticker_list]
+        screenerStockDataFetcher._tickersInfoDict = {}
+        with ThreadPoolExecutor() as executor:
+            executor.map(self.get_stats, ticker_list)
+        return screenerStockDataFetcher._tickersInfoDict
+
     # Fetch stock price data from Yahoo finance
     def fetchStockData(
         self,

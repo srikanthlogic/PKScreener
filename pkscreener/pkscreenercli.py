@@ -156,6 +156,11 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--maxprice",
+    help="Maximum Price for the stock to be considered.",
+    required=False,
+)
+argParser.add_argument(
     "-o",
     "--options",
     help="Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>:etc. format. For example: ./pkscreenercli.py -a Y -o X:12:10 -e will run the screener with answer Y as default choice to questions and scan with menu choices: Scanners > Nifty (All Stocks) > Closing at least 2%% up since last 3 day",
@@ -345,7 +350,10 @@ def pkscreenercli():
     if args.options is not None and str(args.options) == "0":
         # Must be from unit tests to be able to break out of loops via eventing
         args.options = None
-
+    
+    if args.maxprice:
+        configManager.maxLTP = args.maxprice
+        configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
     if args.testbuild and not args.prodbuild:
         print(
             colorText.BOLD

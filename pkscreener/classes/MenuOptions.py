@@ -118,6 +118,7 @@ level3_X_Reversal_MenuDict = {
     "6": "Narrow Range (NRx) Reversal",
     "7": "Lorentzian Classifier (Machine Learning based indicator)",
     "8": "PSAR and RSI reversal",
+    "9": "Rising RSI",
     "0": "Cancel",
 }
 level3_X_ChartPattern_MenuDict = {

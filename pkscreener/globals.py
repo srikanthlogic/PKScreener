@@ -531,7 +531,7 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
-        sortKey = ["Volume"]
+        sortKey = ["%Chng"]
         ascending = [False]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
@@ -1604,7 +1604,7 @@ def printNotifySaveScreenedResults(
     targetDateG10k = prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, testing, user, pngName, pngExtension, eligible)
     if saveResults is not None and "Date" in saveResults.columns and len(saveResults) > 0:
         recordDate = saveResults["Date"].iloc[0].replace("/","-")
-    removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"],userArgs=userPassedArgs)
+    summaryReturns = removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"],userArgs=userPassedArgs)
 
     tabulated_results = ""
     if screenResults is not None and len(screenResults) > 0:
@@ -1724,7 +1724,7 @@ def printNotifySaveScreenedResults(
             print(
                 colorText.BOLD
                 + colorText.GREEN
-                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec."
+                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec.{(' with portfolio returns:' + summaryReturns) if len(summaryReturns) > 0 else ''}"
                 + colorText.END
             )
     elif user is not None:
@@ -1779,8 +1779,13 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
     periods = configManager.periodsRange
     if userArgs is not None and userArgs.backtestdaysago is not None and int(userArgs.backtestdaysago) < 22:
         dropAdditionalColumns.append("22-Pd %")
+    summaryReturns = ("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
     for period in periods:
         if saveResults is not None:
+            if f"LTP{period}" in saveResults.columns:
+                pdReturn = round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
+                if pdReturn > -500:
+                    summaryReturns = f"{period}-Pd({pdReturn} %), {summaryReturns}"
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")
             saveResults.drop(f"Growth{period}", axis=1, inplace=True, errors="ignore")
             if len(dropAdditionalColumns) > 0:
@@ -1794,6 +1799,7 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
                 for col in dropAdditionalColumns:
                     if col in screenResults.columns:
                         screenResults.drop(col, axis=1, inplace=True, errors="ignore")
+    return summaryReturns
 
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):

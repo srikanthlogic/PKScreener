@@ -654,7 +654,18 @@ class ScreeningStatistics:
             saveDict["Pattern"] = f'{saved[1]}TTM-SQZ'
             return True
         return False
-        
+
+    # Find stocks with rising RSI from lower levels
+    def findRisingRSI(self, df):
+        data = df.copy()
+        data = data[::-1]
+        data = data.tail(3)
+        dayMinus2RSI = data["RSI"].iloc[0]
+        dayMinus1RSI = data["RSI"].iloc[1]
+        dayRSI = data["RSI"].iloc[2]
+        return (dayMinus2RSI <= 35 and dayMinus1RSI > dayMinus2RSI and dayRSI > dayMinus1RSI) or \
+                (dayMinus1RSI <= 35 and dayRSI > dayMinus1RSI)
+
     #@measure_time
     # Find out trend for days to lookback
     def findTrend(self, df, screenDict, saveDict, daysToLookback=None, stockName=""):
