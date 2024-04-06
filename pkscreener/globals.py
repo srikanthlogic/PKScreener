@@ -531,7 +531,7 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
     try:
-        sortKey = ["%Chng"]
+        sortKey = ["Volume"]
         ascending = [False]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:

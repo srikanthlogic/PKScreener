@@ -549,8 +549,11 @@ class tools:
                         for style in cellStyles:
                             cleanValue = cellCleanValues[valCounter]
                             valCounter += 1
-                            if columnNumber == 0:
-                                cleanValue = unstyledLine.split(column_separator)[1]
+                            if columnNumber == 0 and len(cleanValue.strip()) > 0:
+                                if column_separator in unstyledLine:
+                                    cleanValue = unstyledLine.split(column_separator)[1]
+                                if "\\" in cleanValue:
+                                    cleanValue = cleanValue.split("\\")[-1]
                                 # style = style if "%" in cleanValue else gridColor
                             if bgColor == "white" and style == "yellow":
                                 # Yellow on a white background is difficult to read
@@ -1449,7 +1452,7 @@ class tools:
     
     def getMaxColumnWidths(df):
         columnWidths = [None]
-        addnlColumnWidths = [35 if (x in ["Trend(22Prds)"] or "-Pd" in x) else (20 if (x in ["Pattern"]) else None) for x in df.columns]
+        addnlColumnWidths = [40 if (x in ["Trend(22Prds)"] or "-Pd" in x) else (20 if (x in ["Pattern"]) else None) for x in df.columns]
         columnWidths.extend(addnlColumnWidths)
         columnWidths = columnWidths[:-1]
         return columnWidths
