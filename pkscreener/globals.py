@@ -1153,6 +1153,28 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     screenResults, saveResults = labelDataForPrinting(
                         screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
                     )
+                    ticker_list = list(saveResults.index)
+                    marketCaps = fetcher.fetchAdditionalTickerInfo(ticker_list)
+                    saveResults["MCapWt%"] = 0
+                    numShares = []
+                    for ticker in ticker_list:
+                        try:
+                            mCap = marketCaps.get(f"{ticker}.NS")
+                            mCap = round(mCap.get("marketCap"),0)
+                        except:
+                            mCap = 0
+                            pass
+                        saveResults.loc[ticker, 'MCapWt%'] = mCap
+                    # Let's get the weighted no. of shares
+                    marketCapSum = sum(saveResults["MCapWt%"])
+                    for ticker in ticker_list:
+                        try:
+                            saveResults.loc[ticker, 'MCapWt%'] = int(round(saveResults.loc[ticker, 'MCapWt%']/marketCapSum,2)*100)
+                        except:
+                            saveResults.loc[ticker, 'MCapWt%'] = 0
+                            pass
+                        numShares.append(saveResults.loc[ticker, 'MCapWt%'])
+                    screenResults["MCapWt%"] = numShares
                 if not newlyListedOnly and not configManager.showunknowntrends and screenResults is not None and len(screenResults) > 0:
                     screenResults, saveResults = removeUnknowns(screenResults, saveResults)
                     print(colorText.FAIL + f"[+] Configuration to remove unknown cell values resulted into removing all rows!" + colorText.END)
@@ -1783,7 +1805,8 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
     for period in periods:
         if saveResults is not None:
             if f"LTP{period}" in saveResults.columns:
-                pdReturn = round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
+                pdReturn = round(100*(sum(saveResults[f"LTP{period}"] * saveResults["MCapWt%"])-sum(saveResults["LTP"] * saveResults["MCapWt%"]))/sum(saveResults["LTP"] * saveResults["MCapWt%"]),1)
+                          #round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
                 if pdReturn > -500:
                     summaryReturns = f"{period}-Pd({pdReturn} %), {summaryReturns}"
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")

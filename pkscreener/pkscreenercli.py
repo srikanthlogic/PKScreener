@@ -161,6 +161,11 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--minprice",
+    help="Minimum Price for the stock to be considered.",
+    required=False,
+)
+argParser.add_argument(
     "-o",
     "--options",
     help="Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>:etc. format. For example: ./pkscreenercli.py -a Y -o X:12:10 -e will run the screener with answer Y as default choice to questions and scan with menu choices: Scanners > Nifty (All Stocks) > Closing at least 2%% up since last 3 day",
@@ -353,6 +358,9 @@ def pkscreenercli():
     
     if args.maxprice:
         configManager.maxLTP = args.maxprice
+        configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
+    if args.minprice:
+        configManager.minLTP = args.minprice
         configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
     if args.testbuild and not args.prodbuild:
         print(
