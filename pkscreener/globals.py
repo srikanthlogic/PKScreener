@@ -1202,9 +1202,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     shareable_strings = []
                     shouldSend = False
                     for corp_df in corp_dfs:
-                        corp_df.set_index("Stock", inplace=True)
+                        if corp_df is None:
+                            continue
                         tab_results = ""
-                        if corp_df is not None and len(corp_df) > 0:
+                        if corp_df is not None and not corp_df.empty:
+                            corp_df.set_index("Stock", inplace=True)
                             tab_results = colorText.miniTabulator().tabulate(
                                 corp_df,
                                 headers="keys",
