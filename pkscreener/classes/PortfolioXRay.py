@@ -482,7 +482,7 @@ def statScanCalculations(userArgs, saveResults, periods,progressLabel:str=None):
     for task in tasksList:
         task.long_running_fn_args = (userArgs, saveResults, periods, scanResults)
     if configManager.enablePortfolioCalculations:
-        PKScheduler.scheduleTasks(tasksList,label=progressLabel,showProgressBars=True)
+        PKScheduler.scheduleTasks(tasksList,label=progressLabel,showProgressBars=True,timeout=600)
     else:
         for task in tasksList:
             task.long_running_fn(*(task,))

@@ -24,6 +24,7 @@
 """
 import warnings
 import os
+import time
 warnings.simplefilter("ignore", UserWarning,append=True)
 os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
 import multiprocessing
@@ -60,7 +61,7 @@ def init_pool_processes(the_lock):
 
 progressUpdater=None
 class PKScheduler():
-    def scheduleTasks(tasksList=[], label:str=None, showProgressBars=False,submitTaskAsArgs=True):
+    def scheduleTasks(tasksList=[], label:str=None, showProgressBars=False,submitTaskAsArgs=True, timeout=6, minAcceptableCompletionPercentage=100):
         n_workers = multiprocessing.cpu_count() - 1  # set this to the number of cores you have on your machine
         global progressUpdater
         console = Console()
@@ -102,13 +103,17 @@ class PKScheduler():
                         futures.append(executor.submit(task.long_running_fn, task if submitTaskAsArgs else task.long_running_fn_args))
 
                     # monitor the progress:
-                    while (n_finished := sum([future.done() for future in futures])) < len(futures):
+                    start_time = time.time()
+                    while (((n_finished := sum([future.done() for future in futures])) < len(futures)) and ((time.time() - start_time) < timeout)):
                         progress.update(
                             overall_progress_task,
                             completed=n_finished,
                             total=len(futures),
                             visible=n_finished < len(futures)
                         )
+                        # We've reached a state where the caller may not want to wait any further
+                        if n_finished*100/len(futures) >= minAcceptableCompletionPercentage:
+                            break
                         for task_id, update_data in _progress.items():
                             for task in tasksList:
                                 if task.taskId == task_id:

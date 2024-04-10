@@ -1348,7 +1348,7 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
             task1 = PKTask("PortfolioLedger",long_running_fn=PortfolioCollection().getPortfoliosAsDataframe)
             task2 = PKTask("PortfolioLedgerSnapshots",long_running_fn=PortfolioCollection().getLedgerSummaryAsDataframe)
             tasksList = [task1,task2]
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})")
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Portfolio Calculations Report Export(Total={len(tasksList)})",timeout=600)
         else:
             for task in tasksList:
                 task.long_running_fn(*(task,))
@@ -1376,7 +1376,7 @@ def prepareGroupedXRay(backtestPeriod, backtest_df):
         # if configManager.enablePortfolioCalculations:
         # On Github CI, we may run out of memory because of saving results in
         # shared multiprocessing dict.
-        PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False)
+        PKScheduler.scheduleTasks(tasksList,f"Portfolio X-Ray for ({len(df_grouped)})", showProgressBars=False,timeout=600)
     else:
         # On Github CI, let's run synchronously.
         for task in tasksList:
