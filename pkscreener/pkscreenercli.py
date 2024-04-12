@@ -275,7 +275,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main
+    from pkscreener.globals import main, sendQuickScanResult
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -284,6 +284,10 @@ def runApplication():
         from pkscreener.classes.MenuOptions import menus
         runOptions = menus.allMenus(topLevel="C", index=12)
         optionalFinalOutcome_df = None
+        import pkscreener.classes.Utility as Utility
+        import pandas as pd
+        # Delete any existing data from the previous run.
+        configManager.deleteFileWithPattern(pattern="stock_data_*.pkl")
         for runOption in runOptions:
             args.options = runOption
             try:
@@ -294,10 +298,29 @@ def runApplication():
                     import traceback
                     traceback.print_exc()
         if optionalFinalOutcome_df is not None:
+            final_df = None
             df_grouped = optionalFinalOutcome_df.groupby("Stock")
             for stock, df_group in df_grouped:
                 if stock == "PORTFOLIO":
-                    print(df_group)
+                    if final_df is None:
+                        final_df = df_group[["Pattern","LTP","EoDLTP","Diff","%Chng"]]
+                    else:
+                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","EoDLTP","Diff","%Chng"]]], axis=0)
+            mark_down = colorText.miniTabulator().tabulate(
+                                final_df,
+                                headers="keys",
+                                tablefmt=colorText.No_Pad_GridFormat,
+                                showindex = False
+                            ).encode("utf-8").decode(Utility.STD_ENCODING)
+            print(mark_down)
+            sendQuickScanResult(menuChoiceHierarchy="IntradayAnalysis",
+                                user="-1001785195297",
+                                tabulated_results=mark_down,
+                                markdown_results=mark_down,
+                                caption="IntradayAnalysis - Morning alert vs Market Close",
+                                pngName= f"PKS_IA_{PKDateUtilities.currentDateTime().strftime('%Y-%m-%d_%H:%M:%S')}",
+                                pngExtension= ".png"
+                                )
     else:
         main(userArgs=args)
 

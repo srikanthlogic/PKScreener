@@ -548,21 +548,26 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
             sortKey = ["bbands_ulr_ratio_max5"]
             ascending = [False]
         try:
+            screenResults[sortKey] = screenResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            saveResults[sortKey] = saveResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
             screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
             saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
-        except:
+        except Exception as e:
+            default_logger().debug(e, exc_info=True)
             pass
         columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5"]
         for column in columnsToBeDeleted:
             if column in saveResults.columns:
                 saveResults.drop(column, axis=1, inplace=True, errors="ignore")
                 screenResults.drop(column, axis=1, inplace=True, errors="ignore")
-        screenResults.set_index("Stock", inplace=True)
-        saveResults.set_index("Stock", inplace=True)
+        if "Stock" in screenResults.columns:
+            screenResults.set_index("Stock", inplace=True)
+        if "Stock" in saveResults.columns:
+            saveResults.set_index("Stock", inplace=True)
         screenResults['Volume'] = screenResults['Volume'].astype(str)
         saveResults['Volume'] = saveResults['Volume'].astype(str)
         screenResults.loc[:, "Volume"] = screenResults.loc[:, "Volume"].apply(
-            lambda x: Utility.tools.formatRatio(float(x), volumeRatio)
+            lambda x: Utility.tools.formatRatio(float(x), volumeRatio) if len(str(x).strip()) > 0 else ''
         )
         saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: str(x) + "x"
@@ -1806,13 +1811,18 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
     summaryReturns = ("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
     for period in periods:
         if saveResults is not None:
-            if f"LTP{period}" in saveResults.columns:
-                pdReturn = round(100*(sum(saveResults[f"LTP{period}"] * saveResults["MCapWt%"])-sum(saveResults["LTP"] * saveResults["MCapWt%"]))/sum(saveResults["LTP"] * saveResults["MCapWt%"]),1)
+            if f"LTP{period}" in saveResults.columns and "MCapWt%" in saveResults.columns:
+                pdLTP = saveResults[f"LTP{period}"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+                mktWeight = saveResults["MCapWt%"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+                ltp = saveResults[f"LTP"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+                pdReturn = round(100*(sum(pdLTP * mktWeight)-sum(ltp * mktWeight))/sum(ltp * mktWeight),1)
                           #round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
                 if pdReturn > -500:
                     summaryReturns = f"{period}-Pd({pdReturn} %), {summaryReturns}"
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")
             saveResults.drop(f"Growth{period}", axis=1, inplace=True, errors="ignore")
+            saveResults.drop(f"MCapWt%", axis=1, inplace=True, errors="ignore")
+            screenResults.drop(f"MCapWt%", axis=1, inplace=True, errors="ignore")
             if len(dropAdditionalColumns) > 0:
                 for col in dropAdditionalColumns:
                     if col in saveResults.columns:

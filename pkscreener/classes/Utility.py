@@ -736,7 +736,7 @@ class tools:
                 os.makedirs(os.path.dirname(f"{outputFolder}{os.sep}"), exist_ok=True)
             configManager.deleteFileWithPattern(rootDir=outputFolder)
         cache_file = os.path.join(outputFolder, fileName)
-        if not os.path.exists(cache_file) or forceSave or (loadCount > 0 and len(stockDict) > (loadCount + 1)):
+        if not os.path.exists(cache_file) or forceSave or (loadCount >= 0 and len(stockDict) > (loadCount + 1)):
             try:
                 with open(cache_file, "wb") as f:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -897,7 +897,7 @@ class tools:
             print(
                     colorText.BOLD
                     + colorText.FAIL
-                    + "[+] Market Stock Data is not cached.."
+                    + "[+] Market Stock Data is not cached, or forced to redownload .."
                     + colorText.END
                 )
             print(
@@ -1188,7 +1188,7 @@ class tools:
         if volumeRatio is not None:
             return volumeRatio
         try:
-            volumeRatio = int(
+            volumeRatio = float(
                 input(
                     colorText.BOLD
                     + colorText.WARN
