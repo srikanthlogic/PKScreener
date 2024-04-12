@@ -277,6 +277,11 @@ def getSummaryCorrectnessOfStrategy(resultdf, summaryRequired=True):
                 },
                 inplace=True,
             )
+    except urllib.error.HTTPError as e:
+        if "HTTP Error 404" in str(e):
+            pass
+        else:
+            default_logger().debug(e, exc_info=True)
     except Exception as e:# pragma: no cover
         default_logger().debug(e, exc_info=True)
         pass

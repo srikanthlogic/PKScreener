@@ -177,7 +177,7 @@ class PKMarketOpenCloseAnalyser:
                                 columns=allDailyIntradayCandles[stock]["columns"],
                                 index=allDailyIntradayCandles[stock]["index"])
                 df = df.head(numOfCandles)
-                df = df[df.index <=  f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+PKMarketOpenCloseAnalyser.configManager.morninganalysiscandlenumber}:00+05:30']
+                df = df[df.index <=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+PKMarketOpenCloseAnalyser.configManager.morninganalysiscandlenumber}:00+05:30').to_datetime64()]
                 if df is not None and len(df) > 0:
                     combinedCandle = {"Open":PKMarketOpenCloseAnalyser.getMorningOpen(df), "High":max(df["High"]), 
                                     "Low":min(df["Low"]),"Close":PKMarketOpenCloseAnalyser.getMorningClose(df),
@@ -235,15 +235,15 @@ class PKMarketOpenCloseAnalyser:
                     del mutableAllDailyCandles[stock]
             except:
                 del mutableAllDailyCandles[stock]
+                if 'PKDevTools_Default_Log_Level' in os.environ.keys():
+                    intradayChange = colorText.miniTabulator().tabulate(
+                                        pd.DataFrame(listPriceDict),
+                                        headers="keys",
+                                        tablefmt=colorText.No_Pad_GridFormat,
+                                        showindex=False
+                                    ).encode("utf-8").decode(STD_ENCODING)
+                    default_logger().debug(intradayChange)
                 continue
-            if 'PKDevTools_Default_Log_Level' in os.environ.keys():
-                intradayChange = colorText.miniTabulator().tabulate(
-                                    pd.DataFrame(listPriceDict),
-                                    headers="keys",
-                                    tablefmt=colorText.No_Pad_GridFormat,
-                                    showindex=False
-                                ).encode("utf-8").decode(STD_ENCODING)
-                default_logger().debug(intradayChange)
         return mutableAllDailyCandles
 
     def runScanForStocksFromMorningTrade(stockListFromMorningTrade,dailyCandleData):
