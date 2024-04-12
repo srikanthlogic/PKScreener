@@ -655,6 +655,34 @@ class ScreeningStatistics:
             return True
         return False
 
+    def findMACDCrossover(self, df, afterTimestamp=None, nthCrossover=1, upDirection=True):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+        macdLine, macdSignal, macdHist = pktalib.MACD(data["Close"], 12, 26, 9)
+        line_df = pd.DataFrame(macdLine)
+        signal_df = pd.DataFrame(macdSignal)
+        diff_df = pd.concat([line_df, signal_df, signal_df-line_df], axis=1)
+        diff_df.columns = ["line","signal","diff"]
+        try:
+            # Let's only consider those candles that are after the alert issue-time in the mornings
+            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber}:00+05:30').to_datetime64()]
+        except:
+            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber}:00+05:30', utc=True)]
+            pass
+        index = len(diff_df)
+        if diff_df["diff"][-1] < 0:
+            while(diff_df["diff"][index-1] < 0 and index >=0):
+                index -= 1
+        else:
+            while(diff_df["diff"][index-1] >= 0 and index >=0):
+                index -= 1
+        ts = diff_df.tail(len(diff_df)-index +1).head(1).index[-1]
+        return ts, df[df.index == ts] #df.head(len(df) -index +1).tail(1)
+    
     # Find stocks with rising RSI from lower levels
     def findRisingRSI(self, df):
         data = df.copy()

@@ -1705,7 +1705,7 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                     ).encode("utf-8").decode(STD_ENCODING)
-                if not testing:
+                if not testing and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
                         menuChoiceHierarchy,
                         user,
@@ -1816,14 +1816,14 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
     summaryReturns = ("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
     for period in periods:
         if saveResults is not None:
-            if f"LTP{period}" in saveResults.columns and "MCapWt%" in saveResults.columns:
-                pdLTP = saveResults[f"LTP{period}"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
-                mktWeight = saveResults["MCapWt%"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
-                ltp = saveResults[f"LTP"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
-                pdReturn = round(100*(sum(pdLTP * mktWeight)-sum(ltp * mktWeight))/sum(ltp * mktWeight),1)
-                          #round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
-                if pdReturn > -500:
-                    summaryReturns = f"{period}-Pd({pdReturn} %), {summaryReturns}"
+            # if f"LTP{period}" in saveResults.columns and "MCapWt%" in saveResults.columns:
+            #     pdLTP = saveResults[f"LTP{period}"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            #     mktWeight = saveResults["MCapWt%"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            #     ltp = saveResults[f"LTP"].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            #     pdReturn = round(100*(sum(pdLTP * mktWeight)-sum(ltp * mktWeight))/sum(ltp * mktWeight),1)
+            #               #round((sum(saveResults[f"LTP{period}"]) - sum(saveResults['LTP']))*100/sum(saveResults['LTP']),1)
+            #     if pdReturn > -500:
+            #         summaryReturns = f"{period}-Pd({pdReturn} %), {summaryReturns}"
             saveResults.drop(f"LTP{period}", axis=1, inplace=True, errors="ignore")
             saveResults.drop(f"Growth{period}", axis=1, inplace=True, errors="ignore")
             saveResults.drop(f"MCapWt%", axis=1, inplace=True, errors="ignore")

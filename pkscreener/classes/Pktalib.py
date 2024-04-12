@@ -119,6 +119,7 @@ class pktalib:
     @classmethod
     def MACD(self, close, fast, slow, signal):
         try:
+            # import pandas_ta as talib
             return talib.macd(close, fast, slow, signal, talib=Imports["talib"])
         except Exception:  # pragma: no cover
             # default_logger().debug(e, exc_info=True)
@@ -155,6 +156,16 @@ class pktalib:
             }
             return pd.DataFrame(data)
 
+    @classmethod
+    def STOCHF(self, high, low, close, fastk_period, fastd_period, fastd_matype):
+        fastk, fastd = talib.STOCHF(high,
+                            low,
+                            close,
+                            fastk_period, 
+                            fastd_period,
+                            fastd_matype)
+        return fastk, fastd
+    
     @classmethod
     def STOCHRSI(self, close, timeperiod, fastk_period, fastd_period, fastd_matype):
         try:

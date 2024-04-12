@@ -532,12 +532,10 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             resp = triggerRemoteScanAlertWorkflow(scanOptions, branch)
             if resp.status_code == 204:
                 sleep(5)
-                if not intradayAnalysisTriggered:
-                    intradayAnalysisTriggered = True
-                    if PKDateUtilities.currentDateTime() >= PKDateUtilities.currentDateTime(simulate=True,hour=15,minute=30):
-                        triggerRemoteScanAlertWorkflow("C:12 --runintradayanalysis -u -1001785195297", branch)
             else:
                 break
+    if PKDateUtilities.currentDateTime() >= PKDateUtilities.currentDateTime(simulate=True,hour=16,minute=00):
+        triggerRemoteScanAlertWorkflow("C:12 --runintradayanalysis -u -1001785195297", branch)
 
 def triggerRemoteScanAlertWorkflow(scanOptions, branch):
     cmd_options = scanOptions.replace("_",":")
@@ -843,6 +841,6 @@ if args.cleanuphistoricalscans:
     cleanuphistoricalscans(daysInPast)
 if args.updateholidays:
     updateHolidays()
-
+    
 print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
 sys.exit(0)

@@ -303,9 +303,9 @@ def runApplication():
             for stock, df_group in df_grouped:
                 if stock == "PORTFOLIO":
                     if final_df is None:
-                        final_df = df_group[["Pattern","LTP","EoDLTP","Diff","%Chng"]]
+                        final_df = df_group[["Pattern","LTP","AlertTime","SqrOffLTP","SqrOff","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]
                     else:
-                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","EoDLTP","Diff","%Chng"]]], axis=0)
+                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","AlertTime","SqrOffLTP","SqrOff","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]], axis=0)
             mark_down = colorText.miniTabulator().tabulate(
                                 final_df,
                                 headers="keys",
