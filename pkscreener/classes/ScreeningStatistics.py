@@ -1293,6 +1293,7 @@ class ScreeningStatistics:
 
     # Preprocess the acquired data
     def preprocessData(self, df, daysToLookback=None):
+        assert isinstance(df, pd.DataFrame)
         data = df.copy()
         data = data.replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna(how="all")
         self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
@@ -1541,7 +1542,7 @@ class ScreeningStatistics:
         data = df.copy()
         orgData = data
         saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
-        for i in range(daysToLookback, round(daysToLookback * 0.5) - 1, -1):
+        for i in range(int(daysToLookback), int(round(daysToLookback * 0.5)) - 1, -1):
             if i == 2:
                 return 0  # Exit if only last 2 candles are left
             if chartPattern == 1:

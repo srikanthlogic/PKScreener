@@ -101,7 +101,10 @@ class StockScreener:
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
             data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData,exchangeName)
-            if len(data) == 0 or len(data) < backtestDuration:
+            if data is not None:
+                if len(data) == 0 or len(data) < backtestDuration:
+                    return None
+            else:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
@@ -727,10 +730,26 @@ class StockScreener:
                         pass
         else:
             self.printProcessingCounter(totalSymbols, stock, printCounter, hostRef)
-            data = hostData
-            data = pd.DataFrame(
-                    data["data"], columns=data["columns"], index=data["index"]
-                )
+            # data = hostData
+            try:
+                columns = hostData["columns"]
+                data = pd.DataFrame(
+                        hostData["data"], columns=columns, index=hostData["index"]
+                    )
+            except (ValueError, AssertionError) as e:
+                # 9 columns passed, passed data had 11 columns
+                # 10 columns passed, passed data had 11 columns
+                hostRef.default_logger.debug(e, exc_info=True)
+                e_diff = str(e).replace(" columns passed, passed data had ",",").replace(" columns","").split(",")
+                num_diff = int(e_diff[1]) - int(e_diff[0])
+                while (num_diff > 0):
+                    columns.append(f"temp{num_diff}")
+                    num_diff -= 1
+                data = pd.DataFrame(
+                        hostData["data"], columns=columns, index=hostData["index"]
+                    )
+                pass
+
         if ((shouldCache and not self.isTradingTime and (hostData is None)) or downloadOnly) \
             or (shouldCache and hostData is None):  # and backtestDuration == 0 # save only if we're NOT backtesting
                 if start is None and data is not None:
