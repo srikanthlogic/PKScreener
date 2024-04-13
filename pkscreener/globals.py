@@ -1708,6 +1708,12 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                     ).encode("utf-8").decode(STD_ENCODING)
+                    caption_results = colorText.miniTabulator().tabulate(
+                        saveResultsTrimmed[['LTP','%Chng','Volume']].head(5),
+                        headers="keys",
+                        tablefmt=colorText.No_Pad_GridFormat
+                    ).encode("utf-8").decode(STD_ENCODING)
+                    caption = f"{caption}.First few samples are below. Open the attached image for more details.\n<pre>{caption_results}</pre>\n...\n<i>The author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NEVER be deemed as one.</i>"
                 if not testing and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
                         menuChoiceHierarchy,

@@ -647,7 +647,7 @@ class tools:
 
     def getRepoHelpText():
         repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra | Telegram: https://t.me/PKScreener |"
-        repoText = f"{repoText}\nThis report is for learning/analysis purposes ONLY. pkjmesra assumes no responsibility or liability for any errors or omissions in this report or repository, or gain/loss bearing out of this analysis.\n"
+        repoText = f"{repoText}\nThe author is NOT a financial advisor and is NOT SEBI registered. This report is for learning/analysis purposes ONLY. Author assumes no responsibility or liability for any errors or omissions in this report or repository, or gain/loss bearing out of this analysis. The user MUST take advise ONLY from registered SEBI financial advisors only.\n"
         repoText = f"{repoText}\n[+] Understanding this report:\n\n"
         return repoText
 
