@@ -139,7 +139,7 @@ class StockScreener:
             with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
                 self.updateStock(stock, screeningDictionary, saveDictionary, executeOption)
                 
-                self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener)
+                self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener, exchangeName)
                 hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
                 
                 isConfluence = False
@@ -621,12 +621,12 @@ class StockScreener:
             raise ScreeningStatistics.NotEnoughVolumeAsPerConfig
         return hasMinVolumeRatio
 
-    def performBasicLTPChecks(self, executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener):
+    def performBasicLTPChecks(self, executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener,exchangeName):
         isLtpValid, verifyStageTwo = screener.validateLTP(
                     fullData,
                     screeningDictionary,
                     saveDictionary,
-                    minLTP=configManager.minLTP,
+                    minLTP=configManager.minLTP if exchangeName == "INDIA" else configManager.minLTP/80,
                     maxLTP=configManager.maxLTP,
                 )
         if not isLtpValid:

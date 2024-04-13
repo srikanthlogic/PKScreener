@@ -33,6 +33,19 @@ class MarketStatus(SingletonMixin, metaclass=SingletonType):
         super(MarketStatus, self).__init__()
 
     @property
+    def exchange(self):
+        if "exchange" in self.attributes.keys():
+            return self.attributes["exchange"]
+        else:
+            return "^NSEI"
+    
+    @exchange.setter
+    def exchange(self, exchangeKey):
+        if self.exchange != exchangeKey:
+            self.marketStatus = self.getMarketStatus(exchangeSymbol=exchangeKey)
+        self.attributes["exchange"] = exchangeKey
+
+    @property
     def marketStatus(self):
         if "marketStatus" in self.attributes.keys():
             return self.attributes["marketStatus"]

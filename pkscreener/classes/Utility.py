@@ -99,50 +99,6 @@ PPPPPPPPPP            KKKKKKK    KKKKKKK SSSSSSSSSSSSSSS       cccccccccccccccc 
 artText = f"{artText}\nv{VERSION}"
 
 STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
-MF_Investing= """                   
-                   ▗▐▞▛▞▙▜▜▜▐▄▄▞▞▞▛▜▜▜▐▚▌▌▖
-                  ▞▞▌▙▚▜▐▞▟▞▌▙▐▞▙▜▐▚▌▙▜▞▞▙▜▄
-                 ▌▛▞▙▚▘▘   ▀▐▞▌▌▘▀▝▝▝ ▘▀▐▐▞▞▞
-                ▗▜▐▚▌▘                  ▗▙▜▞▌
-                ▐▐▚▌▙                  ▗▌▌▌▙▘
-                 ▚▌▛▞▛▖               ▞▟▞▙▜
-                  ▝▞▌▙▜▖            ▗▐▞▞▞▞▖
-                   ▝▜▐▞▟▚          ▗▌▙▜▞▌▘
-                     ▙▜▐▚▜▖▙▄▚▄▚▞▞▟▐▞▞▌▌
-                   ▗▚▚▙▚▜▚▜▖▙▚▚▌▛▟▐▚▜▞▌▙▚
-                  ▟▐▚▌▙▀           ▝▝▟▐▚▚▙▖
-                ▖▛▞▞▌▛                ▚▜▚▞▞▙
-              ▗▞▟▞▜▞▘                  ▝▐▞▌▙▜▄
-             ▄▚▜▄▀▌                      ▝▟▐▞▟▐
-           ▗▞▞▙▚▚▘                         ▚▜▐▞▛▄
-          ▗▚▜▐▞▌▘                           ▝▌▙▜▐▐
-         ▐▚▜▐▚▘                              ▝▐▐▚▙▀▖
-        ▞▌▛▞▌▘                                 ▚▌▙▜▞▖
-       ▞▞▙▜▞           ▗▄▖▄▗▄▖▄▗▄▗▄▗▄▖▄         ▝▟▐▞▟▗
-      ▐▞▜▐▝            ▐▖▌▙▚▚▚▚▚▞▚▚▚▚▞▞          ▝▟▐▞▞▖
-     ▗▌▛▙▀▝                    ▌▌▌                ▝▌▛▟▞
-     ▌▛▞▟▝             ▗▚▚▚▚▞▖▌▌▌▛▞▌▙▚▚            ▚▜▐▐▚
-    ▞▌▛▟▖              ▐▐▞▟▐▞▞▟▞▟▐▐▞▞▞▞             ▙▜▞▙
-    ▌▛▟▐                        ▌▙                  ▐▐▐▞▌
-   ▐▞▌▙▚               ▗▚▜▞▌▛▀▌▙▚▘                   ▛▟▐▞▖
-   ▞▟▞▟                 ▝▚▞▞▞▀▝ ▘                    ▐▞▌▛▖
-   ▟▐▞▟                   ▚▜▐▚▖                      ▐▐▞▌▌
-   ▙▚▜▐                    ▝▞▞▞▄                     ▐▐▞▌▌
-   ▚▜▞▙▘                     ▀▞▞▞▖                   ▝▌▙▜▝
-   ▜▞▟▐                       ▝▐▞▞▌▖                 ▚▜▐▞▘
-   ▝▟▐▞▌                        ▝▞▞                 ▝▙▜▐▞▘
-    ▌▙▚▜▘                                           ▌▌▛▟▝
-    ▝▞▙▚▛▄                                         ▙▜▞▌▌
-     ▝▐▚▜▐▄                                      ▖▛▞▟▐▝
-       ▜▐▚▚▛▄                                  ▗▟▐▚▜▐▘▘
-        ▘▜▞▟▐▚▚▗                            ▗▗▚▛▞▞▙▀
-          ▚▚▜▞▜▞▙▜▄▖▖▖                 ▗▗▄▞▜▞▙▜▐▞▀
-            ▘▀▚▚▚▌▌▛▟▞▛▜▚▌▌▙▞▄▚▞▄▚▚▚▜▀▛▙▚▚▜▞▞▟▐▝
-               ▘▘▀▞▟▐▞▞▙▚▜▞▞▟▐▚▜▐▞▙▜▞▙▚▌▛▞▌▚▀
-                     ▝▝▝▝▘▘▀▝▝▘▀▝▝▝▝▝▝▝▝
-"""
-MF_IN = colorText.GREEN + MF_Investing + colorText.END
-MF_OUT = colorText.FAIL + MF_Investing + colorText.END
 
 def marketStatus():
     # task = PKTask("Nifty 50 Market Status",MarketStatus().getMarketStatus)
@@ -171,6 +127,7 @@ class tools:
         else:
             os.system("clear")
         try:
+            art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
             print(art.encode('utf-8').decode(STD_ENCODING))
         except Exception as e:# pragma: no cover
             default_logger().debug(e, exc_info=True)

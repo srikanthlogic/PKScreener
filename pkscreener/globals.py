@@ -465,6 +465,9 @@ def initPostLevel0Execution(
             elif indexOption == 13:
                 newlyListedOnly = True
                 indexOption = 12
+        if indexOption == 15:
+            from pkscreener.classes.MarketStatus import MarketStatus
+            MarketStatus().exchange = "^IXIC"
         selectedChoice["1"] = str(indexOption)
     except KeyboardInterrupt:
         raise KeyboardInterrupt
