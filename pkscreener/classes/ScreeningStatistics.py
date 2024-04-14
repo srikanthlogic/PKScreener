@@ -686,17 +686,20 @@ class ScreeningStatistics:
             diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber}:00+05:30', utc=True)]
             pass
         index = len(diff_df)
-        if diff_df["diff"][-1] < 0:
-            while(diff_df["diff"][index-1] < 0 and index >=0):
-                index -= 1
-        else:
-            while(diff_df["diff"][index-1] >= 0 and index >=0):
-                index -= 1
+        crossOver = 0
+        while (crossOver < nthCrossover and index >=0):
+            if diff_df["diff"][index-1] < 0:
+                while(diff_df["diff"][index-1] < 0 and index >=0):
+                    index -= 1
+            else:
+                while(diff_df["diff"][index-1] >= 0 and index >=0):
+                    index -= 1
+            crossOver += 1
         ts = diff_df.tail(len(diff_df)-index +1).head(1).index[-1]
         return ts, df[df.index == ts] #df.head(len(df) -index +1).tail(1)
     
     # Find stock showing RSI crossing with RSI 9 SMA
-    def findRSICrossingMA(self, df, screenDict, saveDict, maLength=9):
+    def findRSICrossingMA(self, df, screenDict, saveDict,lookFor=1, maLength=9):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
@@ -705,11 +708,11 @@ class ScreeningStatistics:
         data = data[::-1].head(3)
         maRsi = maRsi[::-1].head(3)
         saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
-        if maRsi.iloc[0] <= data['RSI'].iloc[0] and maRsi.iloc[1] > data['RSI'].iloc[1]:
+        if lookFor in [1,3] and maRsi.iloc[0] <= data['RSI'].iloc[0] and maRsi.iloc[1] > data['RSI'].iloc[1]:
             screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.GREEN + f'RSI-MA-Buy' + colorText.END
             saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Buy'
             return True
-        elif maRsi.iloc[0] >= data['RSI'].iloc[0] and maRsi.iloc[1] < data['RSI'].iloc[1]:
+        elif lookFor in [2,3] and maRsi.iloc[0] >= data['RSI'].iloc[0] and maRsi.iloc[1] < data['RSI'].iloc[1]:
             screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.FAIL + f'RSI-MA-Sell' + colorText.END
             saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Sell'
             return True

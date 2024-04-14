@@ -302,18 +302,14 @@ class PKMarketOpenCloseAnalyser:
                 eodLTPs.append("0")
                 eodDiffs.append("0")
                 continue
-        save_df["AlertTime"] = morningTimestamps
-        screen_df["AlertTime"] = morningTimestamps
-        save_df["SqrOffLTP"] = sellLTPs
-        screen_df["SqrOffLTP"] = sellLTPs
-        save_df["SqrOff"] = sellTimestamps
-        screen_df["SqrOff"] = sellTimestamps
-        screen_df["SqrOffDiff"] = sqrOffDiffs
-        save_df["SqrOffDiff"] = sqrOffDiffs
-        save_df["EoDLTP"] = eodLTPs
-        screen_df["EoDLTP"] = eodLTPs
-        save_df["EoDDiff"] = eodDiffs
-        screen_df["EoDDiff"] = eodDiffs
+        diffColumns = ["AlertTime", "SqrOff", "SqrOffLTP", "SqrOffDiff", "EoDLTP", "EoDDiff"]
+        diffValues = [morningTimestamps, sellTimestamps, sellLTPs, sqrOffDiffs,eodLTPs, eodDiffs]
+        for col in diffColumns:
+            save_df[col] = diffValues[diffColumns.index(col)]
+            screen_df.loc[:, col] = save_df.loc[:, col].apply(
+                lambda x: x if col in ["AlertTime", "SqrOff", "SqrOffLTP", "EoDLTP"] else ((colorText.GREEN if x >= 0 else colorText.FAIL) + str(x) + colorText.END)
+            )
+
         columns = save_df.columns
         lastIndex = len(save_df)
         for col in columns:
@@ -331,10 +327,12 @@ class PKMarketOpenCloseAnalyser:
             else:
                 save_df.loc[lastIndex,col] = ""
             screen_df.loc[lastIndex,col] = save_df.loc[lastIndex,col]
-        save_df.loc[lastIndex,"EoDDiff"] = str(save_df.loc[lastIndex,"EoDDiff"]) + f'({round(100*2*save_df.loc[lastIndex,"EoDDiff"]/ltpSum,2)}%)'
-        save_df.loc[lastIndex,"SqrOffDiff"] = str(save_df.loc[lastIndex,"SqrOffDiff"]) + f'({round(100*2*save_df.loc[lastIndex,"SqrOffDiff"]/ltpSum,2)}%)'
-        screen_df.loc[lastIndex,"EoDDiff"] = save_df.loc[lastIndex,"EoDDiff"]
-        screen_df.loc[lastIndex,"SqrOffDiff"] = save_df.loc[lastIndex,"SqrOffDiff"]
+        eodDiff = save_df.loc[lastIndex,"EoDDiff"]
+        sqrOffDiff = save_df.loc[lastIndex,"SqrOffDiff"]
+        save_df.loc[lastIndex,"EoDDiff"] = str(eodDiff) + f'({round(100*2*eodDiff/ltpSum,2)}%)'
+        save_df.loc[lastIndex,"SqrOffDiff"] = str(sqrOffDiff) + f'({round(100*2*sqrOffDiff/ltpSum,2)}%)'
+        screen_df.loc[lastIndex,"EoDDiff"] = (colorText.GREEN if eodDiff >= 0 else colorText.FAIL) + save_df.loc[lastIndex,"EoDDiff"] + colorText.END
+        screen_df.loc[lastIndex,"SqrOffDiff"] = (colorText.GREEN if sqrOffDiff >= 0 else colorText.FAIL) + save_df.loc[lastIndex,"SqrOffDiff"] + colorText.END
         save_df.set_index("Stock", inplace=True)
         screen_df.set_index("Stock", inplace=True)
         PKMarketOpenCloseAnalyser.allIntradayCandles = None

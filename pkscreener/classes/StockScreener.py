@@ -221,8 +221,10 @@ class StockScreener:
                         return returnLegibleData()
                 elif executeOption == 6:
                     if reversalOption == 10:
-                        hasRSIMAReversal = screener.findRSICrossingMA(processedData,screeningDictionary,
-                            saveDictionary)
+                        hasRSIMAReversal = screener.findRSICrossingMA(processedData,
+                                                                      screeningDictionary,
+                                                                      saveDictionary,
+                                                                      lookFor=maLength) # 1 =Buy, 2 =Sell, 3 = Any
                         if not hasRSIMAReversal:
                             return returnLegibleData()
                     elif reversalOption == 9:

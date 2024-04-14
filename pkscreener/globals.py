@@ -801,12 +801,12 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
             reversalOption = int(options[3])
-            if reversalOption in [4, 6, 7]:
+            if reversalOption in [4, 6, 7, 10]:
                 if len(options) >= 5:
                     if str(options[4]).isnumeric():
                         maLength = int(options[4])
                     elif str(options[4]).upper() == "D":
-                        maLength = 50 if reversalOption == 4 else (3 if reversalOption == 7 else 7)
+                        maLength = 50 if reversalOption == 4 else (3 if reversalOption in [7] else (2 if reversalOption in [10] else 7))
                 elif defaultAnswer == "Y" and user is not None:
                     # bot mode
                     maLength = 50 if reversalOption == 4 else (3 if reversalOption == 7 else 7)
@@ -822,7 +822,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             return
         else:
             selectedChoice["3"] = str(reversalOption)
-            if str(reversalOption) == "7":
+            if str(reversalOption) in ["7", "10"]:
                 selectedChoice["4"] = str(maLength)
     if executeOption == 7:
         selectedMenu = m2.find(str(executeOption))
@@ -1590,7 +1590,7 @@ def updateMenuChoiceHierarchy():
             menuChoiceHierarchy
             + f'>{level3_X_Reversal_MenuDict[selectedChoice["3"]].strip()}'
         )
-        if len(selectedChoice) >= 5 and selectedChoice["3"] == "7":
+        if len(selectedChoice) >= 5 and selectedChoice["3"] in ["7","10"]:
             menuChoiceHierarchy = (
             menuChoiceHierarchy
             + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["4"]].strip()}'
@@ -1731,8 +1731,8 @@ def printNotifySaveScreenedResults(
                         caption_df,
                         headers="keys",
                         tablefmt=colorText.No_Pad_GridFormat,
-                        maxcolwidths=[None,None,3,3]
-                    ).encode("utf-8").decode(STD_ENCODING).replace("-+-----+-----+-----+","-+-----+---+---+").replace("%  ","%").replace("=+=====+=====+=====+","=+=====+===+===+").replace("Vol  |","Vol|").replace("x  ","x")
+                        maxcolwidths=[None,None,4,3]
+                    ).encode("utf-8").decode(STD_ENCODING).replace("-+-----+-----+-----+","-+-----+----+---+").replace("%  ","% ").replace("=+=====+=====+=====+","=+=====+====+===+").replace("Vol  |","Vol|").replace("x  ","x")
                     caption = f"{caption}.Open attached image for more. 5 samples:<pre>{caption_results}</pre><i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
                 if not testing and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(

@@ -402,7 +402,7 @@ class menus:
             elif selectedMenu.level == 3:
                 self.level = 4
                 # next levelsub-menu of the selected sub-menu
-                if selectedMenu.parent.menuKey == "6" and selectedMenu.menuKey == "7":
+                if selectedMenu.parent.menuKey == "6" and selectedMenu.menuKey in ["7","10"]:
                     return self.renderLevel4_X_Lorenzian_Menus(
                         skip=skip,
                         asList=asList,

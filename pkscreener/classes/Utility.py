@@ -1186,7 +1186,7 @@ class tools:
                     + colorText.END
                 )
             )
-            if resp >= 0 and resp <= 9:
+            if resp >= 0 and resp <= 10:
                 return resp
             raise ValueError
         except ValueError as e:  # pragma: no cover
@@ -1252,11 +1252,11 @@ class tools:
                             + colorText.END
                         )
                         raise ValueError
-                elif resp == 7:
+                elif resp in [7,10]:
                     m3 = menus()
                     m3.renderForMenu(menu,asList=True)
                     lMenu =  m3.find(str(resp))
-                    return 7, tools.promptSubMenuOptions(lMenu)
+                    return resp, tools.promptSubMenuOptions(lMenu)
                 return resp, None
             raise ValueError
         except ValueError as e:  # pragma: no cover
