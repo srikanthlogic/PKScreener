@@ -151,6 +151,8 @@ class ScreeningStatistics:
 
     # Find stocks that have broken through 52 week low.
     def find52WeekLowBreakout(self, df):
+        if df is None or len(df) == 0:
+            return False
         # https://chartink.com/screener/52-week-low-breakout
         data = df.copy()
         data = data.fillna(0)
@@ -173,6 +175,8 @@ class ScreeningStatistics:
         # Find stocks that have broken through 52 week low.
 
     def find10DaysLowBreakout(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -190,6 +194,8 @@ class ScreeningStatistics:
         # Find stocks that have broken through 52 week low.
 
     def findAroonBullishCrossover(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -252,6 +258,8 @@ class ScreeningStatistics:
     def findBreakoutValue(
         self, df, screenDict, saveDict, daysToLookback, alreadyBrokenout=False
     ):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -489,6 +497,8 @@ class ScreeningStatistics:
 
     # Find stocks with reversing PSAR and RSI
     def findPSARReversalWithRSI(self, df, screenDict, saveDict,minRSI=50):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data[::-1]
         psar = pktalib.psar(data["High"],data["Low"])
@@ -530,6 +540,8 @@ class ScreeningStatistics:
 
     # Find stock reversing at given MA
     def findReversalMA(self, df, screenDict, saveDict, maLength, percentage=0.02):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         maRange = [10, 20, 50, 200]
         results = []
@@ -685,6 +697,8 @@ class ScreeningStatistics:
     
     # Find stocks with rising RSI from lower levels
     def findRisingRSI(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data[::-1]
         data = data.tail(3)
@@ -892,6 +906,9 @@ class ScreeningStatistics:
         change_millions =""
         try:
             mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
+            if isinstance(mf_inst_ownershipChange, pd.Series):
+                print(f"Unexpected mf_inst_ownershipChange:{mf_inst_ownershipChange}")
+                mf_inst_ownershipChange = 0
             roundOff = 2
             millions = round(mf_inst_ownershipChange/1000000,roundOff)
             while float(millions) == 0 and roundOff <=5:
@@ -1334,6 +1351,8 @@ class ScreeningStatistics:
 
     # Validate if the stock is bullish in the short term
     def validate15MinutePriceVolumeBreakout(self, df):
+        if df is None or len(df) == 0:
+            return False
         # https://chartink.com/screener/15-min-price-volume-breakout
         data = df.copy()
         data = data.fillna(0)
@@ -1388,6 +1407,8 @@ class ScreeningStatistics:
     #@measure_time
     # validate if CCI is within given range
     def validateCCI(self, df, screenDict, saveDict, minCCI, maxCCI):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -1408,6 +1429,8 @@ class ScreeningStatistics:
 
     # Find Conflucence
     def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1,confFilter=3):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         recent = data.head(2)
         is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
@@ -1471,6 +1494,8 @@ class ScreeningStatistics:
     #@measure_time
     # Validate if share prices are consolidating
     def validateConsolidation(self, df, screenDict, saveDict, percentage=10):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -1500,6 +1525,8 @@ class ScreeningStatistics:
     # validate if the stock has been having higher highs, higher lows
     # and higher close with latest close > supertrend and 8-EMA.
     def validateHigherHighsHigherLowsHigherClose(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         day0 = data
         day1 = data[1:]
@@ -1539,6 +1566,8 @@ class ScreeningStatistics:
     def validateInsideBar(
         self, df, screenDict, saveDict, chartPattern=1, daysToLookback=5
     ):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         orgData = data
         saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
@@ -1596,6 +1625,8 @@ class ScreeningStatistics:
 
     # Find IPO base
     def validateIpoBase(self, stock, df, screenDict, saveDict, percentage=0.3):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         listingPrice = data[::-1].head(1)["Open"].iloc[0]
         currentPrice = data.head(1)["Close"].iloc[0]
@@ -1634,6 +1665,8 @@ class ScreeningStatistics:
     #@measure_time
     # Validate Lorentzian Classification signal
     def validateLorentzian(self, df, screenDict, saveDict, lookFor=3):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         # lookFor: 1-Buy, 2-Sell, 3-Any
         data = data[::-1]  # Reverse the dataframe
@@ -1647,7 +1680,8 @@ class ScreeningStatistics:
             }
         )
         try:
-            lc = ata.LorentzianClassification(data=data)
+            with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
+                lc = ata.LorentzianClassification(data=data)
             saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
             if lc.df.iloc[-1]["isNewBuySignal"]:
                 screenDict["Pattern"] = (
@@ -1678,6 +1712,8 @@ class ScreeningStatistics:
 
     # validate if the stock has been having lower lows, lower highs
     def validateLowerHighsLowerLows(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         day0 = data
         day1 = data[1:]
@@ -1703,6 +1739,8 @@ class ScreeningStatistics:
 
     # Validate if recent volume is lowest of last 'N' Days
     def validateLowestVolume(self, df, daysForLowestVolume):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -1800,6 +1838,8 @@ class ScreeningStatistics:
 
     # Find stocks that are bearish intraday: Macd Histogram negative
     def validateMACDHistogramBelow0(self, df):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -1810,6 +1850,8 @@ class ScreeningStatistics:
     #@measure_time
     # Find if stock gaining bullish momentum
     def validateMomentum(self, df, screenDict, saveDict):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         try:
             data = data.head(3)
@@ -1973,6 +2015,8 @@ class ScreeningStatistics:
 
     # Find NRx range for Reversal
     def validateNarrowRange(self, df, screenDict, saveDict, nr=4):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
         if PKDateUtilities.isTradingTime():
@@ -2005,7 +2049,7 @@ class ScreeningStatistics:
             return False
         else:
             rangeData = data.head(nr)
-            rangeData["Range"] = abs(rangeData["Close"] - rangeData["Open"])
+            rangeData.loc[:,'Range'] = abs(rangeData["Close"] - rangeData["Open"])
             recent = rangeData.head(1)
             if recent["Range"].iloc[0] == rangeData.describe()["Range"]["min"]:
                 screenDict["Pattern"] = (
@@ -2017,6 +2061,8 @@ class ScreeningStatistics:
 
     # Find if stock is newly listed
     def validateNewlyListed(self, df, daysToLookback):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         daysToLookback = int(daysToLookback[:-1])
         recent = data.head(1)
@@ -2028,6 +2074,8 @@ class ScreeningStatistics:
 
     # Validate if the stock prices are at least rising by 2% for the last 3 sessions
     def validatePriceRisingByAtLeast2Percent(self, df, screenDict, saveDict):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -2056,6 +2104,8 @@ class ScreeningStatistics:
     #@measure_time
     # validate if RSI is within given range
     def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -2072,6 +2122,8 @@ class ScreeningStatistics:
 
     # Validate if the stock is bullish in the short term
     def validateShortTermBullish(self, df, screenDict, saveDict):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         # https://chartink.com/screener/short-term-bullish
         data = data.fillna(0)
@@ -2142,6 +2194,8 @@ class ScreeningStatistics:
     def validateVCP(
         self, df, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3
     ):
+        if df is None or len(df) == 0:
+            return False
         data = df.copy()
         try:
             percentageFromTop /= 100
@@ -2219,6 +2273,8 @@ class ScreeningStatistics:
     def validateVolume(
         self, df, screenDict, saveDict, volumeRatio=2.5, minVolume=100
     ):
+        if df is None or len(df) == 0:
+            return False, False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
@@ -2243,6 +2299,8 @@ class ScreeningStatistics:
     # Find if stock is validating volume spread analysis
     def validateVolumeSpreadAnalysis(self, df, screenDict, saveDict):
         try:
+            if df is None or len(df) == 0:
+                return False
             data = df.copy()
             data = data.head(2)
             if len(data) < 2:

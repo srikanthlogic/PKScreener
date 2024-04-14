@@ -556,8 +556,14 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
             sortKey = ["bbands_ulr_ratio_max5"]
             ascending = [False]
         try:
-            screenResults[sortKey] = screenResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
-            saveResults[sortKey] = saveResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            try:
+                screenResults[sortKey] = screenResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            except:
+                pass
+            try:
+                saveResults[sortKey] = saveResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
+            except:
+                pass
             screenResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
             saveResults.sort_values(by=sortKey, ascending=ascending, inplace=True)
         except Exception as e:
@@ -1671,7 +1677,7 @@ def printNotifySaveScreenedResults(
     if screenResults is not None and len(screenResults) >= 1:
         choiceSegments = menuChoiceHierarchy.split(">")
         choiceSegments = f"{choiceSegments[-2]} > {choiceSegments[-1]}" if len(choiceSegments)>=4 else f"{choiceSegments[-1]}"
-        title = f'<b>{choiceSegments}</b> {"" if selectedChoice["0"] != "G" else "for Date:"+ targetDateG10k}'
+        title = f'<b>{choiceSegments}</b>{"" if selectedChoice["0"] != "G" else " for Date:"+ targetDateG10k}'
         if (
             ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] != "LOCAL_RUN_SCANNER")
             or "PKDevTools_Default_Log_Level" in os.environ.keys()
@@ -1684,11 +1690,11 @@ def printNotifySaveScreenedResults(
                 saveResultsTrimmed = saveResults.copy()
                 # No point sending a photo with more than MAX_ALLOWED stocks.
                 warn_text = (
-                    f" but only including top {MAX_ALLOWED} results here. "
+                    f" but showing only {MAX_ALLOWED}. "
                     if (len(saveResults) > MAX_ALLOWED)
                     else ""
                 )
-                caption = f"<b>({len(saveResults)}{'+' if (len(saveResults) > MAX_ALLOWED) else ''}</b> stocks found in {str('{:.2f}'.format(elapsed_time))} sec){warn_text}. {title}"
+                caption = f"({len(saveResults)}{'+' if (len(saveResults) > MAX_ALLOWED) else ''} stocks found in {str(int(elapsed_time))} sec){warn_text}.{title}"
                 backtestExtension = "_backtest.png"
                 if len(screenResultsTrimmed) > MAX_ALLOWED:
                     screenResultsTrimmed = screenResultsTrimmed.head(MAX_ALLOWED)
@@ -1708,12 +1714,26 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                     ).encode("utf-8").decode(STD_ENCODING)
+                    caption_df = saveResultsTrimmed[['LTP','%Chng','Volume']].head(5)
+                    caption_df.loc[:, "LTP"] = caption_df.loc[:, "LTP"].apply(
+                        lambda x: str(int(round(x,0)))
+                    )
+                    caption_df.loc[:, "%Chng"] = caption_df.loc[:, "%Chng"].apply(
+                        lambda x: f'{int(round(float(x.replace("%","")),0))}%'
+                    )
+                    caption_df.loc[:, "Volume"] = caption_df.loc[:, "Volume"].apply(
+                        lambda x: f'{int(round(float(x.replace("x","")),0))}x'
+                    )
+                    caption_df.rename(columns={"%Chng": "Ch%","Volume":"Vol"}, inplace=True)
+                    for col in caption_df.columns:
+                        caption_df[col] = caption_df[col].astype(str)
                     caption_results = colorText.miniTabulator().tabulate(
-                        saveResultsTrimmed[['LTP','%Chng','Volume']].head(5),
+                        caption_df,
                         headers="keys",
-                        tablefmt=colorText.No_Pad_GridFormat
-                    ).encode("utf-8").decode(STD_ENCODING)
-                    caption = f"{caption}.First few samples are below. Open the attached image for more details.\n<pre>{caption_results}</pre>\n...\n<i>The author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NEVER be deemed as one.</i>"
+                        tablefmt=colorText.No_Pad_GridFormat,
+                        maxcolwidths=[None,None,3,3]
+                    ).encode("utf-8").decode(STD_ENCODING).replace("-+-----+-----+-----+","-+-----+---+---+").replace("%  ","%").replace("=+=====+=====+=====+","=+=====+===+===+").replace("Vol  |","Vol|").replace("x  ","x")
+                    caption = f"{caption}.Open attached image for more. 5 samples:<pre>{caption_results}</pre><i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
                 if not testing and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
                         menuChoiceHierarchy,

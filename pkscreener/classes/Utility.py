@@ -122,6 +122,8 @@ class tools:
             if userArgs is not None and userArgs.v:
                 os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
             return
+        elif (userArgs is not None and userArgs.runintradayanalysis):
+            return
         if platform.system() == "Windows":
             os.system("cls")
         else:
