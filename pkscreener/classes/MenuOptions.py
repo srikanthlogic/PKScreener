@@ -119,6 +119,7 @@ level3_X_Reversal_MenuDict = {
     "7": "Lorentzian Classifier (Machine Learning based indicator)",
     "8": "PSAR and RSI reversal",
     "9": "Rising RSI",
+    "10": "RSI MA Reversal",
     "0": "Cancel",
 }
 level3_X_ChartPattern_MenuDict = {

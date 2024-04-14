@@ -140,7 +140,7 @@ class StockScreener:
                 return returnLegibleData()
             
             with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
-                self.updateStock(stock, screeningDictionary, saveDictionary, executeOption)
+                self.updateStock(stock, screeningDictionary, saveDictionary, executeOption, exchangeName)
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener, exchangeName)
                 hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
@@ -156,6 +156,7 @@ class StockScreener:
                 isNR = False
                 hasPsarRSIReversal = False
                 hasRisingRSIReversal = False
+                hasRSIMAReversal = False
                 isValidRsi = False
                 isBuyingTrendline = False
                 isMomentum = False
@@ -219,7 +220,12 @@ class StockScreener:
                     if not isValidRsi:
                         return returnLegibleData()
                 elif executeOption == 6:
-                    if reversalOption == 9:
+                    if reversalOption == 10:
+                        hasRSIMAReversal = screener.findRSICrossingMA(processedData,screeningDictionary,
+                            saveDictionary)
+                        if not hasRSIMAReversal:
+                            return returnLegibleData()
+                    elif reversalOption == 9:
                         hasRisingRSIReversal = screener.findRisingRSI(processedData)
                         if not hasRisingRSIReversal:
                             return returnLegibleData()
@@ -432,6 +438,7 @@ class StockScreener:
                                                                 or (reversalOption == 7 and isLorentzian)
                                                                 or (reversalOption == 8 and hasPsarRSIReversal)
                                                                 or (reversalOption == 9 and hasRisingRSIReversal)
+                                                                or (reversalOption == 10 and hasRSIMAReversal)
                                                                 ))
                         or ((executeOption == 7) and ((respChartPattern < 3 and isInsideBar > 0) 
                                                                   or (isConfluence)
@@ -637,11 +644,11 @@ class StockScreener:
         if configManager.stageTwo and not verifyStageTwo and executeOption > 0:
             raise ScreeningStatistics.NotAStageTwoStock
 
-    def updateStock(self, stock, screeningDictionary, saveDictionary, executeOption=0):
+    def updateStock(self, stock, screeningDictionary, saveDictionary, executeOption=0,exchangeName='INDIA'):
         screeningDictionary["Stock"] = (
                     colorText.WHITE
                     + (
-                        f"\x1B]8;;https://in.tradingview.com/chart?symbol=NSE%3A{stock}\x1B\\{stock}\x1B]8;;\x1B\\"
+                        f"\x1B]8;;https://in.tradingview.com/chart?symbol={'NSE' if exchangeName=='INDIA' else 'NASDAQ'}%3A{stock}\x1B\\{stock}\x1B]8;;\x1B\\"
                     )
                     + colorText.END
                 ) if executeOption != 26 else stock

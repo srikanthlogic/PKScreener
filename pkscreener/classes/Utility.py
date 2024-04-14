@@ -1211,7 +1211,7 @@ class tools:
                     + colorText.END
                 )
             )
-            if resp >= 0 and resp <= 9:
+            if resp >= 0 and resp <= 10:
                 if resp == 4:
                     try:
                         maLength = int(

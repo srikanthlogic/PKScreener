@@ -695,6 +695,26 @@ class ScreeningStatistics:
         ts = diff_df.tail(len(diff_df)-index +1).head(1).index[-1]
         return ts, df[df.index == ts] #df.head(len(df) -index +1).tail(1)
     
+    # Find stock showing RSI crossing with RSI 9 SMA
+    def findRSICrossingMA(self, df, screenDict, saveDict, maLength=9):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data[::-1]
+        maRsi = pktalib.MA(data['RSI'], timeperiod=maLength)
+        data = data[::-1].head(3)
+        maRsi = maRsi[::-1].head(3)
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
+        if maRsi.iloc[0] <= data['RSI'].iloc[0] and maRsi.iloc[1] > data['RSI'].iloc[1]:
+            screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.GREEN + f'RSI-MA-Buy' + colorText.END
+            saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Buy'
+            return True
+        elif maRsi.iloc[0] >= data['RSI'].iloc[0] and maRsi.iloc[1] < data['RSI'].iloc[1]:
+            screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.FAIL + f'RSI-MA-Sell' + colorText.END
+            saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Sell'
+            return True
+        return False
+    
     # Find stocks with rising RSI from lower levels
     def findRisingRSI(self, df):
         if df is None or len(df) == 0:
@@ -907,7 +927,6 @@ class ScreeningStatistics:
         try:
             mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
             if isinstance(mf_inst_ownershipChange, pd.Series):
-                print(f"Unexpected mf_inst_ownershipChange:{mf_inst_ownershipChange}")
                 mf_inst_ownershipChange = 0
             roundOff = 2
             millions = round(mf_inst_ownershipChange/1000000,roundOff)
