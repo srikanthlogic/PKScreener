@@ -1227,6 +1227,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                         tab_results = ""
                         if corp_df is not None and not corp_df.empty:
                             corp_df.set_index("Stock", inplace=True)
+                            corp_df = corp_df[~corp_df.index.duplicated(keep='first')]
                             tab_results = colorText.miniTabulator().tabulate(
                                 corp_df,
                                 headers="keys",
@@ -1636,6 +1637,14 @@ def printNotifySaveScreenedResults(
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     Utility.tools.clearScreen()
+    if screenResults is not None and len(screenResults) > 0:
+        screenResults = screenResults[~screenResults.index.duplicated(keep='first')]
+        saveResults = saveResults[~saveResults.index.duplicated(keep='first')]
+        if "Stock" in screenResults.columns:
+            screenResults.drop_duplicates(keep="first", inplace=True)
+        if "Stock" in saveResults.columns:
+            saveResults.drop_duplicates(keep="first", inplace=True)
+
     print(
         colorText.BOLD
         + colorText.FAIL
