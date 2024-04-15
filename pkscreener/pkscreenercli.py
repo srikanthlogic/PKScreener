@@ -113,6 +113,12 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--barometer",
+    action="store_true",
+    help="Send global market barometer to telegram channel or a user",
+    required=False,
+)
+argParser.add_argument(
     "-c",
     "--croninterval",
     help="Pass interval in seconds to wait before the program is run again with same parameters",
@@ -275,7 +281,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult
+    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -322,7 +328,10 @@ def runApplication():
                                 pngExtension= ".png"
                                 )
     else:
-        main(userArgs=args)
+        if args.barometer:
+            sendGlobalMarketBarometer(userArgs=args)
+        else:
+            main(userArgs=args)
 
 
 def pkscreenercli():

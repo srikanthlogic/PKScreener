@@ -64,6 +64,9 @@ class MarketStatus(SingletonMixin, metaclass=SingletonType):
             if progress:
                 progress[task_id] = {"progress": 0, "total": 1}
             _,lngStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus(exchange=exchangeSymbol)
+            if exchangeSymbol in ["^NSEI","^BSESN"]:
+                _,bseStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus(exchange="^BSESN")
+                lngStatus = f"{lngStatus} | {bseStatus}"
             if progress:
                 progress[task_id] = {"progress": 1, "total": 1}
         except Exception as e:# pragma: no cover

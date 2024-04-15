@@ -285,6 +285,50 @@ class tools:
             return colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
         return colorText.BOLD + colorText.FAIL + str(ratio) + "x" + colorText.END
 
+    def addQuickWatermark(sourceImage:Image, xVertical=None):
+        width, height = sourceImage.size
+        watermarkText = f"© {datetime.date.today().year} pkjmesra | PKScreener"
+        message_length = len(watermarkText)
+        # load font (tweak ratio based on a particular font)
+        FONT_RATIO = 1.5
+        DIAGONAL_PERCENTAGE = .85
+        diagonal_length = int(math.sqrt((width**2) + (height**2)))
+        diagonal_to_use = diagonal_length * DIAGONAL_PERCENTAGE
+        height_to_use = height * DIAGONAL_PERCENTAGE
+        font_size = int(diagonal_to_use / (message_length / FONT_RATIO))
+        font_size_vertical = int(height_to_use / (message_length / FONT_RATIO))
+        fontPath = tools.setupReportFont()
+        font = ImageFont.truetype(fontPath, font_size)
+        font_vertical = ImageFont.truetype(fontPath, font_size_vertical)
+        #font = ImageFont.load_default() # fallback
+
+        # watermark
+        opacity = int(256 * .6)
+        mark_width, mark_height = font.getsize(watermarkText)
+        watermark = Image.new('RGBA', (mark_width, mark_height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(watermark)
+        draw.text((0, 0), text=watermarkText, font=font, fill=(128, 128, 128, opacity))
+        angle = math.degrees(math.atan(height/width))
+        watermark_diag = watermark.rotate(angle, expand=1)
+        
+        mark_width_ver, mark_height_ver = font_vertical.getsize(watermarkText)
+        watermark_ver = Image.new('RGBA', (mark_width_ver, mark_height_ver), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(watermark_ver)
+        draw.text((0, 0), text=watermarkText, font=font_vertical, fill=(128, 128, 128, opacity))
+        watermark_vertical = watermark_ver.rotate(90, expand=1)
+
+        # merge
+        wx, wy = watermark_diag.size
+        px = int((width - wx)/2)
+        py = int((height - wy)/2)
+        wxv, wyv = watermark_vertical.size
+        pxv =  int((width - wxv)/12) if xVertical is None else xVertical
+        pyv= int((height - wyv)/2)
+        sourceImage.paste(watermark_diag, (px, py, px + wx, py + wy), watermark_diag)
+        sourceImage.paste(watermark_vertical, (pxv, pyv, pxv + wxv, pyv + wyv), watermark_vertical)
+        # sourceImage.show()
+        return sourceImage
+
     def removeAllColorStyles(styledText):
         styles = [
             colorText.HEAD,
@@ -374,7 +418,7 @@ class tools:
         fontPath = tools.setupReportFont()
         artfont = ImageFont.truetype(fontPath, 30)
         stdfont = ImageFont.truetype(fontPath, 60)
-
+        
         bgColor, gridColor, artColor, menuColor = tools.getDefaultColors()
 
         dfs_to_print = [styledTable, backtestSummary, backtestDetail]
@@ -413,6 +457,7 @@ class tools:
         stdfont_sep_width, _ = stdfont.getsize_multiline(column_separator)
 
         startColValue = 100
+        xVertical = startColValue
         rowPixelRunValue = 9
         im_width = max(
             artfont_arttext_width,
@@ -528,6 +573,8 @@ class tools:
                                 fill=style,
                             )
                             colPixelRunValue = colPixelRunValue + col_width
+                            if columnNumber == 0:
+                                xVertical = int(columnNumber/2)
 
                         columnNumber = columnNumber + 1
                     if len(valueScreenCols) > 0:
@@ -583,6 +630,7 @@ class tools:
             rowPixelRunValue += artfont_line_height + 1
 
         im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
+        im = tools.addQuickWatermark(im,xVertical)
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
         # im.show()

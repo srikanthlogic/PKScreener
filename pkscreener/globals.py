@@ -53,6 +53,7 @@ from PKDevTools.classes.Telegram import (
     is_token_telegram_configured,
     send_document,
     send_message,
+    send_photo
 )
 from PKNSETools.morningstartools.PKMorningstarDataFetcher import morningstarDataFetcher
 from PKNSETools.Nasdaq.PKNasdaqIndex import PKNasdaqIndexFetcher
@@ -1733,7 +1734,7 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=[None,None,4,3]
                     ).encode("utf-8").decode(STD_ENCODING).replace("-+-----+-----+-----+","-+-----+----+---+").replace("%  ","% ").replace("=+=====+=====+=====+","=+=====+====+===+").replace("Vol  |","Vol|").replace("x  ","x")
-                    caption = f"{caption}.Open attached image for more. 5 samples:<pre>{caption_results}</pre>" #<i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
+                    caption = f"{caption}.Open attached image for more. Samples:<pre>{caption_results}</pre>" #<i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
                 if not testing and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
                         menuChoiceHierarchy,
@@ -1768,7 +1769,7 @@ def printNotifySaveScreenedResults(
                             caption = f"Backtest data for stocks listed in <b>{title}</b> scan results. See more past backtest data at https://pkjmesra.github.io/PKScreener/BacktestReports.html"
                             sendMessageToTelegramChannel(
                                 message=None,
-                                photo_filePath=pngName + backtestExtension,
+                                document_filePath=pngName + backtestExtension,
                                 caption=caption,
                                 user=user,
                             )
@@ -1948,7 +1949,7 @@ def sendQuickScanResult(
         )
         sendMessageToTelegramChannel(
             message=None,
-            photo_filePath=pngName + pngExtension,
+            document_filePath=pngName + pngExtension,
             caption=caption,
             user=user,
         )
@@ -2233,15 +2234,31 @@ def saveNotifyResultsFile(
     if defaultAnswer is None:
         input("Press <Enter> to continue...")
 
+def sendGlobalMarketBarometer(userArgs=None):
+    from pkscreener.classes import Barometer
+    caption = "Global Market Barometer with India market Performance (top) and Valuation (bottom)"
+    gmbPath = Barometer.getGlobalMarketBarometerValuation()
+    try:
+        if gmbPath is not None:
+            sendMessageToTelegramChannel(
+                message=None,
+                photo_filePath=gmbPath,
+                caption=caption,
+                user=(userArgs.user if userArgs is not None else None),
+            )
+            os.remove(gmbPath)
+    except:
+        pass
 
 def sendMessageToTelegramChannel(
     message=None, photo_filePath=None, document_filePath=None, caption=None, user=None
 ):
     global userPassedArgs, test_messages_queue
-    test_messages_queue.append(f"message:{message}\ncaption:{caption}\nuser:{user}\ndocument:{document_filePath}")
-    if len(test_messages_queue) >10:
-        test_messages_queue.pop(0)
-    if user is None and userPassedArgs.user is not None:
+    if test_messages_queue is not None:
+        test_messages_queue.append(f"message:{message}\ncaption:{caption}\nuser:{user}\ndocument:{document_filePath}")
+        if len(test_messages_queue) >10:
+            test_messages_queue.pop(0)
+    if user is None and userPassedArgs is not None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     if user is not None and caption is not None:
         caption = f"{caption.replace('&','n')}."
@@ -2257,7 +2274,7 @@ def sendMessageToTelegramChannel(
         try:
             if caption is not None:
                 caption = f"{caption.replace('&','n')}"
-            send_document(photo_filePath, caption, userID=user)
+            send_photo(photo_filePath, caption, userID=user)
             # Breather for the telegram API to be able to send the heavy photo
             sleep(2)
         except Exception as e:  # pragma: no cover
@@ -2268,7 +2285,7 @@ def sendMessageToTelegramChannel(
                 caption = f"{caption.replace('&','n')}"
             send_document(document_filePath, caption, userID=user)
             # Breather for the telegram API to be able to send the document
-            sleep(1)
+            sleep(2)
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
     if user is not None:
