@@ -285,13 +285,15 @@ class tools:
             return colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
         return colorText.BOLD + colorText.FAIL + str(ratio) + "x" + colorText.END
 
-    def addQuickWatermark(sourceImage:Image, xVertical=None):
+    def addQuickWatermark(sourceImage:Image, xVertical=None, dataSrc=""):
         width, height = sourceImage.size
         watermarkText = f"© {datetime.date.today().year} pkjmesra | PKScreener"
         message_length = len(watermarkText)
         # load font (tweak ratio based on a particular font)
         FONT_RATIO = 1.5
         DIAGONAL_PERCENTAGE = .85
+        DATASRC_FONTSIZE = 10
+        dataSrc = f"Src: {dataSrc}"
         diagonal_length = int(math.sqrt((width**2) + (height**2)))
         diagonal_to_use = diagonal_length * DIAGONAL_PERCENTAGE
         height_to_use = height * DIAGONAL_PERCENTAGE
@@ -326,6 +328,12 @@ class tools:
         pyv= int((height - wyv)/2)
         sourceImage.paste(watermark_diag, (px, py, px + wx, py + wy), watermark_diag)
         sourceImage.paste(watermark_vertical, (pxv, pyv, pxv + wxv, pyv + wyv), watermark_vertical)
+        
+        # Draw the data sources
+        dataSrcFont = ImageFont.truetype(fontPath, DATASRC_FONTSIZE)
+        dataSrc_width, dataSrc_height = dataSrcFont.getsize_multiline(dataSrc)
+        draw = ImageDraw.Draw(sourceImage)
+        draw.text((width-dataSrc_width, height-dataSrc_height-2), text=dataSrc, font=dataSrcFont, fill=(128, 128, 128, opacity))
         # sourceImage.show()
         return sourceImage
 
@@ -630,10 +638,10 @@ class tools:
             rowPixelRunValue += artfont_line_height + 1
 
         im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
-        im = tools.addQuickWatermark(im,xVertical)
+        im = tools.addQuickWatermark(im,xVertical,dataSrc="Yahoo; Morningstar, Inc; National Stock Exchange of India Ltd;")
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
-        # im.show()
+        im.show()
 
     def wrapFitLegendText(table, backtestSummary, legendText):
         wrapper = textwrap.TextWrapper(

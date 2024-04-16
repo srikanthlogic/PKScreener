@@ -1181,7 +1181,7 @@ class ScreeningStatistics:
                 + colorText.BOLD
             )
             sug = "Stay Bullish!"
-        if not PKDateUtilities.isClosingHour():
+        if PKDateUtilities.isClosingHour():
             print(
                 colorText.BOLD
                 + colorText.WARN

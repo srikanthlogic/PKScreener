@@ -82,8 +82,8 @@ def getGlobalMarketBarometerValuation():
         gmbPerf_size = gmbPerformance.size
         gmbValue_size = gmbValuation.size
         # watermark = Utility.tools.getWatermarkImage(gmbPerformance)
-        gmbPerformance = Utility.tools.addQuickWatermark(gmbPerformance)
-        gmbValuation = Utility.tools.addQuickWatermark(gmbValuation)
+        gmbPerformance = Utility.tools.addQuickWatermark(gmbPerformance, dataSrc="Morningstar, Inc")
+        gmbValuation = Utility.tools.addQuickWatermark(gmbValuation, dataSrc="Morningstar, Inc")
         gmbCombined = Image.new('RGB',(gmbPerf_size[0], gmbPerf_size[1]+gmbValue_size[1]+gapHeight), bgColor)
         gmbCombined.paste(gmbPerformance,(0,0))
         draw = ImageDraw.Draw(gmbCombined)

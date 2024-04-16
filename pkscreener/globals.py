@@ -1038,6 +1038,16 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     df=fetcher.fetchLatestNiftyDaily(proxyServer=fetcher.proxyServer)
                 )
                 warningText = "\nNifty AI prediction works best if you request after market is closed. It may not be accurate while market is still open!" if "Open" in Utility.marketStatus() else ""
+                try:
+                    todayHoliday, todayOccassion = PKDateUtilities.isHoliday(PKDateUtilities.currentDateTime())
+                    nextWeekday = PKDateUtilities.nextWeekday()
+                    tomorrowHoliday,tomorrowOccassion = PKDateUtilities.isHoliday(nextWeekday)
+                    if todayHoliday:
+                        warningText = f"{warningText}\n\nMarket is closed today due to {todayOccassion}."
+                    if tomorrowHoliday:
+                        warningText = f"{warningText}\n\nMarket will be closed on {nextWeekday.strftime('%Y-%m-%d')} due to {tomorrowOccassion}."
+                except:
+                    pass
                 sendMessageToTelegramChannel(
                     message=f"{Utility.tools.removeAllColorStyles(Utility.marketStatus())}\nNifty AI prediction for the Next Day: {pText}. {sText}.{warningText}",
                     user=user,
