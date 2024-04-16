@@ -314,6 +314,15 @@ def runApplication():
                         final_df = df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]
                     else:
                         final_df = pd.concat([final_df, df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]], axis=0)
+            final_df.rename(
+                columns={
+                    "LTP": "Morning Portfolio",
+                    "SqrOffLTP": "SqrOff Portfolio",
+                    "EoDLTP": "EoD Portfolio",
+                    "%Chng": "EoD %Chng",
+                    },
+                    inplace=True,
+                )
             mark_down = colorText.miniTabulator().tabulate(
                                 final_df,
                                 headers="keys",

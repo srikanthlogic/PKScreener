@@ -88,7 +88,10 @@ def getGlobalMarketBarometerValuation():
         gmbCombined.paste(gmbPerformance,(0,0))
         draw = ImageDraw.Draw(gmbCombined)
         # artwork
-        repoText = f'https://GitHub.com/pkjmesra/pkscreener/ | © {datetime.date.today().year} pkjmesra | https://t.me/PKScreener\n{MarketStatus().getMarketStatus(exchangeSymbol="^NSEI")}\n{MarketStatus().getMarketStatus(exchangeSymbol="^BSESN")}\n{MarketStatus().getMarketStatus(exchangeSymbol="^IXIC")}'
+        nseMarketStatus = MarketStatus().getMarketStatus(exchangeSymbol="^NSEI",namedOnly=True)
+        bseMarketStatus = MarketStatus().getMarketStatus(exchangeSymbol="^BSESN",namedOnly=True)
+        nasdaqMarketStatus = MarketStatus().getMarketStatus(exchangeSymbol="^IXIC")
+        repoText = f'https://GitHub.com/pkjmesra/pkscreener/ | © {datetime.date.today().year} pkjmesra | https://t.me/PKScreener\n{nseMarketStatus}\n{bseMarketStatus}\n{nasdaqMarketStatus}'
         draw.text((5, gmbPerf_size[1]+5), Utility.tools.removeAllColorStyles(repoText), font=artfont, fill="lightgreen")
         gmbCombined.paste(gmbValuation,(0,gmbPerf_size[1]+gapHeight))
         gmbCombined.save(os.path.join(folderPath,"gmb.png"),"PNG")

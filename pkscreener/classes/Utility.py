@@ -448,7 +448,7 @@ class tools:
             dfs_to_print.append(addendum)
             unstyled_dfs.append(unstyled_addendum)
 
-        repoText = tools.getRepoHelpText()
+        repoText = tools.getRepoHelpText(table,backtestSummary)
         artfont_repotext_width, artfont_repotext_height = artfont.getsize_multiline(repoText)
         legendText = tools.getLegendHelpText(table,backtestSummary)
         _, artfont_legendtext_height = artfont.getsize_multiline(legendText)
@@ -508,7 +508,7 @@ class tools:
             for line in screenLines:
                 _, stdfont_line_height = stdfont.getsize_multiline(line)
                 # Print the row separators
-                if (line.startswith(line_separator)):
+                if not (line.startswith(column_separator)):
                     draw.text(
                         (colPixelRunValue, rowPixelRunValue),
                         line,
@@ -695,9 +695,10 @@ class tools:
         # return colorText.WHITE + legendText + colorText.END
         return legendText
 
-    def getRepoHelpText():
+    def getRepoHelpText(table,backtestSummary):
         repoText = f"Source: https://GitHub.com/pkjmesra/pkscreener/  | © {datetime.date.today().year} pkjmesra | Telegram: https://t.me/PKScreener |"
-        repoText = f"{repoText}\nThe author is NOT a financial advisor and is NOT SEBI registered. This report is for learning/analysis purposes ONLY. Author assumes no responsibility or liability for any errors or omissions in this report or repository, or gain/loss bearing out of this analysis. The user MUST take advise ONLY from registered SEBI financial advisors only.\n"
+        disclaimer = f"The author is NOT a financial advisor and is NOT SEBI registered. This report is for learning/analysis purposes ONLY. Author assumes no responsibility or liability for any errors or omissions in this report or repository, or gain/loss bearing out of this analysis. The user MUST take advise ONLY from registered SEBI financial advisors only."
+        repoText = f"{repoText}\n{tools.wrapFitLegendText(table,backtestSummary,disclaimer)}"
         repoText = f"{repoText}\n[+] Understanding this report:\n\n"
         return repoText
 

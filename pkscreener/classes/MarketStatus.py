@@ -58,13 +58,13 @@ class MarketStatus(SingletonMixin, metaclass=SingletonType):
     def marketStatus(self, status):
         self.attributes["marketStatus"] = status
 
-    def getMarketStatus(self, progress=None, task_id=0, exchangeSymbol="^NSEI"):
+    def getMarketStatus(self, progress=None, task_id=0, exchangeSymbol="^NSEI",namedOnly=False):
         lngStatus = ""
         try:
             if progress:
                 progress[task_id] = {"progress": 0, "total": 1}
             _,lngStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus(exchange=exchangeSymbol)
-            if exchangeSymbol in ["^NSEI","^BSESN"]:
+            if exchangeSymbol in ["^NSEI","^BSESN"] and not namedOnly:
                 _,bseStatus,_ = MarketStatus.nseFetcher.capitalMarketStatus(exchange="^BSESN")
                 lngStatus = f"{lngStatus} | {bseStatus}"
             if progress:
