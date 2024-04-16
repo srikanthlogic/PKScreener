@@ -31,7 +31,7 @@ import argparse
 import builtins
 import logging
 import traceback
-
+import datetime
 # Keep module imports prior to classes
 import os
 import sys
@@ -63,6 +63,8 @@ os.environ["AUTOGRAPH_VERBOSITY"] = "0"
 printenabled=False
 originalStdOut=None
 original__stdout=None
+cron_runs=0
+
 def decorator(func):
     def new_func(*args, **kwargs):
         if printenabled:
@@ -480,13 +482,16 @@ def scheduleNextRun():
         ):
             sleepUntilNextExecution = False
         sleep(int(args.croninterval))
-    print(
-        colorText.BOLD + colorText.GREEN + "=> Going to fetch again!" + colorText.END,
-        end="\r",
-        flush=True,
-    )
-    sleep(3)
+    global cron_runs
+    if cron_runs > 0:
+        print(
+            colorText.BOLD + colorText.GREEN + f'=> Going to fetch again in {int(args.croninterval)} sec. at {(PKDateUtilities.currentDateTime() + datetime.timedelta(seconds=120)).strftime("%Y-%m-%d %H:%M:%S")} IST...' + colorText.END,
+            end="\r",
+            flush=True,
+        )
+        sleep(int(args.croninterval) if not args.testbuild else 3)
     runApplication()
+    cron_runs += 1
 
 
 if __name__ == "__main__":
