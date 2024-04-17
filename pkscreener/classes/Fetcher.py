@@ -38,7 +38,7 @@ from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 from pkscreener.classes.PKTask import PKTask
-
+from PKDevTools.classes.OutputControls import OutputControls
 # This Class Handles Fetching of Stock Data over the internet
 
 
@@ -112,7 +112,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         if printCounter:
             sys.stdout.write("\r\033[K")
             try:
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.GREEN
                     + (
@@ -134,7 +134,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 default_logger().debug(e, exc_info=True)
                 pass
             if len(data) == 0:
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "=> Failed to fetch!"
@@ -144,7 +144,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 )
                 raise StockDataEmptyException
                 return None
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD + colorText.GREEN + "=> Done!" + colorText.END,
                 end="\r",
                 flush=True,
@@ -207,7 +207,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
             data = pd.read_excel("watchlist.xlsx")
         except FileNotFoundError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + f"[+] watchlist.xlsx not found in {os.getcwd()}"
@@ -219,7 +219,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 data = data["Stock Code"].values.tolist()
         except KeyError as e: # pragma: no cover
             default_logger().debug(e, exc_info=True)
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + '[+] Bad Watchlist Format: First Column (A1) should have Header named "Stock Code"'
@@ -230,7 +230,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
             sample = {"Stock Code": ["SBIN", "INFY", "TATAMOTORS", "ITC"]}
             sample_data = pd.DataFrame(sample, columns=["Stock Code"])
             sample_data.to_excel("watchlist_template.xlsx", index=False, header=True)
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.BLUE
                 + f"[+] watchlist_template.xlsx created in {os.getcwd()} as a referance template."

@@ -26,7 +26,7 @@ from enum import Enum
 
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
-
+from PKDevTools.classes.OutputControls import OutputControls
 import pkscreener.classes.ConfigManager as ConfigManager
 
 configManager = ConfigManager.tools()
@@ -447,13 +447,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select a menu option:"
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -490,13 +490,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select a Strategy for Screening:"
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -521,13 +521,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an Index for Screening:"
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -555,13 +555,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select a Criterion for Stock Screening: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -586,13 +586,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -617,13 +617,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -648,13 +648,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -679,13 +679,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -710,13 +710,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -742,13 +742,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """
@@ -774,13 +774,13 @@ class menus:
         if asList:
             return menuText
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Select an option: "
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + menuText
                 + """

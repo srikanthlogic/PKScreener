@@ -39,6 +39,7 @@ from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
 from pkscreener.classes.ConfigManager import parser, tools
+from PKDevTools.classes.OutputControls import OutputControls
 
 import pkscreener.classes.Fetcher as Fetcher
 import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
@@ -248,7 +249,7 @@ class PKScanRunner:
                     testing=testing,
                 )
 
-        print(colorText.END)
+        OutputControls().printOutput(colorText.END)
         PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,scr
 
@@ -290,7 +291,7 @@ class PKScanRunner:
                 cleanup_on_signal(signal.SIGBREAK)
             else:
                 cleanup_on_sigterm()
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
             + f"[+] Using Period:{PKScanRunner.configManager.period} and Duration:{PKScanRunner.configManager.duration} for scan! You can change this in user config."
@@ -301,8 +302,8 @@ class PKScanRunner:
             sys.stdout.write(f"{round(time.time() - start_time)}.")
             worker.daemon = True
             worker.start()
-        print(f"Started all workers in {time.time() - start_time}s")
-        sys.stdout.write("\x1b[1A")
+        OutputControls().printOutput(f"Started all workers in {time.time() - start_time}s")
+        # sys.stdout.write("\x1b[1A")
 
     def terminateAllWorkers(consumers, tasks_queue, testing):
         # Exit all processes. Without this, it threw error in next screening session
@@ -331,7 +332,7 @@ class PKScanRunner:
                 break
 
     def shutdown(frame, signum):
-        print("Shutting down for test coverage")
+        OutputControls().printOutput("Shutting down for test coverage")
 
     def runScan(testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df, *otherArgs,resultsReceivedCb=None):
         queueCounter = 0

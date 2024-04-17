@@ -71,6 +71,7 @@ from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 from pkscreener.classes.PKTask import PKTask
 from pkscreener.classes.MarketStatus import MarketStatus
 from pkscreener.classes.PKScheduler import PKScheduler
+from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.Utils import random_user_agent
 
 configManager = ConfigManager.tools()
@@ -117,27 +118,29 @@ lastScreened = os.path.join(
 # Class for managing misc and utility methods
 
 class tools:
-    def clearScreen(userArgs=None):
+    def clearScreen(userArgs=None,clearAlways=False):
         if "RUNNER" in os.environ.keys() or (userArgs is not None and userArgs.prodbuild):
             if userArgs is not None and userArgs.v:
                 os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
             return
         elif (userArgs is not None and userArgs.runintradayanalysis):
             return
-        if platform.system() == "Windows":
-            os.system("cls")
-        else:
-            os.system("clear")
+        if clearAlways:
+            if platform.system() == "Windows":
+                os.system("cls")
+            else:
+                os.system("clear")
         try:
-            art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
-            print(art.encode('utf-8').decode(STD_ENCODING))
+            if clearAlways:
+                art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
+                OutputControls().printOutput(art.encode('utf-8').decode(STD_ENCODING), enableMultipleLineOutput=True)
         except Exception as e:# pragma: no cover
             default_logger().debug(e, exc_info=True)
             pass
 
     # Print about developers and repository
     def showDevInfo(defaultAnswer=None):
-        print("\n" + Changelog.changelog())
+        OutputControls().printOutput("\n" + Changelog.changelog())
         devInfo = "\n[+] Developer: PK (PKScreener)"
         versionInfo = "[+] Version: %s" % VERSION
         homePage = "[+] Home Page: https://github.com/pkjmesra/PKScreener\nTelegram Bot:@nse_pkscreener_bot\nChannel:https://t.me/PKScreener\nDiscussions:https://t.me/PKScreeners"
@@ -146,12 +149,12 @@ class tools:
         )
         communityInfo = "[+] Join Community Discussions: https://github.com/pkjmesra/PKScreener/discussions"
         latestInfo = "[+] Download latest software from https://github.com/pkjmesra/PKScreener/releases/latest"
-        print(colorText.BOLD + colorText.WARN + devInfo + colorText.END)
-        print(colorText.BOLD + colorText.WARN + versionInfo + colorText.END)
-        print(colorText.BOLD + homePage + colorText.END)
-        print(colorText.BOLD + colorText.FAIL + issuesInfo + colorText.END)
-        print(colorText.BOLD + colorText.GREEN + communityInfo + colorText.END)
-        print(colorText.BOLD + colorText.BLUE + latestInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.WARN + devInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.WARN + versionInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + homePage + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.FAIL + issuesInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.GREEN + communityInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.BLUE + latestInfo + colorText.END)
         if defaultAnswer is None:
             input(
                 colorText.BOLD
@@ -212,30 +215,30 @@ class tools:
         try:
             df = pd.read_pickle(lastScreened)
             if df is not None and len(df) > 0:
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.GREEN
                     + "\n[+] Showing recently screened results..\n"
                     + colorText.END
                 )
                 df.sort_values(by=["Volume"], ascending=False, inplace=True)
-                print(
+                OutputControls().printOutput(
                     colorText.miniTabulator().tabulate(
                         df, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=tools.getMaxColumnWidths(df)
                     ).encode("utf-8").decode(STD_ENCODING)
                 )
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.WARN
                     + "[+] Note: Trend calculation is based on number of recent days to screen as per your configuration."
                     + colorText.END
                 )
             else:
-                print("Nothing to show here!")
+                OutputControls().printOutput("Nothing to show here!")
         except FileNotFoundError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] Failed to load recently screened result table from disk! Skipping.."
@@ -717,7 +720,7 @@ class tools:
     def set_github_output(name, value):
         if "GITHUB_OUTPUT" in os.environ.keys():
             with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-                print(f"{name}={value}", file=fh)
+                OutputControls().printOutput(f"{name}={value}", file=fh)
 
     def afterMarketStockDataExists(intraday=False, forceLoad=False):
         curr = PKDateUtilities.currentDateTime()
@@ -760,12 +763,12 @@ class tools:
             try:
                 with open(cache_file, "wb") as f:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
-                    print(colorText.BOLD + colorText.GREEN + "=> Done." + colorText.END)
+                    OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "=> Done." + colorText.END)
                 if downloadOnly:
                     Committer.execOSCommand(f"git add {cache_file} -f >/dev/null 2>&1")
             except pickle.PicklingError as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "=> Error while Caching Stock Data."
@@ -774,7 +777,7 @@ class tools:
             except Exception as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD + colorText.GREEN + "=> Already Cached." + colorText.END
             )
 
@@ -839,7 +842,7 @@ class tools:
                 try:
                     stockData = pickle.load(f)
                     if not downloadOnly:
-                        print(
+                        OutputControls().printOutput(
                             colorText.BOLD
                             + colorText.GREEN
                             + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
@@ -890,7 +893,7 @@ class tools:
                 except pickle.UnpicklingError as e:
                     default_logger().debug(e, exc_info=True)
                     f.close()
-                    print(
+                    OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.FAIL
                         + "[+] Error while Reading Stock Cache."
@@ -901,7 +904,7 @@ class tools:
                 except EOFError as e:  # pragma: no cover
                     default_logger().debug(e, exc_info=True)
                     f.close()
-                    print(
+                    OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.FAIL
                         + "[+] Stock Cache Corrupted."
@@ -916,13 +919,13 @@ class tools:
             and ("1m" if isIntraday else ConfigManager.default_duration)
             == configManager.duration
         ) or forceRedownload:
-            print(
+            OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "[+] Market Stock Data is not cached, or forced to redownload .."
                     + colorText.END
                 )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
                 + "[+] Downloading cache from server for faster processing, Please Wait.."
@@ -1023,7 +1026,7 @@ class tools:
                     except Exception as e:  # pragma: no cover
                         default_logger().debug(e, exc_info=True)
                         f.close()
-                        print("[!] Download Error - " + str(e))
+                        OutputControls().printOutput("[!] Download Error - " + str(e))
                 else:
                     default_logger().debug(
                         f"Stock data cache file:{cache_file} on server has length ->{filesize}{chunksize}"
@@ -1043,7 +1046,7 @@ class tools:
                         forceRedownload=forceRedownload
                     )
         if not stockDataLoaded:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] Cache unavailable on pkscreener server, Continuing.."
@@ -1095,7 +1098,7 @@ class tools:
                 isSaved = True
             except Exception as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
-                print(
+                OutputControls().printOutput(
                     colorText.FAIL
                     + (
                         "[+] Error saving file at %s"
@@ -1109,7 +1112,7 @@ class tools:
                     isSaved = True
                 except Exception as ex:  # pragma: no cover
                     default_logger().debug(ex, exc_info=True)
-                    print(
+                    OutputControls().printOutput(
                         colorText.FAIL
                         + (
                             "[+] Error saving file at %s"
@@ -1120,7 +1123,7 @@ class tools:
                     filePath = os.path.join(tempfile.gettempdir(), filename)
                     df.to_excel(filePath,engine="xlsxwriter")
                     isSaved = True
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + (colorText.GREEN if isSaved else colorText.FAIL)
                 + (("[+] Results saved to %s" % filePath) if isSaved else "[+] Failed saving results into Excel file!")
@@ -1288,7 +1291,7 @@ class tools:
                         return resp, maLength
                     except ValueError as e:  # pragma: no cover
                         default_logger().debug(e, exc_info=True)
-                        print(
+                        OutputControls().printOutput(
                             colorText.BOLD
                             + colorText.FAIL
                             + "\n[!] Invalid Input! MA Length should be single integer value!\n"
@@ -1308,7 +1311,7 @@ class tools:
                         return resp, maLength
                     except ValueError as e:  # pragma: no cover
                         default_logger().debug(e, exc_info=True)
-                        print(
+                        OutputControls().printOutput(
                             colorText.BOLD
                             + colorText.FAIL
                             + "\n[!] Invalid Input! NR timeframe should be single integer value!\n"
@@ -1410,7 +1413,7 @@ class tools:
             for file_url in urls:
                 resp = fetcher.fetchURL(file_url, stream=True)
                 if resp is not None and resp.status_code == 200:
-                    print(
+                    OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.GREEN
                         + "[+] Downloading AI model (v2) for Nifty predictions, Please Wait.."
@@ -1442,7 +1445,7 @@ class tools:
                         f.close()
                     except Exception as e:  # pragma: no cover
                         default_logger().debug(e, exc_info=True)
-                        print("[!] Download Error - " + str(e))
+                        OutputControls().printOutput("[!] Download Error - " + str(e))
             time.sleep(3)
         try:
             if os.path.isfile(files[0]) and os.path.isfile(files[1]):
@@ -1470,7 +1473,7 @@ class tools:
 
     def alertSound(beeps=3, delay=0.2):
         for i in range(beeps):
-            print("\a")
+            OutputControls().printOutput("\a")
             sleep(delay)
     
     def getMaxColumnWidths(df):

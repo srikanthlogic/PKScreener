@@ -53,6 +53,7 @@ from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener import Imports
+from PKDevTools.classes.OutputControls import OutputControls
 import pkscreener.classes.ConfigManager as ConfigManager
 
 multiprocessing.freeze_support()
@@ -243,9 +244,9 @@ def setupLogger(shouldLog=False, trace=False):
             os.remove(log_file_path)
         except Exception:# pragma: no cover
             pass
-    print(colorText.FAIL + "\n[+] Logs will be written to:"+colorText.END)
-    print(colorText.GREEN + f"[+] {log_file_path}"+colorText.END)
-    print(colorText.FAIL + "[+] If you need to share, open this folder, copy and zip the log file to share.\n" + colorText.END)
+    OutputControls().printOutput(colorText.FAIL + "\n[+] Logs will be written to:"+colorText.END)
+    OutputControls().printOutput(colorText.GREEN + f"[+] {log_file_path}"+colorText.END)
+    OutputControls().printOutput(colorText.FAIL + "[+] If you need to share, open this folder, copy and zip the log file to share.\n" + colorText.END)
     # logger = multiprocessing.log_to_stderr(log.logging.DEBUG)
     log.setup_custom_logger(
         "pkscreener",
@@ -258,7 +259,7 @@ def setupLogger(shouldLog=False, trace=False):
 
 def warnAboutDependencies():
     if not Imports["talib"]:
-        print(
+        OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] TA-Lib is not installed. Looking for pandas_ta."
@@ -266,7 +267,7 @@ def warnAboutDependencies():
             )
         sleep(1)
         if Imports["pandas_ta"]:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
                 + "[+] Found and falling back on pandas_ta.\n[+] For full coverage(candle patterns), you may wish to read the README file in PKScreener repo : https://github.com/pkjmesra/PKScreener \n[+] or follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
@@ -274,7 +275,7 @@ def warnAboutDependencies():
             )
             sleep(1)
         else:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] Neither ta-lib nor pandas_ta was located. You need at least one of them to continue! \n[+] Please follow instructions from README file under PKScreener repo: https://github.com/pkjmesra/PKScreener"
@@ -301,7 +302,7 @@ def runApplication():
             try:
                 optionalFinalOutcome_df = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
             except Exception as e:
-                print(e)
+                OutputControls().printOutput(e)
                 if args.log:
                     import traceback
                     traceback.print_exc()
@@ -329,7 +330,7 @@ def runApplication():
                                 tablefmt=colorText.No_Pad_GridFormat,
                                 showindex = False
                             ).encode("utf-8").decode(Utility.STD_ENCODING)
-            print(mark_down)
+            OutputControls().printOutput(mark_down)
             sendQuickScanResult(menuChoiceHierarchy="IntradayAnalysis",
                                 user="-1001785195297",
                                 tabulated_results=mark_down,
@@ -352,10 +353,10 @@ def pkscreenercli():
             multiprocessing.set_start_method("fork")
         except RuntimeError as e:# pragma: no cover
             if "RUNNER" not in os.environ.keys() and ('PKDevTools_Default_Log_Level' in os.environ.keys() and os.environ["PKDevTools_Default_Log_Level"] != str(log.logging.NOTSET)):
-                print(
+                OutputControls().printOutput(
                     "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
                 )
-                print(e)
+                OutputControls().printOutput(e)
                 traceback.print_exc()
             pass
     configManager.getConfig(ConfigManager.parser)
@@ -377,7 +378,7 @@ def pkscreenercli():
     if originalStdOut is None:
         # Clear only if this is the first time it's being called from some
         # loop within workflowtriggers.
-        Utility.tools.clearScreen(userArgs=args)
+        Utility.tools.clearScreen(userArgs=args, clearAlways=True)
     warnAboutDependencies()
     if args.prodbuild:
         disableSysOut()
@@ -388,7 +389,7 @@ def pkscreenercli():
         )
     if args.monitor:
         Utility.tools.clearScreen()
-        print("Not Implemented Yet!")
+        OutputControls().printOutput("Not Implemented Yet!")
         # intradayMonitorInstance.monitor()
         sys.exit(0)
     if args.intraday:
@@ -406,7 +407,7 @@ def pkscreenercli():
         configManager.minLTP = args.minprice
         configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
     if args.testbuild and not args.prodbuild:
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
             + "[+] Started in TestBuild mode!"
@@ -414,7 +415,7 @@ def pkscreenercli():
         )
         runApplication()
     elif args.download:
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
             + "[+] Download ONLY mode! Stocks will not be screened!"
@@ -450,7 +451,7 @@ def runApplicationForScreening():
         default_logger().debug(e, exc_info=True)
         if args.prodbuild:
             disableSysOut(disable=False)
-        print(
+        OutputControls().printOutput(
             f"{e}\n[+] An error occurred! Please run with '-l' option to collect the logs.\n[+] For example, 'pkscreener -l' and then contact the developer!"
         )
         if "RUNNER" in os.environ.keys() or ('PKDevTools_Default_Log_Level' in os.environ.keys() and os.environ["PKDevTools_Default_Log_Level"] != str(log.logging.NOTSET)):
@@ -464,7 +465,7 @@ def runApplicationForScreening():
 def scheduleNextRun():
     sleepUntilNextExecution = not PKDateUtilities.isTradingTime()
     while sleepUntilNextExecution:
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
             + (
@@ -493,7 +494,7 @@ def scheduleNextRun():
         sleep(int(args.croninterval))
     global cron_runs
     if cron_runs > 0:
-        print(
+        OutputControls().printOutput(
             colorText.BOLD + colorText.GREEN + f'=> Going to fetch again in {int(args.croninterval)} sec. at {(PKDateUtilities.currentDateTime() + datetime.timedelta(seconds=120)).strftime("%Y-%m-%d %H:%M:%S")} IST...' + colorText.END,
             end="\r",
             flush=True,

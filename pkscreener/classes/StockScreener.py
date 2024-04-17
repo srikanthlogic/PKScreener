@@ -44,7 +44,7 @@ from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
 from pkscreener import Imports
 from pkscreener.classes.CandlePatterns import CandlePatterns
-
+from PKDevTools.classes.OutputControls import OutputControls
 
 class StockScreener:
     def __init__(self):
@@ -567,8 +567,8 @@ class StockScreener:
             if testbuild or printCounter:
                 import traceback
                 traceback.print_exc()
-                print(e)
-                print(
+                OutputControls().printOutput(e)
+                OutputControls().printOutput(
                     colorText.FAIL
                     + (
                         "\n[+] Exception Occured while Screening %s! Skipping this stock.."
@@ -788,7 +788,7 @@ class StockScreener:
     def printProcessingCounter(self, totalSymbols, stock, printCounter, hostRef):
         if printCounter:
             try:
-                print(
+                OutputControls().printOutput(
                             colorText.BOLD
                             + colorText.GREEN
                             + (
@@ -806,7 +806,7 @@ class StockScreener:
                             + colorText.END,
                             end="",
                         )
-                print(
+                OutputControls().printOutput(
                             colorText.BOLD
                             + colorText.GREEN
                             + "=> Done!"

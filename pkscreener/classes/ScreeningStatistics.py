@@ -37,6 +37,7 @@ from sys import float_info as sflt
 import pkscreener.classes.Utility as Utility
 from pkscreener import Imports
 from pkscreener.classes.Pktalib import pktalib
+from PKDevTools.classes.OutputControls import OutputControls
 from PKNSETools.morningstartools import Stock
 
 if sys.version_info >= (3, 11):
@@ -1182,7 +1183,7 @@ class ScreeningStatistics:
             )
             sug = "Stay Bullish!"
         if PKDateUtilities.isClosingHour():
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "Note: The AI prediction should be executed After 3 PM or Near to Closing time as the Prediction Accuracy is based on the Closing price!"
@@ -1192,7 +1193,7 @@ class ScreeningStatistics:
         strengthText = "Probability/Strength of Prediction = {}%".format(
             Utility.tools.getSigmoidConfidence(pred[0])
         )
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.BLUE
             + "\n"
@@ -1202,7 +1203,7 @@ class ScreeningStatistics:
             + predictionText
             + colorText.END
         )
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.BLUE
             + "\n"

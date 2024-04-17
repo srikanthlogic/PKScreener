@@ -35,6 +35,7 @@ from pkscreener.classes.ConfigManager import parser, tools
 from pkscreener.classes.Portfolio import Portfolio, PortfolioCollection
 from pkscreener.classes.PKTask import PKTask
 from pkscreener.classes.PKScheduler import PKScheduler
+from PKDevTools.classes.OutputControls import OutputControls
 
 configManager = tools()
 configManager.getConfig(parser)
@@ -45,7 +46,7 @@ def summariseAllStrategies(testing=False):
     counter = 0
     for report in reports:
         counter += 1
-        print(f"Processing {counter} of {len(reports)}...")
+        OutputControls().printOutput(f"Processing {counter} of {len(reports)}...")
         df = bestStrategiesFromSummaryForReport(
             f"PKScreener_{report}_Insights_DateSorted.html", summary=True,includeLargestDatasets=True
         )
@@ -284,8 +285,8 @@ def performXRay(*args, **kwargs):
         if df is None:
             return None
         df = cleanFormattingForStatsData(calcForDate, saveResults, df)
-        # print(f"All portfolios:\n{PortfolioCollection().portfoliosAsDataframe}")
-        # print(f"All portfoliosSummary:\n{PortfolioCollection().ledgerSummaryAsDataframe}")
+        # OutputControls().printOutput(f"All portfolios:\n{PortfolioCollection().portfoliosAsDataframe}")
+        # OutputControls().printOutput(f"All portfoliosSummary:\n{PortfolioCollection().ledgerSummaryAsDataframe}")
     if task is not None:
         if task.taskId > 0:
             task.progressStatusDict[task.taskId] = {'progress': 0, 'total': 1}

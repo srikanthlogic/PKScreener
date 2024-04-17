@@ -32,6 +32,7 @@ from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
+from PKDevTools.classes.OutputControls import OutputControls
 parser = configparser.ConfigParser(strict=False)
 
 # Default attributes for Downloading Cache from Git repo
@@ -114,13 +115,13 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     if not f.endswith(excludeFile):
                         try:
                             os.remove(f if os.sep in f else os.path.join(dir,f))
-                        except:
+                        except Exception as e:
                             self.default_logger.debug(e, exc_info=True)
                             pass
                 else:
                     try:
                         os.remove(f if os.sep in f else os.path.join(dir,f))
-                    except:
+                    except Exception as e:
                         self.default_logger.debug(e, exc_info=True)
                         pass
 
@@ -168,7 +169,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 parser.write(fp)
                 fp.close()
                 if showFileCreatedText:
-                    print(
+                    OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.GREEN
                         + "[+] Default configuration generated as user configuration is not found!"
@@ -178,7 +179,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     return
             except IOError as e:  # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "[+] Failed to save user config. Exiting.."
@@ -189,8 +190,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
         else:
             parser = configparser.ConfigParser(strict=False)
             parser.add_section("config")
-            print("")
-            print(
+            OutputControls().printOutput("")
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
                 + "[+] PKScreener User Configuration:"
@@ -316,7 +317,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
             # delete stock data due to config change
             self.deleteFileWithPattern()
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] Cached Stock Data Deleted."
@@ -327,7 +328,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)
                 fp.close()
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.GREEN
                     + "[+] User configuration saved."
@@ -337,7 +338,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 return
             except IOError as e:  # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
-                print(
+                OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "[+] Failed to save user config. Exiting.."
@@ -484,22 +485,22 @@ class tools(SingletonMixin, metaclass=SingletonType):
         try:
             prompt = "[+] PKScreener User Configuration:"
             f = open("pkscreener.ini", "r")
-            print(colorText.BOLD + colorText.GREEN + prompt + colorText.END)
+            OutputControls().printOutput(colorText.BOLD + colorText.GREEN + prompt + colorText.END)
             configData = f.read()
             f.close()
-            print("\n" + configData)
+            OutputControls().printOutput("\n" + configData)
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
             return f"{prompt}\n{configData}"
         except Exception as e:  # pragma: no cover
             self.default_logger.debug(e, exc_info=True)
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] User Configuration not found!"
                 + colorText.END
             )
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.WARN
                 + "[+] Configure the limits to continue."
