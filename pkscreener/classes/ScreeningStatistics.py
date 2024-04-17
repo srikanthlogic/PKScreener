@@ -2253,11 +2253,6 @@ class ScreeningStatistics:
             filteredTops = tops[
                 tops.tops > (highestTop - (highestTop * percentageFromTop))
             ]
-            # print(tops)
-            # print(filteredTops)
-            # print(tops.sort_values(by=['tops'], ascending=False))
-            # print(tops.describe())
-            # print(f"Till {highestTop-(highestTop*percentageFromTop)}")
             if filteredTops.equals(tops):  # Tops are in the range
                 lowPoints = []
                 for i in range(len(tops) - 1):
@@ -2379,52 +2374,3 @@ class ScreeningStatistics:
         except Exception as e:  # pragma: no cover
             self.default_logger.debug(e, exc_info=True)
             return False
-
-    """
-    # Find out trend for days to lookback
-    def validateVCP(df, screenDict, saveDict, daysToLookback=ConfigManager.daysToLookback, stockName=None):
-        // De-index date
-        data = df.copy()
-        data.reset_index(inplace=True)
-        data.rename(columns={'index':'Date'}, inplace=True)
-        data = data.head(daysToLookback)
-        data = data[::-1]
-        data = data.set_index(np.arange(len(data)))
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        data['tops'] = data['Close'].iloc[list(pktalib.argrelextrema(np.array(data['Close']), np.greater_equal, order=3)[0])]
-        data['bots'] = data['Close'].iloc[list(pktalib.argrelextrema(np.array(data['Close']), np.less_equal, order=3)[0])]
-        try:
-            try:
-                top_slope,top_c = np.polyfit(data.index[data.tops > 0], data['tops'][data.tops > 0], 1)
-                bot_slope,bot_c = np.polyfit(data.index[data.bots > 0], data['bots'][data.bots > 0], 1)
-                topAngle = math.degrees(math.atan(top_slope))
-                vcpAngle = math.degrees(math.atan(bot_slope) - math.atan(top_slope))
-
-                # print(math.degrees(math.atan(top_slope)))
-                # print(math.degrees(math.atan(bot_slope)))
-                # print(vcpAngle)
-                # print(topAngle)
-                # print(data.max()['bots'])
-                # print(data.max()['tops'])
-                if (vcpAngle > 20 and vcpAngle < 70) and (topAngle > -10 and topAngle < 10) and (data['bots'].max() <= data['tops'].max()) and (len(data['bots'][data.bots > 0]) > 1):
-                    print("---> GOOD VCP %s at %sRs" % (stockName, top_c))
-                    import os
-                    os.system("echo %s >> vcp_plots\VCP.txt" % stockName)
-
-                    import matplotlib.pyplot as plt                
-                    plt.scatter(data.index[data.tops > 0], data['tops'][data.tops > 0], c='g')
-                    plt.scatter(data.index[data.bots > 0], data['bots'][data.bots > 0], c='r')
-                    plt.plot(data.index, data['Close'])
-                    plt.plot(data.index, top_slope*data.index+top_c,'g--')
-                    plt.plot(data.index, bot_slope*data.index+bot_c,'r--')
-                    if stockName != None:
-                        plt.title(stockName)
-                    # plt.show()
-                    plt.savefig('vcp_plots\%s.png' % stockName)
-                    plt.clf()
-            except np.RankWarning:
-                pass
-        except np.linalg.LinAlgError:
-            return False
-    """
