@@ -95,8 +95,10 @@ def bestStrategiesFromSummaryForReport(reportName: None, summary=False,includeLa
     dfs = []
     insights = None
     if "PKDevTools_Default_Log_Level" not in os.environ.keys():
-        if (("RUNNER" not in os.environ.keys()) or not configManager.showPastStrategyData):
+        if (("RUNNER" not in os.environ.keys())):
             return None
+    if not configManager.showPastStrategyData:
+        return None
     try:
         dfs = pd.read_html(
             "https://pkjmesra.github.io/PKScreener/Backtest-Reports/{0}".format(

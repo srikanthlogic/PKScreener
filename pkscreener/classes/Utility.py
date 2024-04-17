@@ -606,34 +606,36 @@ class tools:
             fill=menuColor,
         )
         # Legend text
-        legendLineNumber = 0
         rowPixelRunValue += 2 * stdFont_oneLinelabel_height + 20
-        legendLines = legendText.split("\n")
+        legendLines = legendText.splitlines()
+        legendSeperator = "***"
+        col_width_sep, _ = artfont.getsize_multiline(legendSeperator)
         for line in legendLines:
             colPixelRunValue = startColValue
             _, artfont_line_height = artfont.getsize_multiline(line)
-            cellStyles, cellCleanValues = tools.getCellColors(
-                line, defaultCellFillColor=gridColor
-            )
-            valCounter = 0
-            for style in cellStyles:
-                cleanValue = cellCleanValues[valCounter]
-                valCounter += 1
-                if bgColor == "white" and style == "yellow":
-                    # Yellow on a white background is difficult to read
-                    style = "blue"
-                elif bgColor == "black" and style == "blue":
-                    # blue on a black background is difficult to read
-                    style = "yellow"
-                col_width, _ = artfont.getsize_multiline(cleanValue)
+            lineitems = line.split(legendSeperator)
+            red = True
+            for lineitem in lineitems:
+                if lineitem == "" or not red:
+                    draw.text(
+                        (colPixelRunValue, rowPixelRunValue),
+                        legendSeperator,
+                        font=artfont,
+                        fill=gridColor,
+                    )
+                    colPixelRunValue += col_width_sep + 1
+                style = "red" if not red else gridColor
+                red = not red
                 draw.text(
                     (colPixelRunValue, rowPixelRunValue),
-                    cleanValue,
+                    lineitem,
                     font=artfont,
                     fill=style,
                 )
+                col_width, _ = artfont.getsize_multiline(lineitem)
                 # Move to the next text in the same line
-                colPixelRunValue += col_width + 2
+                colPixelRunValue += col_width + 1
+                
             # Let's go to the next line
             rowPixelRunValue += artfont_line_height + 1
 
@@ -693,10 +695,10 @@ class tools:
         legendText = f"{legendText} and above 100 is considered overbought. If the CCI is < '-100' or CCI is > 100 and the Trend(22Prds) is Strong/Weak Up, it is shown in green. Otherwise it's in red. *** 12. 1-Pd/2-Pd etc. ***: 60.29% of (413) under 1-Pd in green shows that the given scan option was correct 60.23% of the times for 413 stocks that scanner found in the last 22 trading sessions under the same scan"
         legendText = f"{legendText} options. Similarly, 61.69 % of (154) in green under 22-Pd, means we found that 61.56% of 154 stocks (~95 stocks) prices found under the same scan options increased in 22 trading periods. 57.87% of (2661) under 'Overall' means that over the last 22 trading sessions we found 2661 stock instances under the same scanning options (for example, Momentum Gainers), out of which 57.87%"
         legendText = f"{legendText} of the stock prices increased in one or more of the last 1 or 2 or 3 or 4 or 5 or 10 or 22 or 22 trading sessions. If you want to see by what percent the prices increased, you should see the details. *** 13. 1 to 30 period gain/loss % ***: 4.17% under 1-Pd in green in the gain/loss table/grid means the stock price increased by 4.17% in the next 1 trading session. If this is in"
-        legendText = f"{legendText} red, example, -5.67%, it means the price actually decreased by 5.67%. Gains are in green and losses are in red in this grid. The Date column has the date(s) on which that specific stock was found under the chosen scan options in the past 22 trading sessions. *** 14. 52Wk H/L ***: These have 52 weeks high/low prices within 10% of LTP:Yellow, above high:Green. Below 90% High:Red."
-        legendText = f"{legendText} *** 15. 1-Pd-% ***: Shows the 1 period gain in percent from the given date. Similarly 2-Pd-%, 3-Pd-% etc shows 2 day, 3 days gain etc. *** 16. 1-Pd-10k ***: Shows 1 period/day portfolio value if you would have invested 10,000 on the given date. *** 17. [T][_trend_] ***: [T] is for Trends followed by the trend name in the filter. *** 18. [BO] ***: Shows the Breakout filter value."
-        legendText = f"{legendText} *** 19. [P] ***: [P] shows pattern name. *** 20. MFI ***: Top 5 Mutual fund ownership and top 5 Institutional investor ownership status as on the last day of the last month, based on analysis from Morningstar. *** 21. FairValue ***: Morningstar Fair value of a given stock as of last trading day as determined by 3rd party analysis based on fundamentals. *** 20. MCapWt% ***: This "
-        legendText = f"{legendText} shows the market-cap weighted portfolio weight to consider investing.\n"
+        legendText = f"{legendText} red, example, -5.67%, it means the price actually decreased by 5.67%. Gains are in green and losses are in red in this grid. The Date column has the date(s) on which that specific stock was found under the chosen scan options in the past 22 trading sessions. *** 14. 52Wk H/L ***: These have 52 weeks high/low prices and will be shown in red, green or yellow based on how close the"
+        legendText = f"{legendText} price is to the 52 wk high/low value.If the 52 week high/low value is within 10% of LTP:Yellow, LTP is above 52 week high:Green. If the LTP is below 90% of 52 week high:Red.*** 15. 1-Pd-% ***: Shows the 1 period gain in percent from the given date. Similarly 2-Pd-%, 3-Pd-% etc shows 2 day, 3 days gain etc. *** 16. 1-Pd-10k ***: Shows 1 period/day portfolio value if you would"
+        legendText = f"{legendText} have invested 10,000 on the given date. *** 17. [T][_trend_] ***: [T] is for Trends followed by the trend name in the filter. *** 18. [BO] ***: This Shows the Breakout filter value from the backtest reports and will be available only if 'showpaststrategydata' configuration is turned on. *** 19. [P] ***: [P] shows pattern name. *** 20. MFI ***: Top 5 Mutual fund ownership and "
+        legendText = f"{legendText} top 5 Institutional investor ownership status as on the last day of the last month, based on analysis from Morningstar. *** 21. FairValue ***: Morningstar Fair value of a given stock as of last trading day as determined by 3rd party analysis based on fundamentals. *** 22. MCapWt% ***: This shows the market-cap weighted portfolio weight to consider investing.\n"
         legendText = tools.wrapFitLegendText(table,backtestSummary, legendText)
         # legendText = legendText.replace("***:", colorText.END + colorText.WHITE)
         # legendText = legendText.replace("*** ", colorText.END + colorText.FAIL)
@@ -797,7 +799,9 @@ class tools:
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
-                        stockDict[stock] = task.result[f"{stock}{exchangeSuffix}"].to_dict("split")
+                        taskResult = task.result.get(f"{stock}{exchangeSuffix}")
+                        if taskResult is not None:
+                            stockDict[stock] = taskResult.to_dict("split")
         return stockDict
 
     def loadStockData(
@@ -817,7 +821,7 @@ class tools:
             isIntraday, forceLoad=forceLoad
         )
         initialLoadCount = len(stockDict)
-        isTrading = PKDateUtilities.isTradingTime()
+        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict

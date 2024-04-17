@@ -265,6 +265,8 @@ jobs:
 
       - name: Build for ${{ matrix.TARGET }}
         run: ${{ matrix.CMD_BUILD }}
+        env:
+          TF_ENABLE_ONEDNN_OPTS : 0
 
       - name: Test Built Binary for ${{ matrix.TARGET }}
         shell: bash

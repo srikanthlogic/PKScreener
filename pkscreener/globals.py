@@ -1895,8 +1895,10 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
 
 def tabulateBacktestResults(saveResults, maxAllowed=0, force=False):
     if "PKDevTools_Default_Log_Level" not in os.environ.keys():
-        if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force) or not configManager.showPastStrategyData:
+        if ("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and not force):
             return None, None
+    if not configManager.showPastStrategyData:
+        return None, None
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     summarydf, detaildf = getSummaryCorrectnessOfStrategy(saveResults)
