@@ -285,14 +285,14 @@ class tools:
             return colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
         return colorText.BOLD + colorText.FAIL + str(ratio) + "x" + colorText.END
 
-    def addQuickWatermark(sourceImage:Image, xVertical=None, dataSrc=""):
+    def addQuickWatermark(sourceImage:Image, xVertical=None, dataSrc="", dataSrcFontSize=10):
         width, height = sourceImage.size
         watermarkText = f"© {datetime.date.today().year} pkjmesra | PKScreener"
         message_length = len(watermarkText)
         # load font (tweak ratio based on a particular font)
         FONT_RATIO = 1.5
         DIAGONAL_PERCENTAGE = .85
-        DATASRC_FONTSIZE = 10
+        DATASRC_FONTSIZE = dataSrcFontSize
         dataSrc = f"Src: {dataSrc}"
         diagonal_length = int(math.sqrt((width**2) + (height**2)))
         diagonal_to_use = diagonal_length * DIAGONAL_PERCENTAGE
@@ -422,10 +422,12 @@ class tools:
             if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
                 return
         warnings.filterwarnings("ignore", category=DeprecationWarning)
+        ART_FONT_SIZE = 30
+        STD_FONT_SIZE = 60
         # First 4 lines are headers. Last 1 line is bottom grid line
         fontPath = tools.setupReportFont()
-        artfont = ImageFont.truetype(fontPath, 30)
-        stdfont = ImageFont.truetype(fontPath, 60)
+        artfont = ImageFont.truetype(fontPath, ART_FONT_SIZE)
+        stdfont = ImageFont.truetype(fontPath, STD_FONT_SIZE)
         
         bgColor, gridColor, artColor, menuColor = tools.getDefaultColors()
 
@@ -640,7 +642,7 @@ class tools:
             rowPixelRunValue += artfont_line_height + 1
 
         im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
-        im = tools.addQuickWatermark(im,xVertical,dataSrc="Yahoo; Morningstar, Inc; National Stock Exchange of India Ltd;")
+        im = tools.addQuickWatermark(im,xVertical,dataSrc="Yahoo; Morningstar, Inc; National Stock Exchange of India Ltd;",dataSrcFontSize=ART_FONT_SIZE)
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
         # im.show()
