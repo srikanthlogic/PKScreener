@@ -2091,7 +2091,7 @@ def runScanners(
             otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave)
             backtest_df, result =PKScanRunner.runScan(testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df,*otherArgs,resultsReceivedCb=processResultsCallback)
 
-        OutputControls().printOutput(f"\x1b[1A")
+        OutputControls().printOutput(f"\x1b[{3 if OutputControls().enableMultipleLineOutput else 1}A")
         elapsed_time = time.time() - start_time
         if menuOption in ["X", "G", "C"]:
             # create extension

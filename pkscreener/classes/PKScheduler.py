@@ -89,7 +89,7 @@ class PKScheduler():
                 _progress = manager.dict()
                 _results = manager.dict()
                 console.control(Control(*((ControlType.CURSOR_UP,1),))) # Cursor up 1 lines f"\x1b[{param}A"
-                sys.stdout.write("\x1b[2K")  # delete the last line
+                # sys.stdout.write("\x1b[2K")  # delete the last line
                 overall_progress_task = progress.add_task(f"[green]{label if label is not None else 'Pending jobs progress:'}")
 
                 lock = Lock()

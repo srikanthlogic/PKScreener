@@ -125,13 +125,13 @@ class tools:
             return
         elif (userArgs is not None and userArgs.runintradayanalysis):
             return
-        if clearAlways:
+        if clearAlways or OutputControls().enableMultipleLineOutput:
             if platform.system() == "Windows":
                 os.system("cls")
             else:
                 os.system("clear")
         try:
-            if clearAlways:
+            if clearAlways or OutputControls().enableMultipleLineOutput:
                 art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
                 OutputControls().printOutput(art.encode('utf-8').decode(STD_ENCODING), enableMultipleLineOutput=True)
         except Exception as e:# pragma: no cover

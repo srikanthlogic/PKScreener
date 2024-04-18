@@ -359,6 +359,8 @@ def pkscreenercli():
                 OutputControls().printOutput(e)
                 traceback.print_exc()
             pass
+
+        OutputControls(enableMultipleLineOutput=(not args.monitor)).printOutput("",end="\r")
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
 
@@ -387,11 +389,7 @@ def pkscreenercli():
         configManager.setConfig(
             ConfigManager.parser, default=True, showFileCreatedText=False
         )
-    if args.monitor:
-        Utility.tools.clearScreen()
-        OutputControls().printOutput("Not Implemented Yet!")
-        # intradayMonitorInstance.monitor()
-        sys.exit(0)
+        
     if args.intraday:
         configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
     else:
@@ -436,8 +434,8 @@ def runLoopOnScheduleOrStdApplication(hasCronInterval):
 
 def runApplicationForScreening():
     try:
-        shouldBreak = args.exit or args.user is not None or args.testbuild
         hasCronInterval = args.croninterval is not None and str(args.croninterval).isnumeric()
+        shouldBreak = (args.exit and not hasCronInterval)or args.user is not None or args.testbuild
         runLoopOnScheduleOrStdApplication(hasCronInterval)
         while True:
             if shouldBreak:

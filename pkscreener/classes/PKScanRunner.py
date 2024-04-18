@@ -302,8 +302,9 @@ class PKScanRunner:
             sys.stdout.write(f"{round(time.time() - start_time)}.")
             worker.daemon = True
             worker.start()
-        OutputControls().printOutput(f"Started all workers in {time.time() - start_time}s")
-        # sys.stdout.write("\x1b[1A")
+        OutputControls().printOutput(f"Started all workers in {round(time.time() - start_time,4)}s")
+        if OutputControls().enableMultipleLineOutput:
+            sys.stdout.write("\x1b[1A")
 
     def terminateAllWorkers(consumers, tasks_queue, testing):
         # Exit all processes. Without this, it threw error in next screening session
