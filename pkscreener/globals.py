@@ -1273,7 +1273,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                         testing,
                         user=user,
                     )
-        if menuOption in ["X","C"]:
+        if menuOption in ["X","C"] and userPassedArgs.monitor is None:
             finishScreening(
                 downloadOnly,
                 testing,
@@ -1329,6 +1329,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
         return optionalFinalOutcome_df
+    elif userPassedArgs.monitor is not None:
+        return screenResults
 
 def getLatestTradeDateTime(stockDict):
     stocks = list(stockDict.keys())
@@ -1641,6 +1643,8 @@ def printNotifySaveScreenedResults(
     screenResults, saveResults, selectedChoice, menuChoiceHierarchy, testing, user=None
 ):
     global userPassedArgs, elapsed_time
+    if userPassedArgs.monitor is not None:
+        return
     MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else min(int(userPassedArgs.maxdisplayresults),100)) if not testing else 1
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
@@ -2250,15 +2254,16 @@ def saveNotifyResultsFile(
                 os.remove(filename)
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
-    OutputControls().printOutput(
-        colorText.BOLD
-        + colorText.GREEN
-        + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
-        + colorText.END
-        , enableMultipleLineOutput=True
-    )
-    if defaultAnswer is None:
-        input("Press <Enter> to continue...")
+    if userPassedArgs.monitor is None:
+        OutputControls().printOutput(
+            colorText.BOLD
+            + colorText.GREEN
+            + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
+            + colorText.END
+            , enableMultipleLineOutput=True
+        )
+        if defaultAnswer is None:
+            input("Press <Enter> to continue...")
 
 def sendGlobalMarketBarometer(userArgs=None):
     from pkscreener.classes import Barometer

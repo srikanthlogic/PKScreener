@@ -54,12 +54,12 @@ from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from pkscreener import Imports
 from PKDevTools.classes.OutputControls import OutputControls
+from pkscreener.classes.MarketMonitor import MarketMonitor
 import pkscreener.classes.ConfigManager as ConfigManager
 
 multiprocessing.freeze_support()
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["AUTOGRAPH_VERBOSITY"] = "0"
-# from pkscreener.classes.IntradayMonitor import intradayMonitorInstance
 
 printenabled=False
 originalStdOut=None
@@ -155,7 +155,6 @@ argParser.add_argument(
 argParser.add_argument(
     "-m",
     "--monitor",
-    action="store_true",
     help="Monitor for intraday scanners and their results.",
     required=False,
 )
@@ -343,7 +342,11 @@ def runApplication():
         if args.barometer:
             sendGlobalMarketBarometer(userArgs=args)
         else:
-            main(userArgs=args)
+            if args.monitor:
+                args.options = MarketMonitor().currentMonitorOption()
+            results = main(userArgs=args)
+            if results is not None and args.monitor:
+                MarketMonitor().refresh(screen_df=results,screenOptions=args.options)
 
 
 def pkscreenercli():
@@ -360,9 +363,12 @@ def pkscreenercli():
                 traceback.print_exc()
             pass
 
-        OutputControls(enableMultipleLineOutput=(not args.monitor)).printOutput("",end="\r")
+        OutputControls(enableMultipleLineOutput=(args.monitor is None)).printOutput("",end="\r")
+        
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
+    if args.monitor is not None:
+        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","))
 
     if args.log or configManager.logsEnabled:
         setupLogger(shouldLog=True, trace=args.testbuild)
