@@ -163,12 +163,12 @@ jobs:
       continue-on-error: true
       if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
       run: |
-        rm -rf actions-data-download/*stock_data_*.pkl
-        rm -rf results/*stock_data_*.pkl
+        rm -rf actions-data-download/*stock_data_*.pkl || true
+        rm -rf results/*stock_data_*.pkl || true
         git ls-files --deleted -z | xargs -0 git rm
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y -i 1m
-        rm -rf results/*.lck
+        rm -rf results/*.lck || true
         ls -l results
         cp results/*.pkl actions-data-download
         ls -l actions-data-download
