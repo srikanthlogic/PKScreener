@@ -158,14 +158,32 @@ jobs:
         curl -o /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -JL $exe_path
         chmod +x /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin
 
-    - name: Download 52 week Stock Data on Ubuntu
+    - name: Delete stock data
       shell: bash
       continue-on-error: true
       if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
       run: |
         rm -rf actions-data-download/*stock_data_*.pkl || true
+
+    - name: Delete results stock data
+      shell: bash
+      continue-on-error: true
+      if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
+      run: |
         rm -rf results/*stock_data_*.pkl || true
+
+    - name: Remove deleted file from git
+      shell: bash
+      continue-on-error: true
+      if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
+      run: |
         git ls-files --deleted -z | xargs -0 git rm
+          
+    - name: Download 52 week Stock Data on Ubuntu
+      shell: bash
+      continue-on-error: true
+      if: ${{ inputs.skipDownload == '' && startsWith(runner.os, 'Linux' ) }}
+      run: |
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y
         /home/runner/work/PKScreener/PKScreener/pkscreenercli.bin -d -a Y -i 1m
         rm -rf results/*.lck || true
