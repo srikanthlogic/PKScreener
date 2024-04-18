@@ -826,7 +826,7 @@ class tools:
             isIntraday, forceLoad=forceLoad
         )
         initialLoadCount = len(stockDict)
-        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()
+        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
