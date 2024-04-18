@@ -720,7 +720,7 @@ class tools:
     def set_github_output(name, value):
         if "GITHUB_OUTPUT" in os.environ.keys():
             with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-                OutputControls().printOutput(f"{name}={value}", file=fh)
+                print(f"{name}={value}", file=fh)
 
     def afterMarketStockDataExists(intraday=False, forceLoad=False):
         curr = PKDateUtilities.currentDateTime()
