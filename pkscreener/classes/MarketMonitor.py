@@ -113,8 +113,8 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + "[+] You chose: "
-            + chosenMenu
+            + "[+] You chose: (Dashboard) > "
+            + f"{chosenMenu} [{screenOptions}]"
             + colorText.END
             , enableMultipleLineOutput=True
         )

@@ -540,9 +540,10 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
 
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
+    global menuChoiceHierarchy
     try:
-        sortKey = ["Volume"]
-        ascending = [False]
+        sortKey = ["Volume"] if "RSI" not in menuChoiceHierarchy else "RSI"
+        ascending = [False if "RSI" not in menuChoiceHierarchy else True]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
                 sortKey = ["MFI"]
@@ -1572,9 +1573,19 @@ def handleMonitorFiveEMA():
 
 def handleRequestForSpecificStocks(options, indexOption):
     listStockCodes = []
+    strOptions = ""
+    if isinstance(options, list):
+        strOptions = ":".join(options)
+    else:
+        strOptions = options
+
     if indexOption == 0:
-        if len(options) >= 4:
-            listStockCodes = str(options[3]).split(",")
+        if len(strOptions) >= 4:
+            providedOptions = strOptions.split(":")
+            for option in providedOptions:
+                if not "".join(str(option).split(".")).isdecimal() and len(option.strip()) > 1:
+                    listStockCodes = str(option.strip()).split(",")
+                    break
     return listStockCodes
 
 def handleExitRequest(executeOption):

@@ -215,7 +215,9 @@ argParser.add_argument(
 argParser.add_argument("-v", action="store_true")  # Dummy Arg for pytest -v
 argsv = argParser.parse_known_args()
 args = argsv[0]
-
+results = None
+resultStocks = None
+plainResults = None
 configManager = ConfigManager.tools()
 
 
@@ -299,7 +301,7 @@ def runApplication():
         for runOption in runOptions:
             args.options = runOption
             try:
-                optionalFinalOutcome_df = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+                optionalFinalOutcome_df,_ = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
             except Exception as e:
                 OutputControls().printOutput(e)
                 if args.log:
@@ -342,13 +344,17 @@ def runApplication():
         if args.barometer:
             sendGlobalMarketBarometer(userArgs=args)
         else:
-            resultStocks = None
+            global results, resultStocks, plainResults
+            monitorOption_org = ""
             if args.monitor:
-                monitorOption = MarketMonitor().currentMonitorOption()
-                if monitorOption.split(":")[-1] == "i":
+                args.answerdefault = args.answerdefault or 'Y'
+                monitorOption_org = MarketMonitor().currentMonitorOption()
+                monitorOption = monitorOption_org
+                lastComponent = monitorOption.split(":")[-1]
+                if "i" in lastComponent:
                     # We need to switch to intraday scan
-                    monitorOption = monitorOption.replace(":i","")
-                    args.intraday = "1m"
+                    monitorOption = monitorOption.replace(lastComponent,"")
+                    args.intraday = lastComponent.replace("i","").strip()
                     configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
                 else:
                     # We need to switch to daily scan
@@ -361,11 +367,15 @@ def runApplication():
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption
-            results, plainResults = main(userArgs=args)
+            try:
+                results, plainResults = main(userArgs=args)
+            except:
+                # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
+                pass
             if plainResults is not None and not plainResults.empty:
                 resultStocks = plainResults.index
-            if results is not None and args.monitor:
-                MarketMonitor().refresh(screen_df=results,screenOptions=args.options, chosenMenu=updateMenuChoiceHierarchy())
+            if results is not None and args.monitor and len(monitorOption_org) > 0:
+                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy())
 
 
 def pkscreenercli():
