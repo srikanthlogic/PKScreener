@@ -609,6 +609,9 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         default_logger().debug(e, exc_info=True)
     return screenResults, saveResults
 
+def isInterrupted():
+    global keyboardInterruptEventFired
+    return keyboardInterruptEventFired
 
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
@@ -628,6 +631,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     screenCounter = multiprocessing.Value("i", 1)
     screenResultsCounter = multiprocessing.Value("i", 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
+    if keyboardInterruptEventFired:
+        return None, None
     keyboardInterruptEventFired = False
     if stockDict is None:
         stockDict = multiprocessing.Manager().dict()
@@ -662,7 +667,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         )
 
         if menuOption in ["H", "U", "T", "E", "Y"]:
-            return
+            return None, None
     elif menuOption in ["B", "G"]:
         # Backtests
         backtestPeriod = 0
@@ -710,10 +715,10 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         userOption = userOption.upper()
         if userOption == "M":
                 # Go back to the caller. It will show the console menu again.
-                return
+                return None, None
         elif userOption == "Z":
             handleExitRequest(userOption)
-            return
+            return None, None
         
         if userOption == "S":
             OutputControls().printOutput(
@@ -744,7 +749,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             configManager.showPastStrategyData = savedValue
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
-            return
+            return None, None
         else:
             userOptions = userOption.split(",")
             for usrOption in userOptions:
@@ -763,12 +768,12 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     else:
         OutputControls().printOutput("Not implemented yet! Try selecting a different option.")
         sleep(3)
-        return
+        return None, None
 
     handleMenu_XBG(menuOption, indexOption, executeOption)
     if indexOption == "M" or executeOption == "M":
         # Go back to the caller. It will show the console menu again.
-        return
+        return None, None
     listStockCodes = handleRequestForSpecificStocks(options, indexOption)
     handleExitRequest(executeOption)
     if executeOption is None:
@@ -799,7 +804,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 + colorText.END
             )
             input("PRess <Enter> to continue...")
-            return
+            return None, None
     if executeOption == 6:
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
@@ -822,7 +827,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 selectedMenu
             )
         if reversalOption is None or reversalOption == 0 or maLength == 0:
-            return
+            return None, None
         else:
             selectedChoice["3"] = str(reversalOption)
             if str(reversalOption) in ["7", "10"]:
@@ -885,7 +890,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             or respChartPattern == 0
             or (maLength == 0 and respChartPattern in [1, 2, 3, 6])
         ):
-            return
+            return None, None
         else:
             selectedChoice["3"] = str(respChartPattern)
             selectedChoice["4"] = str(maLength)
@@ -908,7 +913,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 + colorText.END
             )
             input("Press <Enter> to continue...")
-            return
+            return None, None
     if executeOption == 9:
         if len(options) >= 4:
             if str(options[3]).isnumeric():
@@ -925,7 +930,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 + colorText.END
             )
             input("Press <Enter> to continue...")
-            return
+            return None, None
         else:
             configManager.volumeRatio = float(volumeRatio)
     if executeOption == 12:
@@ -939,7 +944,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
         if popOption is None or popOption == 0:
-            return
+            return None, None
         else:
             selectedChoice["3"] = str(popOption)
         if popOption in [1,2,4]:
@@ -961,7 +966,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 )
                 if defaultAnswer is None:
                     input("Press <Enter> to continue...")
-                return
+                return None, None
             else:
                 listStockCodes = ",".join(list(screenResults.index))
         else:
@@ -976,7 +981,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             popOption = Utility.tools.promptSubMenuOptions(selectedMenu)
         if popOption is None or popOption == 0:
-            return
+            return None, None
         else:
             selectedChoice["3"] = str(popOption)
         updateMenuChoiceHierarchy()
@@ -992,7 +997,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             )
             if defaultAnswer is None:
                 input("Press <Enter> to continue...")
-            return
+            return None, None
         else:
             listStockCodes = ",".join(list(screenResults.index))
     if executeOption == 26:
@@ -1006,7 +1011,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             listStockCodes.extend(list(df["Stock"]))
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
-        return
+        return None, None
     if executeOption >= 27 and executeOption <= 41:
         OutputControls().printOutput(
             colorText.BOLD
@@ -1015,7 +1020,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             + colorText.END
         )
         input("Press <Enter> to continue...")
-        return
+        return None, None
     if (
         not str(indexOption).isnumeric() and indexOption in ["W", "E", "M", "N", "Z"]
     ) or (
@@ -1056,9 +1061,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 )
                 if defaultAnswer is None:
                     input("\nPress <Enter> to Continue...\n")
-                return
+                return None, None
             elif indexOption == "M":
-                return
+                return None, None
             elif indexOption == "Z":
                 input(
                     colorText.BOLD
@@ -1074,7 +1079,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     stockDict,endOfdayCandles = PKMarketOpenCloseAnalyser.getStockDataForSimulation()
                     if stockDict is None or endOfdayCandles is None:
                         OutputControls().printOutput(f"Cannot proceed! Stock data is unavailable. Please check the error logs/messages !")
-                        return
+                        return None, None
                     listStockCodes = sorted(list(filter(None,list(set(stockDict.keys())))))
                 listStockCodes = prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption)
         except urllib.error.URLError as e:

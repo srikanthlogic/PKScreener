@@ -285,7 +285,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy
+    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -302,6 +302,8 @@ def runApplication():
             args.options = runOption
             try:
                 optionalFinalOutcome_df,_ = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+                if isInterrupted():
+                    break
             except Exception as e:
                 OutputControls().printOutput(e)
                 if args.log:
@@ -369,7 +371,11 @@ def runApplication():
                 args.options = monitorOption
             try:
                 results, plainResults = main(userArgs=args)
-            except:
+                if isInterrupted():
+                    sys.exit(0)
+            except SystemExit:
+                sys.exit(0)
+            except Exception:
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
@@ -479,6 +485,8 @@ def runApplicationForScreening():
         if args.v:
             disableSysOut(disable=False)
             return
+        sys.exit(0)
+    except SystemExit:
         sys.exit(0)
     except (RuntimeError, Exception) as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)

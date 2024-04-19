@@ -318,7 +318,11 @@ class PKScanRunner:
                         sleep(1)
                     # worker.join()  # necessary so that the Process exists before the test suite exits (thus coverage is collected)
                 # else:
+                # try:
+                    # while worker.is_alive():
                 worker.terminate()
+                # except:
+                #     continue
             except OSError as e: # pragma: no cover
                 default_logger().debug(e, exc_info=True)
                 # if e.winerror == 5:
