@@ -827,7 +827,7 @@ class tools:
         )
         initialLoadCount = len(stockDict)
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
-        if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
+        if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly or not exists):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
 

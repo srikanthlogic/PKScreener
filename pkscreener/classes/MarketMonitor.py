@@ -41,26 +41,23 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             rowIndex = 0
             colIndex = 0
             self.maxNumRowsInEachResult = 10
-            maxNumColsInEachResult = 6
-            self.maxNumResultsPerRow = 3
-            maxColIndex = maxNumColsInEachResult * self.maxNumResultsPerRow - 1
-            colNameIndex = 0
+            self.maxNumColsInEachResult = 6
+            self.maxNumResultsPerRow = 5
+            maxColIndex = self.maxNumColsInEachResult * self.maxNumResultsPerRow - 1
+            self.lines = 0
+            for monitorKey in monitors:
+                self.monitorPositions[monitorKey] = [rowIndex,colIndex]
+                colIndex += self.maxNumColsInEachResult
+                if colIndex > maxColIndex:
+                    colIndex = 0
+                    rowIndex += self.maxNumRowsInEachResult
             columns = []
-            gapIndex = 0
+            colNameIndex = 0
+            maxColIndex = min(maxColIndex,len(self.monitorPositions)*self.maxNumColsInEachResult -1)
             while colNameIndex <= maxColIndex:
                 columns.append(f"A{colNameIndex +1}")
                 colNameIndex += 1
             self.monitor_df = pd.DataFrame(columns=columns)
-            for col in self.monitor_df.columns:
-                self.monitor_df.loc[:,col] = [["-"]*30]
-
-            for monitorKey in monitors:
-                self.monitorPositions[monitorKey] = [rowIndex,colIndex]
-                gapIndex += 1
-                colIndex += maxNumColsInEachResult
-                if colIndex > maxColIndex:
-                    colIndex = 0
-                    rowIndex += self.maxNumRowsInEachResult
 
     def currentMonitorOption(self):
         try:
@@ -74,7 +71,9 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             pass
         return option
 
-    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None):
+    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None, chosenMenu=None):
+        highlightRows = []
+        highlightCols = []
         if screen_df is None or screen_df.empty:
             return
 
@@ -85,7 +84,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         if monitorPosition is not None:
             startRowIndex, startColIndex = monitorPosition
             if not self.monitor_df.empty:
-                for _ in range(2*len(self.monitor_df)+2): # 2 lines for header rows
+                for _ in range(self.lines):
                     sys.stdout.write("\x1b[1A")  # cursor up one line
                     sys.stdout.write("\x1b[2K")  # delete the last line
 
@@ -110,14 +109,22 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                 highlightRows.append(startRowIndex+1)
                 startRowIndex += 1
 
-            self.monitor_df = self.monitor_df.replace(np.nan, "-", regex=True)
-            tabulated_results = colorText.miniTabulator().tabulate(
-                self.monitor_df, tablefmt=colorText.No_Pad_GridFormat,
-                highlightCharacter=colorText.HEAD+"="+colorText.END,
-                showindex=False,
-                highlightedRows=highlightRows,
-                highlightedColumns=highlightCols,
-                maxcolwidths=Utility.tools.getMaxColumnWidths(self.monitor_df)
-            )
-            # Utility.tools.clearScreen(clearAlways=True)
-            OutputControls().printOutput(f"{tabulated_results}\n", enableMultipleLineOutput=True)
+        self.monitor_df = self.monitor_df.replace(np.nan, "-", regex=True)
+        OutputControls().printOutput(
+            colorText.BOLD
+            + colorText.FAIL
+            + "[+] You chose: "
+            + chosenMenu
+            + colorText.END
+            , enableMultipleLineOutput=True
+        )
+        tabulated_results = colorText.miniTabulator().tabulate(
+            self.monitor_df, tablefmt=colorText.No_Pad_GridFormat,
+            highlightCharacter=colorText.HEAD+"="+colorText.END,
+            showindex=False,
+            highlightedRows=highlightRows,
+            highlightedColumns=highlightCols,
+            maxcolwidths=Utility.tools.getMaxColumnWidths(self.monitor_df)
+        )
+        self.lines = len(tabulated_results.splitlines()) + 1 # 1 for the progress bar at the bottom and 1 for the chosenMenu option
+        OutputControls().printOutput(tabulated_results, enableMultipleLineOutput=True)

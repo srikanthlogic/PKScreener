@@ -996,12 +996,14 @@ class ScreeningStatistics:
                 security = None
                 # Refresh each saturday or sunday or when not found in saved data
                 try:
-                    security = Stock(stock,exchange=exchangeName)
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        security = Stock(stock,exchange=exchangeName)
                 except ValueError: # pragma: no cover
                     # We did not find the stock? It's okay. Move on to the next one.
                     pass
                 if security is not None:
-                    fv = security.fairValue()
+                    with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                        fv = security.fairValue()
                     if fv is not None:
                         try:
                             fvResponseValue = fv["latestFairValue"]
@@ -1110,16 +1112,18 @@ class ScreeningStatistics:
         latest_instdate = None
         security = None
         try:
-            security = Stock(stock,exchange=exchangeName)
+            with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                security = Stock(stock,exchange=exchangeName)
         except ValueError:
             # We did not find the stock? It's okay. Move on to the next one.
             pass
         if security is not None:
             try:
-                changeStatusRowsMF = security.mutualFundOwnership(top=5)
-                changeStatusRowsInst = security.institutionOwnership(top=5)
-                changeStatusDataMF = security.mutualFundFIIChangeData(changeStatusRowsMF)
-                changeStatusDataInst = security.mutualFundFIIChangeData(changeStatusRowsInst)
+                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                    changeStatusRowsMF = security.mutualFundOwnership(top=5)
+                    changeStatusRowsInst = security.institutionOwnership(top=5)
+                    changeStatusDataMF = security.mutualFundFIIChangeData(changeStatusRowsMF)
+                    changeStatusDataInst = security.mutualFundFIIChangeData(changeStatusRowsInst)
             except Exception as e:
                 self.default_logger.debug(e, exc_info=True)
                 # TypeError or ConnectionError because we could not find the stock or MFI data isn't available?

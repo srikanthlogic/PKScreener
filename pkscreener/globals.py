@@ -49,6 +49,7 @@ from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger #, tracelog
+from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKDevTools.classes.Telegram import (
     is_token_telegram_configured,
     send_document,
@@ -1328,9 +1329,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             optionalFinalOutcome_df = analysis_df
         else:
             optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
-        return optionalFinalOutcome_df
+        return optionalFinalOutcome_df, saveResults
     elif userPassedArgs.monitor is not None:
-        return screenResults
+        return screenResults, saveResults
 
 def getLatestTradeDateTime(stockDict):
     stocks = list(stockDict.keys())
@@ -1471,9 +1472,11 @@ def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption
         updateMenuChoiceHierarchy()
     if listStockCodes is None or len(listStockCodes) == 0:
         if indexOption >= 0 and indexOption <= 14:
-            listStockCodes = fetcher.fetchStockCodes(
-                            indexOption, stockCode=None
-                        )
+            shouldSuppress = not OutputControls().enableMultipleLineOutput
+            with SuppressOutput(suppress_stderr=shouldSuppress, suppress_stdout=shouldSuppress):
+                listStockCodes = fetcher.fetchStockCodes(
+                                indexOption, stockCode=None
+                            )
         elif indexOption == 15:
             OutputControls().printOutput(colorText.BOLD + "[+] Getting Stock Codes From NASDAQ... ", end="")
             nasdaq = PKNasdaqIndexFetcher(configManager)
@@ -1597,7 +1600,7 @@ def handleMenu_XBG(menuOption, indexOption, executeOption):
 
 
 def updateMenuChoiceHierarchy():
-    global selectedChoice, menuChoiceHierarchy
+    global userPassedArgs, selectedChoice, menuChoiceHierarchy
     menuChoiceHierarchy = f'{level0MenuDict[selectedChoice["0"]].strip()}>{level1_X_MenuDict[selectedChoice["1"]].strip()}>{level2_X_MenuDict[selectedChoice["2"]].strip()}'
     if selectedChoice["2"] == "6":
         menuChoiceHierarchy = (
@@ -1629,15 +1632,17 @@ def updateMenuChoiceHierarchy():
             menuChoiceHierarchy
             + f'>{level3_X_PopularStocks_MenuDict[selectedChoice["3"]].strip()}'
         )
+    intraday = "(Intraday)" if (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig() else ""
+    menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
         + "[+] You chose: "
         + menuChoiceHierarchy
         + colorText.END
-        , enableMultipleLineOutput=True
     )
     default_logger().info(menuChoiceHierarchy)
+    return menuChoiceHierarchy
 
 def printNotifySaveScreenedResults(
     screenResults, saveResults, selectedChoice, menuChoiceHierarchy, testing, user=None

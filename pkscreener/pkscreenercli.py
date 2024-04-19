@@ -283,7 +283,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer
+    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -342,11 +342,30 @@ def runApplication():
         if args.barometer:
             sendGlobalMarketBarometer(userArgs=args)
         else:
+            resultStocks = None
             if args.monitor:
-                args.options = MarketMonitor().currentMonitorOption()
-            results = main(userArgs=args)
+                monitorOption = MarketMonitor().currentMonitorOption()
+                if monitorOption.split(":")[-1] == "i":
+                    # We need to switch to intraday scan
+                    monitorOption = monitorOption.replace(":i","")
+                    args.intraday = "1m"
+                    configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
+                else:
+                    # We need to switch to daily scan
+                    args.intraday = False
+                    configManager.toggleConfig(candleDuration='1d', clearCache=False)
+                if monitorOption.startswith("|"):
+                    monitorOption = monitorOption.replace("|","")
+                    # We need to pipe the output from previous run into the next one
+                    if resultStocks is not None:
+                        resultStocks = ",".join(resultStocks)
+                        monitorOption = f"{monitorOption}:{resultStocks}"
+                args.options = monitorOption
+            results, plainResults = main(userArgs=args)
+            if plainResults is not None and not plainResults.empty:
+                resultStocks = plainResults.index
             if results is not None and args.monitor:
-                MarketMonitor().refresh(screen_df=results,screenOptions=args.options)
+                MarketMonitor().refresh(screen_df=results,screenOptions=args.options, chosenMenu=updateMenuChoiceHierarchy())
 
 
 def pkscreenercli():

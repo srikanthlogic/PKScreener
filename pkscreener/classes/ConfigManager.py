@@ -73,7 +73,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
-        self.defaultMonitorOptions = "X:12:9:2.5,X:12:2:D,X:12:6:8:D,X:12:6:9:D,X:12:6:10:D,X:12:7:3:D:D,X:12:7:6:1:D:D,X:12:23:D,X:12:6:3:D"
+        self.defaultMonitorOptions = "X:12:9:2.5,|X:0:5:0:70:i,X:12:2,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9:D:D,X:12:6:10:D:D,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:23,X:12:24"
 
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
