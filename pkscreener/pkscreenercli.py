@@ -122,6 +122,12 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--bot",
+    action="store_true",
+    help="Run only in telegram bot mode",
+    required=False,
+)
+argParser.add_argument(
     "-c",
     "--croninterval",
     help="Pass interval in seconds to wait before the program is run again with same parameters",
@@ -430,7 +436,12 @@ def pkscreenercli():
         configManager.setConfig(
             ConfigManager.parser, default=True, showFileCreatedText=False
         )
-        
+    # Check and see if we're running only the telegram bot
+    if args.bot:
+        from pkscreener import pkscreenerbot
+        pkscreenerbot.runpkscreenerbot()
+        return
+    
     if args.intraday:
         configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
     else:

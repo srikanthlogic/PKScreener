@@ -105,7 +105,7 @@ setup(
     entry_points="""
 	[console_scripts]
 	pkscreener=pkscreener.pkscreenercli:pkscreenercli
-	pkbot=pkscreener.pkscreenerbot:main
+	pkbot=pkscreener.pkscreenerbot:runpkscreenerbot
 	""",
     download_url="https://github.com/"
     + __USERNAME__
