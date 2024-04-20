@@ -2139,7 +2139,7 @@ class ScreeningStatistics:
         rsi = int(data.head(1)["RSI"].iloc[0])
         saveDict["RSI"] = rsi
         # https://chartink.com/screener/rsi-screening
-        if rsi >= minRSI and rsi <= maxRSI:  # or (rsi <= 71 and rsi >= 67):
+        if rsi> 0 and rsi >= minRSI and rsi <= maxRSI:  # or (rsi <= 71 and rsi >= 67):
             screenDict["RSI"] = (
                 colorText.BOLD + colorText.GREEN + str(rsi) + colorText.END
             )

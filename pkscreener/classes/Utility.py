@@ -340,6 +340,19 @@ class tools:
         # sourceImage.show()
         return sourceImage
 
+    def roundOff(value,places):
+        roundValue = value
+        try:
+            newValue = tools.removeAllColorStyles(str(roundValue))
+            newValue = newValue.replace("%","").replace("x","")
+            roundValue = round(float(newValue),places)
+            if places == 0:
+                roundValue = int(roundValue)
+            roundValue = str(value).replace(str(newValue),str(roundValue))
+        except:
+            pass
+        return roundValue
+    
     def removeAllColorStyles(styledText):
         styles = [
             colorText.HEAD,

@@ -80,6 +80,16 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         screen_monitor_df = screen_df.copy()
         screen_monitor_df.reset_index(inplace=True)
         screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI","Volume"]].head(self.maxNumRowsInEachResult-1)
+        screen_monitor_df.loc[:, "%Chng"] = screen_monitor_df.loc[:, "%Chng"].apply(
+                    lambda x: Utility.tools.roundOff(str(x).split("% (")[0] + colorText.END,0)
+                )
+        screen_monitor_df.loc[:, "52Wk H"] = screen_monitor_df.loc[:, "52Wk H"].apply(
+            lambda x: Utility.tools.roundOff(x,0)
+        )
+        screen_monitor_df.loc[:, "Volume"] = screen_monitor_df.loc[:, "Volume"].apply(
+            lambda x: Utility.tools.roundOff(x,0)
+        )
+        screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk H":"52WkH"}, inplace=True)
         monitorPosition = self.monitorPositions.get(screenOptions)
         if monitorPosition is not None:
             startRowIndex, startColIndex = monitorPosition
@@ -97,7 +107,8 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                 for col in screen_monitor_df.columns:
                     if rowIndex == 0:
                         # Column names to be repeated for each refresh in respective headers
-                        self.monitor_df.loc[startRowIndex,[f"A{startColIndex+1}"]] = colorText.BOLD+colorText.HEAD+(screenOptions.replace(":D","") if startColIndex==firstColIndex else col)+colorText.END
+                        widgetHeader = ":".join(screenOptions.replace(":D","").split(":")[:4])
+                        self.monitor_df.loc[startRowIndex,[f"A{startColIndex+1}"]] = colorText.BOLD+colorText.HEAD+(widgetHeader if startColIndex==firstColIndex else col)+colorText.END
                         highlightCols.append(startColIndex)
                     else:
                         self.monitor_df.loc[startRowIndex, [f"A{startColIndex+1}"]] = screen_monitor_df.iloc[rowIndex-1,colIndex]
