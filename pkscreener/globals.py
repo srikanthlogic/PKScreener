@@ -126,6 +126,7 @@ elapsed_time = 0
 start_time = 0
 test_messages_queue = []
 strategyFilter=[]
+listStockCodes = None
 
 def finishScreening(
     downloadOnly,
@@ -620,14 +621,20 @@ def isInterrupted():
     global keyboardInterruptEventFired
     return keyboardInterruptEventFired
 
-def refreshStockData():
-    global stockDict, loadedStockData
-    # stockDict = None
+def refreshStockData(startupoptions=None):
+    global stockDict, loadedStockData, listStockCodes
+    options = startupoptions.replace("|","").split(" ")[0].replace(":i","")
     loadedStockData = False
+    options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
+        options, False, False, defaultAnswer='Y'
+    )
+    listStockCodes = prepareStocksForScreening(testing=False, downloadOnly=False, listStockCodes=None,indexOption=indexOption)
+    loadDatabaseOrFetch(downloadOnly=False, listStockCodes=listStockCodes, menuOption=menuOption,indexOption=indexOption)
+    PKScanRunner.refreshDatabase()
 
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
-    global screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
+    global listStockCodes, screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     elapsed_time = 0
     start_time = 0
@@ -640,11 +647,12 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     userPassedArgs = userArgs
     options = []
     strategyFilter=[]
-    screenCounter = multiprocessing.Value("i", 1)
-    screenResultsCounter = multiprocessing.Value("i", 0)
-    keyboardInterruptEvent = multiprocessing.Manager().Event()
     if keyboardInterruptEventFired:
         return None, None
+    screenCounter = multiprocessing.Value("i", 1)
+    screenResultsCounter = multiprocessing.Value("i", 0)
+    if keyboardInterruptEvent is None and not keyboardInterruptEventFired:
+        keyboardInterruptEvent = multiprocessing.Manager().Event()
     keyboardInterruptEventFired = False
     if stockDict is None:
         stockDict = multiprocessing.Manager().dict()
@@ -1120,32 +1128,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             and not loadedStockData
             and not testing
         ):
-            if menuOption not in ["C"]:
-                stockDict = Utility.tools.loadStockData(
-                    stockDict,
-                    configManager,
-                    downloadOnly=downloadOnly,
-                    defaultAnswer=defaultAnswer,
-                    forceLoad=(menuOption in ["X", "B", "G", "S"]),
-                    stockCodes = listStockCodes,
-                    exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
-            )
-            if not configManager.isIntradayConfig():
-                candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
-                configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
-                # We also need to load the intraday data to be able to calculate intraday RSI
-                Utility.tools.loadStockData(
-                        {},
-                        configManager,
-                        downloadOnly=downloadOnly,
-                        defaultAnswer=defaultAnswer,
-                        forceLoad=(menuOption in ["X", "B", "G", "S"]),
-                        stockCodes = listStockCodes,
-                        isIntraday=True,
-                        exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
-                )
-                resetConfigToDefault()
-            loadedStockData = True
+            loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption)
             
         loadCount = len(stockDict) if stockDict is not None else 0
 
@@ -1207,7 +1190,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     progressbar()
         sys.stdout.write(f"\x1b[1A") # Replace the download progress bar and start writing on the same line
         if not keyboardInterruptEventFired:
-            screenResults, saveResults, backtest_df, scr = PKScanRunner.runScanWithParams(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
+            screenResults, saveResults, backtest_df, scr = PKScanRunner.runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
             if menuOption in ["C"]:
                 runOptionName = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
                 PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults,runOptionName=runOptionName)
@@ -1369,6 +1352,35 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         return optionalFinalOutcome_df, saveResults
     elif userPassedArgs.monitor is not None:
         return screenResults, saveResults
+
+def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
+    global stockDict, configManager, defaultAnswer, userPassedArgs, loadedStockData
+    if menuOption not in ["C"]:
+        stockDict = Utility.tools.loadStockData(
+                    stockDict,
+                    configManager,
+                    downloadOnly=downloadOnly,
+                    defaultAnswer=defaultAnswer,
+                    forceLoad=(menuOption in ["X", "B", "G", "S"]),
+                    stockCodes = listStockCodes,
+                    exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
+            )
+    if not configManager.isIntradayConfig():
+        candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
+        configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
+                # We also need to load the intraday data to be able to calculate intraday RSI
+        Utility.tools.loadStockData(
+                        {},
+                        configManager,
+                        downloadOnly=downloadOnly,
+                        defaultAnswer=defaultAnswer,
+                        forceLoad=(menuOption in ["X", "B", "G", "S"]),
+                        stockCodes = listStockCodes,
+                        isIntraday=True,
+                        exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
+                )
+        resetConfigToDefault()
+    loadedStockData = True
 
 def getLatestTradeDateTime(stockDict):
     stocks = list(stockDict.keys())

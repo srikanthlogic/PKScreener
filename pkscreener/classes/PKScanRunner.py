@@ -50,6 +50,10 @@ class PKScanRunner:
     configManager.getConfig(parser)
     fetcher = Fetcher.screenerStockDataFetcher(configManager)
     candlePatterns = CandlePatterns()
+    tasks_queue = None
+    results_queue = None
+    scr = None
+    consumers = None
 
     def initDataframes():
         screenResults = pd.DataFrame(
@@ -64,6 +68,7 @@ class PKScanRunner:
                 "Volume",
                 "MA-Signal",
                 "RSI",
+                "RSIi",
                 "Trend",
                 "Pattern",
                 "CCI",
@@ -81,6 +86,7 @@ class PKScanRunner:
                 "Volume",
                 "MA-Signal",
                 "RSI",
+                "RSIi",
                 "Trend",
                 "Pattern",
                 "CCI",
@@ -232,17 +238,29 @@ class PKScanRunner:
         choices = f"{choices}{'_i' if isIntraday else ''}"
         return choices
 
-    def runScanWithParams(keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb):
-        tasks_queue, results_queue, scr, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
+    def refreshDatabase():
+        for worker in PKScanRunner.consumers:
+            worker.refreshDatabase = True
+            
+    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb):
+        if PKScanRunner.tasks_queue is None or \
+            PKScanRunner.results_queue is None or \
+            PKScanRunner.scr is None or \
+            PKScanRunner.consumers is None:
+            tasks_queue, results_queue, scr, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
+            PKScanRunner.tasks_queue = tasks_queue
+            PKScanRunner.results_queue = results_queue
+            PKScanRunner.scr = scr
+            PKScanRunner.consumers = consumers
         screenResults, saveResults, backtest_df = scanningCb(
                     menuOption,
                     items,
-                    tasks_queue,
-                    results_queue,
+                    PKScanRunner.tasks_queue,
+                    PKScanRunner.results_queue,
                     len(items),
                     backtestPeriod,
                     samplingDuration - 1,
-                    consumers,
+                    PKScanRunner.consumers,
                     screenResults,
                     saveResults,
                     backtest_df,
@@ -250,8 +268,9 @@ class PKScanRunner:
                 )
 
         OutputControls().printOutput(colorText.END)
-        PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
-        return screenResults, saveResults,backtest_df,scr
+        if userPassedArgs is not None and userPassedArgs.monitor is None:
+            PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
+        return screenResults, saveResults,backtest_df,PKScanRunner.scr
 
     def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDict, items):
         tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
@@ -335,6 +354,10 @@ class PKScanRunner:
             except Exception as e:  # pragma: no cover
                 # default_logger().debug(e, exc_info=True)
                 break
+        PKScanRunner.tasks_queue = None
+        PKScanRunner.results_queue = None
+        PKScanRunner.scr = None
+        PKScanRunner.consumers = None
 
     def shutdown(frame, signum):
         OutputControls().printOutput("Shutting down for test coverage")

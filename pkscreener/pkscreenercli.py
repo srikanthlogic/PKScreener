@@ -47,6 +47,7 @@ except Exception:# pragma: no cover
     pass
 
 from time import sleep
+import time
 
 from PKDevTools.classes import log as log
 from PKDevTools.classes.ColorText import colorText
@@ -224,6 +225,9 @@ args = argsv[0]
 results = None
 resultStocks = None
 plainResults = None
+start_time = None
+dbTimestamp = None
+elapsed_time = None
 configManager = ConfigManager.tools()
 
 
@@ -352,13 +356,21 @@ def runApplication():
         if args.barometer:
             sendGlobalMarketBarometer(userArgs=args)
         else:
-            global results, resultStocks, plainResults
+            global results, resultStocks, plainResults, dbTimestamp, elapsed_time, start_time
             monitorOption_org = ""
             if args.monitor:
                 args.answerdefault = args.answerdefault or 'Y'
                 if MarketMonitor().monitorIndex == 0:
+                    dbTimestamp = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
+                    elapsed_time = 0
+                    if start_time is None:
+                        start_time = time.time()
+                    else:
+                        elapsed_time = round(time.time() - start_time,2)
+                        start_time = time.time()
+                if MarketMonitor().monitorIndex == 0 and args.options is not None:
                     # Load the stock data afresh for each cycle
-                    refreshStockData()
+                    refreshStockData(args.options)
                 monitorOption_org = MarketMonitor().currentMonitorOption()
                 monitorOption = monitorOption_org
                 lastComponent = monitorOption.split(":")[-1]
@@ -393,7 +405,7 @@ def runApplication():
             if plainResults is not None and not plainResults.empty:
                 resultStocks = plainResults.index
             if results is not None and args.monitor and len(monitorOption_org) > 0:
-                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy())
+                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s")
 
 
 def pkscreenercli():

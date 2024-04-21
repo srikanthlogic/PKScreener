@@ -71,7 +71,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             pass
         return option
 
-    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None, chosenMenu=None):
+    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None, chosenMenu=None, dbTimestamp=""):
         highlightRows = []
         highlightCols = []
         if screen_df is None or screen_df.empty:
@@ -124,7 +124,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + "[+] You chose: (Dashboard) > "
+            + f"[+] {dbTimestamp} (Dashboard) > "
             + f"{chosenMenu} [{screenOptions}]"
             + colorText.END
             , enableMultipleLineOutput=True

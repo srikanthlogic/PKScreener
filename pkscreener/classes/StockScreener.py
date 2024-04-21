@@ -117,9 +117,13 @@ class StockScreener:
                 intraday_fullData, intraday_processedData = screener.preprocessData(
                     intraday_data, daysToLookback=configManager.effectiveDaysToLookback
                 )
+                # Match the index length and values length
                 fullData = fullData.head(len(intraday_fullData))
+                intraday_fullData = intraday_fullData.head(len(fullData))
                 processedData = processedData.head(len(intraday_processedData))
+                intraday_processedData = intraday_processedData.head(len(processedData))
                 data = data.tail(len(intraday_data))
+                intraday_data = intraday_data.tail(len(data))
                 # Indexes won't match. Hence, we'd need to fallback on tolist
                 processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
                 fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
@@ -575,6 +579,7 @@ class StockScreener:
             # hostRef.default_logger.debug(e, exc_info=True)
             pass
         except KeyError as e: # pragma: no cover
+            print(e)
             hostRef.default_logger.debug(e, exc_info=True)
             pass
         except OSError as e: # pragma: no cover
