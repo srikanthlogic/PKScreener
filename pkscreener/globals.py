@@ -545,7 +545,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
     # Publish to gSheet with https://github.com/burnash/gspread
     global menuChoiceHierarchy, userPassedArgs
     try:
-        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()
+        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         if isTrading or userPassedArgs.monitor:
             screenResults['RSI'] = screenResults['RSI'].astype(str) + "/" + screenResults['RSIi'].astype(str)
             saveResults['RSI'] = saveResults['RSI'].astype(str) + "/" + saveResults['RSIi'].astype(str)
@@ -622,7 +622,7 @@ def isInterrupted():
 
 def refreshStockData():
     global stockDict, loadedStockData
-    stockDict = None
+    # stockDict = None
     loadedStockData = False
 
 # @tracelog

@@ -71,7 +71,7 @@ class StockScreener:
         downloadOnly,
         volumeRatio,
         testbuild=False,
-        printCounter=False,
+        userArgs=None,
         backtestDuration=0,
         backtestPeriodToLookback=30,
         logLevel=logging.NOTSET,
@@ -90,6 +90,7 @@ class StockScreener:
         fetcher = hostRef.fetcher
         screener = hostRef.screener
         candlePatterns = hostRef.candlePatterns
+        printCounter = userArgs.log if (userArgs is not None and userArgs.log is not None) else False
         userArgsLog = printCounter
         start_time = time.time()
         try:
@@ -475,8 +476,9 @@ class StockScreener:
                         or (executeOption == 21 and (fairValueDiff < 0 and reversalOption in [9]))
                         or (executeOption == 26)
                     ):
+                        isNotMonitoringDashboard = userArgs.monitor is None
                         # Now screen for common ones to improve performance
-                        if not (executeOption == 6 and reversalOption == 7):
+                        if isNotMonitoringDashboard and not (executeOption == 6 and reversalOption == 7):
                             if sys.version_info >= (3, 11):
                                 with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                                     screener.validateLorentzian(
@@ -485,7 +487,7 @@ class StockScreener:
                                         saveDictionary,
                                         lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
                                     )
-                        if not (executeOption in [1,2]):
+                        if isNotMonitoringDashboard and not (executeOption in [1,2]):
                             screener.findBreakoutValue(
                                 processedData,
                                 screeningDictionary,
@@ -493,7 +495,7 @@ class StockScreener:
                                 daysToLookback=configManager.daysToLookback,
                                 alreadyBrokenout=(executeOption == 2),
                             )
-                        if executeOption != 3:
+                        if isNotMonitoringDashboard and executeOption != 3:
                             screener.validateConsolidation(
                                 processedData,
                                 screeningDictionary,
@@ -507,11 +509,11 @@ class StockScreener:
                         screener.find52WeekHighLow(
                             fullData, saveDictionary, screeningDictionary
                         )
-                        if executeOption != 8:
+                        if isNotMonitoringDashboard and executeOption != 8:
                             screener.validateCCI(
                                 processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                             )
-                        if executeOption != 21 and backtestDuration == 0:
+                        if isNotMonitoringDashboard and executeOption != 21 and backtestDuration == 0:
                             # We don't need to have MFI or fair value data for backtesting because those
                             # are anyways only available for days in the past.
                             # For executeOption 21, we'd have already got the mfiStake and fairValueDiff

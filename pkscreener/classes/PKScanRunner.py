@@ -139,7 +139,7 @@ class PKScanRunner:
                             downloadOnly,
                             volumeRatio,
                             testBuild,
-                            userArgs.log,
+                            userArgs,
                             daysInPast,
                             (
                                 backtestPeriod
