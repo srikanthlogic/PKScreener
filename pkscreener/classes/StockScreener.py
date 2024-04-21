@@ -100,7 +100,11 @@ class StockScreener:
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData,exchangeName)
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionary, configManager, fetcher, period, testData,exchangeName)
+            if not configManager.isIntradayConfig():
+                intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.secondaryObjectDictionary, configManager, fetcher, period, testData,exchangeName)
+            else:
+                intraday_data = data
             if data is not None:
                 if len(data) == 0 or len(data) < backtestDuration:
                     return None
@@ -108,6 +112,17 @@ class StockScreener:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
+            if backtestDuration == 0:
+                intraday_fullData, intraday_processedData = screener.preprocessData(
+                    intraday_data, daysToLookback=configManager.effectiveDaysToLookback
+                )
+                fullData = fullData.head(len(intraday_fullData))
+                processedData = processedData.head(len(intraday_processedData))
+                data = data.tail(len(intraday_data))
+                # Indexes won't match. Hence, we'd need to fallback on tolist
+                processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
+                fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
+
             def returnLegibleData():
                 if backtestDuration == 0 or menuOption not in ["B"]:
                     return None
@@ -692,8 +707,8 @@ class StockScreener:
                 
         return fullData,processedData,data
 
-    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, configManager, fetcher, period, testData=None,exchangeName="INDIA"):
-        hostData = hostRef.objectDictionary.get(stock)
+    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,objectDictionary, configManager, fetcher, period, testData=None,exchangeName="INDIA"):
+        hostData = objectDictionary.get(stock)
         data = None
         start = None
         if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
@@ -762,13 +777,13 @@ class StockScreener:
         if ((shouldCache and not self.isTradingTime and (hostData is None)) or downloadOnly) \
             or (shouldCache and hostData is None):  # and backtestDuration == 0 # save only if we're NOT backtesting
                 if start is None and data is not None:
-                    hostRef.objectDictionary[stock] = data.to_dict("split")
+                    objectDictionary[stock] = data.to_dict("split")
                 if downloadOnly:
                     with hostRef.processingResultsCounter.get_lock():
                         hostRef.processingResultsCounter.value += 1
                     raise ScreeningStatistics.DownloadDataOnly
                 else:
-                    hostData = hostRef.objectDictionary.get(stock)
+                    hostData = objectDictionary.get(stock)
         return data
 
     def determineBasicConfigs(self, stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog):
@@ -845,6 +860,7 @@ class StockScreener:
             "52Wk H",
             "52Wk L",
             "RSI",
+            "RSIi",
             "Volume",
             "22-Pd %",
             "Consol.",
@@ -862,6 +878,7 @@ class StockScreener:
             "52Wk H": 0,
             "52Wk L": 0,
             "RSI": 0,
+            "RSIi": 0,
             "Volume": "",
             "22-Pd %": "",
             "Consol.": "Range:0%",
@@ -879,6 +896,7 @@ class StockScreener:
             "52Wk H": 0,
             "52Wk L": 0,
             "RSI": 0,
+            "RSIi": 0,
             "Volume": "",
             "22-Pd %": "",
             "Consol.": "Range:0%",

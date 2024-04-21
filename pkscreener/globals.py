@@ -111,6 +111,7 @@ m1 = menus()
 m2 = menus()
 m3 = menus()
 maLength = None
+nValueForMenu = 0
 menuChoiceHierarchy = ""
 newlyListedOnly = False
 screenCounter = None
@@ -362,6 +363,8 @@ def handleScannerExecuteOption4(executeOption, options):
         input("Press <Enter> to continue...")
         return
     OutputControls().printOutput(colorText.END)
+    global nValueForMenu 
+    nValueForMenu = daysForLowestVolume
     return daysForLowestVolume
 
 
@@ -540,9 +543,13 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
 
 def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,executeOption, reversalOption):
     # Publish to gSheet with https://github.com/burnash/gspread
-    global menuChoiceHierarchy
+    global menuChoiceHierarchy, userPassedArgs
     try:
-        sortKey = ["Volume"] if "RSI" not in menuChoiceHierarchy else "RSI"
+        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()
+        if isTrading or userPassedArgs.monitor:
+            screenResults['RSI'] = screenResults['RSI'].astype(str) + "/" + screenResults['RSIi'].astype(str)
+            saveResults['RSI'] = saveResults['RSI'].astype(str) + "/" + saveResults['RSIi'].astype(str)
+        sortKey = ["Volume"] if "RSI" not in menuChoiceHierarchy else ("RSIi" if isTrading else "RSI")
         ascending = [False if "RSI" not in menuChoiceHierarchy else True]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
@@ -572,7 +579,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         except Exception as e:
             default_logger().debug(e, exc_info=True)
             pass
-        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5"]
+        columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5", "RSIi"]
         for column in columnsToBeDeleted:
             if column in saveResults.columns:
                 saveResults.drop(column, axis=1, inplace=True, errors="ignore")
@@ -612,6 +619,11 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
 def isInterrupted():
     global keyboardInterruptEventFired
     return keyboardInterruptEventFired
+
+def refreshStockData():
+    global stockDict, loadedStockData
+    stockDict = None
+    loadedStockData = False
 
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
@@ -934,7 +946,10 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             configManager.volumeRatio = float(volumeRatio)
     if executeOption == 12:
-        configManager.toggleConfig(candleDuration="15m")
+        candleDuration = userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else ("15m")
+        configManager.toggleConfig(candleDuration=candleDuration)
+        global nValueForMenu 
+        nValueForMenu = candleDuration
     if executeOption == 21:
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:
@@ -1115,7 +1130,23 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     stockCodes = listStockCodes,
                     exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
             )
+            if not configManager.isIntradayConfig():
+                candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
+                configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
+                # We also need to load the intraday data to be able to calculate intraday RSI
+                Utility.tools.loadStockData(
+                        {},
+                        configManager,
+                        downloadOnly=downloadOnly,
+                        defaultAnswer=defaultAnswer,
+                        forceLoad=(menuOption in ["X", "B", "G", "S"]),
+                        stockCodes = listStockCodes,
+                        isIntraday=True,
+                        exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
+                )
+                resetConfigToDefault()
             loadedStockData = True
+            
         loadCount = len(stockDict) if stockDict is not None else 0
 
         if downloadOnly:
@@ -1650,6 +1681,8 @@ def updateMenuChoiceHierarchy():
         )
     intraday = "(Intraday)" if (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig() else ""
     menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
+    global nValueForMenu
+    menuChoiceHierarchy = menuChoiceHierarchy.replace("N-",f"{nValueForMenu}-")
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL

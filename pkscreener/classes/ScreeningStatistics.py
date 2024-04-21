@@ -700,27 +700,27 @@ class ScreeningStatistics:
         return ts, df[df.index == ts] #df.head(len(df) -index +1).tail(1)
     
     # Find stock showing RSI crossing with RSI 9 SMA
-    def findRSICrossingMA(self, df, screenDict, saveDict,lookFor=1, maLength=9):
+    def findRSICrossingMA(self, df, screenDict, saveDict,lookFor=1, maLength=9, rsiKey="RSI"):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
         data = data[::-1]
-        maRsi = pktalib.MA(data['RSI'], timeperiod=maLength)
+        maRsi = pktalib.MA(data[rsiKey], timeperiod=maLength)
         data = data[::-1].head(3)
         maRsi = maRsi[::-1].head(3)
         saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
-        if lookFor in [1,3] and maRsi.iloc[0] <= data['RSI'].iloc[0] and maRsi.iloc[1] > data['RSI'].iloc[1]:
+        if lookFor in [1,3] and maRsi.iloc[0] <= data[rsiKey].iloc[0] and maRsi.iloc[1] > data[rsiKey].iloc[1]:
             screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.GREEN + f'RSI-MA-Buy' + colorText.END
             saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Buy'
-            return True
-        elif lookFor in [2,3] and maRsi.iloc[0] >= data['RSI'].iloc[0] and maRsi.iloc[1] < data['RSI'].iloc[1]:
+            return True if (rsiKey == "RSIi") else (self.findRSICrossingMA(df, screenDict, saveDict,lookFor=lookFor, maLength=maLength, rsiKey="RSIi") or True)
+        elif lookFor in [2,3] and maRsi.iloc[0] >= data[rsiKey].iloc[0] and maRsi.iloc[1] < data[rsiKey].iloc[1]:
             screenDict['MA-Signal'] = saved[0] + colorText.BOLD + colorText.FAIL + f'RSI-MA-Sell' + colorText.END
             saveDict['MA-Signal'] = saved[1] + f'RSI-MA-Sell'
-            return True
-        return False
+            return True if (rsiKey == "RSIi") else (self.findRSICrossingMA(df, screenDict, saveDict,lookFor=lookFor, maLength=maLength, rsiKey="RSIi") or True)
+        return False if (rsiKey == "RSIi") else (self.findRSICrossingMA(df, screenDict, saveDict,lookFor=lookFor, maLength=maLength, rsiKey="RSIi"))
     
     # Find stocks with rising RSI from lower levels
-    def findRisingRSI(self, df):
+    def findRisingRSI(self, df, rsiKey="RSI"):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
@@ -729,8 +729,11 @@ class ScreeningStatistics:
         dayMinus2RSI = data["RSI"].iloc[0]
         dayMinus1RSI = data["RSI"].iloc[1]
         dayRSI = data["RSI"].iloc[2]
-        return (dayMinus2RSI <= 35 and dayMinus1RSI > dayMinus2RSI and dayRSI > dayMinus1RSI) or \
+        returnValue = (dayMinus2RSI <= 35 and dayMinus1RSI > dayMinus2RSI and dayRSI > dayMinus1RSI) or \
                 (dayMinus1RSI <= 35 and dayRSI > dayMinus1RSI)
+        if rsiKey == "RSI":
+            returnValue = self.findRisingRSI(df, rsiKey="RSIi") or returnValue
+        return returnValue
 
     #@measure_time
     # Find out trend for days to lookback
@@ -2130,22 +2133,23 @@ class ScreeningStatistics:
 
     #@measure_time
     # validate if RSI is within given range
-    def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI):
+    def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI,rsiKey="RSI"):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
-        rsi = int(data.head(1)["RSI"].iloc[0])
-        saveDict["RSI"] = rsi
+        rsi = int(data.head(1)[rsiKey].iloc[0])
+        saveDict[rsiKey] = rsi
         # https://chartink.com/screener/rsi-screening
         if rsi> 0 and rsi >= minRSI and rsi <= maxRSI:  # or (rsi <= 71 and rsi >= 67):
-            screenDict["RSI"] = (
+            screenDict[rsiKey] = (
                 colorText.BOLD + colorText.GREEN + str(rsi) + colorText.END
             )
-            return True
-        screenDict["RSI"] = colorText.BOLD + colorText.FAIL + str(rsi) + colorText.END
-        return False
+            return True if (rsiKey == "RSIi") else (self.validateRSI(df, screenDict, saveDict, minRSI, maxRSI,rsiKey="RSIi") or True)
+        screenDict[rsiKey] = colorText.BOLD + colorText.FAIL + str(rsi) + colorText.END
+        # If either daily or intraday RSI comes within range?
+        return False if (rsiKey == "RSIi") else (self.validateRSI(df, screenDict, saveDict, minRSI, maxRSI,rsiKey="RSIi"))
 
     # Validate if the stock is bullish in the short term
     def validateShortTermBullish(self, df, screenDict, saveDict):

@@ -840,6 +840,7 @@ class tools:
         )
         initialLoadCount = len(stockDict)
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
+        # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly or not exists):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict

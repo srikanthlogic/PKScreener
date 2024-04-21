@@ -31,7 +31,7 @@ from PKDevTools.classes.ColorText import colorText
 from pkscreener.classes import Utility
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
-    def __init__(self,monitors=[]):
+    def __init__(self,monitors=[], maxNumResultsPerRow=5,maxNumColsInEachResult=6,maxNumRowsInEachResult=10):
         super(MarketMonitor, self).__init__()
         if monitors is not None and len(monitors) > 0:
             self.monitors = monitors
@@ -40,9 +40,9 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             # We are going to present the dataframes in a 3x3 matrix with limited set of columns
             rowIndex = 0
             colIndex = 0
-            self.maxNumRowsInEachResult = 10
-            self.maxNumColsInEachResult = 6
-            self.maxNumResultsPerRow = 5
+            self.maxNumRowsInEachResult = maxNumRowsInEachResult
+            self.maxNumColsInEachResult = maxNumColsInEachResult
+            self.maxNumResultsPerRow = maxNumResultsPerRow
             maxColIndex = self.maxNumColsInEachResult * self.maxNumResultsPerRow - 1
             self.lines = 0
             for monitorKey in monitors:
@@ -89,7 +89,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         screen_monitor_df.loc[:, "Volume"] = screen_monitor_df.loc[:, "Volume"].apply(
             lambda x: Utility.tools.roundOff(x,0)
         )
-        screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk H":"52WkH"}, inplace=True)
+        screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk H":"52WkH", "RSI":"RSI/i"}, inplace=True)
         monitorPosition = self.monitorPositions.get(screenOptions)
         if monitorPosition is not None:
             startRowIndex, startColIndex = monitorPosition

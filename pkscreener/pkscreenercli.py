@@ -291,7 +291,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted
+    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -356,6 +356,9 @@ def runApplication():
             monitorOption_org = ""
             if args.monitor:
                 args.answerdefault = args.answerdefault or 'Y'
+                if MarketMonitor().monitorIndex == 0:
+                    # Load the stock data afresh for each cycle
+                    refreshStockData()
                 monitorOption_org = MarketMonitor().currentMonitorOption()
                 monitorOption = monitorOption_org
                 lastComponent = monitorOption.split(":")[-1]
@@ -366,7 +369,7 @@ def runApplication():
                     configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
                 else:
                     # We need to switch to daily scan
-                    args.intraday = False
+                    args.intraday = None
                     configManager.toggleConfig(candleDuration='1d', clearCache=False)
                 if monitorOption.startswith("|"):
                     monitorOption = monitorOption.replace("|","")
@@ -376,6 +379,9 @@ def runApplication():
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption
             try:
+                results = None
+                plainResults = None
+                resultStocks = None
                 results, plainResults = main(userArgs=args)
                 if isInterrupted():
                     sys.exit(0)
@@ -409,7 +415,7 @@ def pkscreenercli():
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
     if args.monitor is not None:
-        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","))
+        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","),maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow)
 
     if args.log or configManager.logsEnabled:
         setupLogger(shouldLog=True, trace=args.testbuild)
