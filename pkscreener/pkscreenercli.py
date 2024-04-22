@@ -317,7 +317,6 @@ def runApplication():
             except Exception as e:
                 OutputControls().printOutput(e)
                 if args.log:
-                    import traceback
                     traceback.print_exc()
         if optionalFinalOutcome_df is not None:
             final_df = None
@@ -358,6 +357,7 @@ def runApplication():
         else:
             global results, resultStocks, plainResults, dbTimestamp, elapsed_time, start_time
             monitorOption_org = ""
+            # args.monitor = configManager.defaultMonitorOptions
             if args.monitor:
                 args.answerdefault = args.answerdefault or 'Y'
                 if MarketMonitor().monitorIndex == 0:
@@ -390,7 +390,7 @@ def runApplication():
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption
-            try:
+            try: 
                 results = None
                 plainResults = None
                 resultStocks = None
@@ -400,6 +400,7 @@ def runApplication():
             except SystemExit:
                 sys.exit(0)
             except Exception:
+                # traceback.print_exc()
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
@@ -426,6 +427,7 @@ def pkscreenercli():
         
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()
+    # args.monitor = configManager.defaultMonitorOptions
     if args.monitor is not None:
         MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","),maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow)
 

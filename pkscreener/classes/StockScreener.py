@@ -102,8 +102,15 @@ class StockScreener:
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
             data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionary, configManager, fetcher, period, testData,exchangeName)
-            if not configManager.isIntradayConfig():
+            if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
+                # Daily data is already available in "data" above.
+                # We need the intraday data for 1-d RSI values when config is not for intraday
                 intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.secondaryObjectDictionary, configManager, fetcher, period, testData,exchangeName)
+                # if intraday_data is not None:
+                #     if len(intraday_data) == 0:
+                #         return None
+                # else:
+                #     return None
             else:
                 intraday_data = data
             if data is not None:
@@ -113,20 +120,24 @@ class StockScreener:
                 return None
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
-            if backtestDuration == 0:
-                intraday_fullData, intraday_processedData = screener.preprocessData(
-                    intraday_data, daysToLookback=configManager.effectiveDaysToLookback
-                )
-                # Match the index length and values length
-                fullData = fullData.head(len(intraday_fullData))
-                intraday_fullData = intraday_fullData.head(len(fullData))
-                processedData = processedData.head(len(intraday_processedData))
-                intraday_processedData = intraday_processedData.head(len(processedData))
-                data = data.tail(len(intraday_data))
-                intraday_data = intraday_data.tail(len(data))
-                # Indexes won't match. Hence, we'd need to fallback on tolist
-                processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
-                fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
+            if backtestDuration == 0 and configManager.calculatersiintraday:
+                if (intraday_data is not None and not intraday_data.empty):
+                    intraday_fullData, intraday_processedData = screener.preprocessData(
+                        intraday_data, daysToLookback=configManager.effectiveDaysToLookback
+                    )
+                    # Match the index length and values length
+                    fullData = fullData.head(len(intraday_fullData))
+                    intraday_fullData = intraday_fullData.head(len(fullData))
+                    processedData = processedData.head(len(intraday_processedData))
+                    intraday_processedData = intraday_processedData.head(len(processedData))
+                    data = data.tail(len(intraday_data))
+                    intraday_data = intraday_data.tail(len(data))
+                    # Indexes won't match. Hence, we'd need to fallback on tolist
+                    processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
+                    fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
+                else:
+                    processedData.loc[:,"RSIi"] = [0]*len(processedData)
+                    fullData.loc[:,"RSIi"] = [0]*len(fullData)
 
             def returnLegibleData():
                 if backtestDuration == 0 or menuOption not in ["B"]:
@@ -715,12 +726,16 @@ class StockScreener:
         return fullData,processedData,data
 
     def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,objectDictionary, configManager, fetcher, period, testData=None,exchangeName="INDIA"):
-        hostData = objectDictionary.get(stock)
+        hostData = objectDictionary.get(stock) if (objectDictionary is not None and len(objectDictionary) > 0) else None
         data = None
         start = None
-        if (period == '1d' or configManager.duration[-1] == "m") and backtestDuration > 0:
-            start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
-            end = start
+        if (period == '1d' or configManager.duration[-1] == "m"):
+            if backtestDuration > 0: # We are backtesting
+                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
+            else:
+                # Since this is intraday data, we'd just need to start from the last trading session
+                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(1)
+            end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         if (
                 not shouldCache
                 or (downloadOnly and hostData is None)

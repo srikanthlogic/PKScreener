@@ -40,6 +40,7 @@ from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
 from pkscreener.classes.ConfigManager import parser, tools
 from PKDevTools.classes.OutputControls import OutputControls
+# from PKDevTools.classes.PKJoinableQueue import PKJoinableQueue
 
 import pkscreener.classes.Fetcher as Fetcher
 import pkscreener.classes.ScreeningStatistics as ScreeningStatistics
@@ -106,6 +107,7 @@ class PKScanRunner:
         return tasks_queue, results_queue, totalConsumers
 
     def populateQueues(items, tasks_queue, exit=False):
+        # default_logger().debug(f"Unfinished items in task_queue: {tasks_queue.qsize()}")
         for item in items:
             tasks_queue.put(item)
         if exit:

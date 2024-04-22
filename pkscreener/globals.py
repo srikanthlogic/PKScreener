@@ -1365,10 +1365,10 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
                     stockCodes = listStockCodes,
                     exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
             )
-    if not configManager.isIntradayConfig():
+    if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
         candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
         configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
-                # We also need to load the intraday data to be able to calculate intraday RSI
+        # We also need to load the intraday data to be able to calculate intraday RSI
         Utility.tools.loadStockData(
                         {},
                         configManager,

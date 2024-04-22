@@ -703,6 +703,8 @@ class ScreeningStatistics:
     def findRSICrossingMA(self, df, screenDict, saveDict,lookFor=1, maLength=9, rsiKey="RSI"):
         if df is None or len(df) == 0:
             return False
+        if rsiKey not in df.columns:
+            return False
         data = df.copy()
         data = data[::-1]
         maRsi = pktalib.MA(data[rsiKey], timeperiod=maLength)
@@ -722,6 +724,8 @@ class ScreeningStatistics:
     # Find stocks with rising RSI from lower levels
     def findRisingRSI(self, df, rsiKey="RSI"):
         if df is None or len(df) == 0:
+            return False
+        if rsiKey not in df.columns:
             return False
         data = df.copy()
         data = data[::-1]
@@ -1343,7 +1347,7 @@ class ScreeningStatistics:
         assert isinstance(df, pd.DataFrame)
         data = df.copy()
         data = data.replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna(how="all")
-        self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
+        # self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
         if self.configManager.useEMA:
@@ -1366,12 +1370,14 @@ class ScreeningStatistics:
         data.insert(len(data.columns), "RSI", rsi)
         cci = pktalib.CCI(data["High"], data["Low"], data["Close"], timeperiod=14)
         data.insert(len(data.columns), "CCI", cci)
-        # len(data["Close"])
-        fastk, fastd = pktalib.STOCHRSI(
-            data["Close"], timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0
-        )
-        data.insert(len(data.columns), "FASTK", fastk)
-        data.insert(len(data.columns), "FASTD", fastd)
+        try:
+            fastk, fastd = pktalib.STOCHRSI(
+                data["Close"], timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0
+            )
+            data.insert(len(data.columns), "FASTK", fastk)
+            data.insert(len(data.columns), "FASTD", fastd)
+        except:
+            pass
         data = data[::-1]  # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -2135,6 +2141,8 @@ class ScreeningStatistics:
     # validate if RSI is within given range
     def validateRSI(self, df, screenDict, saveDict, minRSI, maxRSI,rsiKey="RSI"):
         if df is None or len(df) == 0:
+            return False
+        if rsiKey not in df.columns:
             return False
         data = df.copy()
         data = data.fillna(0)

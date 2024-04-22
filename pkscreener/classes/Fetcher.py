@@ -32,6 +32,7 @@ warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import yfinance as yf
 from concurrent.futures import ThreadPoolExecutor
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.Fetcher import StockDataEmptyException
 from PKDevTools.classes.log import default_logger
@@ -96,6 +97,12 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         elif isinstance(stockCode,str):
             if len(exchangeSuffix) > 0:
                 stockCode = f"{stockCode}{exchangeSuffix}" if not stockCode.endswith(exchangeSuffix) else stockCode
+        if (period == '1d' or duration[-1] == "m"):
+            # Since this is intraday data, we'd just need to start from the last trading session
+            if start is None:
+                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(1)
+            if end is None:
+                end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
             data = yf.download(
                 tickers=stockCode,

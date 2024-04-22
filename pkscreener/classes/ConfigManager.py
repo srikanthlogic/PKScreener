@@ -74,7 +74,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
         self.maxDashboardWidgetsPerRow = 6
+        self.calculatersiintraday = False
         self.defaultMonitorOptions = "X:12:9:2.5,|X:0:5:0:50,X:12:2,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:23,X:12:24,X:12:10,X:12:12:i 1m,X:12:12:i 5m,X:12:13:i 1m"
+        #"X:12:9:2.5,|X:0:5:0:50,X:12:2,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:23,X:12:24,X:12:10,X:12:12:i 1m,X:12:12:i 5m,X:12:13:i 1m"
 
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
@@ -156,6 +158,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "logsEnabled", "y" if self.logsEnabled else "n")
             parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
             parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
+            parser.set("config", "calculatersiintraday", "y" if self.calculatersiintraday else "n")
             parser.set("config", "generalTimeout", str(self.generalTimeout))
             parser.set("config", "defaultIndex", str(self.defaultIndex))
             parser.set("config", "longTimeout", str(self.longTimeout))
@@ -260,6 +263,11 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     "[+] Enable showing past strategy data? [Y/N]: "
                 )
             ).lower()
+            self.calculatersiintraday = str(
+                input(
+                    "[+] Calculate intraday RSI during trading hours? [Y/N]: "
+                )
+            ).lower()
             self.generalTimeout = input(
                 "[+] General network timeout (in seconds)(Optimal = 2 for good networks): "
             )
@@ -306,6 +314,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
             parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
             parser.set("config", "showPastStrategyData", self.showPastStrategyData)
+            parser.set("config", "calculatersiintraday", self.calculatersiintraday)
             parser.set("config", "logsEnabled", self.logsEnabledPrompt)
             parser.set("config", "generalTimeout", self.generalTimeout)
             parser.set("config", "defaultIndex", self.defaultIndex)
@@ -401,6 +410,11 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.showPastStrategyData = (
                     False
                     if "y" not in str(parser.get("config", "showPastStrategyData")).lower()
+                    else True
+                )
+                self.calculatersiintraday = (
+                    False
+                    if "y" not in str(parser.get("config", "calculatersiintraday")).lower()
                     else True
                 )
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
