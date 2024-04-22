@@ -81,7 +81,7 @@ class StockScreener:
     ):
         assert (
             hostRef is not None
-        ), "hostRef argument must not be None. It should b an instance of PKMultiProcessorClient"
+        ), "hostRef argument must not be None. It should be an instance of PKMultiProcessorClient"
         configManager = hostRef.configManager
         self.configManager = configManager
         screeningDictionary, saveDictionary = self.initResultDictionaries()
@@ -135,9 +135,6 @@ class StockScreener:
                     # Indexes won't match. Hence, we'd need to fallback on tolist
                     processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
                     fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
-                else:
-                    processedData.loc[:,"RSIi"] = [0]*len(processedData)
-                    fullData.loc[:,"RSIi"] = [0]*len(fullData)
 
             def returnLegibleData():
                 if backtestDuration == 0 or menuOption not in ["B"]:
@@ -859,7 +856,7 @@ class StockScreener:
     def setupLoggers(self, hostRef, screener, logLevel, stock):
         # Set the loglevels for both the caller and screener
         # Also add handlers that are specific to this sub-process which
-        # will co ntinue with the screening. Each sub-process would have
+        # will continue with the screening. Each sub-process would have
         # its own logger but going into the same file/console > to that
         # of the parent logger.
         if hostRef.default_logger.level > 0:

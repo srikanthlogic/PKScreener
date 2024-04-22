@@ -127,6 +127,9 @@ start_time = 0
 test_messages_queue = []
 strategyFilter=[]
 listStockCodes = None
+tasks_queue = None
+results_queue = None
+consumers = None
 
 def finishScreening(
     downloadOnly,
@@ -1190,13 +1193,14 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     progressbar()
         sys.stdout.write(f"\x1b[1A") # Replace the download progress bar and start writing on the same line
         if not keyboardInterruptEventFired:
-            screenResults, saveResults, backtest_df, scr = PKScanRunner.runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners)
+            global tasks_queue, results_queue, consumers
+            screenResults, saveResults, backtest_df, tasks_queue, results_queue, consumers = PKScanRunner.runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners,tasks_queue=tasks_queue, results_queue=results_queue, consumers=consumers)
             if menuOption in ["C"]:
                 runOptionName = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
                 PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults,runOptionName=runOptionName)
             if downloadOnly and menuOption in ["X"]:
-                scr.getFreshMFIStatus(stock="LatestCheckedOnDate")
-                scr.getFairValue(stock="LatestCheckedOnDate", force=True)
+                screener.getFreshMFIStatus(stock="LatestCheckedOnDate")
+                screener.getFairValue(stock="LatestCheckedOnDate", force=True)
             if not downloadOnly and menuOption in ["X", "G", "C"]:
                 if menuOption == "G":
                     userPassedArgs.backtestdaysago = backtestPeriod

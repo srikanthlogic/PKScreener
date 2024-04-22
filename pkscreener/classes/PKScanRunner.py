@@ -244,16 +244,12 @@ class PKScanRunner:
         for worker in PKScanRunner.consumers:
             worker.refreshDatabase = True
             
-    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb):
-        if PKScanRunner.tasks_queue is None or \
-            PKScanRunner.results_queue is None or \
-            PKScanRunner.scr is None or \
-            PKScanRunner.consumers is None:
-            tasks_queue, results_queue, scr, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
-            PKScanRunner.tasks_queue = tasks_queue
-            PKScanRunner.results_queue = results_queue
-            PKScanRunner.scr = scr
-            PKScanRunner.consumers = consumers
+    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers):
+        if tasks_queue is None or results_queue is None or consumers is None:
+            tasks_queue, results_queue, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
+        PKScanRunner.tasks_queue = tasks_queue
+        PKScanRunner.results_queue = results_queue
+        PKScanRunner.consumers = consumers
         screenResults, saveResults, backtest_df = scanningCb(
                     menuOption,
                     items,
@@ -272,7 +268,7 @@ class PKScanRunner:
         OutputControls().printOutput(colorText.END)
         if userPassedArgs is not None and userPassedArgs.monitor is None:
             PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
-        return screenResults, saveResults,backtest_df,PKScanRunner.scr
+        return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers
 
     def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDict, items):
         tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
@@ -298,7 +294,7 @@ class PKScanRunner:
                     for _ in range(totalConsumers)
                 ]
         PKScanRunner.startWorkers(consumers)
-        return tasks_queue,results_queue,scr,consumers
+        return tasks_queue,results_queue,consumers
     
     def startWorkers(consumers):
         try:
