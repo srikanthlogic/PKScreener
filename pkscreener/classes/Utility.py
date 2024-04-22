@@ -813,7 +813,7 @@ class tools:
             queueCounter += 1
         
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=10,minAcceptableCompletionPercentage=80)
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=10,minAcceptableCompletionPercentage=80)
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
