@@ -812,6 +812,7 @@ class tools:
                 tasksList.append(task)
             queueCounter += 1
         
+        processedStocks = []
         if len(tasksList) > 0:
             PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=3*configManager.longTimeout*(4 if downloadOnly else 1),minAcceptableCompletionPercentage=(100 if downloadOnly else 80))
             for task in tasksList:
@@ -820,7 +821,9 @@ class tools:
                         taskResult = task.result.get(f"{stock}{exchangeSuffix}")
                         if taskResult is not None:
                             stockDict[stock] = taskResult.to_dict("split")
-        return stockDict
+                            processedStocks.append(stock)
+        leftOutStocks = list(set(stockCodes)-set(processedStocks))
+        return stockDict, leftOutStocks
 
     def loadStockData(
         stockDict,
@@ -839,12 +842,16 @@ class tools:
             isIntraday, forceLoad=forceLoad
         )
         initialLoadCount = len(stockDict)
+        leftOutStocks = None
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
-            stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
+            stockDict, leftOutStocks = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
+            if len(leftOutStocks) > int(len(stockCodes)*0.05):
+                # More than 5 % of stocks are still remaining
+                stockDict, _ = tools.downloadLatestData(stockDict,configManager,leftOutStocks,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
             # return stockDict
-        if downloadOnly:
+        if downloadOnly or isTrading:
             # We don't want to download from local stale pkl file or stale file at server
             return stockDict
         

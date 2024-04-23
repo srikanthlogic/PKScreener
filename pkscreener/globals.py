@@ -634,7 +634,7 @@ def refreshStockData(startupoptions=None):
         options, False, False, defaultAnswer='Y'
     )
     listStockCodes = prepareStocksForScreening(testing=False, downloadOnly=False, listStockCodes=None,indexOption=indexOption)
-    loadDatabaseOrFetch(downloadOnly=False, listStockCodes=listStockCodes, menuOption=menuOption,indexOption=indexOption)
+    stockDictPrimary,stockDictSecondary = loadDatabaseOrFetch(downloadOnly=False, listStockCodes=listStockCodes, menuOption=menuOption,indexOption=indexOption)
     PKScanRunner.refreshDatabase(consumers,stockDictPrimary,stockDictSecondary)
 
 # @tracelog
@@ -1134,7 +1134,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             and not loadedStockData
             and not testing
         ):
-            loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption)
+            stockDictPrimary,stockDictSecondary = loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption)
             
         loadCount = len(stockDictPrimary) if stockDictPrimary is not None else 0
 
@@ -1372,11 +1372,11 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
                     stockCodes = listStockCodes,
                     exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
             )
-    if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
+    if menuOption not in ["C"] and not configManager.isIntradayConfig() and configManager.calculatersiintraday:
         candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
         configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
         # We also need to load the intraday data to be able to calculate intraday RSI
-        Utility.tools.loadStockData(
+        stockDictSecondary = Utility.tools.loadStockData(
                         stockDictSecondary,
                         configManager,
                         downloadOnly=downloadOnly,
@@ -1388,6 +1388,7 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
                 )
         resetConfigToDefault()
     loadedStockData = True
+    return stockDictPrimary, stockDictSecondary
 
 def getLatestTradeDateTime(stockDictPrimary):
     stocks = list(stockDictPrimary.keys())
