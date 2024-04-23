@@ -841,7 +841,7 @@ class tools:
         initialLoadCount = len(stockDict)
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
-        if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly or not exists):
+        if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
             stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
             # return stockDict
 
@@ -850,82 +850,7 @@ class tools:
         )
         stockDataLoaded = False
         if exists and not forceRedownload:
-            with open(
-                os.path.join(Archiver.get_user_outputs_dir(), cache_file), "rb"
-            ) as f:
-                try:
-                    stockData = pickle.load(f)
-                    if not downloadOnly:
-                        OutputControls().printOutput(
-                            colorText.BOLD
-                            + colorText.GREEN
-                            + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
-                            + colorText.END
-                        )
-                    if stockData is not None and len(stockData) > 0:
-                        multiIndex = stockData.keys()
-                        if isinstance(multiIndex, pd.MultiIndex):
-                            # If we requested for multiple stocks from yfinance
-                            # we'd have received a multiindex dataframe
-                            listStockCodes = multiIndex.get_level_values(0)
-                            listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
-                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
-                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
-                        else:
-                            listStockCodes = list(stockData.keys())
-                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
-                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
-                        for stock in listStockCodes:
-                            df_or_dict = stockData.get(stock)
-                            df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
-                            # This will keep all the latest security data we downloaded
-                            # just now and also copy the additional data like, MF/FII,FairValue
-                            # etc. data, from yesterday's saved data.
-                            try:
-                                existingPreLoadedData = stockDict.get(stock)
-                                if existingPreLoadedData is not None:
-                                    if isTrading:
-                                        # Only copy the MF/FII/FairValue data and leave the stock prices as is.
-                                        cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
-                                        for col in cols:
-                                            existingPreLoadedData[col] = df_or_dict.get(col)
-                                        stockDict[stock] = existingPreLoadedData
-                                    else:
-                                        stockDict[stock] = df_or_dict | existingPreLoadedData
-                                else:
-                                    if not isTrading:
-                                        stockDict[stock] = df_or_dict
-                            except:
-                                # Probably, the "stock" got removed from the latest download
-                                # and so, was not found in stockDict
-                                continue
-                    # if len(stockDict) > 0:
-                    #     stockDict = stockDict | stockData
-                    # else:
-                    #     stockDict = stockData
-                        stockDataLoaded = True
-                except pickle.UnpicklingError as e:
-                    default_logger().debug(e, exc_info=True)
-                    f.close()
-                    OutputControls().printOutput(
-                        colorText.BOLD
-                        + colorText.FAIL
-                        + "[+] Error while Reading Stock Cache."
-                        + colorText.END
-                    )
-                    if tools.promptFileExists(defaultAnswer=defaultAnswer) == "Y":
-                        configManager.deleteFileWithPattern()
-                except EOFError as e:  # pragma: no cover
-                    default_logger().debug(e, exc_info=True)
-                    f.close()
-                    OutputControls().printOutput(
-                        colorText.BOLD
-                        + colorText.FAIL
-                        + "[+] Stock Cache Corrupted."
-                        + colorText.END
-                    )
-                    if tools.promptFileExists(defaultAnswer=defaultAnswer) == "Y":
-                        configManager.deleteFileWithPattern()
+            stockDict, stockDataLoaded = tools.loadDataFromLocalPickle(stockDict,configManager, downloadOnly, defaultAnswer, exchangeSuffix, cache_file, isTrading)
         if (
             not stockDataLoaded
             and ("1d" if isIntraday else ConfigManager.default_period)
@@ -933,23 +858,117 @@ class tools:
             and ("1m" if isIntraday else ConfigManager.default_duration)
             == configManager.duration
         ) or forceRedownload:
+            stockDict, stockDataLoaded = tools.downloadSavedDataFromServer(stockDict,configManager, downloadOnly, defaultAnswer, retrial, forceLoad, stockCodes, exchangeSuffix, isIntraday, forceRedownload, cache_file, isTrading)
+        if not stockDataLoaded:
             OutputControls().printOutput(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] Cache unavailable on pkscreener server, Continuing.."
+                + colorText.END
+            )
+        # See if we need to save stock data
+        stockDataLoaded = stockDataLoaded or (len(stockDict) > 0 and (len(stockDict) != initialLoadCount))
+        if stockDataLoaded:
+            tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly, forceSave=stockDataLoaded)
+        return stockDict
+
+    def loadDataFromLocalPickle(stockDict, configManager, downloadOnly, defaultAnswer, exchangeSuffix, cache_file, isTrading):
+        with open(
+                os.path.join(Archiver.get_user_outputs_dir(), cache_file), "rb"
+            ) as f:
+            try:
+                stockData = pickle.load(f)
+                if not downloadOnly:
+                    OutputControls().printOutput(
+                            colorText.BOLD
+                            + colorText.GREEN
+                            + f"[+] Automatically Using Cached Stock Data {'due to After-Market hours' if not PKDateUtilities.isTradingTime() else ''}!"
+                            + colorText.END
+                        )
+                if stockData is not None and len(stockData) > 0:
+                    multiIndex = stockData.keys()
+                    if isinstance(multiIndex, pd.MultiIndex):
+                            # If we requested for multiple stocks from yfinance
+                            # we'd have received a multiindex dataframe
+                        listStockCodes = multiIndex.get_level_values(0)
+                        listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
+                        if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                            listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                    else:
+                        listStockCodes = list(stockData.keys())
+                        if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                            listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                    for stock in listStockCodes:
+                        df_or_dict = stockData.get(stock)
+                        df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
+                            # This will keep all the latest security data we downloaded
+                            # just now and also copy the additional data like, MF/FII,FairValue
+                            # etc. data, from yesterday's saved data.
+                        try:
+                            existingPreLoadedData = stockDict.get(stock)
+                            if existingPreLoadedData is not None:
+                                if isTrading:
+                                        # Only copy the MF/FII/FairValue data and leave the stock prices as is.
+                                    cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
+                                    for col in cols:
+                                        existingPreLoadedData[col] = df_or_dict.get(col)
+                                    stockDict[stock] = existingPreLoadedData
+                                else:
+                                    stockDict[stock] = df_or_dict | existingPreLoadedData
+                            else:
+                                if not isTrading:
+                                    stockDict[stock] = df_or_dict
+                        except:
+                                # Probably, the "stock" got removed from the latest download
+                                # and so, was not found in stockDict
+                            continue
+                    # if len(stockDict) > 0:
+                    #     stockDict = stockDict | stockData
+                    # else:
+                    #     stockDict = stockData
+                    stockDataLoaded = True
+            except pickle.UnpicklingError as e:
+                default_logger().debug(e, exc_info=True)
+                f.close()
+                OutputControls().printOutput(
+                        colorText.BOLD
+                        + colorText.FAIL
+                        + "[+] Error while Reading Stock Cache."
+                        + colorText.END
+                    )
+                if tools.promptFileExists(defaultAnswer=defaultAnswer) == "Y":
+                    configManager.deleteFileWithPattern()
+            except EOFError as e:  # pragma: no cover
+                default_logger().debug(e, exc_info=True)
+                f.close()
+                OutputControls().printOutput(
+                        colorText.BOLD
+                        + colorText.FAIL
+                        + "[+] Stock Cache Corrupted."
+                        + colorText.END
+                    )
+                if tools.promptFileExists(defaultAnswer=defaultAnswer) == "Y":
+                    configManager.deleteFileWithPattern()
+        return stockDict, stockDataLoaded
+
+    def downloadSavedDataFromServer(stockDict, configManager, downloadOnly, defaultAnswer, retrial, forceLoad, stockCodes, exchangeSuffix, isIntraday, forceRedownload, cache_file, isTrading):
+        OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL
                     + "[+] Market Stock Data is not cached, or forced to redownload .."
                     + colorText.END
                 )
-            OutputControls().printOutput(
+        OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
                 + "[+] Downloading cache from server for faster processing, Please Wait.."
                 + colorText.END
             )
-            cache_url = (
+        cache_url = (
                 "https://raw.githubusercontent.com/pkjmesra/PKScreener/actions-data-download/actions-data-download/"
                 + cache_file  # .split(os.sep)[-1]
             )
-            headers = {
+        headers = {
                     'authority': 'raw.githubusercontent.com',
                     'accept': '*/*',
                     'accept-language': 'en-US,en;q=0.9',
@@ -964,90 +983,90 @@ class tools:
                     'user-agent': f'{random_user_agent()}' 
                     #'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36
             }
-            resp = fetcher.fetchURL(cache_url, headers=headers, stream=True)
-            if resp is not None:
-                default_logger().debug(
+        resp = fetcher.fetchURL(cache_url, headers=headers, stream=True)
+        if resp is not None:
+            default_logger().debug(
                     f"Stock data cache file:{cache_file} request status ->{resp.status_code}"
                 )
-            if resp is not None and resp.status_code == 200:
-                contentLength = resp.headers.get("content-length")
-                serverBytes = int(contentLength) if contentLength is not None else 0
-                KB = 1024
-                MB = KB * 1024
-                chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
-                filesize = int( serverBytes / chunksize)
-                if filesize > 0 and chunksize == MB: # Saved data can't be in KBs. Something definitely went wrong.
-                    bar, spinner = tools.getProgressbarStyle()
-                    try:
-                        f = open(
+        if resp is not None and resp.status_code == 200:
+            contentLength = resp.headers.get("content-length")
+            serverBytes = int(contentLength) if contentLength is not None else 0
+            KB = 1024
+            MB = KB * 1024
+            chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
+            filesize = int( serverBytes / chunksize)
+            if filesize > 0 and chunksize == MB: # Saved data can't be in KBs. Something definitely went wrong.
+                bar, spinner = tools.getProgressbarStyle()
+                try:
+                    f = open(
                             os.path.join(Archiver.get_user_outputs_dir(), cache_file),
                             "w+b",
                         )  # .split(os.sep)[-1]
-                        dl = 0
-                        with alive_bar(
+                    dl = 0
+                    with alive_bar(
                             filesize, bar=bar, spinner=spinner, manual=True
                         ) as progressbar:
-                            for data in resp.iter_content(chunk_size=chunksize):
-                                dl += 1
-                                f.write(data)
-                                progressbar(dl / filesize)
-                                if dl >= filesize:
-                                    progressbar(1.0)
-                        f.close()
-                        with open(
+                        for data in resp.iter_content(chunk_size=chunksize):
+                            dl += 1
+                            f.write(data)
+                            progressbar(dl / filesize)
+                            if dl >= filesize:
+                                progressbar(1.0)
+                    f.close()
+                    with open(
                             os.path.join(Archiver.get_user_outputs_dir(), cache_file),
                             "rb",
                         ) as f:
-                            stockData = pickle.load(f)
-                        if len(stockData) > 0:
-                            multiIndex = stockData.keys()
-                            if isinstance(multiIndex, pd.MultiIndex):
+                        stockData = pickle.load(f)
+                    if len(stockData) > 0:
+                        multiIndex = stockData.keys()
+                        if isinstance(multiIndex, pd.MultiIndex):
                                 # If we requested for multiple stocks from yfinance
                                 # we'd have received a multiindex dataframe
-                                listStockCodes = multiIndex.get_level_values(0)
-                                listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
-                                if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
-                                    listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
-                            else:
-                                listStockCodes = list(stockData.keys())
-                                if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
-                                    listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
-                            for stock in listStockCodes:
-                                df_or_dict = stockData.get(stock)
-                                df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
+                            listStockCodes = multiIndex.get_level_values(0)
+                            listStockCodes = sorted(list(filter(None,list(set(listStockCodes)))))
+                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                        else:
+                            listStockCodes = list(stockData.keys())
+                            if len(listStockCodes) > 0 and len(exchangeSuffix) > 0 and exchangeSuffix in listStockCodes[0]:
+                                listStockCodes = [x.replace(exchangeSuffix,"") for x in listStockCodes]
+                        for stock in listStockCodes:
+                            df_or_dict = stockData.get(stock)
+                            df_or_dict = df_or_dict.to_dict("split") if isinstance(df_or_dict,pd.DataFrame) else df_or_dict
                                 # This will keep all the latest security data we downloaded
                                 # just now and also copy the additional data like, MF/FII,FairValue
                                 # etc. data, from yesterday's saved data.
-                                try:
-                                    existingPreLoadedData = stockDict.get(stock)
-                                    if existingPreLoadedData is not None:
-                                        if isTrading:
+                            try:
+                                existingPreLoadedData = stockDict.get(stock)
+                                if existingPreLoadedData is not None:
+                                    if isTrading:
                                             # Only copy the MF/FII/FairValue data and leave the stock prices as is.
-                                            cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
-                                            for col in cols:
-                                                existingPreLoadedData[col] = df_or_dict.get(col)
-                                            stockDict[stock] = existingPreLoadedData
-                                        else:
-                                            stockDict[stock] = df_or_dict | existingPreLoadedData
+                                        cols = ["MF", "FII","MF_Date","FII_Date","FairValue"]
+                                        for col in cols:
+                                            existingPreLoadedData[col] = df_or_dict.get(col)
+                                        stockDict[stock] = existingPreLoadedData
                                     else:
-                                        if not isTrading:
-                                            stockDict[stock] = df_or_dict
-                                except:
+                                        stockDict[stock] = df_or_dict | existingPreLoadedData
+                                else:
+                                    if not isTrading:
+                                        stockDict[stock] = df_or_dict
+                            except:
                                     # Probably, the "stock" got removed from the latest download
                                     # and so, was not found in stockDict
-                                    continue
-                            stockDataLoaded = True
-                    except Exception as e:  # pragma: no cover
-                        default_logger().debug(e, exc_info=True)
-                        f.close()
-                        OutputControls().printOutput("[!] Download Error - " + str(e))
-                else:
-                    default_logger().debug(
+                                continue
+                        stockDataLoaded = True
+                except Exception as e:  # pragma: no cover
+                    default_logger().debug(e, exc_info=True)
+                    f.close()
+                    OutputControls().printOutput("[!] Download Error - " + str(e))
+            else:
+                default_logger().debug(
                         f"Stock data cache file:{cache_file} on server has length ->{filesize}{chunksize}"
                     )
-                if not retrial and not stockDataLoaded:
+            if not retrial and not stockDataLoaded:
                     # Don't try for more than once.
-                    stockDict = tools.loadStockData(
+                stockDict = tools.loadStockData(
                         stockDict,
                         configManager,
                         downloadOnly,
@@ -1059,18 +1078,8 @@ class tools:
                         isIntraday = isIntraday,
                         forceRedownload=forceRedownload
                     )
-        if not stockDataLoaded:
-            OutputControls().printOutput(
-                colorText.BOLD
-                + colorText.FAIL
-                + "[+] Cache unavailable on pkscreener server, Continuing.."
-                + colorText.END
-            )
-        # See if we need to save stock data
-        stockDataLoaded = stockDataLoaded or (len(stockDict) > 0 and (len(stockDict) != initialLoadCount))
-        if stockDataLoaded:
-            tools.saveStockData(stockDict,configManager,initialLoadCount,isIntraday,downloadOnly, forceSave=stockDataLoaded)
-        return stockDict
+                
+        return stockDict,stockDataLoaded
 
     # Save screened results to excel
     def promptSaveResults(df, defaultAnswer=None):

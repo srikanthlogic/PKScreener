@@ -106,13 +106,7 @@ class StockScreener:
                 # Daily data is already available in "data" above.
                 # We need the intraday data for 1-d RSI values when config is not for intraday
                 intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.objectDictionarySecondary, configManager, fetcher, period, testData,exchangeName)
-                # if intraday_data is not None:
-                #     if len(intraday_data) == 0:
-                #         return None
-                # else:
-                #     return None
-            else:
-                intraday_data = data
+                
             if data is not None:
                 if len(data) == 0 or len(data) < backtestDuration:
                     raise StockDataEmptyException(f"Data length:{len(data)}")

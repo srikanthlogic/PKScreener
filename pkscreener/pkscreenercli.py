@@ -378,7 +378,6 @@ def runApplication():
                     # We need to switch to intraday scan
                     monitorOption = monitorOption.replace(lastComponent,"")
                     args.intraday = lastComponent.replace("i","").strip()
-                    configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
                 else:
                     # We need to switch to daily scan
                     args.intraday = None
@@ -404,6 +403,8 @@ def runApplication():
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
+                plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
+                results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
             if results is not None and args.monitor and len(monitorOption_org) > 0:
                 MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s")
