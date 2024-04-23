@@ -732,7 +732,7 @@ class StockScreener:
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
             else:
                 # Since this is intraday data, we'd just need to start from the last trading session
-                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(1)
+                start = PKDateUtilities.tradingDate()
             end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         if (
                 not shouldCache

@@ -100,7 +100,7 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         if (period == '1d' or duration[-1] == "m"):
             # Since this is intraday data, we'd just need to start from the last trading session
             if start is None:
-                start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(1)
+                start = PKDateUtilities.tradingDate()
             if end is None:
                 end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):

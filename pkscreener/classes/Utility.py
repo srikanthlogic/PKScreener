@@ -794,7 +794,7 @@ class tools:
                 colorText.BOLD + colorText.GREEN + "=> Already Cached." + colorText.END
             )
 
-    def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS"):
+    def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS",downloadOnly=False):
         numStocksPerIteration = int(len(stockCodes)/5) + 1
         queueCounter = 0
         iterations = int(len(stockCodes)/numStocksPerIteration) + 1
@@ -813,7 +813,7 @@ class tools:
             queueCounter += 1
         
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=3*configManager.longTimeout,minAcceptableCompletionPercentage=80)
+            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=3*configManager.longTimeout*(4 if downloadOnly else 1),minAcceptableCompletionPercentage=(100 if downloadOnly else 80))
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
@@ -842,9 +842,12 @@ class tools:
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
-            stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix)
+            stockDict = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
             # return stockDict
-
+        if downloadOnly:
+            # We don't want to download from local stale pkl file or stale file at server
+            return stockDict
+        
         default_logger().info(
             f"Stock data cache file:{cache_file} exists ->{str(exists)}"
         )
