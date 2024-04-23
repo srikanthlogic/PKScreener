@@ -378,6 +378,7 @@ def runApplication():
                     # We need to switch to intraday scan
                     monitorOption = monitorOption.replace(lastComponent,"")
                     args.intraday = lastComponent.replace("i","").strip()
+                    configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
                 else:
                     # We need to switch to daily scan
                     args.intraday = None
