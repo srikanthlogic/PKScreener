@@ -35,6 +35,7 @@ from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
+from PKDevTools.classes.multiprocessing_logging import LogQueueReader
 
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
@@ -98,13 +99,14 @@ class PKScanRunner:
     def initQueues(minimumCount=0):
         tasks_queue = multiprocessing.JoinableQueue()
         results_queue = multiprocessing.Queue()
+        logging_queue = multiprocessing.Queue()
 
         totalConsumers = min(minimumCount, multiprocessing.cpu_count())
         if totalConsumers == 1:
             totalConsumers = 2  # This is required for single core machine
         if PKScanRunner.configManager.cacheEnabled is True and multiprocessing.cpu_count() > 2:
             totalConsumers -= 1
-        return tasks_queue, results_queue, totalConsumers
+        return tasks_queue, results_queue, totalConsumers, logging_queue
 
     def populateQueues(items, tasks_queue, exit=False):
         # default_logger().debug(f"Unfinished items in task_queue: {tasks_queue.qsize()}")
@@ -246,9 +248,15 @@ class PKScanRunner:
             worker.objectDictionarySecondary = stockDictSecondary
             worker.refreshDatabase = True
             
-    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDictPrimary,stockDictSecondary,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers):
+    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDictPrimary,stockDictSecondary,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers,logging_queue):
         if tasks_queue is None or results_queue is None or consumers is None:
-            tasks_queue, results_queue, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items)
+            tasks_queue, results_queue, consumers,logging_queue = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items)
+            try:
+                if logging_queue is not None:
+                    log_queue_reader = LogQueueReader(logging_queue)
+                    log_queue_reader.start()
+            except:
+                pass
         PKScanRunner.tasks_queue = tasks_queue
         PKScanRunner.results_queue = results_queue
         PKScanRunner.consumers = consumers
@@ -270,10 +278,10 @@ class PKScanRunner:
         OutputControls().printOutput(colorText.END)
         if userPassedArgs is not None and userPassedArgs.monitor is None:
             PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
-        return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers
+        return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
     def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items):
-        tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
+        tasks_queue, results_queue, totalConsumers, logging_queue = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=PKScanRunner.configManager.isIntradayConfig())
         sec_cache_file = cache_file if "intraday_" in cache_file else f"intraday_{cache_file}"
@@ -282,6 +290,7 @@ class PKScanRunner:
                         StockScreener().screenStocks,
                         tasks_queue,
                         results_queue,
+                        logging_queue,
                         screenCounter,
                         screenResultsCounter,
                         stockDictPrimary,
@@ -301,7 +310,7 @@ class PKScanRunner:
                     for _ in range(totalConsumers)
                 ]
         PKScanRunner.startWorkers(consumers)
-        return tasks_queue,results_queue,consumers
+        return tasks_queue,results_queue,consumers,logging_queue
 
     def startWorkers(consumers):
         try:

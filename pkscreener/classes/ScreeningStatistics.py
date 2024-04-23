@@ -56,6 +56,8 @@ from PKDevTools.classes.SuppressOutput import SuppressOutput
 class DownloadDataOnly(Exception):
     pass
 
+class EligibilityConditionNotMet(Exception):
+    pass
 
 # Exception for stocks which are not newly listed when screening only for Newly Listed
 class NotNewlyListed(Exception):
@@ -730,6 +732,8 @@ class ScreeningStatistics:
         data = df.copy()
         data = data[::-1]
         data = data.tail(3)
+        if len(data) < 3:
+            return False
         dayMinus2RSI = data["RSI"].iloc[0]
         dayMinus1RSI = data["RSI"].iloc[1]
         dayRSI = data["RSI"].iloc[2]
@@ -1346,38 +1350,43 @@ class ScreeningStatistics:
     def preprocessData(self, df, daysToLookback=None):
         assert isinstance(df, pd.DataFrame)
         data = df.copy()
-        data = data.replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna(how="all")
-        # self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
-        if daysToLookback is None:
-            daysToLookback = self.configManager.daysToLookback
-        if self.configManager.useEMA:
-            sma = pktalib.EMA(data["Close"], timeperiod=50)
-            lma = pktalib.EMA(data["Close"], timeperiod=200)
-            ssma = pktalib.EMA(data["Close"], timeperiod=9)
-            data.insert(len(data.columns), "SMA", sma)
-            data.insert(len(data.columns), "LMA", lma)
-            data.insert(len(data.columns), "SSMA", ssma)
-        else:
-            sma = pktalib.SMA(data["Close"], timeperiod=50)
-            lma = pktalib.SMA(data["Close"], timeperiod=200)
-            ssma = pktalib.SMA(data["Close"], timeperiod=9)
-            data.insert(len(data.columns), "SMA", sma)
-            data.insert(len(data.columns), "LMA", lma)
-            data.insert(len(data.columns), "SSMA", ssma)
-        vol = pktalib.SMA(data["Volume"], timeperiod=20)
-        rsi = pktalib.RSI(data["Close"], timeperiod=14)
-        data.insert(len(data.columns), "VolMA", vol)
-        data.insert(len(data.columns), "RSI", rsi)
-        cci = pktalib.CCI(data["High"], data["Low"], data["Close"], timeperiod=14)
-        data.insert(len(data.columns), "CCI", cci)
         try:
-            fastk, fastd = pktalib.STOCHRSI(
-                data["Close"], timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0
-            )
-            data.insert(len(data.columns), "FASTK", fastk)
-            data.insert(len(data.columns), "FASTD", fastd)
-        except:
-            pass
+            data = data.replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna(how="all")
+            # self.default_logger.info(f"Preprocessing data:\n{data.head(1)}\n")
+            if daysToLookback is None:
+                daysToLookback = self.configManager.daysToLookback
+            if self.configManager.useEMA:
+                sma = pktalib.EMA(data["Close"], timeperiod=50)
+                lma = pktalib.EMA(data["Close"], timeperiod=200)
+                ssma = pktalib.EMA(data["Close"], timeperiod=9)
+                data.insert(len(data.columns), "SMA", sma)
+                data.insert(len(data.columns), "LMA", lma)
+                data.insert(len(data.columns), "SSMA", ssma)
+            else:
+                sma = pktalib.SMA(data["Close"], timeperiod=50)
+                lma = pktalib.SMA(data["Close"], timeperiod=200)
+                ssma = pktalib.SMA(data["Close"], timeperiod=9)
+                data.insert(len(data.columns), "SMA", sma)
+                data.insert(len(data.columns), "LMA", lma)
+                data.insert(len(data.columns), "SSMA", ssma)
+            vol = pktalib.SMA(data["Volume"], timeperiod=20)
+            rsi = pktalib.RSI(data["Close"], timeperiod=14)
+            data.insert(len(data.columns), "VolMA", vol)
+            data.insert(len(data.columns), "RSI", rsi)
+            cci = pktalib.CCI(data["High"], data["Low"], data["Close"], timeperiod=14)
+            data.insert(len(data.columns), "CCI", cci)
+            try:
+                fastk, fastd = pktalib.STOCHRSI(
+                    data["Close"], timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0
+                )
+                data.insert(len(data.columns), "FASTK", fastk)
+                data.insert(len(data.columns), "FASTD", fastd)
+            except Exception as e:
+                self.default_logger.debug(e, exc_info=True)
+                pass
+        except Exception as e:
+                self.default_logger.debug(e, exc_info=True)
+                pass
         data = data[::-1]  # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -1400,6 +1409,8 @@ class ScreeningStatistics:
             ::-1
         ]  # Reverse the dataframe so that it's the most recent date first
         recent = data.head(3)
+        if len(recent) < 3:
+            return False
         cond1 = recent["Close"].iloc[0] > recent["Close"].iloc[1]
         cond2 = cond1 and (recent["Close"].iloc[0] > recent["SMA20"].iloc[0])
         cond3 = cond2 and (recent["Close"].iloc[1] > recent["High"].iloc[2])
@@ -1469,6 +1480,8 @@ class ScreeningStatistics:
             return False
         data = df.copy()
         recent = data.head(2)
+        if len(recent) < 2:
+            return False
         is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
         is50DMADownTrend = (recent["SMA"].iloc[0] < recent["SMA"].iloc[1])
         isGoldenCrossOver = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
@@ -1568,6 +1581,8 @@ class ScreeningStatistics:
         day1 = data[1:]
         day2 = data[2:]
         day3 = data[3:]
+        if len(day1) < 1 or len(day2) < 1 or len(day3) < 1:
+            return False
         higherHighs = (
             (day0["High"].iloc[0] > day1["High"].iloc[0])
             and (day1["High"].iloc[0] > day2["High"].iloc[0])
@@ -1786,6 +1801,8 @@ class ScreeningStatistics:
             return False
         data = data.head(daysForLowestVolume)
         recent = data.head(1)
+        if len(recent) < 1:
+            return False
         if (recent["Volume"].iloc[0] <= data.describe()["Volume"]["min"]) and recent[
             "Volume"
         ][0] != np.nan:
@@ -1898,9 +1915,9 @@ class ScreeningStatistics:
                 yc = row[1]["Close"]
                 yo = row[1]["Open"]
                 if yc <= yo:
-                    self.default_logger.info(
-                        f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because yesterday-close ({yc}) <= yesterday-open ({yo})'
-                    )
+                    # self.default_logger.info(
+                    #     f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because yesterday-close ({yc}) <= yesterday-open ({yo})'
+                    # )
                     return False
             openDesc = data.sort_values(by=["Open"], ascending=False)
             closeDesc = data.sort_values(by=["Close"], ascending=False)
@@ -1911,17 +1928,17 @@ class ScreeningStatistics:
                     and data.equals(closeDesc)
                     and data.equals(volDesc)
                 ):
-                    self.default_logger.info(
-                        f'Stock:{saveDict["Stock"]}, open,close and volume equal from day before yesterday. A potential momentum-gainer!'
-                    )
+                    # self.default_logger.info(
+                    #     f'Stock:{saveDict["Stock"]}, open,close and volume equal from day before yesterday. A potential momentum-gainer!'
+                    # )
                     to = data["Open"].iloc[0]
                     yc = data["Close"].iloc[1]
                     yo = data["Open"].iloc[1]
                     dyc = data["Close"].iloc[2]
                     if (to >= yc) and (yo >= dyc):
-                        self.default_logger.info(
-                            f'Stock:{saveDict["Stock"]}, is a momentum-gainer because today-open ({to}) >= yesterday-close ({yc}) and yesterday-open({yo}) >= day-before-close({dyc})'
-                        )
+                        # self.default_logger.info(
+                        #     f'Stock:{saveDict["Stock"]}, is a momentum-gainer because today-open ({to}) >= yesterday-close ({yc}) and yesterday-open({yo}) >= day-before-close({dyc})'
+                        # )
                         saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
                         screenDict["Pattern"] = (
                             saved[0]
@@ -1932,12 +1949,12 @@ class ScreeningStatistics:
                         )
                         saveDict["Pattern"] = saved[1] + "Momentum Gainer"
                         return True
-                    self.default_logger.info(
-                        f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because either today-open ({to}) < yesterday-close ({yc}) or yesterday-open({yo}) < day-before-close({dyc})'
-                    )
+                    # self.default_logger.info(
+                    #     f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because either today-open ({to}) < yesterday-close ({yc}) or yesterday-open({yo}) < day-before-close({dyc})'
+                    # )
             except IndexError as e: # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
-                # self.default_logger.debug(data)
+                self.default_logger.debug(data)
                 pass
             return False
         except Exception as e:  # pragma: no cover
@@ -2102,6 +2119,8 @@ class ScreeningStatistics:
         data = df.copy()
         daysToLookback = int(daysToLookback[:-1])
         recent = data.head(1)
+        if len(recent) < 1:
+            return False
         if len(data) < daysToLookback and (
             recent["Close"].iloc[0] != np.nan and recent["Close"].iloc[0] > 0
         ):

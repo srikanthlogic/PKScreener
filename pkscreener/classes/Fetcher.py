@@ -150,7 +150,6 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                     flush=True,
                 )
                 raise StockDataEmptyException
-                return None
             OutputControls().printOutput(
                 colorText.BOLD + colorText.GREEN + "=> Done!" + colorText.END,
                 end="\r",

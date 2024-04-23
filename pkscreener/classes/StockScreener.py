@@ -115,9 +115,9 @@ class StockScreener:
                 intraday_data = data
             if data is not None:
                 if len(data) == 0 or len(data) < backtestDuration:
-                    return None
+                    raise StockDataEmptyException(f"Data length:{len(data)}")
             else:
-                return None
+                raise StockDataEmptyException(f"Data is None: {data}")
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
             if backtestDuration == 0 and configManager.calculatersiintraday:
@@ -136,9 +136,9 @@ class StockScreener:
                     processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
                     fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
 
-            def returnLegibleData():
+            def returnLegibleData(exceptionMessage=None):
                 if backtestDuration == 0 or menuOption not in ["B"]:
-                    return None
+                    raise ScreeningStatistics.EligibilityConditionNotMet(exceptionMessage)
                 elif (backtestDuration > 0 and backtestDuration <= configManager.maxBacktestWindow):
                     screener.validateMovingAverages(
                         processedData, screeningDictionary, saveDictionary, maRange=1.25
@@ -165,7 +165,7 @@ class StockScreener:
                     raise ScreeningStatistics.NotNewlyListed
 
             if processedData.empty:
-                return returnLegibleData()
+                raise StockDataEmptyException("Empty processedData")
             
             with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
                 self.updateStock(stock, screeningDictionary, saveDictionary, executeOption, exchangeName)
@@ -200,7 +200,7 @@ class StockScreener:
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
                 if not isValidityCheckMet:
-                    return returnLegibleData()
+                    return returnLegibleData("Validity Check not met!")
                 isShortTermBullish = (executeOption == 11 and isValidityCheckMet)
                 if newlyListedOnly:
                     isIpoBase = screener.validateIpoBase(
@@ -222,10 +222,10 @@ class StockScreener:
                             daysToLookback=configManager.daysToLookback,
                         )
                         if not (isBreaking or isPotentialBreaking) or not hasMinVolumeRatio:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isBreaking:{isBreaking},isPotentialBreaking:{isPotentialBreaking},hasMinVolumeRatio:{hasMinVolumeRatio}")
                     elif executeOption == 2:
                         if not (isBreaking) or not hasMinVolumeRatio:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isBreaking:{isBreaking},hasMinVolumeRatio:{hasMinVolumeRatio}")
                 elif executeOption == 3:
                     consolidationValue = screener.validateConsolidation(
                         processedData,
@@ -234,19 +234,19 @@ class StockScreener:
                         percentage=configManager.consolidationPercentage,
                     )
                     if ((consolidationValue == 0 or consolidationValue > configManager.consolidationPercentage)):
-                        return returnLegibleData()
+                        return returnLegibleData(f"consolidationValue:{consolidationValue}")
                 elif executeOption == 4:
                     isLowestVolume = screener.validateLowestVolume(
                         processedData, daysForLowestVolume
                     )
                     if not isLowestVolume:
-                        return returnLegibleData()
+                        return returnLegibleData(f"isLowestVolume:{isLowestVolume}")
                 elif executeOption == 5:
                     isValidRsi = screener.validateRSI(
                         processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                     )
                     if not isValidRsi:
-                        return returnLegibleData()
+                        return returnLegibleData(f"isValidRsi:{isValidRsi}")
                 elif executeOption == 6:
                     if reversalOption == 10:
                         hasRSIMAReversal = screener.findRSICrossingMA(processedData,
@@ -254,11 +254,11 @@ class StockScreener:
                                                                       saveDictionary,
                                                                       lookFor=maLength) # 1 =Buy, 2 =Sell, 3 = Any
                         if not hasRSIMAReversal:
-                            return returnLegibleData()
+                            return returnLegibleData(f"hasRSIMAReversal:{hasRSIMAReversal}")
                     elif reversalOption == 9:
                         hasRisingRSIReversal = screener.findRisingRSI(processedData)
                         if not hasRisingRSIReversal:
-                            return returnLegibleData()
+                            return returnLegibleData(f"hasRisingRSIReversal:{hasRisingRSIReversal}")
                     elif reversalOption == 8:
                         hasPsarRSIReversal = screener.findPSARReversalWithRSI(
                             processedData,
@@ -267,7 +267,7 @@ class StockScreener:
                             # minRSI=maLength if maLength is not None else 40,
                         )
                         if not hasPsarRSIReversal:
-                            return returnLegibleData()
+                            return returnLegibleData(f"hasPsarRSIReversal:{hasPsarRSIReversal}")
                     elif reversalOption == 6:
                         isNR = screener.validateNarrowRange(
                             processedData,
@@ -276,19 +276,19 @@ class StockScreener:
                             nr=maLength if maLength is not None else 4,
                         )
                         if not isNR:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isNR:{isNR}")
                     elif reversalOption == 5:
                         isVSA = screener.validateVolumeSpreadAnalysis(
                             processedData, screeningDictionary, saveDictionary
                         )
                         if not isVSA:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isVSA:{isVSA}")
                     elif reversalOption == 4 and maLength is not None:
                         isMaSupport = screener.findReversalMA(
                             fullData, screeningDictionary, saveDictionary, maLength
                         )
                         if not isMaSupport:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isMaSupport:{isMaSupport}")
                     elif reversalOption == 7:
                         if sys.version_info >= (3, 11):
                             isLorentzian = screener.validateLorentzian(
@@ -298,7 +298,7 @@ class StockScreener:
                                 lookFor=maLength, # 1 =Buy, 2 =Sell, 3 = Any
                             )
                             if not isLorentzian:
-                                return returnLegibleData()
+                                return returnLegibleData(f"isLorentzian:{isLorentzian}")
                 elif executeOption == 7:
                     if respChartPattern == 3:
                         isConfluence = screener.validateConfluence(
@@ -310,29 +310,29 @@ class StockScreener:
                             confFilter=(maLength if maLength > 0 else 3) # 1 = Conf up, 2 = Conf Down, 3 = all
                         )
                         if not isConfluence:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isConfluence:{isConfluence}")
                     elif respChartPattern == 4:
                         isVCP = screener.validateVCP(
                             fullData, screeningDictionary, saveDictionary
                         )
                         if not isVCP:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isVCP:{isVCP}")
                     elif respChartPattern == 5:
                         if Imports["scipy"]:
                             isBuyingTrendline = screener.findTrendlines(
                                 fullData, screeningDictionary, saveDictionary
                             )
                             if not isBuyingTrendline:
-                                return returnLegibleData()
+                                return returnLegibleData(f"isBuyingTrendline:{isBuyingTrendline}")
                     elif respChartPattern == 6:
                         hasBbandsSqz = screener.findBbandsSqueeze(fullData, screeningDictionary, saveDictionary, filter=(maLength if maLength > 0 else 4))
                         if not hasBbandsSqz:
-                            return returnLegibleData()
+                            return returnLegibleData(f"hasBbandsSqz:{hasBbandsSqz}")
                     elif respChartPattern == 7:
                         isCandlePattern = candlePatterns.findPattern(
                         processedData, screeningDictionary, saveDictionary)
                         if not isCandlePattern:
-                            return returnLegibleData()
+                            return returnLegibleData(f"isCandlePattern:{isCandlePattern}")
                         
                 elif executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
@@ -341,7 +341,7 @@ class StockScreener:
                         )
                     )
                     if not isPriceRisingByAtLeast2Percent:
-                        return returnLegibleData()
+                        return returnLegibleData(f"isPriceRisingByAtLeast2Percent:{isPriceRisingByAtLeast2Percent}")
                 # Must-run, but only at the end
                 try:
                     if executeOption != 7 or (executeOption == 7 and respChartPattern != 7):
@@ -391,7 +391,7 @@ class StockScreener:
                         processedData, screeningDictionary, saveDictionary, minRSI, maxRSI
                     )
                     if not isValidCci:
-                        return returnLegibleData()
+                        return returnLegibleData(f"isValidCci:{isValidCci}")
 
                 if not (isConfluence or isShortTermBullish or isMaSupport):
                     isMaReversal = screener.validateMovingAverages(
@@ -401,11 +401,11 @@ class StockScreener:
                     if reversalOption == 1 and not (str(saveDictionary["Pattern"]).split(",")[0]
                                                                     in CandlePatterns.reversalPatternsBullish
                                                                     or isMaReversal > 0):
-                        return returnLegibleData()
+                        return returnLegibleData(f"reversalOption:{reversalOption},isMaReversal:{isMaReversal},{CandlePatterns.reversalPatternsBullish}")
                     elif reversalOption == 2 and not (str(saveDictionary["Pattern"]).split(",")[0]
                                                                     in CandlePatterns.reversalPatternsBearish
                                                                     or isMaReversal < 0):
-                        return returnLegibleData()
+                        return returnLegibleData(f"reversalOption:{reversalOption},isMaReversal:{isMaReversal},{CandlePatterns.reversalPatternsBearish}")
                 # validateInsideBar needs "Trend" to be already defined
                 # ValidateInsideBar also needs "MA-Signal" to be setup
                 if executeOption == 7 and respChartPattern < 3:
@@ -417,17 +417,17 @@ class StockScreener:
                                 daysToLookback=insideBarToLookback,
                             )
                     if isInsideBar ==0:
-                        return returnLegibleData()
+                        return returnLegibleData(f"isInsideBar:{isInsideBar}")
 
                 if not (isLorentzian or (isInsideBar !=0) or isBuyingTrendline or isIpoBase or isNR or isVCP or isVSA):
                     isMomentum = screener.validateMomentum(
                         processedData, screeningDictionary, saveDictionary
                     )
                     if executeOption == 6 and reversalOption ==3 and not isMomentum:
-                        return returnLegibleData()
+                        return returnLegibleData(f"executeOption:{executeOption},reversalOption:{reversalOption},isMomentum:{isMomentum}")
 
                 with hostRef.processingResultsCounter.get_lock():
-                    hostRef.default_logger.debug(f"ExecuteOption:{executeOption}:{reversalOption}:{respChartPattern}:{maLength}. Elapsed: {time.time() - start_time}")
+                    # hostRef.default_logger.debug(f"ExecuteOption:{executeOption}:{reversalOption}:{respChartPattern}:{maLength}. Elapsed: {time.time() - start_time}")
                     if (
                         (executeOption == 0)
                         or ((
@@ -555,18 +555,23 @@ class StockScreener:
             # Capturing Ctr+C Here isn't a great idea
             pass
         except StockDataEmptyException as e: # pragma: no cover
-            hostRef.default_logger.debug(e, exc_info=True)
+            if not data.isnull().values.all(axis=0)[0]:
+                hostRef.default_logger.debug(f"StockDataEmptyException:{stock}: {e}", exc_info=True)
+            pass
+        except ScreeningStatistics.EligibilityConditionNotMet as e:
+            # hostRef.default_logger.debug(f"EligibilityConditionNotMet:{stock}: {e}", exc_info=True)
             pass
         except ScreeningStatistics.NotNewlyListed as e: # pragma: no cover
-            hostRef.default_logger.debug(e, exc_info=True)
+            # hostRef.default_logger.debug(f"NotNewlyListed:{stock}: {e}", exc_info=True)
             pass
         except ScreeningStatistics.NotAStageTwoStock as e: # pragma: no cover
-            # hostRef.default_logger.debug(e, exc_info=True)
+            # hostRef.default_logger.debug(f"NotAStageTwoStock:{stock}: {e}", exc_info=True)
             pass
         except ScreeningStatistics.NotEnoughVolumeAsPerConfig as e: # pragma: no cover 
+            # hostRef.default_logger.debug(f"NotEnoughVolumeAsPerConfig:{stock}: {e}", exc_info=True)
             pass
         except ScreeningStatistics.DownloadDataOnly as e: # pragma: no cover
-            # hostRef.default_logger.debug(e, exc_info=True)
+            # hostRef.default_logger.debug(f"DownloadDataOnly:{stock}: {e}", exc_info=True)
             try:
                 data = hostRef.objectDictionaryPrimary.get(stock)
                 if data is not None:
@@ -584,19 +589,19 @@ class StockScreener:
                 pass
             pass
         except ScreeningStatistics.LTPNotInConfiguredRange as e: # pragma: no cover
-            # hostRef.default_logger.debug(e, exc_info=True)
+            # hostRef.default_logger.debug(f"LTPNotInConfiguredRange:{stock}: {e}", exc_info=True)
             pass
         except KeyError as e: # pragma: no cover
-            print(e)
-            hostRef.default_logger.debug(e, exc_info=True)
+            hostRef.default_logger.debug(f"KeyError:{stock}: {e}", exc_info=True)
             pass
         except OSError as e: # pragma: no cover
+            hostRef.default_logger.debug(f"OSError:{stock}: {e}", exc_info=True)
             pass
         except Exception as e:  # pragma: no cover
-            hostRef.default_logger.debug(e, exc_info=True)
+            hostRef.default_logger.debug(f"Exception:{stock}: {e}", exc_info=True)
             if testbuild or printCounter:
-                import traceback
-                traceback.print_exc()
+                # import traceback
+                # traceback.print_exc()
                 OutputControls().printOutput(e)
                 OutputControls().printOutput(
                     colorText.FAIL
@@ -660,7 +665,7 @@ class StockScreener:
                     minVolume=minVolume,
                 )
         if (not hasMinVolQty and executeOption > 0) or (executeOption == 9 and not hasMinVolumeRatio):
-            raise ScreeningStatistics.NotEnoughVolumeAsPerConfig
+            raise ScreeningStatistics.NotEnoughVolumeAsPerConfig(f"hasMinVolQty:{hasMinVolQty},executeOption:{executeOption},hasMinVolumeRatio:{hasMinVolumeRatio}")
         return hasMinVolumeRatio
 
     def performBasicLTPChecks(self, executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener,exchangeName):
@@ -693,6 +698,8 @@ class StockScreener:
             fullData, processedData = screener.preprocessData(
                     data, daysToLookback=configManager.effectiveDaysToLookback
                 )
+            if processedData.empty:
+                raise StockDataEmptyException(f"Empty processedData with data length ({len(data)})")
             if portfolio:
                 data = data[::-1]
                 screener.validateLTPForPortfolioCalc(
@@ -859,16 +866,16 @@ class StockScreener:
         # will continue with the screening. Each sub-process would have
         # its own logger but going into the same file/console > to that
         # of the parent logger.
-        if hostRef.default_logger.level > 0:
-            return
-        else:
-            hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
-        hostRef.default_logger.level = logLevel
-        screener.default_logger.level = logLevel
-        log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
-        hostRef.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
-        screener.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
-        hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
+        # if hostRef.default_logger.level > 0:
+        #     return
+        # else:
+        # hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
+        # hostRef.default_logger.level = logLevel
+        screener.default_logger = hostRef.default_logger
+        # log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
+        # hostRef.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
+        # screener.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
+        # hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
 
     def initResultDictionaries(self):
         periods = self.configManager.periodsRange
