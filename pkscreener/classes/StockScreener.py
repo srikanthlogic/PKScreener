@@ -99,13 +99,13 @@ class StockScreener:
 
             volumeRatio, period = self.determineBasicConfigs(stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog)
             # hostRef.default_logger.info(
-            #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
+            #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionaryPrimary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionary, configManager, fetcher, period, testData,exchangeName)
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionaryPrimary, configManager, fetcher, period, testData,exchangeName)
             if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
                 # Daily data is already available in "data" above.
                 # We need the intraday data for 1-d RSI values when config is not for intraday
-                intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.secondaryObjectDictionary, configManager, fetcher, period, testData,exchangeName)
+                intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.objectDictionarySecondary, configManager, fetcher, period, testData,exchangeName)
                 # if intraday_data is not None:
                 #     if len(intraday_data) == 0:
                 #         return None
@@ -379,7 +379,7 @@ class StockScreener:
                                 hostData=data,
                                 exchangeName=exchangeName
                             )
-                            hostRef.objectDictionary[stock] = data.to_dict("split")
+                            hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
                     hostRef.default_logger.debug(e, exc_info=True)
                     screeningDictionary["Trend"] = "Unknown"
@@ -540,7 +540,7 @@ class StockScreener:
                                 hostData=data,
                                 exchangeName=exchangeName
                             )
-                            hostRef.objectDictionary[stock] = data.to_dict("split")
+                            hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
 
                         hostRef.processingResultsCounter.value += 1
                         return (
@@ -568,17 +568,17 @@ class StockScreener:
         except ScreeningStatistics.DownloadDataOnly as e: # pragma: no cover
             # hostRef.default_logger.debug(e, exc_info=True)
             try:
-                data = hostRef.objectDictionary.get(stock)
+                data = hostRef.objectDictionaryPrimary.get(stock)
                 if data is not None:
                     data = pd.DataFrame(data["data"], columns=data["columns"], index=data["index"])
                     screener.getMutualFundStatus(stock, hostData=data, force=True, exchangeName=exchangeName)
-                    hostRef.objectDictionary[stock] = data.to_dict("split")
+                    hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
             except Exception as ex:
                 hostRef.default_logger.debug(f"MFIStatus: {stock}:\n{ex}", exc_info=True)
                 pass
             try:
                 screener.getFairValue(stock,hostData=data, force=True,exchangeName=exchangeName)
-                hostRef.objectDictionary[stock] = data.to_dict("split")
+                hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
             except Exception as ex:
                 hostRef.default_logger.debug(f"FairValue: {stock}:\n{ex}", exc_info=True)
                 pass

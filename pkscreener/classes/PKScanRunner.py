@@ -240,13 +240,15 @@ class PKScanRunner:
         choices = f"{choices}{'_i' if isIntraday else ''}"
         return choices
 
-    def refreshDatabase():
-        for worker in PKScanRunner.consumers:
+    def refreshDatabase(consumers,stockDictPrimary,stockDictSecondary):
+        for worker in consumers:
+            worker.objectDictionaryPrimary = stockDictPrimary
+            worker.objectDictionarySecondary = stockDictSecondary
             worker.refreshDatabase = True
             
-    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers):
+    def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDictPrimary,stockDictSecondary,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers):
         if tasks_queue is None or results_queue is None or consumers is None:
-            tasks_queue, results_queue, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDict, items)
+            tasks_queue, results_queue, consumers = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items)
         PKScanRunner.tasks_queue = tasks_queue
         PKScanRunner.results_queue = results_queue
         PKScanRunner.consumers = consumers
@@ -270,10 +272,11 @@ class PKScanRunner:
             PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers
 
-    def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDict, items):
+    def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items):
         tasks_queue, results_queue, totalConsumers = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=PKScanRunner.configManager.isIntradayConfig())
+        sec_cache_file = cache_file if "intraday_" in cache_file else f"intraday_{cache_file}"
         consumers = [
                     PKMultiProcessorClient(
                         StockScreener().screenStocks,
@@ -281,8 +284,8 @@ class PKScanRunner:
                         results_queue,
                         screenCounter,
                         screenResultsCounter,
-                        # stockDict,
-                        cache_file if exists else stockDict,
+                        stockDictPrimary,
+                        stockDictSecondary,
                         PKScanRunner.fetcher.proxyServer,
                         keyboardInterruptEvent,
                         default_logger(),
@@ -290,12 +293,16 @@ class PKScanRunner:
                         PKScanRunner.configManager,
                         PKScanRunner.candlePatterns,
                         scr,
+                        None,
+                        None
+                        #cache_file if exists else None,
+                        #sec_cache_file,
                     )
                     for _ in range(totalConsumers)
                 ]
         PKScanRunner.startWorkers(consumers)
         return tasks_queue,results_queue,consumers
-    
+
     def startWorkers(consumers):
         try:
             from pytest_cov.embed import cleanup_on_signal, cleanup_on_sigterm

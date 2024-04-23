@@ -120,7 +120,8 @@ screenResults = None
 backtest_df = None
 screenResultsCounter = None
 selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
-stockDict = None
+stockDictPrimary = None
+stockDictSecondary = None
 userPassedArgs = None
 elapsed_time = 0
 start_time = 0
@@ -134,7 +135,7 @@ consumers = None
 def finishScreening(
     downloadOnly,
     testing,
-    stockDict,
+    stockDictPrimary,
     configManager,
     loadCount,
     testBuild,
@@ -147,7 +148,7 @@ def finishScreening(
         # This scan must have been triggered by github workflow by a user or scheduled job
         return
     global defaultAnswer, menuChoiceHierarchy, userPassedArgs, selectedChoice
-    saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCount)
+    saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, loadCount)
     if not testBuild and not downloadOnly and not testing:
         saveNotifyResultsFile(
             screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=user
@@ -625,7 +626,7 @@ def isInterrupted():
     return keyboardInterruptEventFired
 
 def refreshStockData(startupoptions=None):
-    global stockDict, loadedStockData, listStockCodes
+    global consumers,stockDictPrimary, loadedStockData, listStockCodes, stockDictSecondary
     options = startupoptions.replace("|","").split(" ")[0].replace(":i","")
     loadedStockData = False
     options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
@@ -633,11 +634,11 @@ def refreshStockData(startupoptions=None):
     )
     listStockCodes = prepareStocksForScreening(testing=False, downloadOnly=False, listStockCodes=None,indexOption=indexOption)
     loadDatabaseOrFetch(downloadOnly=False, listStockCodes=listStockCodes, menuOption=menuOption,indexOption=indexOption)
-    PKScanRunner.refreshDatabase()
+    PKScanRunner.refreshDatabase(consumers,stockDictPrimary,stockDictSecondary)
 
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
-    global listStockCodes, screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
+    global listStockCodes, screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDictPrimary, stockDictSecondary, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     elapsed_time = 0
     start_time = 0
@@ -657,8 +658,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     if keyboardInterruptEvent is None and not keyboardInterruptEventFired:
         keyboardInterruptEvent = multiprocessing.Manager().Event()
     keyboardInterruptEventFired = False
-    if stockDict is None:
-        stockDict = multiprocessing.Manager().dict()
+    if stockDictPrimary is None:
+        stockDictPrimary = multiprocessing.Manager().dict()
+        stockDictSecondary = multiprocessing.Manager().dict()
         loadCount = 0
     endOfdayCandles = None
     minRSI = 0
@@ -1102,11 +1104,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 return handleMonitorFiveEMA()
             else:
                 if str(menuOption).upper() == "C":
-                    stockDict,endOfdayCandles = PKMarketOpenCloseAnalyser.getStockDataForSimulation()
-                    if stockDict is None or endOfdayCandles is None:
+                    stockDictPrimary,endOfdayCandles = PKMarketOpenCloseAnalyser.getStockDataForSimulation()
+                    if stockDictPrimary is None or endOfdayCandles is None:
                         OutputControls().printOutput(f"Cannot proceed! Stock data is unavailable. Please check the error logs/messages !")
                         return None, None
-                    listStockCodes = sorted(list(filter(None,list(set(stockDict.keys())))))
+                    listStockCodes = sorted(list(filter(None,list(set(stockDictPrimary.keys())))))
                 listStockCodes = prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption)
         except urllib.error.URLError as e:
             default_logger().debug(e, exc_info=True)
@@ -1133,7 +1135,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         ):
             loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption)
             
-        loadCount = len(stockDict) if stockDict is not None else 0
+        loadCount = len(stockDictPrimary) if stockDictPrimary is not None else 0
 
         if downloadOnly:
             OutputControls().printOutput(
@@ -1194,10 +1196,10 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         sys.stdout.write(f"\x1b[1A") # Replace the download progress bar and start writing on the same line
         if not keyboardInterruptEventFired:
             global tasks_queue, results_queue, consumers
-            screenResults, saveResults, backtest_df, tasks_queue, results_queue, consumers = PKScanRunner.runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDict,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners,tasks_queue=tasks_queue, results_queue=results_queue, consumers=consumers)
+            screenResults, saveResults, backtest_df, tasks_queue, results_queue, consumers = PKScanRunner.runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDictPrimary,stockDictSecondary,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb=runScanners,tasks_queue=tasks_queue, results_queue=results_queue, consumers=consumers)
             if menuOption in ["C"]:
                 runOptionName = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
-                PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDict,endOfdayCandles,screenResults, saveResults,runOptionName=runOptionName)
+                PKMarketOpenCloseAnalyser.runOpenCloseAnalysis(stockDictPrimary,endOfdayCandles,screenResults, saveResults,runOptionName=runOptionName)
             if downloadOnly and menuOption in ["X"]:
                 screener.getFreshMFIStatus(stock="LatestCheckedOnDate")
                 screener.getFairValue(stock="LatestCheckedOnDate", force=True)
@@ -1302,7 +1304,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             finishScreening(
                 downloadOnly,
                 testing,
-                stockDict,
+                stockDictPrimary,
                 configManager,
                 loadCount,
                 testBuild,
@@ -1339,7 +1341,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 gClient = PKSpreadsheets(credentialDictStr=creds)
                 runOption = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
                 df = saveResults.copy()
-                df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDict)
+                df["LastTradeDate"], df["LastTradeTime"] = getLatestTradeDateTime(stockDictPrimary)
                 gClient.df_to_sheet(df=df,sheetName=runOption)
                 OutputControls().printOutput(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
@@ -1358,10 +1360,10 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         return screenResults, saveResults
 
 def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
-    global stockDict, configManager, defaultAnswer, userPassedArgs, loadedStockData
+    global stockDictPrimary,stockDictSecondary, configManager, defaultAnswer, userPassedArgs, loadedStockData
     if menuOption not in ["C"]:
-        stockDict = Utility.tools.loadStockData(
-                    stockDict,
+        stockDictPrimary = Utility.tools.loadStockData(
+                    stockDictPrimary,
                     configManager,
                     downloadOnly=downloadOnly,
                     defaultAnswer=defaultAnswer,
@@ -1374,7 +1376,7 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
         configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
         # We also need to load the intraday data to be able to calculate intraday RSI
         Utility.tools.loadStockData(
-                        {},
+                        stockDictSecondary,
                         configManager,
                         downloadOnly=downloadOnly,
                         defaultAnswer=defaultAnswer,
@@ -1386,15 +1388,15 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
         resetConfigToDefault()
     loadedStockData = True
 
-def getLatestTradeDateTime(stockDict):
-    stocks = list(stockDict.keys())
+def getLatestTradeDateTime(stockDictPrimary):
+    stocks = list(stockDictPrimary.keys())
     stock = stocks[0]
     try:
         lastTradeDate = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         lastTradeTime_ist = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
-        df = pd.DataFrame(data=stockDict[stock]["data"],
-                        columns=stockDict[stock]["columns"],
-                        index=stockDict[stock]["index"])
+        df = pd.DataFrame(data=stockDictPrimary[stock]["data"],
+                        columns=stockDictPrimary[stock]["columns"],
+                        index=stockDictPrimary[stock]["index"])
         ts = df.index[-1]
         lastTraded = pd.to_datetime(ts, unit='s', utc=True) #.tz_convert("Asia/Kolkata")
         lastTradeDate = lastTraded.strftime("%Y-%m-%d")
@@ -2276,7 +2278,7 @@ def updateBacktestResults(
     return backtest_df
 
 
-def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCount):
+def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, loadCount):
     global userPassedArgs, keyboardInterruptEventFired
     argsIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     intradayConfig = configManager.isIntradayConfig()
@@ -2291,9 +2293,9 @@ def saveDownloadedData(downloadOnly, testing, stockDict, configManager, loadCoun
             + colorText.END,
             end="",
         )
-        Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday)
+        Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday)
         if downloadOnly:
-            Utility.tools.saveStockData(stockDict, configManager, loadCount, intraday, downloadOnly=downloadOnly)
+            Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday, downloadOnly=downloadOnly)
     else:
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 
