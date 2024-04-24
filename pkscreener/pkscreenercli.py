@@ -368,9 +368,6 @@ def runApplication():
                     else:
                         elapsed_time = round(time.time() - start_time,2)
                         start_time = time.time()
-                if MarketMonitor().monitorIndex == 0 and args.options is not None:
-                    # Load the stock data afresh for each cycle
-                    refreshStockData(args.options)
                 monitorOption_org = MarketMonitor().currentMonitorOption()
                 monitorOption = monitorOption_org
                 lastComponent = monitorOption.split(":")[-1]
@@ -389,7 +386,10 @@ def runApplication():
                     if resultStocks is not None:
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
-                args.options = monitorOption
+                args.options = monitorOption.replace("::",":")
+                if MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None:
+                    # Load the stock data afresh for each cycle
+                    refreshStockData(args.options)
             try: 
                 results = None
                 plainResults = None
@@ -397,10 +397,12 @@ def runApplication():
                 results, plainResults = main(userArgs=args)
                 if isInterrupted():
                     sys.exit(0)
+                # while pipeResults(plainResults,args):
+                #     results, plainResults = main(userArgs=args)
             except SystemExit:
                 sys.exit(0)
-            except Exception:
-                # traceback.print_exc()
+            except Exception as e:
+                default_logger().debug(e, exc_info=True)
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
@@ -410,6 +412,34 @@ def runApplication():
             if results is not None and args.monitor and len(monitorOption_org) > 0:
                 MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s")
 
+def pipeResults(prevOutput,args):
+    nextOnes = args.options.split(";")
+    if len(nextOnes) > 1:
+        monitorOption = nextOnes[1]
+        if len(monitorOption) == 0:
+            return False
+        lastComponent = monitorOption.split(":")[-1]
+        if "i" in lastComponent:
+            # We need to switch to intraday scan
+            monitorOption = monitorOption.replace(lastComponent,"")
+            args.intraday = lastComponent.replace("i","").strip()
+            configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
+        else:
+            # We need to switch to daily scan
+            args.intraday = None
+            configManager.toggleConfig(candleDuration='1d', clearCache=False)
+        if monitorOption.startswith("|"):
+            monitorOption = monitorOption.replace("|","")
+            # We need to pipe the output from previous run into the next one
+            if prevOutput is not None and not prevOutput.empty:
+                prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
+                prevOutput_results = prevOutput_results.index
+                prevOutput_results = ",".join(prevOutput_results)
+                monitorOption = f"{monitorOption}:{prevOutput_results}"
+        args.options = monitorOption.replace("::",":")
+        args.options = args.options + ";".join(nextOnes[2:])
+        return True
+    return False
 
 def pkscreenercli():
     global originalStdOut

@@ -795,7 +795,7 @@ class tools:
             )
 
     def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS",downloadOnly=False):
-        numStocksPerIteration = int(len(stockCodes)/5) + 1
+        numStocksPerIteration = int(len(stockCodes)/int(len(stockCodes)/10)) + 1
         queueCounter = 0
         iterations = int(len(stockCodes)/numStocksPerIteration) + 1
         tasksList = []
@@ -814,7 +814,10 @@ class tools:
         
         processedStocks = []
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",timeout=3*configManager.longTimeout*(4 if downloadOnly else 1),minAcceptableCompletionPercentage=(100 if downloadOnly else 80))
+            PKScheduler.scheduleTasks(tasksList=tasksList, 
+                                      label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",
+                                      timeout=(5+2.5*configManager.longTimeout*(4 if downloadOnly else 1)), # 5 sec additional time for multiprocessing setup
+                                      minAcceptableCompletionPercentage=(100 if downloadOnly else 100))
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
@@ -843,9 +846,11 @@ class tools:
         )
         initialLoadCount = len(stockDict)
         leftOutStocks = None
+        recentDownloadFromOriginAttempted = False
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
         # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
+            recentDownloadFromOriginAttempted = True
             stockDict, leftOutStocks = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
             if len(leftOutStocks) > int(len(stockCodes)*0.05):
                 # More than 5 % of stocks are still remaining
@@ -876,6 +881,8 @@ class tools:
                 + "[+] Cache unavailable on pkscreener server, Continuing.."
                 + colorText.END
             )
+        if not stockDataLoaded and not recentDownloadFromOriginAttempted:
+            stockDict, _ = tools.downloadLatestData(stockDict,configManager,stockCodes,exchangeSuffix=exchangeSuffix,downloadOnly=downloadOnly)
         # See if we need to save stock data
         stockDataLoaded = stockDataLoaded or (len(stockDict) > 0 and (len(stockDict) != initialLoadCount))
         if stockDataLoaded:
@@ -883,6 +890,7 @@ class tools:
         return stockDict
 
     def loadDataFromLocalPickle(stockDict, configManager, downloadOnly, defaultAnswer, exchangeSuffix, cache_file, isTrading):
+        stockDataLoaded = False
         with open(
                 os.path.join(Archiver.get_user_outputs_dir(), cache_file), "rb"
             ) as f:
@@ -962,6 +970,7 @@ class tools:
         return stockDict, stockDataLoaded
 
     def downloadSavedDataFromServer(stockDict, configManager, downloadOnly, defaultAnswer, retrial, forceLoad, stockCodes, exchangeSuffix, isIntraday, forceRedownload, cache_file, isTrading):
+        stockDataLoaded = False
         OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.FAIL

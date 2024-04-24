@@ -1527,6 +1527,7 @@ def resetConfigToDefault():
 def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption):
     if not downloadOnly:
         updateMenuChoiceHierarchy()
+    indexOption = int(indexOption)
     if listStockCodes is None or len(listStockCodes) == 0:
         if indexOption >= 0 and indexOption <= 14:
             shouldSuppress = not OutputControls().enableMultipleLineOutput
