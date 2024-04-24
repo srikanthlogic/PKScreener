@@ -437,7 +437,7 @@ def pipeResults(prevOutput,args):
                 prevOutput_results = ",".join(prevOutput_results)
                 monitorOption = f"{monitorOption}:{prevOutput_results}"
         args.options = monitorOption.replace("::",":")
-        args.options = args.options + ";".join(nextOnes[2:])
+        args.options = args.options + ":D:;".join(nextOnes[2:])
         return True
     return False
 

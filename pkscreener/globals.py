@@ -1357,7 +1357,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         else:
             optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
         return optionalFinalOutcome_df, saveResults
-    elif userPassedArgs.monitor is not None:
+    else:
         return screenResults, saveResults
 
 def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
