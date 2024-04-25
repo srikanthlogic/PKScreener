@@ -216,7 +216,67 @@ class ScreeningStatistics:
         if diff.eq(0).any().any():
             diff += sflt.epsilon
         return diff
-    
+
+    # Find ATR cross stocks
+    def findATRCross(self, df):
+        #https://chartink.com/screener/stock-crossing-atr
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+        recentCandleHeight = self.getCandleBodyHeight(recent)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+        atr = pktalib.ATR(data["High"],data["Low"],data["Close"], 14)
+        atrCross = recentCandleHeight >= atr.tail(1).iloc[0]
+        bullishRSI = recent["RSI"].iloc[0] >= 55 or recent["RSIi"].iloc[0] >= 55
+        smav7 = pktalib.SMA(data["Volume"],timeperiod=7).tail(1).iloc[0]
+        atrCrossCondition = atrCross and bullishRSI and (smav7 < recent["Volume"].iloc[0])
+        return atrCrossCondition
+
+# study(title="UT Bot Alerts", overlay = true)
+
+# // Inputs
+# a = input(1,     title = "Key Vaule. 'This changes the sensitivity'")
+# c = input(10,    title = "ATR Period")
+# h = input(false, title = "Signals from Heikin Ashi Candles")
+
+# xATR  = atr(c)
+# nLoss = a * xATR
+
+# src = h ? security(heikinashi(syminfo.tickerid), timeframe.period, close, lookahead = false) : close
+
+# xATRTrailingStop = 0.0
+# xATRTrailingStop := iff(src > nz(xATRTrailingStop[1], 0) and src[1] > nz(xATRTrailingStop[1], 0), max(nz(xATRTrailingStop[1]), src - nLoss),
+#    iff(src < nz(xATRTrailingStop[1], 0) and src[1] < nz(xATRTrailingStop[1], 0), min(nz(xATRTrailingStop[1]), src + nLoss), 
+#    iff(src > nz(xATRTrailingStop[1], 0), src - nLoss, src + nLoss)))
+ 
+# pos = 0   
+# pos :=	iff(src[1] < nz(xATRTrailingStop[1], 0) and src > nz(xATRTrailingStop[1], 0), 1,
+#    iff(src[1] > nz(xATRTrailingStop[1], 0) and src < nz(xATRTrailingStop[1], 0), -1, nz(pos[1], 0))) 
+   
+# xcolor = pos == -1 ? color.red: pos == 1 ? color.green : color.blue 
+
+# ema   = ema(src,1)
+# above = crossover(ema, xATRTrailingStop)
+# below = crossover(xATRTrailingStop, ema)
+
+# buy  = src > xATRTrailingStop and above 
+# sell = src < xATRTrailingStop and below
+
+# barbuy  = src > xATRTrailingStop 
+# barsell = src < xATRTrailingStop 
+
+# plotshape(buy,  title = "Buy",  text = 'Buy',  style = shape.labelup,   location = location.belowbar, color= color.green, textcolor = color.white, transp = 0, size = size.tiny)
+# plotshape(sell, title = "Sell", text = 'Sell', style = shape.labeldown, location = location.abovebar, color= color.red,   textcolor = color.white, transp = 0, size = size.tiny)
+
+# barcolor(barbuy  ? color.green : na)
+# barcolor(barsell ? color.red   : na)
+
+# alertcondition(buy,  "UT Long",  "UT Long")
+# alertcondition(sell, "UT Short", "UT Short")
+
     # Find accurate breakout value
     def findBreakingoutNow(self, df, fullData, saveDict, screenDict):
         if df is None or len(df) == 0:

@@ -475,7 +475,7 @@ class StockScreener:
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
-                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25] and isValidityCheckMet)
+                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25,27] and isValidityCheckMet)
                         or (executeOption == 21 and (mfiStake > 0 and reversalOption in [3,5]))
                         or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
@@ -609,42 +609,45 @@ class StockScreener:
 
     def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
         isValid = True
-        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25]:
+        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27]:
             return True
         if executeOption == 11:
             isValid = screener.validateShortTermBullish(
                 fullData, screeningDictionary, saveDictionary
             )
-        if executeOption == 12:
+        elif executeOption == 12:
             isValid = (
                 screener.validate15MinutePriceVolumeBreakout(fullData)
             )
-        if executeOption == 13:
+        elif executeOption == 13:
             isValid = screener.findBullishIntradayRSIMACD(
                 fullData
             )
-        if executeOption == 14:
+        elif executeOption == 14:
             isValid = screener.findNR4Day(fullData)
-        if executeOption == 15:
+        elif executeOption == 15:
             isValid = screener.find52WeekLowBreakout(fullData)
-        if executeOption == 16:
+        elif executeOption == 16:
             isValid = screener.find10DaysLowBreakout(fullData)
-        if executeOption == 17:
+        elif executeOption == 17:
             isValid = screener.find52WeekHighBreakout(fullData)
-        if executeOption == 18:
+        elif executeOption == 18:
             isValid = screener.findAroonBullishCrossover(fullData)
-        if executeOption == 19:
+        elif executeOption == 19:
             isValid = screener.validateMACDHistogramBelow0(fullData)
-        if executeOption == 20:
+        elif executeOption == 20:
             isValid = screener.validateBullishForTomorrow(fullData)
-        if executeOption == 23:
+        elif executeOption == 23:
             isValid = screener.findBreakingoutNow(processedData, fullData, saveDictionary, screeningDictionary)
-        if executeOption == 24:
+        elif executeOption == 24:
             isValid = (
                 screener.validateHigherHighsHigherLowsHigherClose(fullData)
             )
-        if executeOption == 25:
+        elif executeOption == 25:
             isValid = screener.validateLowerHighsLowerLows(processedData)
+        elif executeOption == 27:
+            isValid = screener.findATRCross(processedData)
+        
         return isValid        
                     
     def performBasicVolumeChecks(self, executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener):

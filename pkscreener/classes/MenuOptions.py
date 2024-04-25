@@ -100,7 +100,7 @@ level2_X_MenuDict = {
     "24": "Higher Highs,Lows & Close (SuperTrend)",
     "25": "Lower Highs,Lows (Sell/Watch for Rev.)",
     "26": "Stocks with stock-split/bonus/dividends",
-    # "26": "RSI above 30 and price > psar      ",
+    "27": "ATR Cross                      ",
     # "27": "Intraday Momentum Build-up      ",
     # "28": "Extremely bullish daily close      ",
     # "29": "Rising RSI                      ",
