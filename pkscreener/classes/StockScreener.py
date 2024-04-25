@@ -101,11 +101,11 @@ class StockScreener:
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionaryPrimary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
-            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionaryPrimary, configManager, fetcher, period, testData,exchangeName)
+            data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionaryPrimary, configManager, fetcher, period,None, testData,exchangeName)
             if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
                 # Daily data is already available in "data" above.
                 # We need the intraday data for 1-d RSI values when config is not for intraday
-                intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.objectDictionarySecondary, configManager, fetcher, period, testData,exchangeName)
+                intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.objectDictionarySecondary, configManager, fetcher, "1d","1m", testData,exchangeName)
                 
             if data is not None:
                 if len(data) == 0 or len(data) < backtestDuration:
@@ -723,22 +723,23 @@ class StockScreener:
                 
         return fullData,processedData,data
 
-    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,objectDictionary, configManager, fetcher, period, testData=None,exchangeName="INDIA"):
+    def getRelevantDataForStock(self, totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,objectDictionary, configManager, fetcher, period, duration, testData=None,exchangeName="INDIA"):
         hostData = objectDictionary.get(stock) if (objectDictionary is not None and len(objectDictionary) > 0) else None
         data = None
+        hostDataLength = 0 if hostData is None else (0 if "data" not in hostData.keys() else len(hostData["data"]))
         start = None
         if (period == '1d' or configManager.duration[-1] == "m"):
             if backtestDuration > 0: # We are backtesting
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
             else:
                 # Since this is intraday data, we'd just need to start from the last trading session
-                start = PKDateUtilities.tradingDate()
+                start = PKDateUtilities.tradingDate().strftime("%Y-%m-%d")
             end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         if (
                 not shouldCache
                 or (downloadOnly and hostData is None)
                 or (hostData is None and self.isTradingTime)
-                or hostData is None
+                or hostData is None or hostDataLength == 0
             ):
             if testData is not None:
                 data = testData
@@ -746,7 +747,7 @@ class StockScreener:
                 data = fetcher.fetchStockData(
                         stock,
                         period,
-                        configManager.duration,
+                        configManager.duration if duration is None else duration,
                         hostRef.proxyServer,
                         hostRef.processingResultsCounter,
                         hostRef.processingCounter,
@@ -794,7 +795,7 @@ class StockScreener:
                     )
                 pass
 
-        if ((shouldCache and not self.isTradingTime and (hostData is None)) or downloadOnly) \
+        if ((shouldCache and not self.isTradingTime and (hostData is None  or hostDataLength == 0)) or downloadOnly) \
             or (shouldCache and hostData is None):  # and backtestDuration == 0 # save only if we're NOT backtesting
                 if start is None and data is not None:
                     objectDictionary[stock] = data.to_dict("split")

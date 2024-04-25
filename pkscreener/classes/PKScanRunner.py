@@ -108,11 +108,12 @@ class PKScanRunner:
             totalConsumers -= 1
         return tasks_queue, results_queue, totalConsumers, logging_queue
 
-    def populateQueues(items, tasks_queue, exit=False):
+    def populateQueues(items, tasks_queue, exit=False,userPassedArgs=None):
         # default_logger().debug(f"Unfinished items in task_queue: {tasks_queue.qsize()}")
         for item in items:
             tasks_queue.put(item)
-        if exit:
+        mayBePiped = userPassedArgs is not None and (userPassedArgs.monitor is not None or "|" in userPassedArgs.options)
+        if exit and not mayBePiped:
             # Append exit signal for each process indicated by None
             for _ in range(multiprocessing.cpu_count()):
                 tasks_queue.put(None)
@@ -233,10 +234,11 @@ class PKScanRunner:
         )
         choices = ""
         for choice in selectedChoice:
-            if len(selectedChoice[choice]) > 0:
+            choiceOption = selectedChoice[choice]
+            if len(choiceOption) > 0 and ("," not in choiceOption and "." not in choiceOption):
                 if len(choices) > 0:
                     choices = f"{choices}_"
-                choices = f"{choices}{selectedChoice[choice]}"
+                choices = f"{choices}{choiceOption}"
         if choices.endswith("_"):
             choices = choices[:-1]
         choices = f"{choices}{'_i' if isIntraday else ''}"
@@ -257,6 +259,9 @@ class PKScanRunner:
                     log_queue_reader.start()
             except:
                 pass
+        # else:
+        #     # Restart the workers because the run method may have exited from a previous run
+        #     PKScanRunner.startWorkers(consumers)
         PKScanRunner.tasks_queue = tasks_queue
         PKScanRunner.results_queue = results_queue
         PKScanRunner.consumers = consumers
@@ -276,7 +281,10 @@ class PKScanRunner:
                 )
 
         OutputControls().printOutput(colorText.END)
-        if userPassedArgs is not None and userPassedArgs.monitor is None:
+        if userPassedArgs is not None and (userPassedArgs.monitor is None and "|" not in userPassedArgs.options):
+            # Don't terminate the multiprocessing clients if we're 
+            # going to pipe the results from an earlier run
+            # or we're running in monitoring mode
             PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
@@ -376,7 +384,7 @@ class PKScanRunner:
     def shutdown(frame, signum):
         OutputControls().printOutput("Shutting down for test coverage")
 
-    def runScan(testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df, *otherArgs,resultsReceivedCb=None):
+    def runScan(userPassedArgs,testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df, *otherArgs,resultsReceivedCb=None):
         queueCounter = 0
         counter = 0
         shouldContinue = True
@@ -392,6 +400,7 @@ class PKScanRunner:
                         ],
                         tasks_queue,
                         (queueCounter + 1 == int(iterations)) and ((queueCounter + 1)*int(iterations) == originalNumberOfStocks),
+                        userPassedArgs
                     )
                 else:
                     PKScanRunner.populateQueues(
@@ -401,6 +410,7 @@ class PKScanRunner:
                         ],
                         tasks_queue,
                         True,
+                        userPassedArgs
                     )
             result = results_queue.get()
             if result is not None:

@@ -200,10 +200,10 @@ class tools:
                     f.write(finalStocks)
         except IOError as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
-            input(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
-                + "[+] Failed to save recently screened result table on disk! Skipping.."
+                + f"{e}\n[+] Failed to save recently screened result table on disk! Skipping.."
                 + colorText.END
             )
         except Exception as e:# pragma: no cover
@@ -705,8 +705,9 @@ class tools:
         legendText = f"{legendText} stock price has increased / decreased since last trading session. (1.5%, 1.3%,1.8%) with LTP shows the stock price rose by 1.5%, 1.3% and 1.8% in the last 1, 2 and 3 trading sessions respectively. *** 5. %Chng ***: This is the change(rise/fall in percentage) in closing/trading price from the previous trading session's closing price. Green means that price rose from the previous"
         legendText = f"{legendText} trading session. Red means it fell.  *** 6. Volume ***: This shows the relative volume in the most recent trading day /today with respect to last 20 trading periods moving average of Volume. For example, 8.5x would mean today's volume so far is 8.5 times the average volume traded in the last 20 trading sessions. Volume in green means that volume for the date so far has been at"
         legendText = f"{legendText} least 2.5 times more than the average volume of last 20 sessions. If the volume is in red, it means the given date's volume is less than 2.5 times the avg volume of the last 20 sessions. *** 7. MA-Signal ***: It shows the price trend of the given stock by analyzing various 50-200 moving/exponential averages crossover strategies. Perform a Google search for the shown MA-Signals"
-        legendText = f"{legendText} to learn about them more. If it is in green, the signal is bullish. Red means bearish. *** 8. RSI ***: Relative Strength Index is a momentum index which describes 14-period relative strength at the given price. Generally, below 30 is considered oversold and above 80 is considered overbought. *** 9. Trend(22Prds) ***:  This describes the average trendline computed based on the"
-        legendText = f"{legendText} last 22 trading sessions. Their strength is displayed depending on the steepness of the trendlines. (Strong / Weak) Up / Down shows how high/low the demand is respectively. A Sideways trend is the horizontal price movement that occurs when the forces of supply and demand are nearly equal. T:▲ or T:▼ shows the general moving average uptrend/downtrend from a 200 day MA perspective"
+        legendText = f"{legendText} to learn about them more. If it is in green, the signal is bullish. Red means bearish. *** 8. RSI or RSI/i***: Relative Strength Index is a momentum index which describes 14-period relative strength at the given price. Generally, below 30 is considered oversold and above 80 is considered overbought. When RSI/i has value, say, 80/41, it means that the daily RSI value is 80 while"
+        legendText = f"{legendText} the 1-minute intraday RSI is 41. *** 9. Trend(22Prds) ***:  This describes the average trendline computed based on the last 22 trading sessions. Their strength is displayed depending on the steepness of the trendlines. (Strong / Weak) Up / Down shows how high/low the demand is respectively. A Sideways trend is the horizontal price movement that occurs when the forces of supply"
+        legendText = f"{legendText} and demand are nearly equal. T:▲ or T:▼ shows the general moving average uptrend/downtrend from a 200 day MA perspective"
         legendText = f"{legendText} if the current 200DMA is more/less than the last 20/80/100 days' 200DMA. Similarly, t:▲ or t:▼ shows for 50DMA based on 9/14/20 days' 50DMA trend. MFI:▲ or MFI:▼ shows"
         legendText = f"{legendText} if the overall top 5 mutual funds and top 5 institutional investors ownership went up or down on the closing of the last month. *** 10. Pattern ***:This shows if the chart or the candle (from the candlestick chart) is"
         legendText = f"{legendText} forming any known pattern in the recent timeframe or as per the selected screening options. Do a google search for the shown pattern names to learn. *** 11. CCI ***: The Commodity Channel Index (CCI) is a technical indicator that measures the difference between the current price and the historical average price of the given stock. Generally below '- 100' is considered oversold"

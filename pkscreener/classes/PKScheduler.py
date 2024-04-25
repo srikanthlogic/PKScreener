@@ -150,8 +150,8 @@ class PKScheduler():
                     lock.acquire()
                     progress.refresh()
                     # raise any errors:
-                    for future in futures:
-                        future.result()
+                    # for future in futures:
+                    #     future.result()
                     lock.release()
 
 # if __name__ == "__main__":

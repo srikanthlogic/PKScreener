@@ -552,10 +552,12 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
     global menuChoiceHierarchy, userPassedArgs
     try:
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
-        if isTrading or userPassedArgs.monitor:
+        if isTrading or userPassedArgs.monitor or ("RSIi" in saveResults.columns):
             screenResults['RSI'] = screenResults['RSI'].astype(str) + "/" + screenResults['RSIi'].astype(str)
             saveResults['RSI'] = saveResults['RSI'].astype(str) + "/" + saveResults['RSIi'].astype(str)
-        sortKey = ["Volume"] if "RSI" not in menuChoiceHierarchy else ("RSIi" if isTrading else "RSI")
+            screenResults.rename(columns={"RSI": "RSI/i"},inplace=True)
+            saveResults.rename(columns={"RSI": "RSI/i"},inplace=True)
+        sortKey = ["Volume"] if "RSI" not in menuChoiceHierarchy else ("RSIi" if (isTrading or "RSIi" in saveResults.columns) else "RSI")
         ascending = [False if "RSI" not in menuChoiceHierarchy else True]
         if executeOption == 21:
             if reversalOption in [3,5,6,7]:
@@ -1372,7 +1374,7 @@ def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
                     stockCodes = listStockCodes,
                     exchangeSuffix = "" if (indexOption == 15 or (configManager.defaultIndex == 15 and indexOption == 0)) else ".NS"
             )
-    if menuOption not in ["C"] and not configManager.isIntradayConfig() and configManager.calculatersiintraday:
+    if menuOption not in ["C"] and (userPassedArgs.monitor is not None or "|" in userPassedArgs.options) :#not configManager.isIntradayConfig() and configManager.calculatersiintraday:
         candleDuration = (userPassedArgs.intraday if (userPassedArgs is not None and userPassedArgs.intraday is not None) else "1m")
         configManager.toggleConfig(candleDuration=candleDuration,clearCache=False)
         # We also need to load the intraday data to be able to calculate intraday RSI
@@ -2168,7 +2170,7 @@ def runScanners(
                     return False, backtest_df
                 return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
             otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave)
-            backtest_df, result =PKScanRunner.runScan(testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df,*otherArgs,resultsReceivedCb=processResultsCallback)
+            backtest_df, result =PKScanRunner.runScan(userPassedArgs,testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df,*otherArgs,resultsReceivedCb=processResultsCallback)
 
         OutputControls().printOutput(f"\x1b[{3 if OutputControls().enableMultipleLineOutput else 1}A")
         elapsed_time = time.time() - start_time
@@ -2517,7 +2519,7 @@ def takeBacktestInputs(
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) or any other custom periods (< 450)."
+        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) or any other custom periods (< 280)."
     )
     try:
         if backtestPeriod == 0:

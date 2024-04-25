@@ -371,6 +371,7 @@ def runApplication():
                 monitorOption_org = MarketMonitor().currentMonitorOption()
                 monitorOption = monitorOption_org
                 lastComponent = monitorOption.split(":")[-1]
+                # previousCandleDuration = configManager.duration
                 if "i" in lastComponent:
                     # We need to switch to intraday scan
                     monitorOption = monitorOption.replace(lastComponent,"")
@@ -387,7 +388,8 @@ def runApplication():
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption.replace("::",":")
-                if MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None:
+                # (previousCandleDuration != configManager.duration) or 
+                if (MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None):
                     # Load the stock data afresh for each cycle
                     refreshStockData(args.options)
             try: 
@@ -397,8 +399,8 @@ def runApplication():
                 results, plainResults = main(userArgs=args)
                 if isInterrupted():
                     sys.exit(0)
-                # while pipeResults(plainResults,args):
-                #     results, plainResults = main(userArgs=args)
+                while pipeResults(plainResults,args):
+                    results, plainResults = main(userArgs=args)
             except SystemExit:
                 sys.exit(0)
             except Exception as e:

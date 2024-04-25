@@ -36,7 +36,7 @@ from PKDevTools.classes.OutputControls import OutputControls
 parser = configparser.ConfigParser(strict=False)
 
 # Default attributes for Downloading Cache from Git repo
-default_period = "450d"
+default_period = "280d"
 default_duration = "1d"
 default_timeout = 2
 
@@ -49,7 +49,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.volumeRatio = 2.5
         self.minLTP = 20.0
         self.maxLTP = 50000
-        self.period = "450d"
+        self.period = "280d"
         self.duration = "1d"
         self.shuffleEnabled = True
         self.cacheEnabled = True
@@ -202,7 +202,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 + colorText.END
             )
             self.period = input(
-                "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 450): "
+                "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 280): "
             )
             self.daysToLookback = input(
                 "[+] Number of recent trading periods (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 22): "
@@ -449,7 +449,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             candleDuration = self.duration.lower()
         self.getConfig(parser)
         if candleDuration[-1] in ["d"]:
-            self.period = "450d"
+            self.period = "280d"
             self.cacheEnabled = True
         if candleDuration[-1] in ["m", "h"] and not self.isIntradayConfig():
             self.period = "1d"

@@ -100,9 +100,13 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         if (period == '1d' or duration[-1] == "m"):
             # Since this is intraday data, we'd just need to start from the last trading session
             if start is None:
-                start = PKDateUtilities.tradingDate()
+                start = PKDateUtilities.tradingDate().strftime("%Y-%m-%d")
             if end is None:
                 end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
+            if start == end:
+                # If we send start and end dates for intraday, it comes back with empty dataframe
+                start = None
+                end = None
         with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
             data = yf.download(
                 tickers=stockCode,

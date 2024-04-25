@@ -79,7 +79,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
 
         screen_monitor_df = screen_df.copy()
         screen_monitor_df.reset_index(inplace=True)
-        screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI","Volume"]].head(self.maxNumRowsInEachResult-1)
+        screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI/i","Volume"]].head(self.maxNumRowsInEachResult-1)
         screen_monitor_df.loc[:, "%Chng"] = screen_monitor_df.loc[:, "%Chng"].apply(
                     lambda x: Utility.tools.roundOff(str(x).split("% (")[0] + colorText.END,0)
                 )
@@ -107,7 +107,10 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                 for col in screen_monitor_df.columns:
                     if rowIndex == 0:
                         # Column names to be repeated for each refresh in respective headers
-                        widgetHeader = ":".join(screenOptions.replace(":D","").split(":")[:4])
+                        cleanedScreenOptions = screenOptions.replace(":D","")
+                        widgetHeader = ":".join(cleanedScreenOptions.split(":")[:4])
+                        if "i " in screenOptions:
+                            widgetHeader = f'{":".join(widgetHeader.split(":")[:3])}:i:{cleanedScreenOptions.split("i ")[-1]}'
                         self.monitor_df.loc[startRowIndex,[f"A{startColIndex+1}"]] = colorText.BOLD+colorText.HEAD+(widgetHeader if startColIndex==firstColIndex else col)+colorText.END
                         highlightCols.append(startColIndex)
                     else:
