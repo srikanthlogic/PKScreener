@@ -475,7 +475,6 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "18",
                     "19",
                     "22",
-                    "27",
                     "28",
                     "29",
                     "30",
@@ -510,7 +509,6 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "18",
                     "19",
                     "22",
-                    "27",
                     "28",
                     "29",
                     "30",
@@ -564,7 +562,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     "23",
                     "24",
                     "25",
-                    "26"
+                    "26","27"
                 ]:  # Vol gainer ratio
                     selection.extend(["", ""])
     elif len(selection) == 4:
@@ -961,7 +959,6 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 selectedMenu=selectedMenu,
                 skip=[
                     "22",
-                    "27",
                     "28",
                     "29",
                     "30",
@@ -1152,7 +1149,6 @@ def addCommandsForMenuItems(application):
                 selectedMenu=selectedMenu,
                 skip=[
                     "22",
-                    "27",
                     "28",
                     "29",
                     "30",
