@@ -199,7 +199,7 @@ jobs:
         shell: bash
         id: releaseversiongetter
         run: |
-          python3 -m pip install requests --break-system-packages
+          pip3 install requests --break-system-packages
           python3 .github/workflows/githubutilities.py -d
           
       - name: Declare env variables
