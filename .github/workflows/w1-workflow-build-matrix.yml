@@ -181,12 +181,17 @@ jobs:
         with:
           ref: ${{ inputs.branch-name }}
 
+      - name: Virtual env
+        if: startsWith(runner.os, 'MacOS')
+        shell: bash
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+        
       - name: Environment setup to get latest released version
         shell: bash
         id: releaseversiongetter
         run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
           pip3 install requests
           python3 .github/workflows/githubutilities.py -d
           
