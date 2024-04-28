@@ -99,6 +99,20 @@ m1 = menus()
 m2 = menus()
 m3 = menus()
 
+TOP_LEVEL_SCANNER_MENUS = ["X", "B"]
+TOP_LEVEL_SCANNER_SKIP_MENUS = ["S", "T", "E", "U", "Z", "C", "G"]
+INDEX_SKIP_MENUS = ["W","E","M","Z","0","2","3","4","6","7","9","10","13"]
+SCANNER_SKIP_MENUS_1_TO_7 = ["0","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_8_TO_13 = ["0","1","2","3","4","5","6","7","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_14_TO_19 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_20_TO_27 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","22","28","29","30","42","M","Z"]
+SCANNER_MENUS_WITH_NO_SUBMENUS = ["1","2","3","10","11","12","13","14","15","16","17","18","19","20","21","23","24","25","26","27"]
+SCANNER_MENUS_WITH_SUBMENU_SUPPORT = ["6", "7", "21"]
+
+INDEX_COMMANDS_SKIP_MENUS_SCANNER = ["W", "E", "M", "Z"]
+INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
+UNSUPPORTED_COMMAND_MENUS =["22","28","29","30","42","M","Z"]
+SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Send message on `/start`."""
@@ -114,7 +128,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     mns = m0.renderForMenu(asList=True)
     inlineMenus = []
     for mnu in mns:
-        if mnu.menuKey in ["X", "B", "G"]:
+        if mnu.menuKey in TOP_LEVEL_SCANNER_MENUS:
             inlineMenus.append(
                 InlineKeyboardButton(
                     mnu.menuText.split("(")[0],
@@ -125,7 +139,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
     cmds = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z", "C", "G"],
+        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -150,28 +164,14 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show new choice of buttons"""
     query = update.callback_query
     data = query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G")
-    if data not in ["X", "B", "G"]:
+    if data not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
     midSkip = "1" if data == "X" else "N"
+    skipMenus = INDEX_SKIP_MENUS.append(midSkip)
     menuText = (
         m1.renderForMenu(
             m0.find(data),
-            skip=[
-                "W",
-                "E",
-                "M",
-                "Z",
-                "0",
-                "2",
-                midSkip,
-                "3",
-                "4",
-                "6",
-                "7",
-                "9",
-                "10",
-                "13",
-            ],
+            skip=skipMenus,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
         .replace("     ", "")
@@ -181,22 +181,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     mns = m1.renderForMenu(
         m0.find(data),
-        skip=[
-            "W",
-            "E",
-            "M",
-            "Z",
-            "0",
-            "2",
-            midSkip,
-            "3",
-            "4",
-            "6",
-            "7",
-            "9",
-            "10",
-            "13",
-        ],
+        skip=skipMenus,
         asList=True,
     )
     inlineMenus = []
@@ -225,76 +210,20 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     selection = preSelection.split("_")
     preSelection = f"{selection[0]}_{selection[1]}"
-    if selection[0].upper() not in ["X", "B", "G"]:
+    if selection[0].upper() not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
     if len(selection) == 2 or (len(selection) == 3 and selection[2] == "P"):
         if str(selection[1]).isnumeric():
             # It's only level 2
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_1_TO_7,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\nN > More options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_1_TO_7,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
@@ -305,72 +234,14 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if selection[2] == "N":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_8_TO_13,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\nP > Previous Options"
             menuText = menuText + "\nM > More Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_8_TO_13,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
@@ -379,72 +250,14 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         elif selection[2] == "M":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_14_TO_19,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\nP > Previous Options"
             menuText = menuText + "\n>> More Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_14_TO_19,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
@@ -453,76 +266,20 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         elif selection[2] == ">>":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "22",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_20_TO_27,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\nP > Previous Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=[
-                    "0",
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "22",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=SCANNER_SKIP_MENUS_20_TO_27,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             mns.append(menu().create("P", "Previous Options", 2))
         elif str(selection[2]).isnumeric():
             preSelection = f"{selection[0]}_{selection[1]}_{selection[2]}"
-            if selection[2] in ["6", "7", "21"]:
+            if selection[2] in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:
                 menuText = m3.renderForMenu(
                     m2.find(selection[2]),
                     renderStyle=MenuRenderStyle.STANDALONE,
@@ -543,27 +300,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                     selection.extend(["D", "D"])
                 elif selection[2] == "9":  # Vol gainer ratio
                     selection.extend(["D", ""])
-                elif selection[2] in [
-                    "1",
-                    "2",
-                    "3",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "23",
-                    "24",
-                    "25",
-                    "26","27"
-                ]:  # Vol gainer ratio
+                elif selection[2] in SCANNER_MENUS_WITH_NO_SUBMENUS:  # Vol gainer ratio
                     selection.extend(["", ""])
     elif len(selection) == 4:
         preSelection = (
@@ -614,7 +351,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 def default_markup(inlineMenus):
     mns = m0.renderForMenu(asList=True)
     for mnu in mns:
-        if mnu.menuKey in ["X", "B", "G"]:
+        if mnu.menuKey in TOP_LEVEL_SCANNER_MENUS:
             inlineMenus.append(
                     InlineKeyboardButton(
                         mnu.menuText.split("(")[0],
@@ -815,20 +552,18 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if cmd == "help":
         await help_command(update=update, context=context)
         return START_ROUTES
-    if cmd in ["x", "b", "g"]:
+    if cmd.upper() in TOP_LEVEL_SCANNER_MENUS:
         await shareUpdateWithChannel(update=update, context=context)
         m0.renderForMenu(
             selectedMenu=None,
-            skip=["S", "T", "E", "U", "Z", "C", "G"],
+            skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
         selectedMenu = m0.find(cmd.upper())
         cmdText = ""
         cmds = m1.renderForMenu(
             selectedMenu=selectedMenu,
-            skip=(
-                ["W", "E", "M", "Z"] if cmd in ["x"] else ["W", "E", "M", "Z", "N", "0", "15"]
-            ),
+            skip=(INDEX_COMMANDS_SKIP_MENUS_SCANNER  if cmd in ["x"] else INDEX_COMMANDS_SKIP_MENUS_BACKTEST),
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
@@ -882,16 +617,16 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if len(selection) == 2:
             m0.renderForMenu(
                 selectedMenu=None,
-                skip=["S", "T", "E", "U", "Z", "C", "G"],
+                skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
             m1.renderForMenu(
                 selectedMenu=selectedMenu,
                 skip=(
-                    ["W", "E", "M", "Z"]
+                    INDEX_COMMANDS_SKIP_MENUS_SCANNER
                     if "x_" in cmd
-                    else ["W", "E", "M", "Z", "N", "0"]
+                    else INDEX_COMMANDS_SKIP_MENUS_BACKTEST
                 ),
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
@@ -917,16 +652,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 return START_ROUTES
             cmds = m2.renderForMenu(
                 selectedMenu=selectedMenu,
-                skip=[
-                    "22",
-                    "27",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=UNSUPPORTED_COMMAND_MENUS,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
@@ -940,16 +666,16 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         elif len(selection) == 3:
             m0.renderForMenu(
                 selectedMenu=None,
-                skip=["S", "T", "E", "U", "Z", "C", "G"],
+                skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
             m1.renderForMenu(
                 selectedMenu=selectedMenu,
                 skip=(
-                    ["W", "E", "M", "Z"]
+                    INDEX_COMMANDS_SKIP_MENUS_SCANNER
                     if "x_" in cmd
-                    else ["W", "E", "M", "Z", "N", "0"]
+                    else INDEX_COMMANDS_SKIP_MENUS_BACKTEST
                 ),
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
@@ -957,19 +683,11 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             selectedMenu = m1.find(selection[1].upper())
             m2.renderForMenu(
                 selectedMenu=selectedMenu,
-                skip=[
-                    "22",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=UNSUPPORTED_COMMAND_MENUS,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            if selection[2] in ["6", "7", "21"]:
+            if selection[2] in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:
                 selectedMenu = m2.find(selection[2].upper())
                 cmds = m3.renderForMenu(
                     selectedMenu=selectedMenu,
@@ -991,26 +709,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                     selection.extend(["D", "D"])
                 elif selection[2] == "9":  # Vol gainer ratio
                     selection.extend(["D", ""])
-                elif selection[2] in [
-                    "1",
-                    "2",
-                    "3",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                ]:  # Vol gainer ratio
+                elif selection[2] in SUPPORTED_COMMAND_MENUS:
                     selection.extend(["", ""])
         if len(selection) >= 4:
             options = ":".join(selection)
@@ -1065,7 +764,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     cmds = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z", "C", "G"],
+        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -1119,7 +818,7 @@ def _shouldAvoidResponse(update):
 def addCommandsForMenuItems(application):
     cmds0 = m0.renderForMenu(
         selectedMenu=None,
-        skip=["S", "T", "E", "U", "Z", "C", "G"],
+        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -1130,7 +829,7 @@ def addCommandsForMenuItems(application):
         cmds1 = m1.renderForMenu(
             selectedMenu=selectedMenu,
             skip=(
-                ["W", "E", "M", "Z"] if p0 == "X" else ["W", "E", "M", "Z", "N", "0"]
+                INDEX_COMMANDS_SKIP_MENUS_SCANNER if p0 == "X" else INDEX_COMMANDS_SKIP_MENUS_BACKTEST
             ),
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
@@ -1147,15 +846,7 @@ def addCommandsForMenuItems(application):
             selectedMenu = m1.find(p1)
             cmds2 = m2.renderForMenu(
                 selectedMenu=selectedMenu,
-                skip=[
-                    "22",
-                    "28",
-                    "29",
-                    "30",
-                    "42",
-                    "M",
-                    "Z",
-                ],
+                skip=UNSUPPORTED_COMMAND_MENUS,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
@@ -1164,7 +855,7 @@ def addCommandsForMenuItems(application):
                 application.add_handler(
                     CommandHandler(f"{p0}_{p1}_{p2}", command_handler)
                 )
-                if p2 in ["6", "7", "21"]:
+                if p2 in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:
                     selectedMenu = m2.find(p2)
                     cmds3 = m3.renderForMenu(
                         selectedMenu=selectedMenu,
