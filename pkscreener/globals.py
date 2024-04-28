@@ -1043,11 +1043,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
         return None, None
-    if executeOption >= 28 and executeOption <= 41:
+    if executeOption >= 29 and executeOption <= 41:
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + "\n[+] Error: Option 28 to 41 Not implemented yet! Press <Enter> to continue."
+            + "\n[+] Error: Option 29 to 41 Not implemented yet! Press <Enter> to continue."
             + colorText.END
         )
         input("Press <Enter> to continue...")
@@ -2545,8 +2545,8 @@ def takeBacktestInputs(
         executeOption=executeOption,
         skip=[
             "0",
-            "28",
             "29",
+            "30",
             "42",
         ],
     )

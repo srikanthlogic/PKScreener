@@ -475,7 +475,7 @@ class StockScreener:
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
-                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25,27] and isValidityCheckMet)
+                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25,27,28] and isValidityCheckMet)
                         or (executeOption == 21 and (mfiStake > 0 and reversalOption in [3,5]))
                         or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
@@ -609,7 +609,7 @@ class StockScreener:
 
     def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
         isValid = True
-        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27]:
+        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27,28]:
             return True
         if executeOption == 11:
             isValid = screener.validateShortTermBullish(
@@ -647,6 +647,8 @@ class StockScreener:
             isValid = screener.validateLowerHighsLowerLows(processedData)
         elif executeOption == 27:
             isValid = screener.findATRCross(processedData)
+        elif executeOption == 28:
+            isValid = screener.findHigherBullishOpens(processedData)
         
         return isValid        
                     

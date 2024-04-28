@@ -481,6 +481,25 @@ class ScreeningStatistics:
         cond4 = cond3 and (recent["Close"].iloc[0] > recent["EMA200"].iloc[0])
         return cond4
     
+    # Find stocks that opened higher than the previous high
+    def findHigherOpens(self, df):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(2)
+        return recent["Open"].iloc[0] > recent["Close"].iloc[1]
+
+    def findHigherBullishOpens(self, df):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(2)
+        return recent["Open"].iloc[0] > recent["High"].iloc[1]
+    
     def findNR4Day(self, df):
         if df is None or len(df) == 0:
             return False

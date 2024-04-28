@@ -402,7 +402,7 @@ class tools:
         coloredStyledValues = cleanedUpStyledValue.split(colorText.END)
         for cleanedUpStyledValue in coloredStyledValues:
             cleanedUpStyledValue = cleanedUpStyledValue.replace(colorText.END,"")
-            if cleanedUpStyledValue.strip() in ["", ","]:
+            if cleanedUpStyledValue.strip() in ["", ",","/"]:
                 if len(cleanedUpStyledValues) > 0:
                     cleanedUpStyledValues[len(cleanedUpStyledValues)-1] = f"{cleanedUpStyledValues[len(cleanedUpStyledValues)-1]}{cleanedUpStyledValue}"
                 else:
