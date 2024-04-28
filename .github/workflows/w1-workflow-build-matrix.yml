@@ -164,12 +164,12 @@ jobs:
             DEP_BUILD: |
               brew install ta-lib
               python3 -m pip install --upgrade pip
-              pip3 uninstall -y PKNSETools
-              pip3 uninstall -y PKDevTools
-              pip3 install -r requirements.txt
-              pip3 install -r requirements-dev.txt
-              pip3 install ta-lib==0.4.28
-              pip3 install .
+              python3 -m pip uninstall -y PKNSETools
+              python3 -m pip uninstall -y PKDevTools
+              python3 -m pip install -r requirements.txt
+              python3 -m pip install -r requirements-dev.txt
+              python3 -m pip install ta-lib==0.4.28
+              python3 -m pip install .
             TEST_BUILD: |
               /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run --testbuild
               exit $?
@@ -192,7 +192,7 @@ jobs:
         shell: bash
         id: releaseversiongetter
         run: |
-          pip3 install requests
+          python3 -m pip install requests
           python3 .github/workflows/githubutilities.py -d
           
       - name: Declare env variables
