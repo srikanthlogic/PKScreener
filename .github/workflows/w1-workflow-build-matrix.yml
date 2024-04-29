@@ -175,7 +175,7 @@ jobs:
           #     exit $?
           #   OUT_PATH: /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run
           #   FILE_NAME: pkscreenercli.run
-          
+
     steps:
       - uses: actions/checkout@v4
         with:
