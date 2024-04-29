@@ -796,7 +796,7 @@ class tools:
             )
 
     def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS",downloadOnly=False):
-        numStocksPerIteration = int(len(stockCodes)/int(len(stockCodes)/10)) + 1
+        numStocksPerIteration = (int(len(stockCodes)/int(len(stockCodes)/10)) if len(stockCodes) >= 10 else len(stockCodes)) + 1
         queueCounter = 0
         iterations = int(len(stockCodes)/numStocksPerIteration) + 1
         tasksList = []
