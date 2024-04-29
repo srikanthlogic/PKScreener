@@ -156,44 +156,44 @@ jobs:
             OUT_PATH: /home/runner/work/PKScreener/PKScreener/dist/pkscreenercli.bin
             FILE_NAME: pkscreenercli.bin
 
-          - os: macos-latest
-            TARGET: MacOS
-            CMD_BUILD: |
-              pyinstaller --onefile --windowed --icon=screenshots/icon.ico pkscreener/pkscreenercli.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
-              mv /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run
-            DEP_BUILD: |
-              brew install ta-lib
-              python3 -m pip install --upgrade pip
-              pip3 uninstall -y PKNSETools
-              pip3 uninstall -y PKDevTools
-              pip3 install -r requirements.txt
-              pip3 install -r requirements-dev.txt
-              pip3 install ta-lib==0.4.28
-              pip3 install .
-            TEST_BUILD: |
-              /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run --testbuild
-              exit $?
-            OUT_PATH: /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run
-            FILE_NAME: pkscreenercli.run
+          # - os: macos-latest
+          #   TARGET: MacOS
+          #   CMD_BUILD: |
+          #     pyinstaller --onefile --windowed --icon=screenshots/icon.ico pkscreener/pkscreenercli.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
+          #     mv /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run
+          #   DEP_BUILD: |
+          #     brew install ta-lib
+          #     python3 -m pip install --upgrade pip
+          #     pip3 uninstall -y PKNSETools
+          #     pip3 uninstall -y PKDevTools
+          #     pip3 install -r requirements.txt
+          #     pip3 install -r requirements-dev.txt
+          #     pip3 install ta-lib==0.4.28
+          #     pip3 install .
+          #   TEST_BUILD: |
+          #     /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run --testbuild
+          #     exit $?
+          #   OUT_PATH: /Users/runner/work/PKScreener/PKScreener/dist/pkscreenercli.run
+          #   FILE_NAME: pkscreenercli.run
           
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch-name }}
 
-      - name: Python venv for MacOS #or remove externally managed env for OSx
-        if: startsWith(runner.os, 'MacOS')
-        shell: bash
-        continue-on-error: true
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          export PIP_BREAK_SYSTEM_PACKAGES=1
-          python3 -m pip install requests
-          # pip cache purge
-          # which brew
-          # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
-          # sudo rm /usr/lib/python3/python\@3*/**/EXTERNALLY-MANAGED
+      # - name: Python venv for MacOS #or remove externally managed env for OSx
+      #   if: startsWith(runner.os, 'MacOS')
+      #   shell: bash
+      #   continue-on-error: true
+      #   run: |
+      #     python3 -m venv venv
+      #     source venv/bin/activate
+      #     export PIP_BREAK_SYSTEM_PACKAGES=1
+      #     python3 -m pip install requests
+      #     # pip cache purge
+      #     # which brew
+      #     # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+      #     # sudo rm /usr/lib/python3/python\@3*/**/EXTERNALLY-MANAGED
 
       - name: Python venv for Linux #or remove externally managed env for OSx
         if: startsWith(runner.os, 'Linux')
