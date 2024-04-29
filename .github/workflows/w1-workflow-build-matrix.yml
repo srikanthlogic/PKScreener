@@ -181,11 +181,27 @@ jobs:
         with:
           ref: ${{ inputs.branch-name }}
 
-      - name: Remove externally managed env for OSx
+      - name: Python venv for MacOS #or remove externally managed env for OSx
         if: startsWith(runner.os, 'MacOS')
         shell: bash
         run: |
-          sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+          python3 -m venv venv
+          source venv/bin/activate
+          # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+
+      - name: Python venv for Linux #or remove externally managed env for OSx
+        if: startsWith(runner.os, 'Linux')
+        shell: bash
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+
+      - name: Python venv for Windows #or remove externally managed env for OSx
+        if: startsWith(runner.os, 'Windows')
+        shell: bash
+        run: |
+          python3 -m venv venv
+          venv\Scripts\activate.bat
 
       - name: Environment setup to get latest released version
         shell: bash
