@@ -188,8 +188,9 @@ jobs:
         run: |
           python3 -m venv venv
           source venv/bin/activate
-          which brew
-          sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+          export PIP_BREAK_SYSTEM_PACKAGES=1
+          # which brew
+          # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
           # sudo rm /usr/lib/python3/python\@3*/**/EXTERNALLY-MANAGED
 
       # - name: Python venv for Linux #or remove externally managed env for OSx
@@ -210,7 +211,6 @@ jobs:
         shell: bash
         id: releaseversiongetters
         run: |
-          export PIP_BREAK_SYSTEM_PACKAGES=1
           pip3 install requests
           python3 .github/workflows/githubutilities.py -d
           
