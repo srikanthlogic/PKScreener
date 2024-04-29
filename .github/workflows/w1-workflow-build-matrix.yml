@@ -187,26 +187,29 @@ jobs:
         run: |
           python3 -m venv venv
           source venv/bin/activate
+          which brew
           # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+          sudo rm /usr/lib/python3/python\@3*/**/EXTERNALLY-MANAGED
 
-      - name: Python venv for Linux #or remove externally managed env for OSx
-        if: startsWith(runner.os, 'Linux')
-        shell: bash
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
+      # - name: Python venv for Linux #or remove externally managed env for OSx
+      #   if: startsWith(runner.os, 'Linux')
+      #   shell: bash
+      #   run: |
+      #     python3 -m venv venv
+      #     source venv/bin/activate
 
-      - name: Python venv for Windows #or remove externally managed env for OSx
-        if: startsWith(runner.os, 'Windows')
-        shell: bash
-        run: |
-          python3 -m venv venv
-          venv\Scripts\activate.bat
+      # - name: Python venv for Windows #or remove externally managed env for OSx
+      #   if: startsWith(runner.os, 'Windows')
+      #   shell: bash
+      #   run: |
+      #     python3 -m venv venv
+      #     venv\Scripts\activate.bat
 
       - name: Environment setup to get latest released version
         shell: bash
-        id: releaseversiongetter
+        id: releaseversiongetters
         run: |
+          export PIP_BREAK_SYSTEM_PACKAGES=1
           pip3 install requests
           python3 .github/workflows/githubutilities.py -d
           
