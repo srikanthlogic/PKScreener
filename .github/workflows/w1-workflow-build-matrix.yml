@@ -181,11 +181,40 @@ jobs:
         with:
           ref: ${{ inputs.branch-name }}
 
-      - name: Environment setup to get latest released version
+      # - name: Python venv for MacOS #or remove externally managed env for OSx
+      #   if: startsWith(runner.os, 'MacOS')
+      #   shell: bash
+      #   continue-on-error: true
+      #   run: |
+      #     python3 -m venv venv
+      #     source venv/bin/activate
+      #     export PIP_BREAK_SYSTEM_PACKAGES=1
+      #     python3 -m pip install requests
+      #     # pip cache purge
+      #     # which brew
+      #     # sudo rm /opt/homebrew/Cellar/python\@3*/**/EXTERNALLY-MANAGED
+      #     # sudo rm /usr/lib/python3/python\@3*/**/EXTERNALLY-MANAGED
+
+      - name: Python venv for Linux #or remove externally managed env for OSx
+        if: startsWith(runner.os, 'Linux')
         shell: bash
-        id: releaseversiongetter
         run: |
           pip3 install requests
+          # python3 -m venv venv
+          # source venv/bin/activate
+
+      - name: Python venv for Windows #or remove externally managed env for OSx
+        if: startsWith(runner.os, 'Windows')
+        shell: bash
+        run: |
+          pip3 install requests
+          # python3 -m venv venv
+          # venv\Scripts\activate.bat
+
+      - name: Environment setup to get latest released version
+        shell: bash
+        id: releaseversiongetters
+        run: |
           python3 .github/workflows/githubutilities.py -d
           
       - name: Declare env variables
