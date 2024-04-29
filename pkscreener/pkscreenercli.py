@@ -30,6 +30,7 @@ warnings.simplefilter("ignore", UserWarning,append=True)
 import argparse
 import builtins
 import logging
+import json
 import traceback
 import datetime
 # Keep module imports prior to classes
@@ -197,6 +198,12 @@ argParser.add_argument(
     "--runintradayanalysis",
     action="store_true",
     help="Run analysis for morning vs EoD LTP values",
+    required=False,
+)
+argParser.add_argument(
+    "--simulate",
+    type=json.loads, # '{"isTrading":true,"currentDateTime":"2024-04-29 09:35:38"}'
+    help="Simulate various conditions",
     required=False,
 )
 argParser.add_argument(
@@ -473,6 +480,10 @@ def pkscreenercli():
         if "PKDevTools_Default_Log_Level" in os.environ.keys():
             del os.environ['PKDevTools_Default_Log_Level']
             # os.environ["PKDevTools_Default_Log_Level"] = str(log.logging.NOTSET)
+    if args.simulate:
+        os.environ["simulation"] = json.dumps(args.simulate)
+    elif "simulation" in os.environ.keys():
+        del os.environ['simulation']
     # Import other dependency here because if we import them at the top
     # multiprocessing behaves in unpredictable ways
     import pkscreener.classes.Utility as Utility
