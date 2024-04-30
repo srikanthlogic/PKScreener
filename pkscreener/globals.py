@@ -553,7 +553,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
     global menuChoiceHierarchy, userPassedArgs
     try:
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
-        if isTrading or userPassedArgs.monitor or ("RSIi" in saveResults.columns):
+        if "RUNNER" not in os.environ.keys() and (isTrading or userPassedArgs.monitor or ("RSIi" in saveResults.columns)):
             screenResults['RSI'] = screenResults['RSI'].astype(str) + "/" + screenResults['RSIi'].astype(str)
             saveResults['RSI'] = saveResults['RSI'].astype(str) + "/" + saveResults['RSIi'].astype(str)
             screenResults.rename(columns={"RSI": "RSI/i"},inplace=True)

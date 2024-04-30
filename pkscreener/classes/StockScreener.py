@@ -114,7 +114,7 @@ class StockScreener:
                 raise StockDataEmptyException(f"Data is None: {data}")
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
-            if backtestDuration == 0 and configManager.calculatersiintraday:
+            if "RUNNER" not in os.environ.keys() and backtestDuration == 0 and configManager.calculatersiintraday:
                 if (intraday_data is not None and not intraday_data.empty):
                     intraday_fullData, intraday_processedData = screener.preprocessData(
                         intraday_data, daysToLookback=configManager.effectiveDaysToLookback
@@ -130,6 +130,9 @@ class StockScreener:
                     processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
                     fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
                 else:
+                    processedData.loc[:,"RSIi"] = np.nan
+                    fullData.loc[:,"RSIi"] = np.nan
+            else:
                     processedData.loc[:,"RSIi"] = np.nan
                     fullData.loc[:,"RSIi"] = np.nan
 
