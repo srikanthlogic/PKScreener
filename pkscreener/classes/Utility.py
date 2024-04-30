@@ -127,8 +127,10 @@ class tools:
             return
         if clearAlways or OutputControls().enableMultipleLineOutput:
             if platform.system() == "Windows":
+                # os.system('color 0f') # sets the background to black with white forerground
                 os.system("cls")
             else:
+                # os.system('setterm -background black -foreground white -store')
                 os.system("clear")
         try:
             if clearAlways or OutputControls().enableMultipleLineOutput:

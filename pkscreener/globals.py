@@ -132,6 +132,7 @@ tasks_queue = None
 results_queue = None
 consumers = None
 logging_queue = None
+mp_manager = None
 
 def finishScreening(
     downloadOnly,
@@ -641,7 +642,7 @@ def refreshStockData(startupoptions=None):
 
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
-    global listStockCodes, screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDictPrimary, stockDictSecondary, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
+    global mp_manager, listStockCodes, screenResults, selectedChoice, defaultAnswer, menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDictPrimary, stockDictSecondary, userPassedArgs, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly, keyboardInterruptEventFired,strategyFilter, elapsed_time, start_time
     selectedChoice = {"0": "", "1": "", "2": "", "3": "", "4": ""}
     elapsed_time = 0
     start_time = 0
@@ -658,12 +659,14 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         return None, None
     screenCounter = multiprocessing.Value("i", 1)
     screenResultsCounter = multiprocessing.Value("i", 0)
+    if mp_manager is None:
+        mp_manager = multiprocessing.Manager()
     if keyboardInterruptEvent is None and not keyboardInterruptEventFired:
-        keyboardInterruptEvent = multiprocessing.Manager().Event()
+        keyboardInterruptEvent = mp_manager.Event()
     keyboardInterruptEventFired = False
     if stockDictPrimary is None:
-        stockDictPrimary = multiprocessing.Manager().dict()
-        stockDictSecondary = multiprocessing.Manager().dict()
+        stockDictPrimary = mp_manager.dict()
+        stockDictSecondary = mp_manager.dict()
         loadCount = 0
     endOfdayCandles = None
     minRSI = 0

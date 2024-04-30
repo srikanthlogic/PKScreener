@@ -78,6 +78,7 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
+    CallbackContext
 )
 
 # Enable logging
@@ -167,7 +168,8 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if data not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
     midSkip = "1" if data == "X" else "N"
-    skipMenus = INDEX_SKIP_MENUS.append(midSkip)
+    skipMenus = [midSkip]
+    skipMenus.extend(INDEX_SKIP_MENUS)
     menuText = (
         m1.renderForMenu(
             m0.find(data),
@@ -220,7 +222,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_1_TO_7,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nN > More options"
+            menuText = menuText + "\n\nN > More options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_1_TO_7,
@@ -237,7 +239,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_8_TO_13,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nP > Previous Options"
+            menuText = menuText + "\n\nP > Previous Options"
             menuText = menuText + "\nM > More Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
@@ -253,7 +255,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_14_TO_19,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nP > Previous Options"
+            menuText = menuText + "\n\nP > Previous Options"
             menuText = menuText + "\n>> More Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
@@ -269,7 +271,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_20_TO_27,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nP > Previous Options"
+            menuText = menuText + "\n\nP > Previous Options"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_20_TO_27,
@@ -868,6 +870,51 @@ def addCommandsForMenuItems(application):
                         application.add_handler(
                             CommandHandler(f"{p0}_{p1}_{p2}_{p3}", command_handler)
                         )
+
+# def send_stuff(context: CallbackContext):
+#   job = context.job
+
+#   keyboard = [ 
+#     [   
+#         InlineKeyboardButton("NEVER", callback_data="NEVER"),
+#         InlineKeyboardButton("UNLIKELY", callback_data="UNLIKELY")
+#     ],  
+#     [   
+#         InlineKeyboardButton("MEH", callback_data="MEH"),
+#         InlineKeyboardButton("MAYBE", callback_data="MAYBE")
+#     ],  
+#     [   
+#         InlineKeyboardButton("YES", callback_data="YES"),
+#         InlineKeyboardButton("ABSOLUTELY", callback_data="ABSOLUTELY")
+#     ],  
+#     [   
+#         InlineKeyboardButton("RATHER NOT SAY", callback_data="UNKNOWN")
+#     ]   
+#   ]
+
+#   reply_markup = InlineKeyboardMarkup(keyboard)
+
+#   context.bot.send_photo(job.context, photo=open(PATH+thefile, 'rb'))
+#   # return values of send_message are saved in the 'msg' var
+#   msg = context.bot.send_message(job.context, text='RATE', reply_markup=reply_markup)
+
+#   # the following job is created every time the send_stuff function is called
+#   context.job_queue.run_once(
+#     callback=cleanup,
+#     when=5,
+#     context=msg,
+#     name='cleanup'
+#   )
+
+# # the function called by the job
+# def cleanup(context: CallbackContext):
+#   job = context.job
+
+#   context.bot.edit_message_text(
+#     chat_id=job.context.chat.id,
+#     text='NO ANSWER PROVIDED',
+#     message_id=job.context.message_id
+#   )
 
 
 def runpkscreenerbot() -> None:
