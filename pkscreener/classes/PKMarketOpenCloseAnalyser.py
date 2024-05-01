@@ -158,7 +158,9 @@ class PKMarketOpenCloseAnalyser:
         #         continue
         return allDailyCandles
     
-    def getIntradayCandleFromMorning(int_cache_file):
+    def getIntradayCandleFromMorning(int_cache_file=None,candle1MinuteNumberSinceMarketStarted=0):
+        if candle1MinuteNumberSinceMarketStarted <= 0:
+            candle1MinuteNumberSinceMarketStarted = PKMarketOpenCloseAnalyser.configManager.morninganalysiscandlenumber
         morningIntradayCandle = None
         intradayDB = PKIntradayStockDataDB(fileName=int_cache_file)
         allDailyIntradayCandles = intradayDB.pickler.pickler.unpickle(fileName=intradayDB.pickler.fileName)
@@ -181,9 +183,9 @@ class PKMarketOpenCloseAnalyser:
                                 index=allDailyIntradayCandles[stock]["index"])
                 df = df.head(numOfCandles)
                 try:
-                    df = df[df.index <=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+PKMarketOpenCloseAnalyser.configManager.morninganalysiscandlenumber}:00+05:30').to_datetime64()]
+                    df = df[df.index <=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+candle1MinuteNumberSinceMarketStarted}:00+05:30').to_datetime64()]
                 except:
-                    df = df[df.index <=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+PKMarketOpenCloseAnalyser.configManager.morninganalysiscandlenumber}:00+05:30', utc=True)]
+                    df = df[df.index <=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+candle1MinuteNumberSinceMarketStarted}:00+05:30', utc=True)]
                     pass
                 if df is not None and len(df) > 0:
                     combinedCandle = {"Open":PKMarketOpenCloseAnalyser.getMorningOpen(df), "High":max(df["High"]), 

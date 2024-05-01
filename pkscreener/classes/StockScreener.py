@@ -130,11 +130,13 @@ class StockScreener:
                     processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
                     fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
                 else:
-                    processedData.loc[:,"RSIi"] = np.nan
-                    fullData.loc[:,"RSIi"] = np.nan
+                    with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
+                        processedData.loc[:,"RSIi"] = np.nan
+                        fullData.loc[:,"RSIi"] = np.nan
             else:
-                    processedData.loc[:,"RSIi"] = np.nan
-                    fullData.loc[:,"RSIi"] = np.nan
+                    with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
+                        processedData.loc[:,"RSIi"] = np.nan
+                        fullData.loc[:,"RSIi"] = np.nan
 
             def returnLegibleData(exceptionMessage=None):
                 if backtestDuration == 0 or menuOption not in ["B"]:
