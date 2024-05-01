@@ -252,7 +252,7 @@ class PKScanRunner:
             
     def runScanWithParams(userPassedArgs,keyboardInterruptEvent,screenCounter,screenResultsCounter,stockDictPrimary,stockDictSecondary,testing, backtestPeriod, menuOption, samplingDuration, items,screenResults, saveResults, backtest_df,scanningCb,tasks_queue, results_queue, consumers,logging_queue):
         if tasks_queue is None or results_queue is None or consumers is None:
-            tasks_queue, results_queue, consumers,logging_queue = PKScanRunner.prepareToRunScan(keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items)
+            tasks_queue, results_queue, consumers,logging_queue = PKScanRunner.prepareToRunScan(menuOption,keyboardInterruptEvent,screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items)
             try:
                 if logging_queue is not None:
                     log_queue_reader = LogQueueReader(logging_queue)
@@ -288,7 +288,7 @@ class PKScanRunner:
             PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
-    def prepareToRunScan(keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items):
+    def prepareToRunScan(menuOption,keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items):
         tasks_queue, results_queue, totalConsumers, logging_queue = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=PKScanRunner.configManager.isIntradayConfig())
@@ -303,6 +303,8 @@ class PKScanRunner:
                         screenResultsCounter,
                         stockDictPrimary,
                         stockDictSecondary,
+                        # (stockDictPrimary if menuOption not in ["C"] else None),
+                        # (stockDictSecondary if menuOption not in ["C"] else None),
                         PKScanRunner.fetcher.proxyServer,
                         keyboardInterruptEvent,
                         default_logger(),
@@ -312,8 +314,8 @@ class PKScanRunner:
                         scr,
                         None,
                         None
-                        #cache_file if exists else None,
-                        #sec_cache_file,
+                        # (cache_file if (exists and menuOption in ["C"]) else None),
+                        # (sec_cache_file if (exists and menuOption in ["C"]) else None),
                     )
                     for _ in range(totalConsumers)
                 ]

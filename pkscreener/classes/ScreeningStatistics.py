@@ -762,22 +762,26 @@ class ScreeningStatistics:
         signal_df = pd.DataFrame(macdSignal)
         diff_df = pd.concat([line_df, signal_df, signal_df-line_df, rsi_df], axis=1)
         diff_df.columns = ["line","signal","diff", "rsi"]
+        # brokerSqrOfftime = None
         try:
             # Let's only consider those candles that are after the alert issue-time in the mornings + 2 candles (for buy/sell)
             diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30').to_datetime64()]
+            # brokerSqrOfftime = pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 15:14:00+05:30').to_datetime64()
         except:
             diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30', utc=True)]
+            # brokerSqrOfftime = pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 15:14:00+05:30', utc=True)
             pass
         index = len(diff_df)
         crossOver = 0
+        
         # Loop until we've found the nth crossover for MACD or we've reached the last point in time
         while (crossOver < nthCrossover and index >=0):
             if diff_df["diff"][index-1] < 0: # Signal line has not crossed yet and is below the zero line
-                while((diff_df["diff"][index-1] < 0 and index >=0)): # or diff_df["rsi"][index-1] <= minRSI):
+                while((diff_df["diff"][index-1] < 0 and index >=0)): # and diff_df.index <= brokerSqrOfftime): # or diff_df["rsi"][index-1] <= minRSI):
                     # Loop while Signal line has not crossed yet and is below the zero line and we've not reached the last point
                     index -= 1
             else:
-                while((diff_df["diff"][index-1] >= 0 and index >=0)): # or diff_df["rsi"][index-1] <= minRSI):
+                while((diff_df["diff"][index-1] >= 0 and index >=0)): # and diff_df.index <= brokerSqrOfftime): # or diff_df["rsi"][index-1] <= minRSI):
                     # Loop until signal line has not crossed yet and is above the zero line
                     index -= 1
             crossOver += 1
