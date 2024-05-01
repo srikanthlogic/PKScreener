@@ -749,7 +749,7 @@ class ScreeningStatistics:
             return True
         return False
 
-    def findMACDCrossover(self, df, afterTimestamp=None, nthCrossover=1, upDirection=True):
+    def findMACDCrossover(self, df, afterTimestamp=None, nthCrossover=1, upDirection=True, minRSI=60):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
@@ -757,24 +757,28 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
         macdLine, macdSignal, macdHist = pktalib.MACD(data["Close"], 12, 26, 9)
+        rsi_df = pktalib.RSI(data["Close"], 14)
         line_df = pd.DataFrame(macdLine)
         signal_df = pd.DataFrame(macdSignal)
-        diff_df = pd.concat([line_df, signal_df, signal_df-line_df], axis=1)
-        diff_df.columns = ["line","signal","diff"]
+        diff_df = pd.concat([line_df, signal_df, signal_df-line_df, rsi_df], axis=1)
+        diff_df.columns = ["line","signal","diff", "rsi"]
         try:
-            # Let's only consider those candles that are after the alert issue-time in the mornings
-            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber}:00+05:30').to_datetime64()]
+            # Let's only consider those candles that are after the alert issue-time in the mornings + 2 candles (for buy/sell)
+            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30').to_datetime64()]
         except:
-            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber}:00+05:30', utc=True)]
+            diff_df = diff_df[diff_df.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30', utc=True)]
             pass
         index = len(diff_df)
         crossOver = 0
+        # Loop until we've found the nth crossover for MACD or we've reached the last point in time
         while (crossOver < nthCrossover and index >=0):
-            if diff_df["diff"][index-1] < 0:
-                while(diff_df["diff"][index-1] < 0 and index >=0):
+            if diff_df["diff"][index-1] < 0: # Signal line has not crossed yet and is below the zero line
+                while((diff_df["diff"][index-1] < 0 and index >=0)): # or diff_df["rsi"][index-1] <= minRSI):
+                    # Loop while Signal line has not crossed yet and is below the zero line and we've not reached the last point
                     index -= 1
             else:
-                while(diff_df["diff"][index-1] >= 0 and index >=0):
+                while((diff_df["diff"][index-1] >= 0 and index >=0)): # or diff_df["rsi"][index-1] <= minRSI):
+                    # Loop until signal line has not crossed yet and is above the zero line
                     index -= 1
             crossOver += 1
         ts = diff_df.tail(len(diff_df)-index +1).head(1).index[-1]
