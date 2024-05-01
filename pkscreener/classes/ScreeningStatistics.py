@@ -757,11 +757,11 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
         macdLine, macdSignal, macdHist = pktalib.MACD(data["Close"], 12, 26, 9)
-        rsi_df = pktalib.RSI(data["Close"], 14)
+        # rsi_df = pktalib.RSI(data["Close"], 14)
         line_df = pd.DataFrame(macdLine)
         signal_df = pd.DataFrame(macdSignal)
-        diff_df = pd.concat([line_df, signal_df, signal_df-line_df, rsi_df], axis=1)
-        diff_df.columns = ["line","signal","diff", "rsi"]
+        diff_df = pd.concat([line_df, signal_df, signal_df-line_df], axis=1)
+        diff_df.columns = ["line","signal","diff"]
         # brokerSqrOfftime = None
         try:
             # Let's only consider those candles that are after the alert issue-time in the mornings + 2 candles (for buy/sell)
