@@ -2039,6 +2039,7 @@ def sendQuickScanResult(
     backtestDetail="",
     summaryLabel = None,
     detailLabel = None,
+    legendPrefixText = ""
 ):
     if "PKDevTools_Default_Log_Level" not in os.environ.keys():
         if (("RUNNER" not in os.environ.keys()) or ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
@@ -2054,7 +2055,8 @@ def sendQuickScanResult(
             addendum=addendum,
             addendumLabel=addendumLabel,
             summaryLabel = summaryLabel,
-            detailLabel = detailLabel
+            detailLabel = detailLabel,
+            legendPrefixText = legendPrefixText
         )
         sendMessageToTelegramChannel(
             message=None,

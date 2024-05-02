@@ -127,10 +127,18 @@ class tools:
             return
         if clearAlways or OutputControls().enableMultipleLineOutput:
             if platform.system() == "Windows":
-                # os.system('color 0f') # sets the background to black with white forerground
+                try:
+                    os.system('color 0f') # sets the background to black with white forerground
+                except:
+                    pass
                 os.system("cls")
+            elif "Darwin" in platform.system():
+                try:
+                    os.system('setterm -background black -foreground white -store')
+                except:
+                    pass
+                os.system("clear")
             else:
-                # os.system('setterm -background black -foreground white -store')
                 os.system("clear")
         try:
             if clearAlways or OutputControls().enableMultipleLineOutput:
@@ -434,7 +442,8 @@ class tools:
         addendum=None,
         addendumLabel=None,
         summaryLabel = None,
-        detailLabel = None
+        detailLabel = None,
+        legendPrefixText = ""
     ):
         if "PKDevTools_Default_Log_Level" not in os.environ.keys():
             if (("RUNNER" in os.environ.keys() and os.environ["RUNNER"] == "LOCAL_RUN_SCANNER")):
@@ -478,7 +487,7 @@ class tools:
 
         repoText = tools.getRepoHelpText(table,backtestSummary)
         artfont_repotext_width, artfont_repotext_height = artfont.getsize_multiline(repoText)
-        legendText = tools.getLegendHelpText(table,backtestSummary)
+        legendText = legendPrefixText + tools.getLegendHelpText(table,backtestSummary)
         _, artfont_legendtext_height = artfont.getsize_multiline(legendText)
         column_separator = "|"
         line_separator = "+"

@@ -37,6 +37,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             self.monitors = monitors
             self.monitorIndex = 0
             self.monitorPositions = {}
+            # self.monitorNames = {}
             # We are going to present the dataframes in a 3x3 matrix with limited set of columns
             rowIndex = 0
             colIndex = 0
@@ -47,6 +48,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             self.lines = 0
             for monitorKey in monitors:
                 self.monitorPositions[monitorKey] = [rowIndex,colIndex]
+                # self.monitorNames[monitorKey] = ""
                 colIndex += self.maxNumColsInEachResult
                 if colIndex > maxColIndex:
                     colIndex = 0
@@ -124,11 +126,12 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                 startRowIndex += 1
 
         self.monitor_df = self.monitor_df.replace(np.nan, "-", regex=True)
+        # self.monitorNames[screenOptions] = f"(Dashboard) > {chosenMenu}"
+        latestScanMenuOption = f"[+] {dbTimestamp} (Dashboard) > " + f"{chosenMenu} [{screenOptions}]"
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + f"[+] {dbTimestamp} (Dashboard) > "
-            + f"{chosenMenu} [{screenOptions}]"
+            + latestScanMenuOption
             + colorText.END
             , enableMultipleLineOutput=True
         )
