@@ -266,16 +266,20 @@ class PKMarketOpenCloseAnalyser:
         screen_df.drop(f"index", axis=1, inplace=True, errors="ignore")
         stocks = save_df["Stock"]
         eodLTPs = []
+        dayHighLTPs = []
         morningTimestamps = []
         sellTimestamps = []
+        dayHighTimestamps = []
         sellLTPs = []
         eodDiffs = []
+        dayHighDiffs = []
         sqrOffDiffs = []
         index = 0
         scrStats = ScreeningStatistics(PKMarketOpenCloseAnalyser.configManager, default_logger())
         for stock in stocks:
             try:
                 # Open, High, Low, Close, Adj Close, Volume. We need the 3rd index item: Close.
+                dayHighLTP = allDailyCandles[stock]["data"][-1][1]
                 endOfDayLTP = allDailyCandles[stock]["data"][-1][3]
                 morningLTP = updatedCandleData[stock]["data"][-1][3] #round(save_df["LTP"][index],2)
                 morningTime = updatedCandleData[stock]["index"][-1].strftime("%H:%M")
@@ -294,33 +298,39 @@ class PKMarketOpenCloseAnalyser:
                                            afterTimestamp=updatedCandleData[stock]["index"][-1],
                                            nthCrossover=1,
                                            upDirection=True)
+                highTS, highRow = scrStats.findIntradayHighCrossover(df=df)
                 sellTimestamps.append(ts.strftime("%H:%M"))
+                dayHighTimestamps.append(highTS.strftime("%H:%M"))
                 sellLTPs.append(row["High"][-1])
                 eodLTPs.append(round(endOfDayLTP,2))
+                dayHighLTPs.append(round(dayHighLTP,2))
                 eodDiffs.append(round(endOfDayLTP - morningLTP,2))
+                dayHighDiffs.append(round(dayHighLTP - morningLTP,2))
                 sqrOffDiffs.append(round(row["High"][-1] - morningLTP,2))
                 index += 1
             except:
                 eodLTPs.append("0")
                 eodDiffs.append("0")
+                dayHighLTPs.append("0")
+                dayHighDiffs.append("0")
                 continue
-        diffColumns = ["AlertTime", "SqrOff", "SqrOffLTP", "SqrOffDiff", "EoDLTP", "EoDDiff"]
-        diffValues = [morningTimestamps, sellTimestamps, sellLTPs, sqrOffDiffs,eodLTPs, eodDiffs]
+        diffColumns = ["AlertTime", "SqrOff", "SqrOffLTP", "SqrOffDiff","DayHighTime","DayHigh","DayHighDiff", "EoDLTP", "EoDDiff"]
+        diffValues = [morningTimestamps, sellTimestamps, sellLTPs, sqrOffDiffs,dayHighTimestamps,dayHighLTPs, dayHighDiffs,eodLTPs, eodDiffs]
         for col in diffColumns:
             save_df[col] = diffValues[diffColumns.index(col)]
             screen_df.loc[:, col] = save_df.loc[:, col].apply(
-                lambda x: x if col in ["AlertTime", "SqrOff", "SqrOffLTP", "EoDLTP"] else ((colorText.GREEN if x >= 0 else colorText.FAIL) + str(x) + colorText.END)
+                lambda x: x if col in ["AlertTime", "SqrOff", "SqrOffLTP", "EoDLTP","DayHigh","DayHighTime"] else ((colorText.GREEN if x >= 0 else colorText.FAIL) + str(x) + colorText.END)
             )
 
         columns = save_df.columns
         lastIndex = len(save_df)
         for col in columns:
-            if col in ["Stock", "Pattern", "LTP", "SqrOffLTP","SqrOffDiff","AlertTime", "EoDLTP", "EoDDiff", "%Chng"]:
+            if col in ["Stock", "Pattern", "LTP", "SqrOffLTP","SqrOffDiff","DayHigh","DayHighDiff","AlertTime", "EoDLTP", "EoDDiff", "%Chng"]:
                 if col == "Stock":
                     save_df.loc[lastIndex,col] = "PORTFOLIO"
                 elif col == "Pattern":
                     save_df.loc[lastIndex,col] = runOptionName if runOptionName is not None else ""
-                elif col in ["LTP", "SqrOffLTP","SqrOffDiff", "EoDLTP", "EoDDiff"]:
+                elif col in ["LTP", "SqrOffLTP","SqrOffDiff", "EoDLTP", "EoDDiff","DayHigh","DayHighDiff"]:
                     save_df.loc[lastIndex,col] = round(sum(save_df[col].dropna(inplace=False).astype(float)),2)
                 elif col == "%Chng":
                     ltpSum = sum(save_df["LTP"].dropna(inplace=False).astype(float))
@@ -331,10 +341,13 @@ class PKMarketOpenCloseAnalyser:
             screen_df.loc[lastIndex,col] = save_df.loc[lastIndex,col]
         eodDiff = save_df.loc[lastIndex,"EoDDiff"]
         sqrOffDiff = save_df.loc[lastIndex,"SqrOffDiff"]
+        dayHighDiff = save_df.loc[lastIndex,"DayHighDiff"]
         save_df.loc[lastIndex,"EoDDiff"] = str(eodDiff) + f'({round(100*2*eodDiff/ltpSum,2)}%)'
         save_df.loc[lastIndex,"SqrOffDiff"] = str(sqrOffDiff) + f'({round(100*2*sqrOffDiff/ltpSum,2)}%)'
+        save_df.loc[lastIndex,"DayHighDiff"] = str(dayHighDiff) + f'({round(100*2*dayHighDiff/ltpSum,2)}%)'
         screen_df.loc[lastIndex,"EoDDiff"] = (colorText.GREEN if eodDiff >= 0 else colorText.FAIL) + save_df.loc[lastIndex,"EoDDiff"] + colorText.END
         screen_df.loc[lastIndex,"SqrOffDiff"] = (colorText.GREEN if sqrOffDiff >= 0 else colorText.FAIL) + save_df.loc[lastIndex,"SqrOffDiff"] + colorText.END
+        screen_df.loc[lastIndex,"DayHighDiff"] = (colorText.GREEN if dayHighDiff >= 0 else colorText.FAIL) + save_df.loc[lastIndex,"DayHighDiff"] + colorText.END
         save_df.set_index("Stock", inplace=True)
         screen_df.set_index("Stock", inplace=True)
         PKMarketOpenCloseAnalyser.allIntradayCandles = None

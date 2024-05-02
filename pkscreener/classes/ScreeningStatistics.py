@@ -749,6 +749,29 @@ class ScreeningStatistics:
             return True
         return False
 
+    def findIntradayHighCrossover(self, df, afterTimestamp=None):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+        diff_df = None
+        try:
+            # Let's only consider those candles that are after the alert issue-time in the mornings + 2 candles (for buy/sell)
+            diff_df = data[data.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30').to_datetime64()]
+            # brokerSqrOfftime = pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 15:14:00+05:30').to_datetime64()
+        except:
+            diff_df = data[data.index >=  pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 09:{15+self.configManager.morninganalysiscandlenumber + 2}:00+05:30', utc=True)]
+            # brokerSqrOfftime = pd.to_datetime(f'{PKDateUtilities.tradingDate().strftime(f"%Y-%m-%d")} 15:14:00+05:30', utc=True)
+            pass
+        dayHighAfterAlert = diff_df["High"].max()
+        highRow = diff_df[diff_df["High"] >= dayHighAfterAlert]
+        if highRow is not None and len(highRow) > 0:
+            highRow = highRow.tail(1)
+        return highRow.index[-1], highRow
+
+
     def findMACDCrossover(self, df, afterTimestamp=None, nthCrossover=1, upDirection=True, minRSI=60):
         if df is None or len(df) == 0:
             return False

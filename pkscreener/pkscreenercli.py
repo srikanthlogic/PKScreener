@@ -327,13 +327,14 @@ def runApplication():
                     traceback.print_exc()
         if optionalFinalOutcome_df is not None:
             final_df = None
+            optionalFinalOutcome_df.drop('FairValue', axis=1, inplace=True, errors="ignore")
             df_grouped = optionalFinalOutcome_df.groupby("Stock")
             for stock, df_group in df_grouped:
                 if stock == "PORTFOLIO":
                     if final_df is None:
-                        final_df = df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]
+                        final_df = df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff","%Chng"]]
                     else:
-                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","%Chng"]]], axis=0)
+                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff","%Chng"]]], axis=0)
             final_df.rename(
                 columns={
                     "LTP": "Morning Portfolio",
