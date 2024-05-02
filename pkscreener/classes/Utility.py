@@ -133,12 +133,12 @@ class tools:
                     pass
                 os.system("cls")
             elif "Darwin" in platform.system():
+                os.system("clear")
+            else:
                 try:
                     os.system('setterm -background black -foreground white -store')
                 except:
                     pass
-                os.system("clear")
-            else:
                 os.system("clear")
         try:
             if clearAlways or OutputControls().enableMultipleLineOutput:
