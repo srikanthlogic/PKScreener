@@ -281,7 +281,7 @@ class PKScanRunner:
                 )
 
         OutputControls().printOutput(colorText.END)
-        if userPassedArgs is not None and (userPassedArgs.monitor is None and "|" not in userPassedArgs.options):
+        if userPassedArgs is not None and (userPassedArgs.monitor is None and "|" not in userPassedArgs.options) and not userPassedArgs.options.upper().startswith("C"):
             # Don't terminate the multiprocessing clients if we're 
             # going to pipe the results from an earlier run
             # or we're running in monitoring mode
@@ -349,7 +349,7 @@ class PKScanRunner:
         if OutputControls().enableMultipleLineOutput:
             sys.stdout.write("\x1b[1A")
 
-    def terminateAllWorkers(consumers, tasks_queue, testing):
+    def terminateAllWorkers(consumers, tasks_queue, testing=False):
         # Exit all processes. Without this, it threw error in next screening session
         for worker in consumers:
             try:
@@ -364,6 +364,7 @@ class PKScanRunner:
                 # try:
                     # while worker.is_alive():
                 worker.terminate()
+                default_logger().debug("Worker terminated!")
                 # except:
                 #     continue
             except OSError as e: # pragma: no cover

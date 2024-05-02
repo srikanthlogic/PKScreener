@@ -281,7 +281,7 @@ class PKMarketOpenCloseAnalyser:
                 # Open, High, Low, Close, Adj Close, Volume. We need the 3rd index item: Close.
                 dayHighLTP = allDailyCandles[stock]["data"][-1][1]
                 endOfDayLTP = allDailyCandles[stock]["data"][-1][3]
-                morningLTP = updatedCandleData[stock]["data"][-1][3] #round(save_df["LTP"][index],2)
+                morningLTP = updatedCandleData[stock]["data"][-1][3] or round(save_df["LTP"][index],2)
                 morningTime = updatedCandleData[stock]["index"][-1].strftime("%H:%M")
                 morningTimestamps.append(morningTime)
                 morningCandles = PKMarketOpenCloseAnalyser.allIntradayCandles

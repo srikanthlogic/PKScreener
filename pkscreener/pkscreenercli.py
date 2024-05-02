@@ -302,7 +302,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData
+    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData, closeWorkersAndExit
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -406,10 +406,12 @@ def runApplication():
                 resultStocks = None
                 results, plainResults = main(userArgs=args)
                 if isInterrupted():
+                    closeWorkersAndExit()
                     sys.exit(0)
                 while pipeResults(plainResults,args):
                     results, plainResults = main(userArgs=args)
             except SystemExit:
+                closeWorkersAndExit()
                 sys.exit(0)
             except Exception as e:
                 default_logger().debug(e, exc_info=True)
@@ -540,6 +542,8 @@ def pkscreenercli():
         if args.intraday is None:
             configManager.toggleConfig(candleDuration="1d", clearCache=False)
         runApplication()
+        from pkscreener.globals import closeWorkersAndExit
+        closeWorkersAndExit()
         sys.exit(0)
     else:
         runApplicationForScreening()
@@ -551,6 +555,7 @@ def runLoopOnScheduleOrStdApplication(hasCronInterval):
         runApplication()
 
 def runApplicationForScreening():
+    from pkscreener.globals import closeWorkersAndExit
     try:
         hasCronInterval = args.croninterval is not None and str(args.croninterval).isnumeric()
         shouldBreak = (args.exit and not hasCronInterval)or args.user is not None or args.testbuild
@@ -562,8 +567,10 @@ def runApplicationForScreening():
         if args.v:
             disableSysOut(disable=False)
             return
+        closeWorkersAndExit()
         sys.exit(0)
     except SystemExit:
+        closeWorkersAndExit()
         sys.exit(0)
     except (RuntimeError, Exception) as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
@@ -577,6 +584,7 @@ def runApplicationForScreening():
         if args.v:
             disableSysOut(disable=False)
             return
+        closeWorkersAndExit()
         sys.exit(0)
 
 
