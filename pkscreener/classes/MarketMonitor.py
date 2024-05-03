@@ -28,7 +28,6 @@ import numpy as np
 from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.ColorText import colorText
-from pkscreener.classes import Utility
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
     def __init__(self,monitors=[], maxNumResultsPerRow=5,maxNumColsInEachResult=6,maxNumRowsInEachResult=10):
@@ -82,6 +81,9 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         screen_monitor_df = screen_df.copy()
         screen_monitor_df.reset_index(inplace=True)
         screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI/i","Volume"]].head(self.maxNumRowsInEachResult-1)
+        # Import Utility here since Utility has dependency on PKScheduler which in turn has dependency on 
+        # multiprocessing, which behaves erratically if imported at the top.
+        from pkscreener.classes import Utility
         screen_monitor_df.loc[:, "%Chng"] = screen_monitor_df.loc[:, "%Chng"].apply(
                     lambda x: Utility.tools.roundOff(str(x).split("% (")[0] + colorText.END,0)
                 )

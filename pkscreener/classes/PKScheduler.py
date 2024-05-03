@@ -28,6 +28,13 @@ import sys
 import time
 warnings.simplefilter("ignore", UserWarning,append=True)
 os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
+
+def init_pool_processes(the_lock):
+    '''Initialize each process with a global variable lock.
+    '''
+    global lock
+    lock = the_lock
+
 import multiprocessing
 from multiprocessing import Lock
 
@@ -40,12 +47,6 @@ from rich.segment import ControlType
 from pkscreener.classes.PKTask import PKTask
 
 multiprocessing.freeze_support()
-
-def init_pool_processes(the_lock):
-    '''Initialize each process with a global variable lock.
-    '''
-    global lock
-    lock = the_lock
 
 # def long_running_fn(*args, **kwargs):
 #     len_of_task = random.randint(3, 20000)  # take some random length of time
