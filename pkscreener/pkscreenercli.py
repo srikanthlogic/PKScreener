@@ -59,7 +59,8 @@ from PKDevTools.classes.OutputControls import OutputControls
 from pkscreener.classes.MarketMonitor import MarketMonitor
 import pkscreener.classes.ConfigManager as ConfigManager
 
-multiprocessing.freeze_support()
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["AUTOGRAPH_VERBOSITY"] = "0"
 

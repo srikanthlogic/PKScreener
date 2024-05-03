@@ -88,7 +88,8 @@ from pkscreener.classes.PKScheduler import PKScheduler
 from pkscreener.classes.PKScanRunner import PKScanRunner
 from pkscreener.classes.PKMarketOpenCloseAnalyser import PKMarketOpenCloseAnalyser
 
-multiprocessing.freeze_support()
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
 # import dataframe_image as dfi
 # import df2img
 # Try Fixing bug with this symbol

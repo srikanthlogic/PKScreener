@@ -46,7 +46,8 @@ from rich.control import Control
 from rich.segment import ControlType
 from pkscreener.classes.PKTask import PKTask
 
-multiprocessing.freeze_support()
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
 
 # def long_running_fn(*args, **kwargs):
 #     len_of_task = random.randint(3, 20000)  # take some random length of time

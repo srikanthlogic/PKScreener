@@ -61,6 +61,7 @@ from PKDevTools.classes import Archiver
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
+from PKDevTools.classes.SuppressOutput import SuppressOutput
 from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
@@ -826,10 +827,12 @@ class tools:
         
         processedStocks = []
         if len(tasksList) > 0:
-            PKScheduler.scheduleTasks(tasksList=tasksList, 
-                                      label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",
-                                      timeout=(5+2.5*configManager.longTimeout*(4 if downloadOnly else 1)), # 5 sec additional time for multiprocessing setup
-                                      minAcceptableCompletionPercentage=(100 if downloadOnly else 100))
+            # Suppress any multiprocessing errors/warnings
+            with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                PKScheduler.scheduleTasks(tasksList=tasksList, 
+                                        label=f"Downloading latest data [{configManager.period},{configManager.duration}] (Total={len(stockCodes)} records in {len(tasksList)} batches){'Be Patient!' if len(stockCodes)> 2000 else ''}",
+                                        timeout=(5+2.5*configManager.longTimeout*(4 if downloadOnly else 1)), # 5 sec additional time for multiprocessing setup
+                                        minAcceptableCompletionPercentage=(100 if downloadOnly else 100))
             for task in tasksList:
                 if task.result is not None:
                     for stock in task.userData:
