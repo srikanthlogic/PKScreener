@@ -47,19 +47,6 @@ from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.ColorText import colorText
 from pkscreener import Imports
 
-if Imports["keras"]:
-    try:
-        import keras
-    except:
-        print("The installation will fail. Please install 'keras' library on your machine!")
-        print(
-                colorText.BOLD
-                + colorText.FAIL
-                + "[+] 'Keras' library is not installed. You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"
-                + colorText.END
-            )
-        pass
-
 import warnings
 from time import sleep
 
@@ -1112,7 +1099,7 @@ class tools:
         return stockDict,stockDataLoaded
 
     # Save screened results to excel
-    def promptSaveResults(df, defaultAnswer=None):
+    def promptSaveResults(sheetName,df, defaultAnswer=None):
         """
         Tries to save the dataframe output into an excel file.
 
@@ -1148,7 +1135,12 @@ class tools:
             filePath = ""
             try:
                 filePath = os.path.join(Archiver.get_user_outputs_dir(), filename)
-                df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
+                # Create a Pandas Excel writer using XlsxWriter as the engine.
+                writer = pd.ExcelWriter(filePath, engine='xlsxwriter') # openpyxl throws an error exporting % sign.
+                # Convert the dataframe to an XlsxWriter Excel object.
+                df.to_excel(writer, sheet_name=sheetName)
+                # Close the Pandas Excel writer and output the Excel file.
+                writer.close()
                 isSaved = True
             except Exception as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
@@ -1162,7 +1154,12 @@ class tools:
                 )
                 try:
                     filePath = os.path.join(desktop, filename)
-                    df.to_excel(filePath, engine="xlsxwriter")  # openpyxl throws an error exporting % sign.
+                    # Create a Pandas Excel writer using XlsxWriter as the engine.
+                    writer = pd.ExcelWriter(filePath, engine='xlsxwriter') # openpyxl throws an error exporting % sign.
+                    # Convert the dataframe to an XlsxWriter Excel object.
+                    df.to_excel(writer, sheet_name=sheetName)
+                    # Close the Pandas Excel writer and output the Excel file.
+                    writer.close()
                     isSaved = True
                 except Exception as ex:  # pragma: no cover
                     default_logger().debug(ex, exc_info=True)
@@ -1175,7 +1172,12 @@ class tools:
                         + colorText.END
                     )
                     filePath = os.path.join(tempfile.gettempdir(), filename)
-                    df.to_excel(filePath,engine="xlsxwriter")
+                    # Create a Pandas Excel writer using XlsxWriter as the engine.
+                    writer = pd.ExcelWriter(filePath, engine='xlsxwriter') # openpyxl throws an error exporting % sign.
+                    # Convert the dataframe to an XlsxWriter Excel object.
+                    df.to_excel(writer, sheet_name=sheetName)
+                    # Close the Pandas Excel writer and output the Excel file.
+                    writer.close()
                     isSaved = True
             OutputControls().printOutput(
                 colorText.BOLD
@@ -1504,6 +1506,18 @@ class tools:
         try:
             if os.path.isfile(files[0]) and os.path.isfile(files[1]):
                 pkl = joblib.load(files[1])
+                if Imports["keras"]:
+                    try:
+                        import keras
+                    except:
+                        print("This installation might not work well, especially for NIFTY prediction. Please install 'keras' library on your machine!")
+                        print(
+                                colorText.BOLD
+                                + colorText.FAIL
+                                + "[+] 'Keras' library is not installed. You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"
+                                + colorText.END
+                            )
+                        pass
                 model = keras.models.load_model(files[0]) if Imports["keras"] else None
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)

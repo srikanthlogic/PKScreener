@@ -2325,12 +2325,13 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
 def saveNotifyResultsFile(
     screenResults, saveResults, defaultAnswer, menuChoiceHierarchy, user=None
 ):
-    global userPassedArgs, elapsed_time
+    global userPassedArgs, elapsed_time, selectedChoice
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
     caption = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b>'
     if screenResults is not None and len(screenResults) >= 1:
-        filename = Utility.tools.promptSaveResults(
+        choices = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
+        filename = Utility.tools.promptSaveResults(choices,
             saveResults, defaultAnswer=defaultAnswer
         )
         # if filename is not None:
@@ -2340,14 +2341,14 @@ def saveNotifyResultsFile(
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.WARN
-            + "[+] Note: Trend calculation is based on number of days 'daysToLookBack' to scan as per your configuration."
+            + "[+] Notes:1.Trend calculation is based on 'daysToLookBack'. See configuration. 2.Reduce the console font size to fit all columns on screen."
             + colorText.END
         )
-        try:
-            if filename is not None:
-                os.remove(filename)
-        except Exception as e:  # pragma: no cover
-            default_logger().debug(e, exc_info=True)
+        # try:
+        #     if filename is not None:
+        #         os.remove(filename)
+        # except Exception as e:  # pragma: no cover
+        #     default_logger().debug(e, exc_info=True)
     if userPassedArgs.monitor is None:
         OutputControls().printOutput(
             colorText.BOLD
