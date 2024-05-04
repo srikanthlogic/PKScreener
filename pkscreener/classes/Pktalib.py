@@ -35,7 +35,11 @@ from PKDevTools.classes.ColorText import colorText
 from pkscreener import Imports
 
 if Imports["talib"]:
-    import talib
+    try:
+        import talib
+    except:
+        print("[+] TA-Lib is not installed. For best results, please install 'TA-Lib' ! Installation failed!")
+        pass
 else:
     try:
         import pandas_ta as talib

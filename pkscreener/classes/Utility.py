@@ -47,7 +47,11 @@ from PKDevTools.classes.log import default_logger
 from pkscreener import Imports
 
 if Imports["keras"]:
-    import keras
+    try:
+        import keras
+    except:
+        print("The installation will fail. Please install 'keras' library on your machine!")
+        pass
 
 import warnings
 from time import sleep
