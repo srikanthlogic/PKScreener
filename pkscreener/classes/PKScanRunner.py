@@ -36,6 +36,7 @@ from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.multiprocessing_logging import LogQueueReader
+from PKDevTools.classes.SuppressOutput import SuppressOutput
 
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
@@ -285,7 +286,7 @@ class PKScanRunner:
             # Don't terminate the multiprocessing clients if we're 
             # going to pipe the results from an earlier run
             # or we're running in monitoring mode
-            PKScanRunner.terminateAllWorkers(consumers, tasks_queue, testing)
+            PKScanRunner.terminateAllWorkers(userPassedArgs,consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
     def prepareToRunScan(menuOption,keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items):
@@ -349,36 +350,38 @@ class PKScanRunner:
         if OutputControls().enableMultipleLineOutput:
             sys.stdout.write("\x1b[1A")
 
-    def terminateAllWorkers(consumers, tasks_queue, testing=False):
-        # Exit all processes. Without this, it threw error in next screening session
-        for worker in consumers:
-            try:
-                if testing: # pragma: no cover
-                    if sys.platform.startswith("win"):
-                        import signal
+    def terminateAllWorkers(userPassedArgs,consumers, tasks_queue, testing=False):
+        shouldSuppress = (userPassedArgs is None) or (userPassedArgs is not None and not userPassedArgs.log)
+        with SuppressOutput(suppress_stderr=shouldSuppress, suppress_stdout=shouldSuppress):
+            # Exit all processes. Without this, it threw error in next screening session
+            for worker in consumers:
+                try:
+                    if testing: # pragma: no cover
+                        if sys.platform.startswith("win"):
+                            import signal
 
-                        signal.signal(signal.SIGBREAK, PKScanRunner.shutdown)
-                        sleep(1)
-                    # worker.join()  # necessary so that the Process exists before the test suite exits (thus coverage is collected)
-                # else:
-                # try:
-                    # while worker.is_alive():
-                worker.terminate()
-                default_logger().debug("Worker terminated!")
-                # except:
-                #     continue
-            except OSError as e: # pragma: no cover
-                default_logger().debug(e, exc_info=True)
-                # if e.winerror == 5:
-                continue
+                            signal.signal(signal.SIGBREAK, PKScanRunner.shutdown)
+                            sleep(1)
+                        # worker.join()  # necessary so that the Process exists before the test suite exits (thus coverage is collected)
+                    # else:
+                    # try:
+                        # while worker.is_alive():
+                    worker.terminate()
+                    default_logger().debug("Worker terminated!")
+                    # except:
+                    #     continue
+                except OSError as e: # pragma: no cover
+                    default_logger().debug(e, exc_info=True)
+                    # if e.winerror == 5:
+                    continue
 
-        # Flush the queue so depending processes will end
-        while True:
-            try:
-                _ = tasks_queue.get(False)
-            except Exception as e:  # pragma: no cover
-                # default_logger().debug(e, exc_info=True)
-                break
+            # Flush the queue so depending processes will end
+            while True:
+                try:
+                    _ = tasks_queue.get(False)
+                except Exception as e:  # pragma: no cover
+                    # default_logger().debug(e, exc_info=True)
+                    break
         PKScanRunner.tasks_queue = None
         PKScanRunner.results_queue = None
         PKScanRunner.scr = None

@@ -644,9 +644,9 @@ def refreshStockData(startupoptions=None):
     PKScanRunner.refreshDatabase(consumers,stockDictPrimary,stockDictSecondary)
 
 def closeWorkersAndExit():
-    global consumers, tasks_queue
+    global consumers, tasks_queue,userPassedArgs
     if consumers is not None:
-        PKScanRunner.terminateAllWorkers(consumers, tasks_queue)
+        PKScanRunner.terminateAllWorkers(userPassedArgs=userPassedArgs,consumers=consumers, tasks_queue=tasks_queue, testing=userPassedArgs.testbuild)
     
 # @tracelog
 def main(userArgs=None,optionalFinalOutcome_df=None):
@@ -2144,7 +2144,7 @@ def runScanners(
     backtest_df,
     testing=False,
 ):
-    global selectedChoice, userPassedArgs, elapsed_time, start_time
+    global selectedChoice, userPassedArgs, elapsed_time, start_time,userPassedArgs
     result = None
     backtest_df = None
     reviewDate = getReviewDate(userPassedArgs)
@@ -2207,7 +2207,7 @@ def runScanners(
                 + "\n[+] Terminating Script, Please wait..."
                 + colorText.END
             )
-            PKScanRunner.terminateAllWorkers(consumers=consumers, tasks_queue=tasks_queue,testing=testing)
+            PKScanRunner.terminateAllWorkers(userPassedArgs=userPassedArgs,consumers=consumers, tasks_queue=tasks_queue,testing=testing)
             logging.shutdown()
         except KeyboardInterrupt:
             pass
@@ -2219,7 +2219,7 @@ def runScanners(
             + f"\nException:\n{e}\n[+] Terminating Script, Please wait..."
             + colorText.END
         )
-        PKScanRunner.terminateAllWorkers(consumers=consumers, tasks_queue=tasks_queue,testing=testing)
+        PKScanRunner.terminateAllWorkers(userPassedArgs=userPassedArgs,consumers=consumers, tasks_queue=tasks_queue,testing=testing)
         logging.shutdown()
 
     if result is not None and len(result) >=3 and "Date" not in saveResults.columns:
