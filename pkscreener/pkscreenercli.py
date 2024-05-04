@@ -468,7 +468,7 @@ def pkscreenercli():
                 traceback.print_exc()
             pass
 
-        OutputControls(enableMultipleLineOutput=(args.monitor is None)).printOutput("",end="\r")
+    OutputControls(enableMultipleLineOutput=(args.monitor is None)).printOutput("",end="\r")
         
     configManager.getConfig(ConfigManager.parser)
     # configManager.restartRequestsCache()

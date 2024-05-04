@@ -38,12 +38,32 @@ if Imports["talib"]:
     try:
         import talib
     except:
-        print("[+] TA-Lib is not installed. For best results, please install 'TA-Lib' ! Installation failed!")
+        print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] 'TA-Lib' library is not installed. For best results, please install 'TA-Lib'! You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"
+                + colorText.END
+            )
+        try:
+            import pandas_ta as talib
+            print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] TA-Lib is not installed. Falling back on pandas_ta.\n[+] For full coverage(candle patterns), you may wish to follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
+                + colorText.END
+            )
+        except:
+            print(
+                colorText.BOLD
+                + colorText.FAIL
+                + "[+] pandas_ta is not installed. Falling back on pandas_ta also failed.\n[+] For full coverage(candle patterns), you may wish to follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
+                + colorText.END
+            )
+            pass
         pass
 else:
     try:
         import pandas_ta as talib
-
         print(
             colorText.BOLD
             + colorText.FAIL
