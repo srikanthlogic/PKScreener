@@ -27,8 +27,8 @@ pip3 install ta-lib==0.4.28
 pip3 install .
 python -m pip install setuptools twine wheel build
 
-python3 setup.py clean build sdist bdist_wheel
-# python -m build --sdist
+# python3 setup.py clean build sdist bdist_wheel
+python -m build --sdist
 
 # Check whether the source distribution will render correctly
 twine check dist/*.tar.gz
