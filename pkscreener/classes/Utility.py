@@ -44,7 +44,7 @@ import numpy as np
 import pytz
 from genericpath import isfile
 from PKDevTools.classes.log import default_logger
-
+from PKDevTools.classes.ColorText import colorText
 from pkscreener import Imports
 
 if Imports["keras"]:
@@ -69,7 +69,6 @@ import pandas as pd
 from alive_progress import alive_bar
 from PIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
-from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.SuppressOutput import SuppressOutput
