@@ -2,14 +2,16 @@
 
 ## What's New?
 1. [v0.44.20240504.332] release
-* ATR cross added X > 12 > 27
-* Higher Opens scanner added X > 12 > 28
-* Performance improvements to have the scans finish within 40 seconds for most cases.
-* Monitoring dashboard added (with option --monitor). See --help option to see all command options.
-* MAcOS failing builds fixed.
+* New scanner: 'ATR cross' added. Try X > 12 > 27
+* New scanner: 'Higher Opens' added. Try X > 12 > 28
+* Performance improvements to have the scans finish within 40 seconds for most cases on Mac/Ubuntu and within 60 seconds on Windows.
+* Monitoring dashboard added (with option --monitor "X"). See --help option to see all command options.
+* MacOS failing builds fixed.
+* Export to Excel is working back again! It was broken inadvertently for a while. Thanks for reporting!
+* NOTE: To fit all result columns on your screen, switch to smaller font size in your console.
 
 ## Older Releases
-* https://github.com/pkjmesra/PKScreener/releases
+* [https://github.com/pkjmesra/PKScreener/releases] : Discarded to save on storage costs!
 
 ## Downloads
 | Operating System                                                                                         | Executable File                                                                                                                                                                                                               |
