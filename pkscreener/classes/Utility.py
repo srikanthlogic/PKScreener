@@ -689,10 +689,10 @@ class tools:
         return legendText
 
     def getDefaultColors():
-        artColors = ["violet", "indigo", "blue", "lightgreen", "yellow", "orange", "red"]
+        artColors = ["blue", "violet", "green", "red", "yellow","orange","indigo"]
         bgColor = "white" if PKDateUtilities.currentDateTime().day % 2 == 0 else "black"
         gridColor = "black" if bgColor == "white" else "white"
-        artColor = random.choice(artColors[3:]) if bgColor == "black" else random.choice(artColors[:3])
+        artColor = random.choice(artColors[3:]) if bgColor == "black" else random.choice(artColors[:4])
         menuColor = "red"
         return bgColor,gridColor,artColor,menuColor
 
