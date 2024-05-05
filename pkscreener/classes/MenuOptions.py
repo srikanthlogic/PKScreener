@@ -33,13 +33,14 @@ configManager = ConfigManager.tools()
 
 level0MenuDict = {
     "X": "Scanners",
+    "M": "Monitor Intraday",
     "S": "Strategies",
     "B": "Backtests",
-    # "G": "Growth of 10k",
+    "G": "Growth of 10k",
+    "C": "Analyse morning vs close outcomes",
     "T": "~",
     "E": "Edit user configuration",
     "Y": "View your user configuration",
-    "C": "Analyse morning vs close outcomes",
     "U": "Check for software update",
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",

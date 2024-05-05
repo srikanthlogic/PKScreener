@@ -30,22 +30,24 @@ from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.ColorText import colorText
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
-    def __init__(self,monitors=[], maxNumResultsPerRow=5,maxNumColsInEachResult=6,maxNumRowsInEachResult=10):
+    def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2):
         super(MarketMonitor, self).__init__()
         if monitors is not None and len(monitors) > 0:
-            self.monitors = monitors
+            
+            self.monitors = monitors[:maxNumResultRowsInMonitor*maxNumResultsPerRow]
             self.monitorIndex = 0
             self.monitorPositions = {}
             # self.monitorNames = {}
             # We are going to present the dataframes in a 3x3 matrix with limited set of columns
             rowIndex = 0
             colIndex = 0
+            self.maxNumResultRowsInMonitor = maxNumResultRowsInMonitor
             self.maxNumRowsInEachResult = maxNumRowsInEachResult
             self.maxNumColsInEachResult = maxNumColsInEachResult
             self.maxNumResultsPerRow = maxNumResultsPerRow
             maxColIndex = self.maxNumColsInEachResult * self.maxNumResultsPerRow - 1
             self.lines = 0
-            for monitorKey in monitors:
+            for monitorKey in self.monitors:
                 self.monitorPositions[monitorKey] = [rowIndex,colIndex]
                 # self.monitorNames[monitorKey] = ""
                 colIndex += self.maxNumColsInEachResult

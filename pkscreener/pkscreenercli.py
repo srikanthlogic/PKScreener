@@ -632,4 +632,7 @@ def scheduleNextRun():
 
 
 if __name__ == "__main__":
-    pkscreenercli()
+    try:
+        pkscreenercli()
+    except KeyboardInterrupt:
+        sys.exit(0)

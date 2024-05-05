@@ -73,9 +73,10 @@ class tools(SingletonMixin, metaclass=SingletonType):
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
-        self.maxDashboardWidgetsPerRow = 6
+        self.maxDashboardWidgetsPerRow = 3
+        self.maxNumResultRowsInMonitor = 2
         self.calculatersiintraday = False
-        self.defaultMonitorOptions = "X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m"
+        self.defaultMonitorOptions = ""#"X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m"
 
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
@@ -168,6 +169,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration)
             parser.set("config", "minimumVolume", str(self.minVolume))
             parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
+            parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
+            parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
+            parser.set("config", "defaultMonitorOptions", "X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m")
             try:
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)
@@ -325,6 +329,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration + "m")
             parser.set("config", "minimumVolume", self.minVolume)
             parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
+            parser.set("config", "defaultMonitorOptions", self.defaultMonitorOptions)
+            parser.set("config", "maxDashboardWidgetsPerRow", self.maxDashboardWidgetsPerRow)
+            parser.set("config", "maxNumResultRowsInMonitor", self.maxNumResultRowsInMonitor)
             # delete stock data due to config change
             self.deleteFileWithPattern()
             OutputControls().printOutput(
@@ -428,6 +435,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.morninganalysiscandleduration = parser.get("config", "morninganalysiscandleduration")
                 self.minVolume = int(parser.get("config", "minimumVolume"))
                 self.backtestPeriodFactor = int(parser.get("config", "backtestPeriodFactor"))
+                self.defaultMonitorOptions = str(parser.get("config", "defaultMonitorOptions"))
+                self.maxDashboardWidgetsPerRow = int(parser.get("config", "maxDashboardWidgetsPerRow"))
+                self.maxNumResultRowsInMonitor = int(parser.get("config", "maxNumResultRowsInMonitor"))
             except configparser.NoOptionError as e:# pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # input(colorText.BOLD + colorText.FAIL +

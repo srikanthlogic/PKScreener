@@ -1073,6 +1073,9 @@ class tools:
                                     # and so, was not found in stockDict
                                 continue
                         stockDataLoaded = True
+                        # Remove the progress bar now!
+                        sys.stdout.write("\x1b[1A")  # cursor up one line
+                        sys.stdout.write("\x1b[2K")  # delete the last line
                 except Exception as e:  # pragma: no cover
                     default_logger().debug(e, exc_info=True)
                     f.close()

@@ -425,7 +425,7 @@ def initExecution(menuOption=None):
                     + colorText.END
                 )
                 sys.exit(0)
-            elif selectedMenu.menuKey in ["B", "C", "G", "H", "U", "T", "S", "E", "X", "Y"]:
+            elif selectedMenu.menuKey in ["B", "C", "G", "H", "U", "T", "S", "E", "X", "Y", "M"]:
                 Utility.tools.clearScreen()
                 selectedChoice["0"] = selectedMenu.menuKey
                 return selectedMenu
@@ -692,7 +692,14 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     # Print Level 1 menu options
     selectedMenu = initExecution(menuOption=menuOption)
     menuOption = selectedMenu.menuKey
-    if menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
+    if menuOption in ["M"]:
+        launcher = sys.argv[0]
+        launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+        print(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
+        sleep(2)
+        os.system(f"{launcher} -a Y -m 'X'")
+        sys.exit(0)
+    elif menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
         # Print Level 2 menu options
         menuOption, indexOption, executeOption, selectedChoice = getScannerMenuChoices(
             testBuild or testing,

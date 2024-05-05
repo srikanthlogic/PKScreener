@@ -5,8 +5,9 @@
 * New scanner: 'ATR cross' added. Try X > 12 > 27
 * New scanner: 'Higher Opens' added. Try X > 12 > 28
 * Performance improvements to have the scans finish within 40 seconds for most cases on Mac/Ubuntu and within 60 seconds on Windows.
-* Monitoring dashboard added (with option --monitor "X"). See --help option to see all command options.
+* Monitoring dashboard added (with option --monitor "X") or just use the menu 'Monitor Intraday'. See --help option to see all command options. Configure how many and what scanners you want in the config file.
 * MacOS failing builds fixed.
+* Menus had disappeared on Windows. That's fixed now. You should see all menus.
 * Export to Excel is working back again! It was broken inadvertently for a while. Thanks for reporting!
 * NOTE: To fit all result columns on your screen, switch to smaller font size in your console.
 
