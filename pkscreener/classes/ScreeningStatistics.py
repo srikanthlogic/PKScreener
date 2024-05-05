@@ -489,6 +489,8 @@ class ScreeningStatistics:
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(2)
+        if len(recent) < 2:
+            return False
         return recent["Open"].iloc[0] > recent["Close"].iloc[1]
 
     def findHigherBullishOpens(self, df):
@@ -498,6 +500,8 @@ class ScreeningStatistics:
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(2)
+        if len(recent) < 2:
+            return False
         return recent["Open"].iloc[0] > recent["High"].iloc[1]
     
     def findNR4Day(self, df):

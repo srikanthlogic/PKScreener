@@ -410,6 +410,12 @@ def initExecution(menuOption=None):
     m0.renderForMenu(selectedMenu=None)
     try:
         if menuOption is None:
+            if "PKDevTools_Default_Log_Level" in os.environ.keys():
+                from PKDevTools.classes import Archiver
+                log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
+                OutputControls().printOutput(colorText.FAIL + "\n    [+] Logs will be written to:"+colorText.END)
+                OutputControls().printOutput(colorText.GREEN + f"    [+] {log_file_path}"+colorText.END)
+                OutputControls().printOutput(colorText.FAIL + "    [+] If you need to share,run through the menus that are causing problems. At the end, open this folder, zip the log file to share at https://github.com/pkjmesra/PKScreener/issues .\n" + colorText.END)
             menuOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ")
             OutputControls().printOutput(colorText.END, end="")
         if menuOption == "" or menuOption is None:
@@ -425,7 +431,7 @@ def initExecution(menuOption=None):
                     + colorText.END
                 )
                 sys.exit(0)
-            elif selectedMenu.menuKey in ["B", "C", "G", "H", "U", "T", "S", "E", "X", "Y", "M"]:
+            elif selectedMenu.menuKey in ["B", "C", "G", "H", "U", "T", "S", "E", "X", "Y", "M", "D", "I", "L"]:
                 Utility.tools.clearScreen()
                 selectedChoice["0"] = selectedMenu.menuKey
                 return selectedMenu
@@ -573,7 +579,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
                 sortKey = ["Volume","MA-Signal"]
                 ascending = [False, False]
         elif executeOption == 23:
-            sortKey = ["bbands_ulr_ratio_max5"]
+            sortKey = ["bbands_ulr_ratio_max5"] if "bbands_ulr_ratio_max5" in screenResults.columns else ["Volume"]
             ascending = [False]
         try:
             try:
@@ -692,12 +698,25 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     # Print Level 1 menu options
     selectedMenu = initExecution(menuOption=menuOption)
     menuOption = selectedMenu.menuKey
-    if menuOption in ["M"]:
+    if menuOption in ["M", "D", "I", "L"]:
         launcher = sys.argv[0]
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
-        print(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
-        sleep(2)
-        os.system(f"{launcher} -a Y -m 'X'")
+        if menuOption in ["M"]:
+            print(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
+            sleep(2)
+            os.system(f"{launcher} -a Y -m 'X'")
+        elif menuOption in ["D"]:
+            print(f"{colorText.GREEN}Launching PKScreener to Download daily OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            sleep(2)
+            os.system(f"{launcher} -a Y -e -d")
+        elif menuOption in ["I"]:
+            print(f"{colorText.GREEN}Launching PKScreener to Download intraday OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d -i 1m{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            sleep(2)
+            os.system(f"{launcher} -a Y -e -d -i 1m")
+        elif menuOption in ["L"]:
+            print(f"{colorText.GREEN}Launching PKScreener to collect logs. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -l{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            sleep(2)
+            os.system(f"{launcher} -a Y -l")
         sys.exit(0)
     elif menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
         # Print Level 2 menu options
@@ -1842,7 +1861,7 @@ def printNotifySaveScreenedResults(
                     ).encode("utf-8").decode(STD_ENCODING)
                     caption_df = saveResultsTrimmed[['LTP','%Chng','Volume']].head(5)
                     caption_df.loc[:, "LTP"] = caption_df.loc[:, "LTP"].apply(
-                        lambda x: str(int(round(x,0)))
+                        lambda x: str(int(round(float(x),0)))
                     )
                     caption_df.loc[:, "%Chng"] = caption_df.loc[:, "%Chng"].apply(
                         lambda x: f'{int(round(float(x.replace("%","")),0))}%'
@@ -2170,6 +2189,13 @@ def runScanners(
                 + f"[+] Starting {'Stock' if menuOption not in ['C'] else 'Intraday'} {'Screening' if menuOption=='X' else ('Analysis' if menuOption == 'C' else 'Backtesting.')}. Press Ctrl+C to stop!"
                 + colorText.END
             )
+        else:
+            OutputControls().printOutput(
+                colorText.BOLD
+                + colorText.FAIL
+                + f"[+] Download ONLY mode (OHLCV for period:{configManager.period}, candle-duration:{configManager.duration} )! Stocks will not be screened!"
+                + colorText.END
+            )
         bar, spinner = Utility.tools.getProgressbarStyle()
         with alive_bar(numStocks, bar=bar, spinner=spinner) as progressbar:
             lstscreen = []
@@ -2187,7 +2213,7 @@ def runScanners(
                 progressbar.text(
                     colorText.BOLD
                     + colorText.GREEN
-                    + f"{'Found' if menuOption in ['X'] else 'Analysed'} {len(lstscreen)} {'Stocks' if menuOption in ['X'] else 'Records'}"
+                    + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
                     + colorText.END
                 )
                 if keyboardInterruptEventFired:

@@ -43,9 +43,12 @@ level0MenuDict = {
     "G": "Growth of 10k",
     "C": "Analyse morning vs close outcomes",
     "T": "~",
+    "D": "Download Daily OHLC Data for the Past Year",
+    "I": "Download Intraday OHLC Data for the Last Trading Day",
     "E": "Edit user configuration",
     "Y": "View your user configuration",
     "U": "Check for software update",
+    "L": "Collect Logs for Debugging",
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",
 }
@@ -463,7 +466,7 @@ class menus:
     def renderLevel0Menus(self, asList=False, renderStyle=None, parent=None, skip=None):
         menuText = self.fromDictionary(
             level0MenuDict,
-            renderExceptionKeys=["T", "E", "U", "Z"],
+            renderExceptionKeys=["T", "E", "U", "Z", "L", "D"],
             renderStyle=renderStyle
             if renderStyle is not None
             else MenuRenderStyle.STANDALONE,

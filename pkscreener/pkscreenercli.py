@@ -215,6 +215,12 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--telegram",
+    action="store_true",
+    help="Run with an assumption that this instance is launched via telegram bot",
+    required=False,
+)
+argParser.add_argument(
     "-u",
     "--user",
     help="Telegram user ID to whom the results must be sent.",
@@ -238,6 +244,13 @@ dbTimestamp = None
 elapsed_time = None
 configManager = ConfigManager.tools()
 
+def removeMonitorFile():
+    from PKDevTools.classes import Archiver
+    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+    try:
+        os.remove(filePath)
+    except:
+        pass
 
 def logFilePath():
     try:
@@ -303,7 +316,7 @@ def warnAboutDependencies():
             input("Press any key to try anyway...")
 
 def runApplication():
-    from pkscreener.globals import main, sendQuickScanResult, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData, closeWorkersAndExit
+    from pkscreener.globals import main, sendQuickScanResult,sendMessageToTelegramChannel, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData, closeWorkersAndExit
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
@@ -408,11 +421,13 @@ def runApplication():
                 results, plainResults = main(userArgs=args)
                 if isInterrupted():
                     closeWorkersAndExit()
+                    removeMonitorFile()
                     sys.exit(0)
                 while pipeResults(plainResults,args):
                     results, plainResults = main(userArgs=args)
             except SystemExit:
                 closeWorkersAndExit()
+                removeMonitorFile()
                 sys.exit(0)
             except Exception as e:
                 default_logger().debug(e, exc_info=True)
@@ -423,7 +438,8 @@ def runApplication():
                 results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
             if results is not None and args.monitor and len(monitorOption_org) > 0:
-                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s")
+                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
+
 
 def pipeResults(prevOutput,args):
     nextOnes = args.options.split(";")
@@ -505,6 +521,14 @@ def pkscreenercli():
         configManager.setConfig(
             ConfigManager.parser, default=True, showFileCreatedText=False
         )
+    if args.telegram:
+        from PKDevTools.classes import Archiver
+        filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+        if os.path.exists(filePath):
+            # Since the file exists, it means, there is another instance running
+            sys.exit(0)
+        import atexit
+        atexit.register(removeMonitorFile)
     # Check and see if we're running only the telegram bot
     if args.bot:
         from pkscreener import pkscreenerbot
@@ -545,6 +569,7 @@ def pkscreenercli():
         runApplication()
         from pkscreener.globals import closeWorkersAndExit
         closeWorkersAndExit()
+        removeMonitorFile()
         sys.exit(0)
     else:
         runApplicationForScreening()
@@ -569,9 +594,11 @@ def runApplicationForScreening():
             disableSysOut(disable=False)
             return
         closeWorkersAndExit()
+        removeMonitorFile()
         sys.exit(0)
     except SystemExit:
         closeWorkersAndExit()
+        removeMonitorFile()
         sys.exit(0)
     except (RuntimeError, Exception) as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
@@ -586,6 +613,7 @@ def runApplicationForScreening():
             disableSysOut(disable=False)
             return
         closeWorkersAndExit()
+        removeMonitorFile()
         sys.exit(0)
 
 
@@ -629,7 +657,6 @@ def scheduleNextRun():
         sleep(int(args.croninterval) if not args.testbuild else 3)
     runApplication()
     cron_runs += 1
-
 
 if __name__ == "__main__":
     try:

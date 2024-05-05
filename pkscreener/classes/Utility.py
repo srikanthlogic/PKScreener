@@ -774,6 +774,7 @@ class tools:
                     pickle.dump(stockDict.copy(), f, protocol=pickle.HIGHEST_PROTOCOL)
                     OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "=> Done." + colorText.END)
                 if downloadOnly:
+                    OutputControls().printOutput(colorText.BOLD + colorText.GREEN + f"=> {cache_file}" + colorText.END)
                     Committer.execOSCommand(f"git add {cache_file} -f >/dev/null 2>&1")
             except pickle.PicklingError as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)
@@ -789,6 +790,8 @@ class tools:
             OutputControls().printOutput(
                 colorText.BOLD + colorText.GREEN + "=> Already Cached." + colorText.END
             )
+            if downloadOnly:
+                    OutputControls().printOutput(colorText.BOLD + colorText.GREEN + f"=> {cache_file}" + colorText.END)
 
     def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS",downloadOnly=False):
         numStocksPerIteration = (int(len(stockCodes)/int(len(stockCodes)/10)) if len(stockCodes) >= 10 else len(stockCodes)) + 1

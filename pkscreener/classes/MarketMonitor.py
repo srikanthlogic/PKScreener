@@ -22,12 +22,14 @@
     SOFTWARE.
 
 """
+import os
 import sys
 import pandas as pd
 import numpy as np
 from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes import Archiver
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
     def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2):
@@ -74,7 +76,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             pass
         return option
 
-    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None, chosenMenu=None, dbTimestamp=""):
+    def refresh(self, screen_df:pd.DataFrame=None, screenOptions=None, chosenMenu=None, dbTimestamp="", telegram=False):
         highlightRows = []
         highlightCols = []
         if screen_df is None or screen_df.empty:
@@ -96,6 +98,30 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             lambda x: Utility.tools.roundOff(x,0)
         )
         screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk H":"52WkH", "RSI":"RSI/i"}, inplace=True)
+        if telegram:
+            telegram_df = screen_monitor_df[["Stock", "LTP", "Ch%", "Vol"]]
+            try:
+                telegram_df.loc[:, "Stock"] = telegram_df.loc[:, "Stock"].apply(
+                    lambda x: x.split('\x1b')[3].replace('\\','') if 'http' in x else x
+                )
+                cols = ["LTP", "Ch%", "Vol"]
+                for col in cols:
+                    telegram_df.loc[:, col] = telegram_df.loc[:, col].apply(
+                        lambda x: x.replace(colorText.FAIL,"").replace(colorText.GREEN,"").replace(colorText.WARN,"").replace(colorText.BOLD,"").replace(colorText.END,"")
+                    )
+                telegram_df.loc[:, "LTP"] = telegram_df.loc[:, "LTP"].apply(
+                    lambda x: str(int(round(float(x),0)))
+                )
+                telegram_df.loc[:, "Ch%"] = telegram_df.loc[:, "Ch%"].apply(
+                    lambda x: f'{int(round(float(x.replace("%","")),0))}%'
+                )
+                telegram_df.loc[:, "Vol"] = telegram_df.loc[:, "Vol"].apply(
+                    lambda x: f'{int(round(float(x.replace("x","")),0))}x'
+                )
+                for col in telegram_df.columns:
+                    telegram_df[col] = telegram_df[col].astype(str)
+            except:
+                pass
         monitorPosition = self.monitorPositions.get(screenOptions)
         if monitorPosition is not None:
             startRowIndex, startColIndex = monitorPosition
@@ -131,11 +157,11 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
 
         self.monitor_df = self.monitor_df.replace(np.nan, "-", regex=True)
         # self.monitorNames[screenOptions] = f"(Dashboard) > {chosenMenu}"
-        latestScanMenuOption = f"[+] {dbTimestamp} (Dashboard) > " + f"{chosenMenu} [{screenOptions}]"
+        latestScanMenuOption = f"{dbTimestamp} (Dashboard) > " + f"{chosenMenu} [{screenOptions}]"
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + latestScanMenuOption
+            + f"[+] {latestScanMenuOption}"
             + colorText.END
             , enableMultipleLineOutput=True
         )
@@ -149,3 +175,23 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         )
         self.lines = len(tabulated_results.splitlines()) + 1 # 1 for the progress bar at the bottom and 1 for the chosenMenu option
         OutputControls().printOutput(tabulated_results, enableMultipleLineOutput=True)
+        if telegram:
+            STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
+            
+            telegram_df_tabulated = colorText.miniTabulator().tabulate(
+                            telegram_df,
+                            headers="keys",
+                            tablefmt=colorText.No_Pad_GridFormat,
+                            showindex=False,
+                            maxcolwidths=[None,None,4,3]
+                        ).encode("utf-8").decode(STD_ENCODING).replace("-K-----S-----C-----R","-K-----S----C---R").replace("%  ","% ").replace("=K=====S=====C=====R","=K=====S====C===R").replace("Vol  |","Vol|").replace("x  ","x")
+            telegram_df_tabulated = telegram_df_tabulated.replace("-E-----N-----E-----R","-E-----N----E---R").replace("=E=====N=====E=====R","=E=====N====E===R")
+            result_output = f"{latestScanMenuOption}\n<pre>{telegram_df_tabulated}</pre>"
+            try:
+                filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+                f = open(filePath, "w")
+                f.write(result_output)
+                f.close()
+            except:
+                pass
+
