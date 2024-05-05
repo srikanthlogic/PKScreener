@@ -185,22 +185,30 @@ rm updater.sh
                     if float(now_components[3]) < float(version_components[3]):
                         prod_update = True
             if prod_update:
+                if skipDownload:
+                    print(
+                        colorText.BOLD
+                        + colorText.GREEN
+                        + f"    [+] A software update (v{tag} [{size} MB]) is available. Check out with the menu option U."
+                        + colorText.END
+                    )
+                    return
                 print(
                     colorText.BOLD
                     + colorText.WARN
                     + "[+] What's New in this Update?\n"
+                    + colorText.END
+                    + colorText.GREEN
                     + OTAUpdater.showWhatsNew()
                     + colorText.END
                 )
-                if skipDownload:
-                    return
                 try:
                     action = input(
                             colorText.BOLD
-                            + colorText.GREEN
+                            + colorText.FAIL
                             + (
                                 "\n[+] New Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
-                                % (str(resp.json()["tag_name"]), size)
+                                % (str(tag), size)
                             )
                         )
                 except EOFError: # user pressed enter
@@ -223,7 +231,7 @@ rm updater.sh
                             + colorText.END
                         )
                         raise (e)
-            elif not prod_update:
+            elif not prod_update and not skipDownload:
                 if tag.lower() == VERSION.lower():
                     print(
                         colorText.BOLD

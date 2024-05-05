@@ -28,6 +28,8 @@ from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes.log import default_logger
 from PKDevTools.classes.OutputControls import OutputControls
 import pkscreener.classes.ConfigManager as ConfigManager
+from pkscreener.classes.OtaUpdater import OTAUpdater
+from pkscreener.classes import VERSION
 
 configManager = ConfigManager.tools()
 
@@ -439,7 +441,7 @@ class menus:
     def renderLevel0Menus(self, asList=False, renderStyle=None, parent=None, skip=None):
         menuText = self.fromDictionary(
             level0MenuDict,
-            renderExceptionKeys=["T", "E", "U"],
+            renderExceptionKeys=["T", "E", "U", "Z"],
             renderStyle=renderStyle
             if renderStyle is not None
             else MenuRenderStyle.STANDALONE,
@@ -461,12 +463,16 @@ class menus:
                     + menuText
                     + """
 
-        Enter your choice > (default is """
+    Enter your choice > (default is """
                     + colorText.WARN
                     + self.find("X").keyTextLabel()
                     + ") "
                     "" + colorText.END
                 )
+                try:
+                    OTAUpdater.checkForUpdate(VERSION, skipDownload=True)
+                except:
+                    pass
             return menuText
 
     def renderLevel1_S_Menus(
@@ -505,7 +511,7 @@ class menus:
                     + menuText
                     + """
 
-        Enter your choice > """
+    Enter your choice > """
                     ""
                 )
             return menuText
@@ -537,7 +543,7 @@ class menus:
                     + menuText
                     + """
 
-        Enter your choice > (default is """
+    Enter your choice > (default is """
                     + colorText.WARN
                     + self.find(str(configManager.defaultIndex)).keyTextLabel()
                     + ")  "
