@@ -32,6 +32,8 @@ from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes import VERSION
 
 configManager = ConfigManager.tools()
+MENU_SEPARATOR = "< "
+LINE_SEPARATOR = "\n"
 
 level0MenuDict = {
     "X": "Scanners",
@@ -67,9 +69,9 @@ level1_X_MenuDict = {
     "8": "Nifty Smallcap 250",
     "9": "Nifty Midcap 50   ",
     "10": "Nifty Midcap 100",
-    "11": "Nifty Midcap 150",
+    "11": "Nifty Midcap 150 ",
     "12": "Nifty (All Stocks)",
-    "13": "Newly Listed (IPOs in last 2 Year)        ",
+    "13": "Newly Listed (IPOs in last 2 Year)           ",
     "14": "F&O Stocks Only",
     "15": "NASDAQ",
     "M": "Back to the Top/Main menu",
@@ -101,7 +103,7 @@ level2_X_MenuDict = {
     "22": "View Stock Performance         ",
     "23": "Breaking out now               ",
     "24": "Higher Highs,Lows & Close (SuperTrend)",
-    "25": "Lower Highs,Lows (Sell/Watch for Rev.)",
+    "25": "Lower Highs,Lows (Watch for Rev.)",
     "26": "Stocks with stock-split/bonus/dividends",
     "27": "ATR Cross                      ",
     "28": "Higher Opens                   ",
@@ -195,6 +197,8 @@ class menu:
         self.isException = None
         self.hasLeftSibling = False
         self.parent = None
+        self.line = 0
+        self.lineIndex = 0
 
     def create(self, key, text, level=0, isException=False, parent=None):
         self.menuKey = str(key)
@@ -202,10 +206,12 @@ class menu:
         self.level = level
         self.isException = isException
         self.parent = parent
+        self.line = 0
+        self.lineIndex = 0
         return self
 
     def keyTextLabel(self):
-        return f"{self.menuKey} > {self.menuText}"
+        return f"{MENU_SEPARATOR}{self.menuKey} > {self.menuText}"
 
     def commandTextKey(self, hasChildren=False):
         cmdText = ""
@@ -313,6 +319,8 @@ class menus:
     ):
         tabLevel = 0
         self.menuDict = {}
+        line = 0
+        lineIndex = 1
         for key in rawDictionary:
             if skip is not None and key in skip:
                 continue
@@ -322,11 +330,25 @@ class menus:
             )
             if key in renderExceptionKeys:
                 m.isException = True
+                line += 2
+                lineIndex = 1
+                m.line = line
+                m.lineIndex = lineIndex
             elif str(key).isnumeric():
                 m.hasLeftSibling = False if tabLevel == 0 else True
+                if tabLevel == 0:
+                    line += 1
+                lineIndex = tabLevel + 1
+                m.line = line
+                m.lineIndex = lineIndex
                 tabLevel = tabLevel + 1
                 if tabLevel >= renderStyle.value:
                     tabLevel = 0
+            else:
+                line += 1
+                lineIndex = 1
+                m.line = line
+                m.lineIndex = lineIndex
             self.menuDict[str(key).upper()] = m
         return self
 
