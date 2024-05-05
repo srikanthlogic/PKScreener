@@ -103,24 +103,33 @@ m3 = menus()
 TOP_LEVEL_SCANNER_MENUS = ["X", "B"]
 TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "T", "E", "U", "Z"]
 INDEX_SKIP_MENUS = ["W","E","M","Z","0","2","3","4","6","7","9","10","13"]
-SCANNER_SKIP_MENUS_1_TO_7 = ["0","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
-SCANNER_SKIP_MENUS_8_TO_13 = ["0","1","2","3","4","5","6","7","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
-SCANNER_SKIP_MENUS_14_TO_19 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
-SCANNER_SKIP_MENUS_20_TO_27 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","22","28","29","30","42","M","Z"]
-SCANNER_MENUS_WITH_NO_SUBMENUS = ["1","2","3","10","11","12","13","14","15","16","17","18","19","20","21","23","24","25","26","27"]
+SCANNER_SKIP_MENUS_1_TO_6 = ["0","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_7_TO_12 = ["0","1","2","3","4","5","6","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_13_TO_18 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_19_TO_25 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","22","26","27","28","29","30","42","M","Z"]
+SCANNER_SKIP_MENUS_26_TO_31 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","29","30","42","M","Z"]
+SCANNER_MENUS_WITH_NO_SUBMENUS = ["1","2","3","10","11","12","13","14","15","16","17","18","19","20","21","23","24","25","26","27","28"]
 SCANNER_MENUS_WITH_SUBMENU_SUPPORT = ["6", "7", "21"]
 
 INDEX_COMMANDS_SKIP_MENUS_SCANNER = ["W", "E", "M", "Z"]
 INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
-UNSUPPORTED_COMMAND_MENUS =["22","28","29","30","42","M","Z"]
-SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27"]
+UNSUPPORTED_COMMAND_MENUS =["22","29","30","42","M","Z"]
+SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Send message on `/start`."""
-    if update is None or update.message is None:
+    updateCarrier = None
+    if update is None:
         return
+    else:
+        if update.callback_query is not None:
+            updateCarrier = update.callback_query
+        if update.message is not None:
+            updateCarrier = update.message
+        if updateCarrier is None:
+            return
     # Get user that sent /start and log his name
-    user = update.message.from_user
+    user = updateCarrier.from_user
     logger.info("User %s started the conversation.", user.first_name)
     # Build InlineKeyboard where each button has a displayed text
     # and a string as callback_data
@@ -147,11 +156,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     cmdText = ""
     for cmd in cmds:
         cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
+    menuText = f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
     # Send message with text and appended InlineKeyboard
-    await update.message.reply_text(
-        f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose.",
-        reply_markup=reply_markup,
-    )
+    if update.callback_query is not None:
+        await sendUpdatedMenu(
+            menuText=menuText, update=update, context=context, reply_markup=reply_markup
+        )
+    elif update.message is not None:
+        await update.message.reply_text(
+            menuText,
+            reply_markup=reply_markup,
+        )
     await context.bot.send_message(
         chat_id=int(f"-{Channel_Id}"),
         text=f"Name: {user.first_name}, Username:@{user.username} with ID: {str(user.id)} started using the bot!",
@@ -181,11 +196,13 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         .replace("\t", "")
         .replace(colorText.FAIL,"").replace(colorText.END,"")
     )
+    menuText = menuText + "\n\nH > Home"
     mns = m1.renderForMenu(
         m0.find(data),
         skip=skipMenus,
         asList=True,
     )
+    mns.append(menu().create("H", "Home", 2))
     inlineMenus = []
     await query.answer()
     for mnu in mns:
@@ -212,73 +229,95 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     selection = preSelection.split("_")
     preSelection = f"{selection[0]}_{selection[1]}"
-    if selection[0].upper() not in TOP_LEVEL_SCANNER_MENUS:
-        return start(update, context)
+    if (selection[0].upper() not in TOP_LEVEL_SCANNER_MENUS):
+        await start(update, context)
+        return START_ROUTES
+    if selection[len(selection)-1].upper() == "H":
+        await start(update, context)
+        return START_ROUTES
     if len(selection) == 2 or (len(selection) == 3 and selection[2] == "P"):
         if str(selection[1]).isnumeric():
             # It's only level 2
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_1_TO_7,
+                skip=SCANNER_SKIP_MENUS_1_TO_6,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\n\nN > More options"
+            menuText = menuText + "\n\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_1_TO_7,
+                skip=SCANNER_SKIP_MENUS_1_TO_6,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             mns.append(menu().create("N", "More Options", 2))
+            mns.append(menu().create("H", "Home", 2))
         elif selection[1] == "N":
             selection.extend(["", ""])
     elif len(selection) == 3:
         if selection[2] == "N":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_8_TO_13,
+                skip=SCANNER_SKIP_MENUS_7_TO_12,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\n\nP > Previous Options"
             menuText = menuText + "\nM > More Options"
+            menuText = menuText + "\n\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_8_TO_13,
+                skip=SCANNER_SKIP_MENUS_7_TO_12,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            mns.append(menu().create("P", "Previous Options", 2))
             mns.append(menu().create("M", "More Options", 2))
+            mns.append(menu().create("H", "Home", 2))
         elif selection[2] == "M":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_14_TO_19,
+                skip=SCANNER_SKIP_MENUS_13_TO_18,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\n\nP > Previous Options"
             menuText = menuText + "\n>> More Options"
+            menuText = menuText + "\n\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_14_TO_19,
+                skip=SCANNER_SKIP_MENUS_13_TO_18,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            mns.append(menu().create("P", "Previous Options", 2))
             mns.append(menu().create(">>", "More Options", 2))
+            mns.append(menu().create("H", "Home", 2))
         elif selection[2] == ">>":
             menuText = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_20_TO_27,
+                skip=SCANNER_SKIP_MENUS_19_TO_25,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\n\nP > Previous Options"
+            menuText = menuText + "\nR > More Options"
+            menuText = menuText + "\n\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
-                skip=SCANNER_SKIP_MENUS_20_TO_27,
+                skip=SCANNER_SKIP_MENUS_19_TO_25,
                 asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            mns.append(menu().create("P", "Previous Options", 2))
+            mns.append(menu().create("R", "More Options", 2))
+            mns.append(menu().create("H", "Home", 2))
+        elif selection[2] == "R":
+            menuText = m2.renderForMenu(
+                m1.find(selection[1]),
+                skip=SCANNER_SKIP_MENUS_26_TO_31,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            menuText = menuText + "\n\nH > Home"
+            mns = m2.renderForMenu(
+                m1.find(selection[1]),
+                skip=SCANNER_SKIP_MENUS_26_TO_31,
+                asList=True,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            mns.append(menu().create("H", "Home", 2))
         elif str(selection[2]).isnumeric():
             preSelection = f"{selection[0]}_{selection[1]}_{selection[2]}"
             if selection[2] in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:

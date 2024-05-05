@@ -32,7 +32,7 @@ from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes import VERSION
 
 configManager = ConfigManager.tools()
-MENU_SEPARATOR = "< "
+MENU_SEPARATOR = ""
 LINE_SEPARATOR = "\n"
 
 level0MenuDict = {
