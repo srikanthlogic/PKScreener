@@ -53,8 +53,8 @@ if "Windows" in platform.system():
         ".github/dependencies/TA_Lib-0.4.28-cp311-cp311-win_amd64.whl"
     ].extend(install_requires)
 elif "Linux" in platform.system():
-    subprocess.Popen(["chmod", "+x", ".github/dependencies/talib.sh"])
-    subprocess.Popen("start .github/dependencies/talib.sh", shell=True)
+    subprocess.Popen(["chmod", "+x", ".github/dependencies/build_tools/github/talib.sh"])
+    subprocess.Popen("start .github/dependencies/build_tools/github/talib.sh", shell=True)
 # For Darwin, brew install ta-lib will work
 
 SYS_MAJOR_VERSION = str(sys.version_info.major)

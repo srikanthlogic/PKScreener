@@ -28,3 +28,9 @@ tensorflow
 urllib3
 xlsxwriter
 yfinance #==0.1.87
+windows-curses; "windows" in sys.platform
+# https://github.com/pkjmesra/PKScreener/blob/main/.github/dependencies/TA_Lib-0.4.28-cp311-cp311-win_amd64.whl; "windows" in sys.platform
+
+# torch
+# torchvision
+# -f https://download.pytorch.org/whl/torch_stable.html
