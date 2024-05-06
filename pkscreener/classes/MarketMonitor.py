@@ -30,6 +30,7 @@ from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes import Archiver
+from PKDevTools.classes.SuppressOutput import SuppressOutput
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
     def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2):
@@ -118,8 +119,9 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                 telegram_df.loc[:, "Vol"] = telegram_df.loc[:, "Vol"].apply(
                     lambda x: f'{int(round(float(x.replace("x","")),0))}x'
                 )
-                for col in telegram_df.columns:
-                    telegram_df[col] = telegram_df[col].astype(str)
+                with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                    for col in telegram_df.columns:
+                        telegram_df[col] = telegram_df[col].astype(str)
             except:
                 pass
         monitorPosition = self.monitorPositions.get(screenOptions)
