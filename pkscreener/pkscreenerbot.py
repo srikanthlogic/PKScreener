@@ -59,6 +59,7 @@ from PKDevTools.classes.ColorText import colorText
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menu, menus
 from pkscreener.classes.WorkflowManager import run_workflow
 from pkscreener.globals import showSendConfigInfo, showSendHelpInfo
+monitor_proc = None
 
 try:
     from telegram import __version_info__
@@ -196,8 +197,9 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         # print(f"launcher is {sys.argv[0]} -a Y -m 'X' -p --telegram")
         try:
             from subprocess import Popen
-            Popen([f"{launcher}","-a","Y","-p","-m","X","--telegram",])
-            # os.system(f"{launcher} -a Y -m 'X' -p --telegram")
+            global monitor_proc
+            if monitor_proc is None or monitor_proc.poll() is not None: # Process finished from an earlier launch
+                monitor_proc = Popen([f"{launcher}","-a","Y","-p","-m","X","--telegram",])
             logger.info(f"{launcher} -a Y -m 'X' -p --telegram launched")
         except Exception as e:
             logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not be launched")

@@ -85,7 +85,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
 
         screen_monitor_df = screen_df.copy()
         screen_monitor_df.reset_index(inplace=True)
-        screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI/i","Volume"]].head(self.maxNumRowsInEachResult-1)
+        screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI/i" if "RSI/i" in screen_monitor_df.columns else "RSI","Volume"]].head(self.maxNumRowsInEachResult-1)
         # Import Utility here since Utility has dependency on PKScheduler which in turn has dependency on 
         # multiprocessing, which behaves erratically if imported at the top.
         from pkscreener.classes import Utility
