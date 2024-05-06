@@ -333,6 +333,10 @@ def runApplication():
             args.options = runOption
             try:
                 optionalFinalOutcome_df,_ = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+                if "EoDDiff" not in optionalFinalOutcome_df.columns:
+                    # Somehow the file must have been corrupted. Let's re-download
+                    configManager.deleteFileWithPattern(pattern="stock_data_*.pkl")
+                    configManager.deleteFileWithPattern(pattern="intraday_stock_data_*.pkl")
                 if isInterrupted():
                     break
             except Exception as e:
