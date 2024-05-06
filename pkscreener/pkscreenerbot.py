@@ -140,7 +140,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     # a list (hence `[[...]]`).
     mns = m0.renderForMenu(asList=True)
     if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
-        mns.append(menu().create("MI", "Intraday Monitor", 2))
+        mns.append(menu().create("MI", "Int. Monitor", 2))
     inlineMenus = []
     for mnu in mns:
         if mnu.menuKey in TOP_LEVEL_SCANNER_MENUS:
@@ -191,23 +191,36 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if data not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
     if data == "MI":
-        # User wants an intraday monitor
-        launcher = "/home/runner/work/PKScreener/PKScreener/pkscreenercli.bin" #if "PKDevTools_Default_Log_Level" in os.environ.keys() else sys.argv[0]
+        from PKDevTools.classes import Archiver
+        filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+        appLogsEnabled = ("PKDevTools_Default_Log_Level" in os.environ.keys())
+        # User wants an Int. Monitor
+        launcher = "/home/runner/work/PKScreener/PKScreener/pkscreenercli.bin" if "MONITORING_BOT_RUNNER" in os.environ.keys() else "pkscreener"
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
         # print(f"launcher is {sys.argv[0]} -a Y -m 'X' -p --telegram")
         try:
             from subprocess import Popen
             global monitor_proc
             if monitor_proc is None or monitor_proc.poll() is not None: # Process finished from an earlier launch
-                monitor_proc = Popen([f"{launcher}","-a","Y","-p","-m","X","--telegram",])
-            logger.info(f"{launcher} -a Y -m 'X' -p --telegram launched")
+                if os.path.exists(filePath):
+                    # Let's remove the old file so that the new app can begin to run
+                    # If we don't remove, it might just exit assuming that there's another instance
+                    # already running.
+                    os.remove(filePath)
+                appArgs = [f"{launcher}","-a","Y","-m","X","--telegram",]
+                if appLogsEnabled:
+                    appArgs.append("-l")
+                else:
+                    appArgs.append("-p")
+                monitor_proc = Popen(appArgs)
+                logger.info(f"{launcher} -a Y -m 'X' -p --telegram launched")
+            else:
+                logger.info(f"{launcher} -a Y -m 'X' -p --telegram already running")
         except Exception as e:
             logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not be launched")
             logger.info(e)
             pass
         try:
-            from PKDevTools.classes import Archiver
-            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
             # if not os.path.exists(filePath):
             #     sleep(5)
             #     if not os.path.exists(filePath):

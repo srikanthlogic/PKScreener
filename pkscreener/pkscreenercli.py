@@ -522,13 +522,20 @@ def pkscreenercli():
             ConfigManager.parser, default=True, showFileCreatedText=False
         )
     if args.telegram:
-        from PKDevTools.classes import Archiver
-        filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
-        if os.path.exists(filePath):
-            # Since the file exists, it means, there is another instance running
+        # Launched by bot for intraday monitor?
+        if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
+            from PKDevTools.classes import Archiver
+            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+            if os.path.exists(filePath):
+                default_logger().info("monitor_outputs.txt already exists! This means an instance may already be running. Exiting now...")
+                # Since the file exists, it means, there is another instance running
+                sys.exit(0)
+            import atexit
+            atexit.register(removeMonitorFile)
+        else:
+            # It should have been launched only during the trading hours
+            default_logger().info("--telegram option must be launched ONLY during NSE trading hours. Exiting now...")
             sys.exit(0)
-        import atexit
-        atexit.register(removeMonitorFile)
     # Check and see if we're running only the telegram bot
     if args.bot:
         from pkscreener import pkscreenerbot
