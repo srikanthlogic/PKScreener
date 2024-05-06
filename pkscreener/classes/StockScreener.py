@@ -654,7 +654,7 @@ class StockScreener:
         elif executeOption == 25:
             isValid = screener.validateLowerHighsLowerLows(processedData)
         elif executeOption == 27:
-            isValid = screener.findATRCross(processedData)
+            isValid = screener.findATRCross(processedData,saveDictionary, screeningDictionary)
         elif executeOption == 28:
             isValid = screener.findHigherBullishOpens(processedData)
         

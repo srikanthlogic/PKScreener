@@ -25,6 +25,7 @@
 """
 import copy
 import datetime
+import shutil
 import sys
 import os
 import numpy as np
@@ -110,6 +111,15 @@ class PKMarketOpenCloseAnalyser:
                 input("Press any key to continue...")
             PKMarketOpenCloseAnalyser.configManager.period = savedPeriod
             PKMarketOpenCloseAnalyser.configManager.duration = savedDuration
+        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        try:
+            if os.path.exists(copyFilePath) and exists:
+                shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
+            if not os.path.exists(copyFilePath) and exists: # Let's make a copy of the original one
+                shutil.copy(srcFilePath,copyFilePath)
+        except:
+            pass
         return exists, cache_file
 
     def ensureDailyStockDataExists():
@@ -126,6 +136,15 @@ class PKMarketOpenCloseAnalyser:
                 print(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
                 print(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d{colorText.END} and then run this menu option again.")
                 input("Press any key to continue...")
+        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        try:
+            if os.path.exists(copyFilePath) and exists:
+                shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
+            if not os.path.exists(copyFilePath) and exists: # Let's make a copy of the original one
+                shutil.copy(srcFilePath,copyFilePath)
+        except:
+            pass
         return exists, cache_file
     
     def simulateMorningTrade(updatedCandleData):
@@ -281,7 +300,8 @@ class PKMarketOpenCloseAnalyser:
                 # Open, High, Low, Close, Adj Close, Volume. We need the 3rd index item: Close.
                 dayHighLTP = allDailyCandles[stock]["data"][-1][1]
                 endOfDayLTP = allDailyCandles[stock]["data"][-1][3]
-                morningLTP = updatedCandleData[stock]["data"][-1][3] or round(save_df["LTP"][index],2)
+                savedMorningLTP = updatedCandleData[stock]["data"][-1][3]
+                morningLTP = savedMorningLTP if pd.notna(savedMorningLTP) else round(save_df["LTP"][index],2)
                 morningTime = updatedCandleData[stock]["index"][-1].strftime("%H:%M")
                 morningTimestamps.append(morningTime)
                 morningCandles = PKMarketOpenCloseAnalyser.allIntradayCandles
@@ -299,6 +319,7 @@ class PKMarketOpenCloseAnalyser:
                                            nthCrossover=1,
                                            upDirection=True)
                 highTS, highRow = scrStats.findIntradayHighCrossover(df=df)
+                dayHighLTP = dayHighLTP if pd.notna(dayHighLTP) else highRow["High"][-1]
                 sellTimestamps.append(ts.strftime("%H:%M"))
                 dayHighTimestamps.append(highTS.strftime("%H:%M"))
                 sellLTPs.append(row["High"][-1])
@@ -351,6 +372,8 @@ class PKMarketOpenCloseAnalyser:
         save_df.set_index("Stock", inplace=True)
         screen_df.set_index("Stock", inplace=True)
         PKMarketOpenCloseAnalyser.allIntradayCandles = None
+        screen_df.replace(np.nan, "", regex=True)
+        save_df.replace(np.nan, "", regex=True)
         if 'index' in save_df.columns:
             save_df.drop('index', axis=1, inplace=True, errors="ignore")
         if 'index' in screen_df.columns:

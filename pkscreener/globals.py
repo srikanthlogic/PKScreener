@@ -581,6 +581,9 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         elif executeOption == 23:
             sortKey = ["bbands_ulr_ratio_max5"] if "bbands_ulr_ratio_max5" in screenResults.columns else ["Volume"]
             ascending = [False]
+        elif executeOption == 27: # ATR Cross
+            sortKey = ["ATR"] if "ATR" in screenResults.columns else ["Volume"]
+            ascending = [False]
         try:
             try:
                 screenResults[sortKey] = screenResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
@@ -598,6 +601,10 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5", "RSIi"]
         if userPassedArgs is not None and userPassedArgs.options is not None and userPassedArgs.options.upper().startswith("C"):
             columnsToBeDeleted.append("FairValue")
+        if executeOption == 27: # ATR Cross
+            columnsToBeDeleted.append("Consol.")
+            screenResults['ATR'] = screenResults['ATR'].astype(str)
+            screenResults['ATR'] = colorText.GREEN + screenResults['ATR'] + colorText.END
         for column in columnsToBeDeleted:
             if column in saveResults.columns:
                 saveResults.drop(column, axis=1, inplace=True, errors="ignore")

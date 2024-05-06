@@ -218,7 +218,7 @@ class ScreeningStatistics:
         return diff
 
     # Find ATR cross stocks
-    def findATRCross(self, df):
+    def findATRCross(self, df,saveDict, screenDict):
         #https://chartink.com/screener/stock-crossing-atr
         if df is None or len(df) == 0:
             return False
@@ -233,6 +233,8 @@ class ScreeningStatistics:
         bullishRSI = recent["RSI"].iloc[0] >= 55 or recent["RSIi"].iloc[0] >= 55
         smav7 = pktalib.SMA(data["Volume"],timeperiod=7).tail(1).iloc[0]
         atrCrossCondition = atrCross and bullishRSI and (smav7 < recent["Volume"].iloc[0])
+        saveDict["ATR"] = round(atr.tail(1).iloc[0],1)
+        screenDict["ATR"] = saveDict["ATR"] #(colorText.GREEN if atrCrossCondition else colorText.FAIL) + str(atr.tail(1).iloc[0]) + colorText.END
         return atrCrossCondition
 
 # study(title="UT Bot Alerts", overlay = true)
@@ -782,13 +784,16 @@ class ScreeningStatistics:
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
+        data.dropna(axis=0, how="all", inplace=True) # Maybe there was no trade done at these times?
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
         macdLine, macdSignal, macdHist = pktalib.MACD(data["Close"], 12, 26, 9)
         # rsi_df = pktalib.RSI(data["Close"], 14)
         line_df = pd.DataFrame(macdLine)
         signal_df = pd.DataFrame(macdSignal)
-        diff_df = pd.concat([line_df, signal_df, signal_df-line_df], axis=1)
-        diff_df.columns = ["line","signal","diff"]
+        vol_df = data["Volume"]
+        diff_df = pd.concat([line_df, signal_df, signal_df-line_df,vol_df], axis=1)
+        diff_df.columns = ["line","signal","diff","vol"]
+        diff_df = diff_df[diff_df["vol"] > 0] # We're not going to do anything with a candle where there was no trade.
         # brokerSqrOfftime = None
         try:
             # Let's only consider those candles that are after the alert issue-time in the mornings + 2 candles (for buy/sell)
@@ -813,7 +818,7 @@ class ScreeningStatistics:
                     index -= 1
             crossOver += 1
         ts = diff_df.tail(len(diff_df)-index +1).head(1).index[-1]
-        return ts, df[df.index == ts] #df.head(len(df) -index +1).tail(1)
+        return ts, data[data.index == ts] #df.head(len(df) -index +1).tail(1)
     
     # Find stock showing RSI crossing with RSI 9 SMA
     def findRSICrossingMA(self, df, screenDict, saveDict,lookFor=1, maLength=9, rsiKey="RSI"):
