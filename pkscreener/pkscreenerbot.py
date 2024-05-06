@@ -198,8 +198,10 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             from subprocess import Popen
             Popen([f"{launcher}","-a","Y","-p","-m","X","--telegram",])
             # os.system(f"{launcher} -a Y -m 'X' -p --telegram")
-            print(f"{launcher} -a Y -m 'X' -p --telegram launched")
-        except:
+            logger.info(f"{launcher} -a Y -m 'X' -p --telegram launched")
+        except Exception as e:
+            logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not be launched")
+            logger.info(e)
             pass
         try:
             from PKDevTools.classes import Archiver
@@ -446,6 +448,8 @@ def default_markup(inlineMenus):
 
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup, replaceWhiteSpaces=True):
     try:
+        if update.callback_query.message.text == menuText:
+            menuText = f"Something went wrong! Maybe try again later.\n{PKDateUtilities.currentDateTime()}: {menuText}"
         await update.callback_query.edit_message_text(
             text=menuText.replace("     ", "").replace("    ", "").replace("\t", "").replace(colorText.FAIL,"").replace(colorText.END,"") if replaceWhiteSpaces else menuText,
             parse_mode="HTML",
