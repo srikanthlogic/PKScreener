@@ -301,7 +301,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             menuText = menuText + "\n\nN > More options"
-            menuText = menuText + "\n\nH > Home"
+            menuText = menuText + "\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_1_TO_6,
@@ -319,8 +319,8 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_7_TO_12,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nM > More Options"
-            menuText = menuText + "\n\nH > Home"
+            menuText = menuText + "\n\nM > More Options"
+            menuText = menuText + "\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_7_TO_12,
@@ -335,8 +335,8 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_13_TO_18,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\n>> More Options"
-            menuText = menuText + "\n\nH > Home"
+            menuText = menuText + "\n\n>> More Options"
+            menuText = menuText + "\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_13_TO_18,
@@ -351,8 +351,8 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 skip=SCANNER_SKIP_MENUS_19_TO_25,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
-            menuText = menuText + "\nR > More Options"
-            menuText = menuText + "\n\nH > Home"
+            menuText = menuText + "\n\nR > More Options"
+            menuText = menuText + "\nH > Home"
             mns = m2.renderForMenu(
                 m1.find(selection[1]),
                 skip=SCANNER_SKIP_MENUS_19_TO_25,
