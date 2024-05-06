@@ -191,8 +191,9 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return start(update, context)
     if data == "MI":
         # User wants an intraday monitor
-        launcher = "pkscreener" if "PKDevTools_Default_Log_Level" in os.environ.keys() else sys.argv[0]
+        launcher = "pkscreener" #if "PKDevTools_Default_Log_Level" in os.environ.keys() else sys.argv[0]
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+        print(f"launcher is {sys.argv[0]} -a Y -m 'X' -p --telegram")
         try:
             from subprocess import Popen
             Popen([f"{launcher}","-a","Y","-p","-m","X","-p","--telegram",])
@@ -209,9 +210,12 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             #         f = open(filePath, "w")
             #         f.write("Please wait...")
             #         f.close()
-            f = open(filePath, "r")
-            result_outputs = f.read()
-            f.close()
+            if os.path.exists(filePath):
+                f = open(filePath, "r")
+                result_outputs = f.read()
+                f.close()
+            else:
+                result_outputs = "No New update. Please try again in the next few seconds."
             await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
         except:
