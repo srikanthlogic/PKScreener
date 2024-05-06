@@ -638,7 +638,7 @@ class tools:
                     colPixelRunValue += col_width_sep + 1
                 style = "red" if not red else gridColor
                 red = not red
-                lineitem = lineitem.replace(":","***:")
+                lineitem = lineitem.replace(": ","***: ")
                 draw.text(
                     (colPixelRunValue, rowPixelRunValue),
                     lineitem,
