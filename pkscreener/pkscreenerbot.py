@@ -220,7 +220,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 result_outputs = "Monitor is running, but the results are being prepared. Try again in next few seconds."
                 logger.info(f"{launcher} -a Y -m 'X' -p --telegram already running")
         except Exception as e:
-            result_outputs = "Something went wrong with the monitor. Try again later."
+            result_outputs = "Hmm...It looks like you caught us taking a break! Try again later :-)"
             logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not be launched")
             logger.info(e)
             pass
@@ -231,8 +231,10 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 f.close()
             await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
-        except:
-            result_outputs = "Something went wrong with the monitor. Try again later."
+        except Exception as e:
+            result_outputs = "Hmm...It looks like you caught us taking a break! Try again later :-)"
+            logger.info(e)
+            logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not read {filePath}")
             await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
 
@@ -274,7 +276,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show new choice of buttons"""
     inlineMenus = []
-    menuText = "Something went wrong! Please try again..."
+    menuText = "Hmm...It looks like you caught us taking a break! Try again later :-)"
     mns = []
     query = update.callback_query
     await query.answer()
