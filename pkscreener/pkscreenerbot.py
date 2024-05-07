@@ -197,7 +197,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         # User wants an Int. Monitor
         launcher = "/home/runner/work/PKScreener/PKScreener/pkscreenercli.bin" if "MONITORING_BOT_RUNNER" in os.environ.keys() else "pkscreener"
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
-        # print(f"launcher is {sys.argv[0]} -a Y -m 'X' -p --telegram")
+        result_outputs = "Starting up the monitor for this hour. Please try again after 30-40 seconds."
         try:
             from subprocess import Popen
             global monitor_proc
@@ -215,28 +215,23 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 monitor_proc = Popen(appArgs)
                 logger.info(f"{launcher} -a Y -m 'X' -p --telegram launched")
             else:
+                result_outputs = "Monitor is running, but the results are being prepared. Try again in next few seconds."
                 logger.info(f"{launcher} -a Y -m 'X' -p --telegram already running")
         except Exception as e:
+            result_outputs = "Something went wrong with the monitor. Try again later."
             logger.info(f"{launcher} -a Y -m 'X' -p --telegram could not be launched")
             logger.info(e)
             pass
         try:
-            # if not os.path.exists(filePath):
-            #     sleep(5)
-            #     if not os.path.exists(filePath):
-            #         f = open(filePath, "w")
-            #         f.write("Please wait...")
-            #         f.close()
             if os.path.exists(filePath):
                 f = open(filePath, "r")
                 result_outputs = f.read()
                 f.close()
-            else:
-                result_outputs = "No New update. Please try again in the next few seconds."
             await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
         except:
-            await start(update, context, updatedResults="No New update. Please try again in the next few seconds.")
+            result_outputs = "Something went wrong with the monitor. Try again later."
+            await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
 
     midSkip = "1" if data == "X" else "N"
@@ -464,7 +459,7 @@ def default_markup(inlineMenus):
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup, replaceWhiteSpaces=True):
     try:
         if update.callback_query.message.text == menuText:
-            menuText = f"Something went wrong! Maybe try again later.\n{PKDateUtilities.currentDateTime()}: {menuText}"
+            menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
         await update.callback_query.edit_message_text(
             text=menuText.replace("     ", "").replace("    ", "").replace("\t", "").replace(colorText.FAIL,"").replace(colorText.END,"") if replaceWhiteSpaces else menuText,
             parse_mode="HTML",
