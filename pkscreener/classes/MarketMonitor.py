@@ -159,11 +159,11 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
 
         self.monitor_df = self.monitor_df.replace(np.nan, "-", regex=True)
         # self.monitorNames[screenOptions] = f"(Dashboard) > {chosenMenu}"
-        latestScanMenuOption = f"{dbTimestamp} (Dashboard) > " + f"{chosenMenu} [{screenOptions}]"
+        latestScanMenuOption = f"[+] {dbTimestamp} (Dashboard) > " + f"{chosenMenu} [{screenOptions}]"
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + f"[+] {latestScanMenuOption}"
+            + latestScanMenuOption
             + colorText.END
             , enableMultipleLineOutput=True
         )
@@ -188,9 +188,9 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
                             maxcolwidths=[None,None,4,3]
                         ).encode("utf-8").decode(STD_ENCODING).replace("-K-----S-----C-----R","-K-----S----C---R").replace("%  ","% ").replace("=K=====S=====C=====R","=K=====S====C===R").replace("Vol  |","Vol|").replace("x  ","x")
             telegram_df_tabulated = telegram_df_tabulated.replace("-E-----N-----E-----R","-E-----N----E---R").replace("=E=====N=====E=====R","=E=====N====E===R")
-            result_output = f"{latestScanMenuOption}\n<pre>{telegram_df_tabulated}</pre>"
+            result_output = f"Latest data as of:{dbTimestamp}\n<b>{chosenMenu.split('>')[-1]}</b> [{screenOptions}]\n<pre>{telegram_df_tabulated}</pre>"
             try:
-                filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+                filePath = os.path.join(Archiver.get_user_outputs_dir(), f"monitor_outputs_{self.monitorIndex}.txt")
                 f = open(filePath, "w")
                 f.write(result_output)
                 f.close()

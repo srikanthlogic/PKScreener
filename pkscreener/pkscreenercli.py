@@ -246,11 +246,14 @@ configManager = ConfigManager.tools()
 
 def removeMonitorFile():
     from PKDevTools.classes import Archiver
-    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
-    try:
-        os.remove(filePath)
-    except:
-        pass
+    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
+    index = 0
+    while index < configManager.maxDashboardWidgetsPerRow*configManager.maxNumResultRowsInMonitor:
+        try:
+            os.remove(f"{filePath}_{index}.txt")
+        except:
+            pass
+        index += 1
 
 def logFilePath():
     try:
@@ -529,9 +532,9 @@ def pkscreenercli():
         # Launched by bot for intraday monitor?
         if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
             from PKDevTools.classes import Archiver
-            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs_0.txt")
             if os.path.exists(filePath):
-                default_logger().info("monitor_outputs.txt already exists! This means an instance may already be running. Exiting now...")
+                default_logger().info("monitor_outputs_0.txt already exists! This means an instance may already be running. Exiting now...")
                 # Since the file exists, it means, there is another instance running
                 sys.exit(0)
             import atexit

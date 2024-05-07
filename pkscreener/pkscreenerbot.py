@@ -59,7 +59,10 @@ from PKDevTools.classes.ColorText import colorText
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menu, menus
 from pkscreener.classes.WorkflowManager import run_workflow
 from pkscreener.globals import showSendConfigInfo, showSendHelpInfo
+import pkscreener.classes.ConfigManager as ConfigManager
+
 monitor_proc = None
+configManager = ConfigManager.tools()
 
 try:
     from telegram import __version_info__
@@ -119,7 +122,7 @@ INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
 UNSUPPORTED_COMMAND_MENUS =["22","29","30","42","M","Z"]
 SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28"]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None) -> int:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None, monitorIndex=0) -> int:
     """Send message on `/start`."""
     updateCarrier = None
     if update is None:
@@ -139,11 +142,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     # The keyboard is a list of button rows, where each row is in turn
     # a list (hence `[[...]]`).
     mns = m0.renderForMenu(asList=True)
-    if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
-        mns.append(menu().create("MI", "Int. Monitor", 2))
+    if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()) or sys.argv[0].endswith(".py"):
+        mns.append(menu().create(f"MI_{monitorIndex}", "Int. Monitor", 2))
     inlineMenus = []
     for mnu in mns:
-        if mnu.menuKey in TOP_LEVEL_SCANNER_MENUS:
+        if mnu.menuKey[0:2] in TOP_LEVEL_SCANNER_MENUS:
             inlineMenus.append(
                 InlineKeyboardButton(
                     mnu.menuText.split("(")[0],
@@ -185,21 +188,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     # Tell ConversationHandler that we're in state `FIRST` now
     return START_ROUTES
 
+def removeMonitorFile():
+    from PKDevTools.classes import Archiver
+    configManager.getConfig(ConfigManager.parser)
+    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
+    index = 0
+    while index < configManager.maxDashboardWidgetsPerRow*configManager.maxNumResultRowsInMonitor:
+        try:
+            os.remove(f"{filePath}_{index}.txt")
+        except:
+            pass
+        index += 1
+
 def launchIntradayMonitor():
     from PKDevTools.classes import Archiver
-    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs.txt")
+    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
     result_outputs = ""
-    if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
+    if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys() or sys.argv[0].endswith(".py")):
         result_outputs = "Starting up the monitor for this hour. Please try again after 30-40 seconds."
     else:
         result_outputs = f"{PKDateUtilities.currentDateTime()}\nIntraday Monitor is available only during the NSE trading hours! Please try during the next trading session."
         try:
-            os.remove(filePath)
+            removeMonitorFile()
         except:
             pass
         return result_outputs, filePath
 
-    appLogsEnabled = ("PKDevTools_Default_Log_Level" in os.environ.keys())
+    appLogsEnabled = ("PKDevTools_Default_Log_Level" in os.environ.keys() or sys.argv[0].endswith(".py"))
     # User wants an Int. Monitor
     launcher = "/home/runner/work/PKScreener/PKScreener/pkscreenercli.bin" if "MONITORING_BOT_RUNNER" in os.environ.keys() else "pkscreener"
     launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
@@ -208,11 +223,10 @@ def launchIntradayMonitor():
         from subprocess import Popen
         global monitor_proc
         if monitor_proc is None or monitor_proc.poll() is not None: # Process finished from an earlier launch
-            if os.path.exists(filePath):
-                # Let's remove the old file so that the new app can begin to run
-                # If we don't remove, it might just exit assuming that there's another instance
-                # already running.
-                os.remove(filePath)
+            # Let's remove the old file(s) so that the new app can begin to run
+            # If we don't remove, it might just exit assuming that there's another instance
+            # already running.
+            removeMonitorFile()
             appArgs = [f"{launcher}","-a","Y","-m","X","--telegram",]
             if appLogsEnabled:
                 appArgs.append("-l")
@@ -234,22 +248,27 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show new choice of buttons"""
     query = update.callback_query
     data = query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G").replace("CMI", "MI")
-    if data not in TOP_LEVEL_SCANNER_MENUS:
+    if data[0:2] not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
-    if data == "MI":
+    if data.startswith("MI"):
+        monitorIndex = int(data.split("_")[1])
         result_outputs, filePath = launchIntradayMonitor()
+        filePath = f"{filePath}_{monitorIndex}.txt"
+        monitorIndex += 1
+        if monitorIndex >= configManager.maxDashboardWidgetsPerRow*configManager.maxNumResultRowsInMonitor:
+            monitorIndex = 0
         try:
             if os.path.exists(filePath):
                 f = open(filePath, "r")
                 result_outputs = f.read()
                 f.close()
-            await start(update, context, updatedResults=result_outputs)
+            await start(update, context, updatedResults=result_outputs,monitorIndex=monitorIndex)
             return START_ROUTES
         except Exception as e:
             result_outputs = "Hmm...It looks like you caught us taking a break! Try again later :-)\nCycleTime shows how much it's taking us to download latest data and then perform each cycle of analysis for all configured scanners. We may be downloading the latest data right now."
             logger.info(e)
             logger.info(f"Could not read {filePath}")
-            await start(update, context, updatedResults=result_outputs)
+            await start(update, context, updatedResults=result_outputs,monitorIndex=monitorIndex)
             return START_ROUTES
 
     midSkip = "1" if data == "X" else "N"
@@ -1050,11 +1069,10 @@ def runpkscreenerbot() -> None:
             START_ROUTES: [
                 CallbackQueryHandler(XScanners, pattern="^" + str("CX") + "$"),
                 CallbackQueryHandler(XScanners, pattern="^" + str("CB") + "$"),
-                CallbackQueryHandler(XScanners, pattern="^" + str("CMI") + "$"),
+                CallbackQueryHandler(XScanners, pattern="^" + str("CMI_")),
                 # CallbackQueryHandler(XScanners, pattern="^" + str("CG") + "$"),
                 CallbackQueryHandler(Level2, pattern="^" + str("CX_")),
                 CallbackQueryHandler(Level2, pattern="^" + str("CB_")),
-                CallbackQueryHandler(Level2, pattern="^" + str("CMI_")),
                 # CallbackQueryHandler(Level2, pattern="^" + str("CG_")),
                 CallbackQueryHandler(end, pattern="^" + str("CZ") + "$"),
                 CallbackQueryHandler(start, pattern="^"),
