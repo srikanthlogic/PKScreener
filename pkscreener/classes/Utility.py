@@ -656,7 +656,7 @@ class tools:
         im = tools.addQuickWatermark(im,xVertical,dataSrc="Yahoo; Morningstar, Inc; National Stock Exchange of India Ltd;",dataSrcFontSize=ART_FONT_SIZE)
         im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
-        im.show()
+        # im.show()
 
     def wrapFitLegendText(table, backtestSummary, legendText):
         wrapper = textwrap.TextWrapper(
