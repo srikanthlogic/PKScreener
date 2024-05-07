@@ -246,7 +246,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             await start(update, context, updatedResults=result_outputs)
             return START_ROUTES
         except Exception as e:
-            result_outputs = "Hmm...It looks like you caught us taking a break! Try again later :-)"
+            result_outputs = "Hmm...It looks like you caught us taking a break! Try again later :-)\nCycleTime shows how much it's taking us to download latest data and then perform each cycle of analysis for all configured scanners. We may be downloading the latest data right now."
             logger.info(e)
             logger.info(f"Could not read {filePath}")
             await start(update, context, updatedResults=result_outputs)
