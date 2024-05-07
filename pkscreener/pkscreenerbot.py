@@ -158,12 +158,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
+    chosenBotMenuOption = ""
     if updatedResults is None:
         cmdText = ""
         for cmd in cmds:
             cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
         menuText = f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
     else:
+        chosenBotMenuOption = "Int. Monitor"
         menuText = updatedResults
     # Send message with text and appended InlineKeyboard
     if update.callback_query is not None:
@@ -177,7 +179,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         )
     await context.bot.send_message(
         chat_id=int(f"-{Channel_Id}"),
-        text=f"Name: {user.first_name}, Username:@{user.username} with ID: {str(user.id)} started using the bot!",
+        text=f"Name: {user.first_name}, Username:@{user.username} with ID: {str(user.id)} started using the bot!\n{chosenBotMenuOption}",
         parse_mode=ParseMode.HTML,
     )
     # Tell ConversationHandler that we're in state `FIRST` now
