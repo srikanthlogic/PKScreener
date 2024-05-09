@@ -110,7 +110,7 @@ level2_X_MenuDict = {
     "26": "Stocks with stock-split/bonus/dividends",
     "27": "ATR Cross                      ",
     "28": "Bullish Higher Opens           ",
-    # "27": "Intraday Momentum Build-up      ",
+    "29": "Intraday Bid/Ask Build-up      ",
     # "28": "Extremely bullish daily close      ",
     # "29": "Rising RSI                      ",
     # "30": "RSI entering bullish territory",

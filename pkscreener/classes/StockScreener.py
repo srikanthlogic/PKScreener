@@ -112,6 +112,21 @@ class StockScreener:
                     raise StockDataEmptyException(f"Data length:{len(data)}")
             else:
                 raise StockDataEmptyException(f"Data is None: {data}")
+            
+            bidGreaterThanAsk = False
+            bidAskRatio = 0
+            if executeOption == 29:
+                hostRef.intradayNSEFetcher.symbol = stock.upper()
+                priceData = hostRef.intradayNSEFetcher.price_order_info()
+                totalBid = priceData["BidQty"].iloc[0]
+                totalAsk = priceData["AskQty"].iloc[0]
+                if totalBid > totalAsk and \
+                    priceData["LTP"].iloc[0] < float(priceData["UprCP"].iloc[0]) and \
+                    priceData["LTP"].iloc[0] > float(priceData["LwrCP"].iloc[0]):
+                    bidGreaterThanAsk = True
+                    bidAskRatio = round(totalBid/totalAsk,1) if totalAsk > 0 else 0
+                else:
+                    raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
             fullData, processedData, data = self.getCleanedDataForDuration(backtestDuration, portfolio, screeningDictionary, saveDictionary, configManager, screener, data)
             if "RUNNER" not in os.environ.keys() and backtestDuration == 0 and configManager.calculatersiintraday:
@@ -174,7 +189,8 @@ class StockScreener:
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener, exchangeName)
                 hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
-                
+                if (bidGreaterThanAsk and not hasMinVolumeRatio) or (bidGreaterThanAsk and bidAskRatio < 2):
+                    raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
                 isConfluence = False
                 isInsideBar = 0
                 isMaReversal = 0
@@ -489,6 +505,7 @@ class StockScreener:
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
                         or (executeOption == 21 and (fairValueDiff < 0 and reversalOption in [9]))
                         or (executeOption == 26)
+                        or (executeOption == 29) and bidGreaterThanAsk
                     ):
                         isNotMonitoringDashboard = userArgs.monitor is None
                         # Now screen for common ones to improve performance

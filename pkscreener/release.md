@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240507.355] release
+* Bid/Ask build up scanner added. Try X > 12 > 29.
 * New scanner: 'ATR cross' added. Try X > 12 > 27 . It's now sorted by descending ATR instead of volume.
 * New scanner: 'Bullish Higher Opens' added. Try X > 12 > 28
 * Performance improvements to have the scans finish within 40 seconds for most cases on Mac/Ubuntu and within 60 seconds on Windows.
