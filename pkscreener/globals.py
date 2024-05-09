@@ -2212,6 +2212,7 @@ def runScanners(
             start_time = time.time()
 
             def processResultsCallback(resultItem, processedCount,result_df, *otherArgs):
+                global userPassedArgs
                 (menuOption, backtestPeriod, result, lstscreen, lstsave) = otherArgs
                 numStocks = processedCount
                 result = resultItem
@@ -2223,6 +2224,21 @@ def runScanners(
                     + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
                     + colorText.END
                 )
+                if result is not None:
+                    if len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
+                        scr_df = pd.DataFrame(lstscreen)
+                        columns = ["Stock","%Chng","LTP","Volume"]
+                        scr_df = scr_df[columns]
+                        tabulated_results = colorText.miniTabulator().tb.tabulate(
+                                scr_df,
+                                headers="keys",
+                                showindex=False,
+                                tablefmt=colorText.No_Pad_GridFormat,
+                                maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
+                            )
+                        tableLength = 2*len(lstscreen)+5
+                        print('\n'+tabulated_results)
+                        sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
                 if keyboardInterruptEventFired:
                     return False, backtest_df
                 return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
