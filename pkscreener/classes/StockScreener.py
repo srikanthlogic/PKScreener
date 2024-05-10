@@ -166,13 +166,9 @@ class StockScreener:
                         ltp > lwrCP) or bidAskSimulate:
                         bidGreaterThanAsk = True
                         bidAskRatio = round(totalBid/totalAsk,1) if totalAsk > 0 else (0 if not bidAskSimulate else 3)
-                        screeningDictionary["BidQty"] = totalBid
-                        screeningDictionary["AskQty"] = totalAsk
-                        screeningDictionary["LwrCP"] = lwrCP
-                        screeningDictionary["UprCP"] = uprCP
-                        screeningDictionary["VWAP"] = vwap
-                        screeningDictionary["DayVola"] = dayVola
-                        screeningDictionary["Del(%)"] = delPercent
+                        bidAskBuildupDict = {"BidQty":totalBid,"AskQty":totalAsk,"LwrCP":lwrCP,"UprCP":uprCP,"VWAP":vwap,"DayVola":dayVola,"Del(%)":delPercent}
+                        screeningDictionary.update(bidAskBuildupDict)
+                        saveDictionary.update(bidAskBuildupDict)
                     else:
                         raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
                 else:

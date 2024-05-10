@@ -31,6 +31,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.OutputControls import OutputControls
 
 from pkscreener import Imports
 
@@ -38,7 +39,7 @@ if Imports["talib"]:
     try:
         import talib
     except:
-        print(
+        OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] 'TA-Lib' library is not installed. For best results, please install 'TA-Lib'! You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"
@@ -46,14 +47,14 @@ if Imports["talib"]:
             )
         try:
             import pandas_ta as talib
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] TA-Lib is not installed. Falling back on pandas_ta.\n[+] For full coverage(candle patterns), you may wish to follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
                 + colorText.END
             )
         except:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] pandas_ta is not installed. Falling back on pandas_ta also failed.\n[+] For full coverage(candle patterns), you may wish to follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"
@@ -64,7 +65,7 @@ if Imports["talib"]:
 else:
     try:
         import pandas_ta as talib
-        print(
+        OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
             + "[+] TA-Lib is not installed. Falling back on pandas_ta.\n[+] For full coverage(candle patterns), you may wish to follow instructions from\n[+] https://github.com/ta-lib/ta-lib-python"

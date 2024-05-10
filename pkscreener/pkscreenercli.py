@@ -388,6 +388,7 @@ def runApplication():
             monitorOption_org = ""
             # args.monitor = configManager.defaultMonitorOptions
             if args.monitor:
+                configManager.getConfig(ConfigManager.parser)
                 args.answerdefault = args.answerdefault or 'Y'
                 if MarketMonitor().monitorIndex == 0:
                     dbTimestamp = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
@@ -412,8 +413,23 @@ def runApplication():
                     configManager.toggleConfig(candleDuration='1d', clearCache=False)
                 if monitorOption.startswith("|"):
                     monitorOption = monitorOption.replace("|","")
+                    monitorOptions = monitorOption.split(":")
+                    if monitorOptions[1] != "0":
+                        monitorOptions[1] = "0"
+                        monitorOption = ":".join(monitorOptions)
                     # We need to pipe the output from previous run into the next one
-                    if resultStocks is not None:
+                    if monitorOption.startswith("{") and "}" in monitorOption:
+                        srcIndex = monitorOption.split("}")[0].split("{")[-1]
+                        monitorOption="".join(monitorOption.split("}")[1:])
+                        try:
+                            srcIndex = int(srcIndex)
+                            # Let's get the previously saved result for the monitor
+                            savedStocks = MarketMonitor().monitorResultStocks[str(srcIndex)]
+                            monitorOption = f"{monitorOption}:{savedStocks}"
+                        except:
+                            # Probably wrong (non-integer) index passed. Let's continue anyway
+                            pass
+                    elif resultStocks is not None:
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption.replace("::",":")
@@ -444,6 +460,8 @@ def runApplication():
                 plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
                 results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
+            if args.monitor:
+                MarketMonitor().saveMonitorResultStocks(plainResults)
             if results is not None and args.monitor and len(monitorOption_org) > 0:
                 MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
 
@@ -501,7 +519,11 @@ def pkscreenercli():
     # configManager.restartRequestsCache()
     # args.monitor = configManager.defaultMonitorOptions
     if args.monitor is not None:
-        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","),maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow)
+        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","),
+                      maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow,
+                      maxNumColsInEachResult=6,
+                      maxNumRowsInEachResult=10,
+                      maxNumResultRowsInMonitor=configManager.maxNumResultRowsInMonitor)
 
     if args.log or configManager.logsEnabled:
         setupLogger(shouldLog=True, trace=args.testbuild)

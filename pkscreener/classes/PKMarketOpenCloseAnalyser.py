@@ -39,6 +39,8 @@ from PKDevTools.classes.Singleton import SingletonType, SingletonMixin
 from PKDevTools.classes.PKPickler import PKPicklerDB
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.log import default_logger
+from PKDevTools.classes.OutputControls import OutputControls
+
 STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
 
 class PKDailyStockDataDB(SingletonMixin, metaclass=SingletonType):
@@ -101,13 +103,13 @@ class PKMarketOpenCloseAnalyser:
             savedDuration = PKMarketOpenCloseAnalyser.configManager.duration
             PKMarketOpenCloseAnalyser.configManager.period = "1d"
             PKMarketOpenCloseAnalyser.configManager.duration = "1m"
-            print(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
-            print(f"[+] {colorText.GREEN}Trying to download {cache_file}{colorText.END}. Please wait ...")
+            OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
+            OutputControls().printOutput(f"[+] {colorText.GREEN}Trying to download {cache_file}{colorText.END}. Please wait ...")
             Utility.tools.loadStockData({},PKMarketOpenCloseAnalyser.configManager,False,'Y',False,False,None,isIntraday=True)
             exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=True)
             if not exists:
-                print(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
-                print(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d -i 1m{colorText.END} and then run this menu option again.")
+                OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
+                OutputControls().printOutput(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d -i 1m{colorText.END} and then run this menu option again.")
                 input("Press any key to continue...")
             PKMarketOpenCloseAnalyser.configManager.period = savedPeriod
             PKMarketOpenCloseAnalyser.configManager.duration = savedDuration
@@ -126,15 +128,15 @@ class PKMarketOpenCloseAnalyser:
         # Ensure that the stock_data_<date>.pkl file exists
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=False)
         if not exists:
-            print(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
+            OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
         # We should download a fresh copy anyways because we may have altered the existing copy in
         # the previous run. -- !!!! Not required if we saved at the end of last operation !!!!
-            print(f"[+] {colorText.GREEN}Trying to download {cache_file}{colorText.END}. Please wait ...")
+            OutputControls().printOutput(f"[+] {colorText.GREEN}Trying to download {cache_file}{colorText.END}. Please wait ...")
             Utility.tools.loadStockData({},PKMarketOpenCloseAnalyser.configManager,False,'Y',False,False,None,isIntraday=False,forceRedownload=True)
             exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=False)
             if not exists:
-                print(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
-                print(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d{colorText.END} and then run this menu option again.")
+                OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
+                OutputControls().printOutput(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d{colorText.END} and then run this menu option again.")
                 input("Press any key to continue...")
         copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
         srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
@@ -215,7 +217,7 @@ class PKMarketOpenCloseAnalyser:
                     df = pd.DataFrame([combinedCandle], columns=df.columns, index=[timestamp])
                     morningIntradayCandle[stock] = df.to_dict("split")
             except Exception as e:
-                print(f"{stock}:    {e}")
+                OutputControls().printOutput(f"{stock}:    {e}")
                 continue
         return morningIntradayCandle
 

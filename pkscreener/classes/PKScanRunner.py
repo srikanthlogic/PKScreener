@@ -425,10 +425,11 @@ class PKScanRunner:
                         True,
                         userPassedArgs
                     )
+            numStocks -= 1
             result = results_queue.get()
             if result is not None:
                 lastNonNoneResult = result
-            numStocks -= 1
+            
             if resultsReceivedCb is not None:
                 shouldContinue, backtest_df = resultsReceivedCb(result, numStocks, backtest_df,*otherArgs)
             counter += 1

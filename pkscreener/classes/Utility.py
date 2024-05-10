@@ -92,7 +92,7 @@ def marketStatus():
         lngStatus = MarketStatus().getMarketStatus(exchangeSymbol="^IXIC" if configManager.defaultIndex == 15 else "^NSEI")
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
-art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
+art = colorText.GREEN + f"{getArtText()}\nv{VERSION}" + colorText.END + f" | {marketStatus()}"
 
 lastScreened = os.path.join(
     Archiver.get_user_outputs_dir(), "last_screened_results.pkl"
@@ -114,18 +114,23 @@ class tools:
                     os.system('color 0f') # sets the background to black with white forerground
                 except:
                     pass
-                os.system("cls")
+                if clearAlways:
+                    os.system("cls")
             elif "Darwin" in platform.system():
-                os.system("clear")
+                if clearAlways:
+                    os.system("clear")
+                # default_logger().debug("Darwin does not work for setting background")
             else:
                 try:
                     os.system('setterm -background black -foreground white -store')
                 except:
                     pass
-                os.system("clear")
+                if clearAlways:
+                    os.system("clear")
+            OutputControls().moveCursorToStartPosition()
         try:
             if clearAlways or OutputControls().enableMultipleLineOutput:
-                art = colorText.GREEN + artText + colorText.END + f" | {marketStatus()}"
+                art = colorText.GREEN + f"{getArtText()}\nv{VERSION}" + colorText.END + f" | {marketStatus()}"
                 OutputControls().printOutput(art.encode('utf-8').decode(STD_ENCODING), enableMultipleLineOutput=True)
         except Exception as e:# pragma: no cover
             default_logger().debug(e, exc_info=True)
@@ -1517,8 +1522,8 @@ class tools:
                     try:
                         import keras
                     except:
-                        print("This installation might not work well, especially for NIFTY prediction. Please install 'keras' library on your machine!")
-                        print(
+                        OutputControls().printOutput("This installation might not work well, especially for NIFTY prediction. Please install 'keras' library on your machine!")
+                        OutputControls().printOutput(
                                 colorText.BOLD
                                 + colorText.FAIL
                                 + "[+] 'Keras' library is not installed. You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"
@@ -1533,7 +1538,7 @@ class tools:
             if not retrial:
                 tools.getNiftyModel(retrial=True)
         if model is None:
-            print(
+            OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.FAIL
                 + "[+] 'Keras' library is not installed. Prediction failed! You may wish to follow instructions from\n[+] https://github.com/pkjmesra/PKScreener/"

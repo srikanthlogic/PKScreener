@@ -24,6 +24,7 @@
 """
 import os
 from PKDevTools.classes.Telegram import get_secrets
+from PKDevTools.classes.OutputControls import OutputControls
 
 import pkscreener.classes.ConfigManager as ConfigManager
 from pkscreener.classes.Fetcher import screenerStockDataFetcher
@@ -85,9 +86,9 @@ def run_workflow(command, user, options, workflowType="B"):
     fetcher = screenerStockDataFetcher(configManager)
     resp = fetcher.postURL(url, data=data, headers=headers)
     if resp.status_code == 204:
-        print(f"Workflow {workflow_name} Triggered!")
+        OutputControls().printOutput(f"Workflow {workflow_name} Triggered!")
     else:
-        print(f"Something went wrong while triggering {workflow_name}")
+        OutputControls().printOutput(f"Something went wrong while triggering {workflow_name}")
     return resp
 
 

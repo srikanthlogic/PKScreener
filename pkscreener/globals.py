@@ -709,19 +709,19 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         launcher = sys.argv[0]
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
         if menuOption in ["M"]:
-            print(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
+            OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
             sleep(2)
             os.system(f"{launcher} -a Y -m 'X'")
         elif menuOption in ["D"]:
-            print(f"{colorText.GREEN}Launching PKScreener to Download daily OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener to Download daily OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
             sleep(2)
             os.system(f"{launcher} -a Y -e -d")
         elif menuOption in ["I"]:
-            print(f"{colorText.GREEN}Launching PKScreener to Download intraday OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d -i 1m{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener to Download intraday OHLC data. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -d -i 1m{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
             sleep(2)
             os.system(f"{launcher} -a Y -e -d -i 1m")
         elif menuOption in ["L"]:
-            print(f"{colorText.GREEN}Launching PKScreener to collect logs. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -l{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
+            OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener to collect logs. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -l{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit at any time.{colorText.END}")
             sleep(2)
             os.system(f"{launcher} -a Y -l")
         sys.exit(0)
@@ -1754,6 +1754,7 @@ def updateMenuChoiceHierarchy():
     menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
     global nValueForMenu
     menuChoiceHierarchy = menuChoiceHierarchy.replace("N-",f"{nValueForMenu}-")
+    Utility.tools.clearScreen()
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
@@ -2240,7 +2241,7 @@ def runScanners(
                     + colorText.END
                 )
                 if result is not None:
-                    if len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
+                    if not userPassedArgs.monitor and len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
                         scr_df = pd.DataFrame(lstscreen)
                         existingColumns = ["Stock","%Chng","LTP","Volume"]
                         newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
@@ -2255,7 +2256,7 @@ def runScanners(
                                 maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
                             )
                         tableLength = 2*len(lstscreen)+5
-                        print('\n'+tabulated_results)
+                        OutputControls().printOutput('\n'+tabulated_results)
                         sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
                 if keyboardInterruptEventFired:
                     return False, backtest_df
