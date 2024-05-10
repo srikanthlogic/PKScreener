@@ -101,7 +101,7 @@ lastScreened = os.path.join(
 # Class for managing misc and utility methods
 
 class tools:
-    def clearScreen(userArgs=None,clearAlways=False):
+    def clearScreen(userArgs=None,clearAlways=False,forceTop=False):
         if "RUNNER" in os.environ.keys() or (userArgs is not None and userArgs.prodbuild):
             if userArgs is not None and userArgs.v:
                 os.environ["RUNNER"]="LOCAL_RUN_SCANNER"
@@ -129,6 +129,10 @@ class tools:
                     os.system("clear")
             OutputControls().moveCursorToStartPosition()
         try:
+            if forceTop and OutputControls().lines == 0:
+                OutputControls().lines = 9
+                OutputControls().moveCursorToStartPosition()
+                
             if clearAlways or OutputControls().enableMultipleLineOutput:
                 art = colorText.GREEN + f"{getArtText()}\nv{VERSION}" + colorText.END + f" | {marketStatus()}"
                 OutputControls().printOutput(art.encode('utf-8').decode(STD_ENCODING), enableMultipleLineOutput=True)

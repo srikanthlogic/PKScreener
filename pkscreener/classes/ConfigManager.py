@@ -155,7 +155,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set(
                 "config", "showunknowntrends", "y" if self.showunknowntrends else "n"
             )
-            parser.set("config", "logsEnabled", "y" if self.logsEnabled else "n")
+            parser.set("config", "logsEnabled", "y" if (self.logsEnabled or "PKDevTools_Default_Log_Level" in os.environ.keys()) else "n")
             parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
             parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
             parser.set("config", "calculatersiintraday", "y" if self.calculatersiintraday else "n")
@@ -171,7 +171,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
             parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
             parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
-            parser.set("config", "defaultMonitorOptions", "X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:7:3:.01:1,|{1}X:0:29:,X:12:6:3,X:12:6:8,X:12:6:7:1,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m")
+            parser.set("config", "defaultMonitorOptions", str(self.defaultMonitorOptions))
             try:
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)

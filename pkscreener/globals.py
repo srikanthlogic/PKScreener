@@ -786,8 +786,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 pass
         userOption = userOption.upper()
         if userOption == "M":
-                # Go back to the caller. It will show the console menu again.
-                return None, None
+            Utility.tools.clearScreen(forceTop=True)
+            # Go back to the caller. It will show the console menu again.
+            return None, None
         elif userOption == "Z":
             handleExitRequest(userOption)
             return None, None
@@ -844,6 +845,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
 
     handleMenu_XBG(menuOption, indexOption, executeOption)
     if indexOption == "M" or executeOption == "M":
+        Utility.tools.clearScreen(forceTop=True)
         # Go back to the caller. It will show the console menu again.
         return None, None
     listStockCodes = handleRequestForSpecificStocks(options, indexOption)

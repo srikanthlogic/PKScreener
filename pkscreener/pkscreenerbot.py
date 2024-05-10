@@ -52,6 +52,7 @@ from telegram.constants import ParseMode
 
 start_time = datetime.now()
 MINUTES_5_IN_SECONDS = 300
+OWNER_USER = "Itsonlypk"
 
 from PKDevTools.classes.Telegram import get_secrets
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
@@ -106,7 +107,7 @@ m1 = menus()
 m2 = menus()
 m3 = menus()
 
-TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI"]
+TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI","DV"]
 TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "T", "D", "I", "E", "U", "L", "Z"]
 INDEX_SKIP_MENUS = ["W","E","M","Z","0","2","3","4","6","7","9","10","13"]
 SCANNER_SKIP_MENUS_1_TO_6 = ["0","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","42","M","Z"]
@@ -122,7 +123,7 @@ INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
 UNSUPPORTED_COMMAND_MENUS =["22","30","42","M","Z"]
 SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29"]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None, monitorIndex=0) -> int:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None, monitorIndex=0,chosenBotMenuOption="") -> int:
     """Send message on `/start`."""
     updateCarrier = None
     if update is None:
@@ -144,6 +145,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     mns = m0.renderForMenu(asList=True)
     if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()) or sys.argv[0].endswith(".py"):
         mns.append(menu().create(f"MI_{monitorIndex}", "Int. Monitor", 2))
+    if user.username == OWNER_USER:
+        mns.append(menu().create(f"DV_0", ("Enbl" if not configManager.logsEnabled else "Dsbl"), 2))
+
     inlineMenus = []
     for mnu in mns:
         if mnu.menuKey[0:2] in TOP_LEVEL_SCANNER_MENUS:
@@ -161,14 +165,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
-    chosenBotMenuOption = ""
     if updatedResults is None:
         cmdText = ""
         for cmd in cmds:
             cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
         menuText = f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
     else:
-        chosenBotMenuOption = f"Int. Monitor. MonitorIndex:{monitorIndex}"
+        chosenBotMenuOption = f"{chosenBotMenuOption}\nInt. Monitor. MonitorIndex:{monitorIndex}"
         menuText = updatedResults
     # Send message with text and appended InlineKeyboard
     if update.callback_query is not None:
@@ -243,6 +246,37 @@ def launchIntradayMonitor():
         logger.info(e)
         pass
     return result_outputs, filePath
+
+async def XDevModeHandler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Show new choice of buttons"""
+    query = update.callback_query
+    data = query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G").replace("CMI", "MI").replace("CDV","DV")
+    if data[0:2] not in TOP_LEVEL_SCANNER_MENUS:
+        return start(update, context)
+    if data.startswith("DV"):
+        # Dev Mode
+        devModeIndex = int(data.split("_")[1])
+        if devModeIndex == 0:
+            if "PKDevTools_Default_Log_Level" in os.environ.keys():
+                del os.environ['PKDevTools_Default_Log_Level']
+                configManager.maxNumResultRowsInMonitor = 2
+                configManager.logsEnabled = False
+            else:
+                # Switch config file
+                configManager.maxNumResultRowsInMonitor = 3
+                configManager.logsEnabled = True
+                os.environ["PKDevTools_Default_Log_Level"] = str(logging.INFO)
+            configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
+            chosenBotMenuOption = configManager.showConfigFile(defaultAnswer='Y')
+            if monitor_proc is not None:
+                try:
+                    monitor_proc.kill()
+                except:
+                    pass
+            
+            launchIntradayMonitor()
+            await start(update, context,chosenBotMenuOption=chosenBotMenuOption)
+    return START_ROUTES
 
 async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show new choice of buttons"""
@@ -1070,6 +1104,7 @@ def runpkscreenerbot() -> None:
                 CallbackQueryHandler(XScanners, pattern="^" + str("CX") + "$"),
                 CallbackQueryHandler(XScanners, pattern="^" + str("CB") + "$"),
                 CallbackQueryHandler(XScanners, pattern="^" + str("CMI_")),
+                CallbackQueryHandler(XDevModeHandler, pattern="^" + str("CDV_")),
                 # CallbackQueryHandler(XScanners, pattern="^" + str("CG") + "$"),
                 CallbackQueryHandler(Level2, pattern="^" + str("CX_")),
                 CallbackQueryHandler(Level2, pattern="^" + str("CB_")),

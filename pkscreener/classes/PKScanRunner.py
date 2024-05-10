@@ -37,6 +37,7 @@ from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.multiprocessing_logging import LogQueueReader
 from PKDevTools.classes.SuppressOutput import SuppressOutput
+# from PKDevTools.classes.FunctionTimeouts import exit_after
 
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
@@ -397,6 +398,7 @@ class PKScanRunner:
     def shutdown(frame, signum):
         OutputControls().printOutput("Shutting down for test coverage")
 
+    # @exit_after(60)
     def runScan(userPassedArgs,testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df, *otherArgs,resultsReceivedCb=None):
         queueCounter = 0
         counter = 0
