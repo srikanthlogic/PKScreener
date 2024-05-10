@@ -323,10 +323,10 @@ class PKScanRunner:
                     )
                     for _ in range(totalConsumers)
                 ]
-        if executeOption == 29: # Intraday Bid/Ask, for which we need to fetch data from NSE instead of yahoo
-            intradayFetcher = Intra_Day("SBINEQN") # This will initialise the cookies etc.
-            for consumer in consumers:
-                consumer.intradayNSEFetcher = intradayFetcher
+        # if executeOption == 29: # Intraday Bid/Ask, for which we need to fetch data from NSE instead of yahoo
+        intradayFetcher = Intra_Day("SBINEQN") # This will initialise the cookies etc.
+        for consumer in consumers:
+            consumer.intradayNSEFetcher = intradayFetcher
         PKScanRunner.startWorkers(consumers)
         return tasks_queue,results_queue,consumers,logging_queue
 

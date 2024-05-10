@@ -466,6 +466,10 @@ def pipeResults(prevOutput,args):
             configManager.toggleConfig(candleDuration='1d', clearCache=False)
         if monitorOption.startswith("|"):
             monitorOption = monitorOption.replace("|","")
+            monitorOptions = monitorOption.split(":")
+            if monitorOptions[1] != "0":
+                monitorOptions[1] = "0"
+                monitorOption = ":".join(monitorOptions)
             # We need to pipe the output from previous run into the next one
             if prevOutput is not None and not prevOutput.empty:
                 prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]

@@ -168,7 +168,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
             cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
         menuText = f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
     else:
-        chosenBotMenuOption = "Int. Monitor"
+        chosenBotMenuOption = f"Int. Monitor. MonitorIndex:{monitorIndex}"
         menuText = updatedResults
     # Send message with text and appended InlineKeyboard
     if update.callback_query is not None:

@@ -1342,7 +1342,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                             summaryLabel = "NSE Stocks with corporate action type stock split:",
                             detailLabel = None,
                             )
-                else:
+                elif "|" not in userPassedArgs.options:
                     printNotifySaveScreenedResults(
                         screenResults,
                         saveResults,
@@ -2162,6 +2162,21 @@ def removeUnknowns(screenResults, saveResults):
         ]
     return screenResults, saveResults
 
+# def apply_df_style(x):
+#     red = 'color: red'
+#     noColor = '' 
+#     green = 'color: green'
+#     #compare columns
+#     mask_green_bid = x['BidQty'] > x['AskQty']
+#     mask_red_bid = x['BidQty'] <= x['AskQty']
+#     mask_green_vwap = x['VWAP'] >= x['LTP']
+#     #DataFrame with same index and columns names as original filled empty strings
+#     df1 =  pd.DataFrame(noColor, index=x.index, columns=x.columns)
+#     #modify values of df1 column by boolean mask
+#     df1.loc[mask_green_bid, 'BidQty'] = green
+#     df1.loc[mask_red_bid, 'AskQty'] = red
+#     df1.loc[mask_green_vwap, 'VWAP'] = green
+#     return df1
 
 def runScanners(
     menuOption,
@@ -2227,8 +2242,11 @@ def runScanners(
                 if result is not None:
                     if len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
                         scr_df = pd.DataFrame(lstscreen)
-                        columns = ["Stock","%Chng","LTP","Volume"]
-                        scr_df = scr_df[columns]
+                        existingColumns = ["Stock","%Chng","LTP","Volume"]
+                        newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
+                        existingColumns.extend(newColumns)
+                        scr_df = scr_df[existingColumns]
+                        scr_df.sort_values(by=["Volume","BidQty"], ascending=False, inplace=True)
                         tabulated_results = colorText.miniTabulator().tb.tabulate(
                                 scr_df,
                                 headers="keys",
@@ -2471,11 +2489,13 @@ def sendMessageToTelegramChannel(
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
     if user is not None:
-        # Send an update to dev channel
-        send_message(
-            "Responded back to userId:{0} with {1}.{2}".format(user, caption, message),
-            userID="-1001785195297",
-        )
+        channel_userID="-1001785195297"
+        if user != channel_userID:
+            # Send an update to dev channel
+            send_message(
+                "Responded back to userId:{0} with {1}.{2}".format(user, caption, message),
+                userID="-1001785195297",
+            )
 
 
 def sendTestStatus(screenResults, label, user=None):

@@ -118,13 +118,63 @@ class StockScreener:
             if executeOption == 29:
                 hostRef.intradayNSEFetcher.symbol = stock.upper()
                 priceData = hostRef.intradayNSEFetcher.price_order_info()
-                totalBid = priceData["BidQty"].iloc[0]
-                totalAsk = priceData["AskQty"].iloc[0]
-                if totalBid > totalAsk and \
-                    priceData["LTP"].iloc[0] < float(priceData["UprCP"].iloc[0]) and \
-                    priceData["LTP"].iloc[0] > float(priceData["LwrCP"].iloc[0]):
-                    bidGreaterThanAsk = True
-                    bidAskRatio = round(totalBid/totalAsk,1) if totalAsk > 0 else 0
+                if priceData is not None:
+                    try:
+                        totalBid = priceData["BidQty"].iloc[0]
+                    except:
+                        totalBid = 0
+                        pass
+                    try:
+                        totalAsk = priceData["AskQty"].iloc[0]
+                    except:
+                        totalAsk = 0
+                        pass
+                    try:
+                        lwrCP = float(priceData["LwrCP"].iloc[0])
+                    except:
+                        lwrCP = 0
+                        pass
+                    try:
+                        uprCP = float(priceData["UprCP"].iloc[0])
+                    except:
+                        uprCP = 0
+                        pass
+                    try:
+                        vwap = float(priceData["VWAP"].iloc[0])
+                    except:
+                        vwap = 0
+                        pass
+                    try:
+                        dayVola = float(priceData["DayVola"].iloc[0])
+                    except:
+                        dayVola = 0
+                        pass
+                    try:
+                        delPercent = priceData["Del(%)"].iloc[0]
+                    except:
+                        delPercent = 0
+                        pass
+                    try:
+                        ltp = priceData["LTP"].iloc[0]
+                    except:
+                        ltp = 0
+                        pass
+                    
+                    bidAskSimulate = userArgs is not None and userArgs.simulate is not None and "BidAsk" in userArgs.simulate.keys()
+                    if (totalBid > totalAsk and \
+                        ltp < uprCP and \
+                        ltp > lwrCP) or bidAskSimulate:
+                        bidGreaterThanAsk = True
+                        bidAskRatio = round(totalBid/totalAsk,1) if totalAsk > 0 else (0 if not bidAskSimulate else 3)
+                        screeningDictionary["BidQty"] = totalBid
+                        screeningDictionary["AskQty"] = totalAsk
+                        screeningDictionary["LwrCP"] = lwrCP
+                        screeningDictionary["UprCP"] = uprCP
+                        screeningDictionary["VWAP"] = vwap
+                        screeningDictionary["DayVola"] = dayVola
+                        screeningDictionary["Del(%)"] = delPercent
+                    else:
+                        raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
                 else:
                     raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
             # hostRef.default_logger.info(f"Will pre-process data:\n{data.tail(10)}")
@@ -189,8 +239,9 @@ class StockScreener:
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener, exchangeName)
                 hasMinVolumeRatio = self.performBasicVolumeChecks(executeOption, volumeRatio, screeningDictionary, saveDictionary, processedData, configManager, screener)
-                if (bidGreaterThanAsk and not hasMinVolumeRatio) or (bidGreaterThanAsk and bidAskRatio < 2):
-                    raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
+                if bidGreaterThanAsk:
+                    if not hasMinVolumeRatio or bidAskRatio < 2:
+                        raise ScreeningStatistics.EligibilityConditionNotMet("Bid/Ask Eligibility Not met.")
                 isConfluence = False
                 isInsideBar = 0
                 isMaReversal = 0
