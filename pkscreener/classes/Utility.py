@@ -129,6 +129,7 @@ class tools:
                     os.system("clear")
             OutputControls().moveCursorToStartPosition()
         try:
+            forceTop = OutputControls().enableMultipleLineOutput
             if forceTop and OutputControls().lines == 0:
                 OutputControls().lines = 9
                 OutputControls().moveCursorToStartPosition()
@@ -145,7 +146,7 @@ class tools:
         OutputControls().printOutput("\n" + Changelog.changelog())
         devInfo = "\n[+] Developer: PK (PKScreener)"
         versionInfo = "[+] Version: %s" % VERSION
-        homePage = "[+] Home Page: https://github.com/pkjmesra/PKScreener\nTelegram Bot:@nse_pkscreener_bot\nChannel:https://t.me/PKScreener\nDiscussions:https://t.me/PKScreeners"
+        homePage = "[+] Home Page: https://github.com/pkjmesra/PKScreener\n[+] Telegram Bot:@nse_pkscreener_bot\n[+] Channel:https://t.me/PKScreener\n[+] Discussions:https://t.me/PKScreeners"
         issuesInfo = (
             "[+] Read/Post Issues here: https://github.com/pkjmesra/PKScreener/issues"
         )

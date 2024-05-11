@@ -1929,7 +1929,7 @@ class ScreeningStatistics:
         return False
 
     # Validate LTP within limits
-    def validateLTP(self, df, screenDict, saveDict, minLTP=None, maxLTP=None):
+    def validateLTP(self, df, screenDict, saveDict, minLTP=None, maxLTP=None,minChange=0):
         data = df.copy()
         ltpValid = False
         if minLTP is None:
@@ -1962,8 +1962,11 @@ class ScreeningStatistics:
                 screenDict["Stock"] = colorText.FAIL + saveDict["Stock"] + colorText.END
         if ltp >= minLTP and ltp <= maxLTP:
             ltpValid = True
+            if minChange != 0:
+                # User has supplied some filter for percentage change
+                ltpValid = float(str(pct_save).replace("%","")) >= minChange
             saveDict["LTP"] = round(ltp, 2)
-            screenDict["LTP"] = colorText.GREEN + ("%.2f" % ltp) + colorText.END
+            screenDict["LTP"] = (colorText.GREEN if ltpValid else colorText.FAIL) + ("%.2f" % ltp) + colorText.END
             return ltpValid, verifyStageTwo
         screenDict["LTP"] = colorText.FAIL + ("%.2f" % ltp) + colorText.END
         saveDict["LTP"] = round(ltp, 2)

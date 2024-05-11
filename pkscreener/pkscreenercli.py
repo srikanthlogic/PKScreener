@@ -246,6 +246,7 @@ configManager = ConfigManager.tools()
 
 def removeMonitorFile():
     from PKDevTools.classes import Archiver
+    from globals import resetConfigToDefault
     filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
     index = 0
     while index < configManager.maxDashboardWidgetsPerRow*configManager.maxNumResultRowsInMonitor:
@@ -254,6 +255,7 @@ def removeMonitorFile():
         except:
             pass
         index += 1
+    resetConfigToDefault()
 
 def logFilePath():
     try:

@@ -212,6 +212,7 @@ def getScannerMenuChoices(
             handleSecondaryMenuChoices(
                 menuOption, testBuild, defaultAnswer=defaultAnswer, user=user
             )
+            Utility.tools.clearScreen(forceTop=True)
         elif menuOption in ["X","C"]:
             indexOption, executeOption = initPostLevel0Execution(
                 menuOption=menuOption,
@@ -432,7 +433,7 @@ def initExecution(menuOption=None):
                 )
                 sys.exit(0)
             elif selectedMenu.menuKey in ["B", "C", "G", "H", "U", "T", "S", "E", "X", "Y", "M", "D", "I", "L"]:
-                Utility.tools.clearScreen()
+                Utility.tools.clearScreen(forceTop=True)
                 selectedChoice["0"] = selectedMenu.menuKey
                 return selectedMenu
     except KeyboardInterrupt:
@@ -739,6 +740,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         )
 
         if menuOption in ["H", "U", "T", "E", "Y"]:
+            Utility.tools.clearScreen(forceTop=True)
             return None, None
     elif menuOption in ["B", "G"]:
         # Backtests
@@ -1572,7 +1574,7 @@ def showSortedBacktestData(backtest_df, summary_df, sortKeys):
     return sorting
 
 def resetConfigToDefault():
-    isIntraday = userPassedArgs.intraday is not None
+    isIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
 
@@ -1943,7 +1945,7 @@ def printNotifySaveScreenedResults(
             OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
-                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec.{(' with portfolio returns:' + summaryReturns) if len(summaryReturns) > 0 else ''}"
+                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec. Showing only stocks that met the filter criteria in the filters section of user configuration{(' with portfolio returns:' + summaryReturns) if (len(summaryReturns) > 0) else ''}"
                 + colorText.END
             )
     elif user is not None:
@@ -1998,7 +2000,7 @@ def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], u
     periods = configManager.periodsRange
     if userArgs is not None and userArgs.backtestdaysago is not None and int(userArgs.backtestdaysago) < 22:
         dropAdditionalColumns.append("22-Pd %")
-    summaryReturns = ("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
+    summaryReturns = "" #("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
     for period in periods:
         if saveResults is not None:
             # if f"LTP{period}" in saveResults.columns and "MCapWt%" in saveResults.columns:

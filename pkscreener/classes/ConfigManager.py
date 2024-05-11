@@ -74,10 +74,10 @@ class tools(SingletonMixin, metaclass=SingletonType):
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
         self.maxDashboardWidgetsPerRow = 3
-        self.maxNumResultRowsInMonitor = 3
+        self.maxNumResultRowsInMonitor = 2
         self.calculatersiintraday = False
-        self.defaultMonitorOptions = ""#"X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:5:0:30,X:12:6:3,X:12:6:7:1,X:12:6:8,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m"
-
+        self.defaultMonitorOptions = "X:12:9:2.5,|X:0:5:0:40:i 1m,X:12:27,X:12:28,X:12:23,X:12:7:3:.01:1,|{1}X:0:29:,X:12:6:3,X:12:6:8,X:12:6:7:1,X:12:6:9,X:12:6:10:1,X:12:7:3:.02:1,X:12:7:6:1,X:12:17,X:12:2,X:12:24,X:12:12:i 5m,X:12:13:i 1m"
+        self.minimumChangePercentage = 0
         self.daysToLookback = 22 * self.backtestPeriodFactor  # 1 month
         self.periods = [1,2,3,4,5,10,15,22,30]
         if self.maxBacktestWindow > self.periods[-1]:
@@ -135,43 +135,44 @@ class tools(SingletonMixin, metaclass=SingletonType):
         if default:
             try:
                 parser.remove_section("config")
+                parser.remove_section("filters")
             except Exception as e:  # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 pass
             parser.add_section("config")
-            parser.set("config", "period", self.period)
-            parser.set("config", "daysToLookback", str(self.daysToLookback))
-            parser.set("config", "duration", self.duration)
-            parser.set("config", "minPrice", str(self.minLTP))
-            parser.set("config", "maxPrice", str(self.maxLTP))
-            parser.set("config", "volumeRatio", str(self.volumeRatio))
-            parser.set(
-                "config", "consolidationPercentage", str(self.consolidationPercentage)
-            )
-            parser.set("config", "shuffle", "y" if self.shuffleEnabled else "n")
-            parser.set("config", "cacheStockData", "y" if self.cacheEnabled else "n")
-            parser.set("config", "onlyStageTwoStocks", "y" if self.stageTwo else "n")
-            parser.set("config", "useEMA", "y" if self.useEMA else "n")
-            parser.set(
-                "config", "showunknowntrends", "y" if self.showunknowntrends else "n"
-            )
-            parser.set("config", "logsEnabled", "y" if (self.logsEnabled or "PKDevTools_Default_Log_Level" in os.environ.keys()) else "n")
-            parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
-            parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
-            parser.set("config", "calculatersiintraday", "y" if self.calculatersiintraday else "n")
-            parser.set("config", "generalTimeout", str(self.generalTimeout))
-            parser.set("config", "defaultIndex", str(self.defaultIndex))
-            parser.set("config", "longTimeout", str(self.longTimeout))
-            parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
+            parser.add_section("filters")
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
+            parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
+            parser.set("config", "cacheStockData", "y" if self.cacheEnabled else "n")
+            parser.set("config", "calculatersiintraday", "y" if self.calculatersiintraday else "n")
+            parser.set("config", "daysToLookback", str(self.daysToLookback))
+            parser.set("config", "defaultIndex", str(self.defaultIndex))
+            parser.set("config", "defaultMonitorOptions", str(self.defaultMonitorOptions))
+            parser.set("config", "duration", self.duration)
+            parser.set("config", "enablePortfolioCalculations", "y" if self.enablePortfolioCalculations else "n")
+            parser.set("config", "generalTimeout", str(self.generalTimeout))
+            parser.set("config", "logsEnabled", "y" if (self.logsEnabled or "PKDevTools_Default_Log_Level" in os.environ.keys()) else "n")
+            parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxBacktestWindow", str(self.maxBacktestWindow))
+            parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
+            parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
+            parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
             parser.set("config", "morninganalysiscandlenumber", str(self.morninganalysiscandlenumber))
             parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration)
-            parser.set("config", "minimumVolume", str(self.minVolume))
-            parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
-            parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
-            parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
-            parser.set("config", "defaultMonitorOptions", str(self.defaultMonitorOptions))
+            parser.set("config", "onlyStageTwoStocks", "y" if self.stageTwo else "n")
+            parser.set("config", "period", self.period)
+            parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
+            parser.set("config", "showunknowntrends", "y" if self.showunknowntrends else "n")
+            parser.set("config", "shuffle", "y" if self.shuffleEnabled else "n")
+            parser.set("config", "useEMA", "y" if self.useEMA else "n")
+
+            parser.set("filters", "consolidationPercentage", str(self.consolidationPercentage))
+            parser.set("filters", "maxPrice", str(self.maxLTP))
+            parser.set("filters", "minimumChangePercentage", str(self.minimumChangePercentage))
+            parser.set("filters", "minimumVolume", str(self.minVolume))
+            parser.set("filters", "minPrice", str(self.minLTP))
+            parser.set("filters", "volumeRatio", str(self.volumeRatio))
+
             try:
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)
@@ -198,6 +199,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         else:
             parser = configparser.ConfigParser(strict=False)
             parser.add_section("config")
+            parser.add_section("filters")
             OutputControls().printOutput("")
             OutputControls().printOutput(
                 colorText.BOLD
@@ -301,37 +303,41 @@ class tools(SingletonMixin, metaclass=SingletonType):
             self.backtestPeriodFactor = input(
                 "[+] Factor for backtest periods. If you choose 5, 1-Pd would mean 5-Pd returns. (number)(Optimal = 1): "
             )
-            parser.set("config", "period", self.period + "d")
-            parser.set("config", "daysToLookback", self.daysToLookback)
-            parser.set("config", "duration", self.duration + "d")
-            parser.set("config", "minPrice", self.minLTP)
-            parser.set("config", "maxPrice", self.maxLTP)
-            parser.set("config", "volumeRatio", self.volumeRatio)
-            parser.set(
-                "config", "consolidationPercentage", self.consolidationPercentage
+            self.minimumChangePercentage = input(
+                "[+] Minimun change in stock price (in percentage). (number)(Optimal = 0): "
             )
-            parser.set("config", "shuffle", self.shuffle)
-            parser.set("config", "cacheStockData", self.cacheStockData)
-            parser.set("config", "onlyStageTwoStocks", self.stageTwoPrompt)
-            parser.set("config", "useEMA", self.useEmaPrompt)
-            parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
-            parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
-            parser.set("config", "showPastStrategyData", self.showPastStrategyData)
-            parser.set("config", "calculatersiintraday", self.calculatersiintraday)
-            parser.set("config", "logsEnabled", self.logsEnabledPrompt)
-            parser.set("config", "generalTimeout", self.generalTimeout)
-            parser.set("config", "defaultIndex", self.defaultIndex)
-            parser.set("config", "longTimeout", self.longTimeout)
-            parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
-            parser.set("config", "maxBacktestWindow", self.maxBacktestWindow)
-            parser.set("config", "morninganalysiscandlenumber", self.morninganalysiscandlenumber)
-            parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration + "m")
-            parser.set("config", "minimumVolume", self.minVolume)
             parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
+            parser.set("config", "cacheStockData", self.cacheStockData)
+            parser.set("config", "calculatersiintraday", self.calculatersiintraday)
+            parser.set("config", "daysToLookback", self.daysToLookback)
+            parser.set("config", "defaultIndex", self.defaultIndex)
             parser.set("config", "defaultMonitorOptions", self.defaultMonitorOptions)
+            parser.set("config", "duration", self.duration + "d")
+            parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
+            parser.set("config", "generalTimeout", self.generalTimeout)
+            parser.set("config", "logsEnabled", self.logsEnabledPrompt)
+            parser.set("config", "longTimeout", self.longTimeout)
+            parser.set("config", "maxBacktestWindow", self.maxBacktestWindow)
+            parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
             parser.set("config", "maxDashboardWidgetsPerRow", self.maxDashboardWidgetsPerRow)
             parser.set("config", "maxNumResultRowsInMonitor", self.maxNumResultRowsInMonitor)
+            parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration + "m")
+            parser.set("config", "morninganalysiscandlenumber", self.morninganalysiscandlenumber)
+            parser.set("config", "onlyStageTwoStocks", self.stageTwoPrompt)
+            parser.set("config", "period", self.period + "d")
+            parser.set("config", "showPastStrategyData", self.showPastStrategyData)
+            parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
+            parser.set("config", "shuffle", self.shuffle)
+            parser.set("config", "useEMA", self.useEmaPrompt)
+
+            parser.set("filters", "consolidationPercentage", self.consolidationPercentage)
+            parser.set("filters", "maxPrice", self.maxLTP)
+            parser.set("filters", "minimumChangePercentage", self.minimumChangePercentage)
+            parser.set("filters", "minimumVolume", self.minVolume)
+            parser.set("filters", "minPrice", self.minLTP)
+            parser.set("filters", "volumeRatio", self.volumeRatio)
+
             # delete stock data due to config change
             self.deleteFileWithPattern()
             OutputControls().printOutput(
@@ -370,11 +376,11 @@ class tools(SingletonMixin, metaclass=SingletonType):
             try:
                 self.duration = parser.get("config", "duration")
                 self.period = parser.get("config", "period")
-                self.minLTP = float(parser.get("config", "minprice"))
-                self.maxLTP = float(parser.get("config", "maxprice"))
-                self.volumeRatio = float(parser.get("config", "volumeRatio"))
+                self.minLTP = float(parser.get("filters", "minprice"))
+                self.maxLTP = float(parser.get("filters", "maxprice"))
+                self.volumeRatio = float(parser.get("filters", "volumeRatio"))
                 self.consolidationPercentage = float(
-                    parser.get("config", "consolidationPercentage")
+                    parser.get("filters", "consolidationPercentage")
                 )
                 self.daysToLookback = int(parser.get("config", "daysToLookback"))
                 self.shuffleEnabled = (
@@ -433,7 +439,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.maxBacktestWindow = int(parser.get("config", "maxBacktestWindow"))
                 self.morninganalysiscandlenumber = int(parser.get("config", "morninganalysiscandlenumber"))
                 self.morninganalysiscandleduration = parser.get("config", "morninganalysiscandleduration")
-                self.minVolume = int(parser.get("config", "minimumVolume"))
+                self.minVolume = int(parser.get("filters", "minimumVolume"))
+                self.minimumChangePercentage = float(parser.get("filters", "minimumchangepercentage"))
                 self.backtestPeriodFactor = int(parser.get("config", "backtestPeriodFactor"))
                 self.defaultMonitorOptions = str(parser.get("config", "defaultMonitorOptions"))
                 self.maxDashboardWidgetsPerRow = int(parser.get("config", "maxDashboardWidgetsPerRow"))
@@ -443,12 +450,14 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 # input(colorText.BOLD + colorText.FAIL +
                 #       '[+] pkscreener requires user configuration again. Press enter to continue..' + colorText.END)
                 parser.remove_section("config")
+                parser.remove_section("filters")
                 self.setConfig(parser, default=True, showFileCreatedText=False)
             except Exception as e:  # pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # input(colorText.BOLD + colorText.FAIL +
                 #       '[+] pkscreener requires user configuration again. Press enter to continue..' + colorText.END)
                 parser.remove_section("config")
+                parser.remove_section("filters")
                 self.setConfig(parser, default=True, showFileCreatedText=False)
         else:
             self.setConfig(parser, default=True, showFileCreatedText=False)

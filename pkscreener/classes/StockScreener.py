@@ -746,6 +746,7 @@ class StockScreener:
                     saveDictionary,
                     minLTP=configManager.minLTP if exchangeName == "INDIA" else configManager.minLTP/80,
                     maxLTP=configManager.maxLTP,
+                    minChange=configManager.minimumChangePercentage
                 )
         if not isLtpValid:
             raise ScreeningStatistics.LTPNotInConfiguredRange
