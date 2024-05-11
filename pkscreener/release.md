@@ -1,12 +1,12 @@
 [![MADE-IN-INDIA](https://img.shields.io/badge/MADE%20WITH%20%E2%9D%A4%20IN-INDIA-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/India) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pkjmesra/PKScreener?style=for-the-badge)](#) [![GitHub all releases](https://img.shields.io/github/downloads/pkjmesra/PKScreener/total?color=Green&label=Downloads&style=for-the-badge)](#) [![MADE_WITH](https://img.shields.io/badge/BUILT%20USING-PYTHON-yellow?style=for-the-badge&logo=python&logoColor=yellow)](https://www.python.org/)
 
 ## What's New?
-1. [v0.44.20240510.358] release
+1. [v0.44.20240511.360] release
 * Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:;|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
 * Added ability to filter your results. For now you can filter using the defined keys in the filters section of user config file. For example, to only show those stocks that have changed by at least 4% and have volume more than 9 million, you can change the config to:
 
-    minimumchangepercentage = 4
-    minimumvolume = 9000000
+  minimumchangepercentage = 4
+  minimumvolume = 9000000
 
 * New scanner: 'ATR cross' added. Try X > 12 > 27 . It's now sorted by descending ATR instead of volume.
 * New scanner: 'Bullish Higher Opens' added. Try X > 12 > 28
