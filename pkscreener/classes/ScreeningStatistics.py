@@ -237,6 +237,195 @@ class ScreeningStatistics:
         screenDict["ATR"] = saveDict["ATR"] #(colorText.GREEN if atrCrossCondition else colorText.FAIL) + str(atr.tail(1).iloc[0]) + colorText.END
         return atrCrossCondition
 
+    # Function to compute ATRTrailingStop
+    def xATRTrailingStop_func(self,close, prev_close, prev_atr, nloss):
+        if close > prev_atr and prev_close > prev_atr:
+            return max(prev_atr, close - nloss)
+        elif close < prev_atr and prev_close < prev_atr:
+            return min(prev_atr, close + nloss)
+        elif close > prev_atr:
+            return close - nloss
+        else:
+            return close + nloss
+    
+    def fillATRTrailingStop(self,pd_data):
+        SENSITIVITY = 1
+        ATR_PERIOD = 10
+        # Compute ATR And nLoss variable
+        pd_data["xATR"] = pktalib.ATR(pd_data["High"], pd_data["Low"], pd_data["Close"], timeperiod=ATR_PERIOD)
+        pd_data["nLoss"] = SENSITIVITY * pd_data["xATR"]
+        
+        #Drop all rows that have nan, X first depending on the ATR preiod for the moving average
+        pd_data = pd_data.dropna()
+        pd_data = pd_data.reset_index()
+        # Filling ATRTrailingStop Variable
+        pd_data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(pd_data) - 1)]
+        
+        for i in range(1, len(pd_data)):
+            pd_data.loc[i, "ATRTrailingStop"] = self.xATRTrailingStop_func(
+                pd_data.loc[i, "Close"],
+                pd_data.loc[i - 1, "Close"],
+                pd_data.loc[i - 1, "ATRTrailingStop"],
+                pd_data.loc[i, "nLoss"],
+            )
+
+    #Calculating signals
+    def computeBuySellSignals(self,pd_data):
+        ema = pktalib.EMA(pd_data["Close"], 1) #short_name='EMA', ewm=True)
+        
+        pd_data["Above"] = ema.ma_crossed_above(pd_data["ATRTrailingStop"])
+        pd_data["Below"] = ema.ma_crossed_below(pd_data["ATRTrailingStop"])
+        
+        pd_data["Buy"] = (pd_data["Close"] > pd_data["ATRTrailingStop"]) & (pd_data["Above"]==True)
+        pd_data["Sell"] = (pd_data["Close"] < pd_data["ATRTrailingStop"]) & (pd_data["Below"]==True)
+
+    def findBuySellSignalsFromATRTrailing(self,df, key_value=1, atr_period=3, ema_period=200,buyOrSell=1,saveDict=None,screenDict=None):
+        # Calculate ATR and xATRTrailingStop
+        xATR = np.array(pktalib.ATR(df['High'], df['Low'], df['Close'], timeperiod=atr_period))
+        nLoss = key_value * xATR
+        src = df['Close']
+
+        # Initialize arrays
+        xATRTrailingStop = np.zeros(len(df))
+        xATRTrailingStop[0] = src[0] - nLoss[0]
+
+        # Calculate xATRTrailingStop using vectorized operations
+        mask_1 = (src > np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) > np.roll(xATRTrailingStop, 1))
+        mask_2 = (src < np.roll(xATRTrailingStop, 1)) & (np.roll(src, 1) < np.roll(xATRTrailingStop, 1))
+        mask_3 = src > np.roll(xATRTrailingStop, 1)
+
+        xATRTrailingStop = np.where(mask_1, np.maximum(np.roll(xATRTrailingStop, 1), src - nLoss), xATRTrailingStop)
+        xATRTrailingStop = np.where(mask_2, np.minimum(np.roll(xATRTrailingStop, 1), src + nLoss), xATRTrailingStop)
+        xATRTrailingStop = np.where(mask_3, src - nLoss, xATRTrailingStop)
+
+        mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
+        mask_sell = (np.roll(src, 1) > xATRTrailingStop) & (src < np.roll(xATRTrailingStop, 1))
+
+        pos = np.zeros(len(df))
+        pos = np.where(mask_buy, 1, pos)
+        pos = np.where(mask_sell, -1, pos)
+        pos[~((pos == 1) | (pos == -1))] = 0
+
+        ema = np.array(pktalib.EMA(df['Close'], timeperiod=ema_period))
+
+        buy_condition_utbot = (xATRTrailingStop > ema) & (pos > 0) & (src > ema)
+        sell_condition_utbot = (xATRTrailingStop < ema) & (pos < 0) & (src < ema)
+
+        # The resulting trend array holds values of 1 (buy), -1 (sell), or 0 (neutral).
+        trend = np.where(buy_condition_utbot, 1, np.where(sell_condition_utbot, -1, 0))
+        trend_arr = np.array(trend)
+        print(trend)
+        df['trend'] = trend_arr
+        saveDict["B/S"] = "Buy" if trend == 1 else ("Sell" if trend == -1 else "NA")
+        screenDict["B/S"] = (colorText.GREEN + "Buy") if trend == 1 else ((colorText.FAIL+ "Sell") if trend == -1 else (colorText.WARN + "NA")) + colorText.END
+        return buyOrSell == trend
+
+    # Example of combining UTBot Alerts with RSI and ADX
+    def custom_strategy(self,dataframe):
+        dataframe = self.findBuySellSignalsFromATRTrailing(dataframe, key_value=2, atr_period=7, ema_period=100)
+        
+        # Calculate RSI and ADX
+        rsi = pktalib.RSI(dataframe['Close'])
+        adx = pktalib.ADX(dataframe['High'], dataframe['Low'], dataframe['Close'])
+        
+        # Define conditions based on UTBot Alerts and additional indicators
+        # ... (your custom conditions here)
+        
+        return dataframe
+    
+    def populate_indicators(self, dataframe: pd.DataFrame, metadata: dict) -> pd.DataFrame:
+        if not self.dp:
+            # Don't do anything if DataProvider is not available.
+            return dataframe
+        L_optimize_trend_alert  = self.findBuySellSignalsFromATRTrailing(dataframe=dataframe, key_value= self.key_value_l.value, atr_period= self.atr_period_l.value, ema_period=self.ema_period_l.value)
+        # Long position?
+        dataframe['trend_l'] = L_optimize_trend_alert['trend']
+        S_optimize_trend_alert  = self.findBuySellSignalsFromATRTrailing(dataframe=dataframe, key_value= self.key_value_s.value, atr_period= self.atr_period_s.value, ema_period=self.ema_period_s.value)
+        # Short position?
+        dataframe['trend_s'] = S_optimize_trend_alert['trend']
+
+        # ADX
+        dataframe['adx'] = pktalib.ADX(dataframe)
+        
+        # RSI
+        # dataframe['rsi'] = ta.RSI(dataframe)
+
+        # EMA
+        dataframe['ema_l'] = pktalib.EMA(dataframe['close'], timeperiod=self.ema_period_l_exit.value)
+        dataframe['ema_s'] = pktalib.EMA(dataframe['close'], timeperiod=self.ema_period_s_exit.value)
+
+
+        # Volume Weighted
+        dataframe['volume_mean'] = dataframe['volume'].rolling(self.volume_check.value).mean().shift(1)
+        dataframe['volume_mean_exit'] = dataframe['volume'].rolling(self.volume_check_exit.value).mean().shift(1)
+
+        dataframe['volume_mean_s'] = dataframe['volume'].rolling(self.volume_check_s.value).mean().shift(1)
+        dataframe['volume_mean_exit_s'] = dataframe['volume'].rolling(self.volume_check_exit_s.value).mean().shift(1)
+        return dataframe
+    
+    def populate_entry_trend(self, dataframe: pd.DataFrame, metadata: dict) -> pd.DataFrame:
+
+        dataframe.loc[
+            (
+                        (dataframe['adx'] > self.adx_long_min.value) & # trend strength confirmation
+                        (dataframe['adx'] < self.adx_long_max.value) & # trend strength confirmation
+                        (dataframe['trend_l'] > 0) &
+                        (dataframe['volume'] > dataframe['volume_mean']) &
+                        (dataframe['volume'] > 0)
+
+            ),
+            'enter_long'] = 1
+
+        dataframe.loc[
+            (
+                        (dataframe['adx'] > self.adx_short_min.value) & # trend strength confirmation
+                        (dataframe['adx'] < self.adx_short_max.value) & # trend strength confirmation
+                        (dataframe['trend_s'] < 0) &
+                        (dataframe['volume'] > dataframe['volume_mean_s']) # volume weighted indicator
+            ),
+            'enter_short'] = 1
+        
+        return dataframe
+    
+    def populate_exit_trend(self, dataframe: pd.DataFrame, metadata: dict) -> pd.DataFrame:
+
+        conditions_long = []
+        conditions_short = []
+        dataframe.loc[:, 'exit_tag'] = ''
+
+        exit_long = (
+                # (dataframe['close'] < dataframe['low'].shift(self.sell_shift.value)) &
+                (dataframe['close'] < dataframe['ema_l']) &
+                (dataframe['volume'] > dataframe['volume_mean_exit'])
+        )
+
+        exit_short = (
+                # (dataframe['close'] > dataframe['high'].shift(self.sell_shift_short.value)) &
+                (dataframe['close'] > dataframe['ema_s']) &
+                (dataframe['volume'] > dataframe['volume_mean_exit_s'])
+        )
+
+
+        conditions_short.append(exit_short)
+        dataframe.loc[exit_short, 'exit_tag'] += 'exit_short'
+
+
+        conditions_long.append(exit_long)
+        dataframe.loc[exit_long, 'exit_tag'] += 'exit_long'
+
+
+        if conditions_long:
+            dataframe.loc[
+                pd.reduce(lambda x, y: x | y, conditions_long),
+                'exit_long'] = 1
+
+        if conditions_short:
+            dataframe.loc[
+                pd.reduce(lambda x, y: x | y, conditions_short),
+                'exit_short'] = 1
+            
+        return dataframe
+    
 # study(title="UT Bot Alerts", overlay = true)
 
 # // Inputs
