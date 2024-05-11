@@ -2,7 +2,12 @@
 
 ## What's New?
 1. [v0.44.20240510.358] release
-* Bid/Ask build up scanner added. Try X > 12 > 29.
+* Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:;|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
+* Added ability to filter your results. For now you can filter using the defined keys in the filters section of user config file. For example, to only show those stocks that have changed by at least 4% and have volume more than 9 million, you can change the config to:
+
+    minimumchangepercentage = 4
+    minimumvolume = 9000000
+
 * New scanner: 'ATR cross' added. Try X > 12 > 27 . It's now sorted by descending ATR instead of volume.
 * New scanner: 'Bullish Higher Opens' added. Try X > 12 > 28
 * Performance improvements to have the scans finish within 40 seconds for most cases on Mac/Ubuntu and within 60 seconds on Windows.
