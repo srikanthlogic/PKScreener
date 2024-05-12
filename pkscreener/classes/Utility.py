@@ -59,6 +59,7 @@ from PKDevTools.classes import Archiver
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
 from PKDevTools.classes.SuppressOutput import SuppressOutput
+from PKDevTools.classes.FunctionTimeouts import exit_after
 from tabulate import tabulate
 
 import pkscreener.classes.ConfigManager as ConfigManager
