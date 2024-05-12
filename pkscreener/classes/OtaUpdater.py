@@ -244,16 +244,27 @@ rm updater.sh
                         + colorText.END
                     )
                 else:
-                    OutputControls().printOutput(
+                    if float(now_components[0]) > float(version_components[0]) or \
+                        float(now_components[1]) > float(version_components[1]) or \
+                        float(now_components[2]) > float(version_components[2]) or \
+                        float(now_components[3]) > float(version_components[3]):
+                        OutputControls().printOutput(
+                            colorText.BOLD
+                            + colorText.FAIL
+                            + (f"[+] This version (v{VERSION}) is in Development! Thanks for trying out!")
+                            + colorText.END
+                        )
+                        return OTAUpdater.developmentVersion
+                    else:
+                        OutputControls().printOutput(
                         colorText.BOLD
-                        + colorText.FAIL
+                        + colorText.GREEN
                         + (
-                            "[+] This version (v%s) is in Development mode and unreleased!"
+                            "[+] No new update available. You have the latest version (v%s) !"
                             % VERSION
                         )
                         + colorText.END
                     )
-                    return OTAUpdater.developmentVersion
         except Exception as e:  # pragma: no cover
             default_logger().debug(e, exc_info=True)
             if OTAUpdater.checkForUpdate.url is not None:
