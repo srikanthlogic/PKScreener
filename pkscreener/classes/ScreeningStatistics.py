@@ -248,7 +248,7 @@ class ScreeningStatistics:
         else:
             return close + nloss
     
-    def findATRTrailingStops(self,df,key_value=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
+    def findATRTrailingStops(self,df,sensitivity=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
         if df is None or len(df) == 0:
             return False
         data = df.copy()
@@ -256,7 +256,7 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
 
-        SENSITIVITY = 1
+        SENSITIVITY = sensitivity
         # Compute ATR And nLoss variable
         data["xATR"] = pktalib.ATR(data["High"], data["Low"], data["Close"], timeperiod=atr_period)
         data["nLoss"] = SENSITIVITY * data["xATR"]

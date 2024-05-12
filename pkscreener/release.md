@@ -2,7 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240511.360] release
-* ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell)
+* ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell). You can change the sensitivity and atr periods in the config file.
 * Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:;|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
 * Added ability to filter your results. For now you can filter using the defined keys in the filters section of user config file. For example, to only show those stocks that have changed by at least 4% and have volume more than 9 million, you can change the config to:
 

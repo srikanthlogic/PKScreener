@@ -263,7 +263,7 @@ class StockScreener:
                 isLowestVolume = False
                 hasBbandsSqz = False
 
-                isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,maLength)
+                isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,configManager,maLength)
                 if not isValidityCheckMet:
                     return returnLegibleData("Validity Check not met!")
                 isShortTermBullish = (executeOption == 11 and isValidityCheckMet)
@@ -679,7 +679,7 @@ class StockScreener:
                 )
         return None
 
-    def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,buySellAll=3):
+    def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,configManager,buySellAll=3):
         isValid = True
         if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27,28,30]:
             return True
@@ -722,7 +722,7 @@ class StockScreener:
         elif executeOption == 28:
             isValid = screener.findHigherBullishOpens(processedData)
         elif executeOption == 30: # findBuySellSignalsFromATRTrailing # findATRTrailingStops
-            isValid = screener.findATRTrailingStops(fullData,buySellAll=buySellAll,saveDict=saveDictionary,screenDict=screeningDictionary)
+            isValid = screener.findATRTrailingStops(fullData,sensitivity=configManager.atrTrailingStopSensitivity, atr_period=configManager.atrTrailingStopPeriod,buySellAll=buySellAll,saveDict=saveDictionary,screenDict=screeningDictionary)
         
         return isValid        
                     

@@ -69,6 +69,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.morninganalysiscandleduration = '1m'
         self.logger = None
         self.showPastStrategyData = False
+        self.atrTrailingStopSensitivity = 1
+        self.atrTrailingStopPeriod = 10
         # This determines how many days apart the backtest calculations are run.
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
@@ -141,6 +143,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 pass
             parser.add_section("config")
             parser.add_section("filters")
+            parser.set("config", "atrtrailingstopperiod", str(self.atrTrailingStopPeriod))
+            parser.set("config", "atrtrailingstopsensitivity", str(self.atrTrailingStopSensitivity))
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
             parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
             parser.set("config", "cacheStockData", "y" if self.cacheEnabled else "n")
@@ -306,6 +310,14 @@ class tools(SingletonMixin, metaclass=SingletonType):
             self.minimumChangePercentage = input(
                 "[+] Minimun change in stock price (in percentage). (number)(Optimal = 0): "
             )
+            self.atrTrailingStopPeriod = input(
+                "[+] ATR Trailing Stop Periods. (number)(Optimal = 10): "
+            )
+            self.atrTrailingStopSensitivity = input(
+                "[+] ATR Trailing Stop Sensitivity. (number)(Optimal = 1): "
+            )
+            parser.set("config", "atrtrailingstopperiod", self.atrTrailingStopPeriod)
+            parser.set("config", "atrtrailingstopsensitivity", self.atrTrailingStopSensitivity)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
             parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
             parser.set("config", "cacheStockData", self.cacheStockData)
@@ -429,6 +441,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     if "y" not in str(parser.get("config", "calculatersiintraday")).lower()
                     else True
                 )
+                self.atrTrailingStopPeriod = int(parser.get("config", "atrtrailingstopperiod"))
+                self.atrTrailingStopSensitivity = float(parser.get("config", "atrtrailingstopsensitivity"))
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
                 self.defaultIndex = int(parser.get("config", "defaultIndex"))
                 self.longTimeout = float(parser.get("config", "longTimeout"))
