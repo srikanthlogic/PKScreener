@@ -326,6 +326,8 @@ def runApplication():
     # Let's stock to the original args passed by user
     argsv = argParser.parse_known_args()
     args = argsv[0]
+    if args.options is not None:
+        args.options = args.options.replace("::",":")
     if args.runintradayanalysis:
         from pkscreener.classes.MenuOptions import menus
         runOptions = menus.allMenus(topLevel="C", index=12)
@@ -581,9 +583,11 @@ def pkscreenercli():
         configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
     else:
         configManager.toggleConfig(candleDuration='1d', clearCache=False)
-    if args.options is not None and str(args.options) == "0":
-        # Must be from unit tests to be able to break out of loops via eventing
-        args.options = None
+    if args.options is not None:
+        if str(args.options) == "0":
+            # Must be from unit tests to be able to break out of loops via eventing
+            args.options = None
+        args.options = args.options.replace("::",":")
     
     if args.maxprice:
         configManager.maxLTP = args.maxprice
