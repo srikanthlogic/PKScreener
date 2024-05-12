@@ -276,7 +276,6 @@ class ScreeningStatistics:
             )
         data = self.computeBuySellSignals(data,ema_period=ema_period)
         recent = data.tail(1)
-        print(recent)
         buy = recent["Buy"].iloc[0]
         sell = recent["Sell"].iloc[0]
         saveDict["B/S"] = "Buy" if buy else ("Sell" if sell else "NA")
