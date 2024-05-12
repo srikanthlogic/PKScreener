@@ -248,45 +248,66 @@ class ScreeningStatistics:
         else:
             return close + nloss
     
-    def fillATRTrailingStop(self,pd_data):
+    def findATRTrailingStops(self,df,key_value=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+
         SENSITIVITY = 1
-        ATR_PERIOD = 10
         # Compute ATR And nLoss variable
-        pd_data["xATR"] = pktalib.ATR(pd_data["High"], pd_data["Low"], pd_data["Close"], timeperiod=ATR_PERIOD)
-        pd_data["nLoss"] = SENSITIVITY * pd_data["xATR"]
+        data["xATR"] = pktalib.ATR(data["High"], data["Low"], data["Close"], timeperiod=atr_period)
+        data["nLoss"] = SENSITIVITY * data["xATR"]
         
         #Drop all rows that have nan, X first depending on the ATR preiod for the moving average
-        pd_data = pd_data.dropna()
-        pd_data = pd_data.reset_index()
+        data = data.dropna()
+        data = data.reset_index()
         # Filling ATRTrailingStop Variable
-        pd_data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(pd_data) - 1)]
+        data["ATRTrailingStop"] = [0.0] + [np.nan for i in range(len(data) - 1)]
         
-        for i in range(1, len(pd_data)):
-            pd_data.loc[i, "ATRTrailingStop"] = self.xATRTrailingStop_func(
-                pd_data.loc[i, "Close"],
-                pd_data.loc[i - 1, "Close"],
-                pd_data.loc[i - 1, "ATRTrailingStop"],
-                pd_data.loc[i, "nLoss"],
+        for i in range(1, len(data)):
+            data.loc[i, "ATRTrailingStop"] = self.xATRTrailingStop_func(
+                data.loc[i, "Close"],
+                data.loc[i - 1, "Close"],
+                data.loc[i - 1, "ATRTrailingStop"],
+                data.loc[i, "nLoss"],
             )
+        data = self.computeBuySellSignals(data,ema_period=ema_period)
+        recent = data.tail(1)
+        print(recent)
+        buy = recent["Buy"].iloc[0]
+        sell = recent["Sell"].iloc[0]
+        saveDict["B/S"] = "Buy" if buy else ("Sell" if sell else "NA")
+        screenDict["B/S"] = ((colorText.GREEN + "Buy") if buy else ((colorText.FAIL+ "Sell") if sell else (colorText.WARN + "NA"))) + colorText.END
+        return buy if buySellAll==1 else (sell if buySellAll == 2 else (True if buySellAll == 3 else False))
 
     #Calculating signals
-    def computeBuySellSignals(self,pd_data):
-        ema = pktalib.EMA(pd_data["Close"], 1) #short_name='EMA', ewm=True)
+    def computeBuySellSignals(self,df,ema_period=200):
+        ema = pktalib.EMA(df["Close"], ema_period) #short_name='EMA', ewm=True)
         
-        pd_data["Above"] = ema.ma_crossed_above(pd_data["ATRTrailingStop"])
-        pd_data["Below"] = ema.ma_crossed_below(pd_data["ATRTrailingStop"])
+        df["Above"] = ema > df["ATRTrailingStop"]
+        df["Below"] = ema < df["ATRTrailingStop"]
         
-        pd_data["Buy"] = (pd_data["Close"] > pd_data["ATRTrailingStop"]) & (pd_data["Above"]==True)
-        pd_data["Sell"] = (pd_data["Close"] < pd_data["ATRTrailingStop"]) & (pd_data["Below"]==True)
+        df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
+        df["Sell"] = (df["Close"] < df["ATRTrailingStop"]) & (df["Below"]==True)
+        return df
 
-    def findBuySellSignalsFromATRTrailing(self,df, key_value=1, atr_period=3, ema_period=200,buyOrSell=1,saveDict=None,screenDict=None):
+    def findBuySellSignalsFromATRTrailing(self,df, key_value=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+
         # Calculate ATR and xATRTrailingStop
-        xATR = np.array(pktalib.ATR(df['High'], df['Low'], df['Close'], timeperiod=atr_period))
+        xATR = np.array(pktalib.ATR(data['High'], data['Low'], data['Close'], timeperiod=atr_period))
         nLoss = key_value * xATR
-        src = df['Close']
-
+        src = data['Close']
         # Initialize arrays
-        xATRTrailingStop = np.zeros(len(df))
+        xATRTrailingStop = np.zeros(len(data))
         xATRTrailingStop[0] = src[0] - nLoss[0]
 
         # Calculate xATRTrailingStop using vectorized operations
@@ -301,12 +322,12 @@ class ScreeningStatistics:
         mask_buy = (np.roll(src, 1) < xATRTrailingStop) & (src > np.roll(xATRTrailingStop, 1))
         mask_sell = (np.roll(src, 1) > xATRTrailingStop) & (src < np.roll(xATRTrailingStop, 1))
 
-        pos = np.zeros(len(df))
+        pos = np.zeros(len(data))
         pos = np.where(mask_buy, 1, pos)
         pos = np.where(mask_sell, -1, pos)
         pos[~((pos == 1) | (pos == -1))] = 0
 
-        ema = np.array(pktalib.EMA(df['Close'], timeperiod=ema_period))
+        ema = np.array(pktalib.EMA(data['Close'], timeperiod=ema_period))
 
         buy_condition_utbot = (xATRTrailingStop > ema) & (pos > 0) & (src > ema)
         sell_condition_utbot = (xATRTrailingStop < ema) & (pos < 0) & (src < ema)
@@ -314,11 +335,11 @@ class ScreeningStatistics:
         # The resulting trend array holds values of 1 (buy), -1 (sell), or 0 (neutral).
         trend = np.where(buy_condition_utbot, 1, np.where(sell_condition_utbot, -1, 0))
         trend_arr = np.array(trend)
-        print(trend)
-        df['trend'] = trend_arr
+        data.insert(len(data.columns), "trend", trend_arr)
+        trend = trend[0]
         saveDict["B/S"] = "Buy" if trend == 1 else ("Sell" if trend == -1 else "NA")
         screenDict["B/S"] = (colorText.GREEN + "Buy") if trend == 1 else ((colorText.FAIL+ "Sell") if trend == -1 else (colorText.WARN + "NA")) + colorText.END
-        return buyOrSell == trend
+        return buySellAll == trend
 
     # Example of combining UTBot Alerts with RSI and ADX
     def custom_strategy(self,dataframe):
@@ -425,48 +446,6 @@ class ScreeningStatistics:
                 'exit_short'] = 1
             
         return dataframe
-    
-# study(title="UT Bot Alerts", overlay = true)
-
-# // Inputs
-# a = input(1,     title = "Key Vaule. 'This changes the sensitivity'")
-# c = input(10,    title = "ATR Period")
-# h = input(false, title = "Signals from Heikin Ashi Candles")
-
-# xATR  = atr(c)
-# nLoss = a * xATR
-
-# src = h ? security(heikinashi(syminfo.tickerid), timeframe.period, close, lookahead = false) : close
-
-# xATRTrailingStop = 0.0
-# xATRTrailingStop := iff(src > nz(xATRTrailingStop[1], 0) and src[1] > nz(xATRTrailingStop[1], 0), max(nz(xATRTrailingStop[1]), src - nLoss),
-#    iff(src < nz(xATRTrailingStop[1], 0) and src[1] < nz(xATRTrailingStop[1], 0), min(nz(xATRTrailingStop[1]), src + nLoss), 
-#    iff(src > nz(xATRTrailingStop[1], 0), src - nLoss, src + nLoss)))
- 
-# pos = 0   
-# pos :=	iff(src[1] < nz(xATRTrailingStop[1], 0) and src > nz(xATRTrailingStop[1], 0), 1,
-#    iff(src[1] > nz(xATRTrailingStop[1], 0) and src < nz(xATRTrailingStop[1], 0), -1, nz(pos[1], 0))) 
-   
-# xcolor = pos == -1 ? color.red: pos == 1 ? color.green : color.blue 
-
-# ema   = ema(src,1)
-# above = crossover(ema, xATRTrailingStop)
-# below = crossover(xATRTrailingStop, ema)
-
-# buy  = src > xATRTrailingStop and above 
-# sell = src < xATRTrailingStop and below
-
-# barbuy  = src > xATRTrailingStop 
-# barsell = src < xATRTrailingStop 
-
-# plotshape(buy,  title = "Buy",  text = 'Buy',  style = shape.labelup,   location = location.belowbar, color= color.green, textcolor = color.white, transp = 0, size = size.tiny)
-# plotshape(sell, title = "Sell", text = 'Sell', style = shape.labeldown, location = location.abovebar, color= color.red,   textcolor = color.white, transp = 0, size = size.tiny)
-
-# barcolor(barbuy  ? color.green : na)
-# barcolor(barsell ? color.red   : na)
-
-# alertcondition(buy,  "UT Long",  "UT Long")
-# alertcondition(sell, "UT Short", "UT Short")
 
     # Find accurate breakout value
     def findBreakingoutNow(self, df, fullData, saveDict, screenDict):

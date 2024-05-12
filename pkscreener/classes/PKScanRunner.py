@@ -37,7 +37,7 @@ from PKDevTools.classes.PKGitFolderDownloader import downloadFolder
 from PKDevTools.classes.PKMultiProcessorClient import PKMultiProcessorClient
 from PKDevTools.classes.multiprocessing_logging import LogQueueReader
 from PKDevTools.classes.SuppressOutput import SuppressOutput
-# from PKDevTools.classes.FunctionTimeouts import exit_after
+from PKDevTools.classes.FunctionTimeouts import exit_after
 
 from pkscreener.classes.StockScreener import StockScreener
 from pkscreener.classes.CandlePatterns import CandlePatterns
@@ -293,6 +293,7 @@ class PKScanRunner:
             PKScanRunner.terminateAllWorkers(userPassedArgs,consumers, tasks_queue, testing)
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
+    @exit_after(180) # Should not remain stuck starting the multiprocessing clients beyond this time
     def prepareToRunScan(menuOption,keyboardInterruptEvent, screenCounter, screenResultsCounter, stockDictPrimary,stockDictSecondary, items, executeOption):
         tasks_queue, results_queue, totalConsumers, logging_queue = PKScanRunner.initQueues(len(items))
         scr = ScreeningStatistics.ScreeningStatistics(PKScanRunner.configManager, default_logger())
@@ -331,6 +332,7 @@ class PKScanRunner:
         PKScanRunner.startWorkers(consumers)
         return tasks_queue,results_queue,consumers,logging_queue
 
+    @exit_after(180) # Should not remain stuck starting the multiprocessing clients beyond this time
     def startWorkers(consumers):
         try:
             from pytest_cov.embed import cleanup_on_signal, cleanup_on_sigterm
@@ -356,7 +358,7 @@ class PKScanRunner:
             worker.start()
         OutputControls().printOutput(f"Started all workers in {round(time.time() - start_time,4)}s")
         if OutputControls().enableMultipleLineOutput:
-            sys.stdout.write("\x1b[1A")
+            sys.stdout.write("\x1b[1A") # Move cursor up to hide the starting times we printed above
 
     def terminateAllWorkers(userPassedArgs,consumers, tasks_queue, testing=False):
         shouldSuppress = (userPassedArgs is None) or (userPassedArgs is not None and not userPassedArgs.log)
@@ -443,4 +445,5 @@ class PKScanRunner:
             if counter >= numStocksPerIteration: #int(numStocksPerIteration * 0.75):
                 queueCounter += 1
                 counter = 0
+        
         return backtest_df, lastNonNoneResult

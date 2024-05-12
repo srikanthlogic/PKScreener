@@ -111,6 +111,7 @@ level2_X_MenuDict = {
     "27": "ATR Cross                      ",
     "28": "Bullish Higher Opens           ",
     "29": "Intraday Bid/Ask Build-up      ",
+    "30": "ATR Trailing Stops(Swing Paper Trading)",
     # "28": "Extremely bullish daily close      ",
     # "29": "Rising RSI                      ",
     # "30": "RSI entering bullish territory",
@@ -423,6 +424,13 @@ class menus:
                     )
                 elif selectedMenu.menuKey == "22":
                     return self.renderLevel3_X_StockPerformance_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+                elif selectedMenu.menuKey in ["30"]:
+                    return self.renderLevel4_X_Lorenzian_Menus(
                         skip=skip,
                         asList=asList,
                         renderStyle=renderStyle,

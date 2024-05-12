@@ -188,16 +188,16 @@ class StockScreener:
                     data = data.tail(len(intraday_data))
                     intraday_data = intraday_data.tail(len(data))
                     # Indexes won't match. Hence, we'd need to fallback on tolist
-                    processedData.loc[:,"RSIi"] = intraday_processedData["RSI"].tolist()
-                    fullData.loc[:,"RSIi"] = intraday_fullData["RSI"].tolist()
+                    processedData.insert(len(processedData.columns), "RSIi", intraday_processedData["RSI"].tolist())
+                    fullData.insert(len(fullData.columns), "RSIi", intraday_processedData["RSI"].tolist())
                 else:
                     with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
-                        processedData.loc[:,"RSIi"] = np.nan
-                        fullData.loc[:,"RSIi"] = np.nan
+                        processedData.insert(len(processedData.columns), "RSIi", np.array(np.nan))
+                        fullData.insert(len(fullData.columns), "RSIi", np.array(np.nan))
             else:
                     with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
-                        processedData.loc[:,"RSIi"] = np.nan
-                        fullData.loc[:,"RSIi"] = np.nan
+                        processedData.insert(len(processedData.columns), "RSIi", np.array(np.nan))
+                        fullData.insert(len(fullData.columns), "RSIi", np.array(np.nan))
 
             def returnLegibleData(exceptionMessage=None):
                 if backtestDuration == 0 or menuOption not in ["B"]:
@@ -263,7 +263,7 @@ class StockScreener:
                 isLowestVolume = False
                 hasBbandsSqz = False
 
-                isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData)
+                isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,maLength)
                 if not isValidityCheckMet:
                     return returnLegibleData("Validity Check not met!")
                 isShortTermBullish = (executeOption == 11 and isValidityCheckMet)
@@ -546,7 +546,7 @@ class StockScreener:
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)
                         or (executeOption == 11 and isShortTermBullish)
-                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25,27,28] and isValidityCheckMet)
+                        or (executeOption in [12,13,14,15,16,17,18,19,20,23,24,25,27,28,30] and isValidityCheckMet)
                         or (executeOption == 21 and (mfiStake > 0 and reversalOption in [3,5]))
                         or (executeOption == 21 and (mfiStake < 0 and reversalOption in [6,7]))
                         or (executeOption == 21 and (fairValueDiff > 0 and reversalOption in [8]))
@@ -679,9 +679,9 @@ class StockScreener:
                 )
         return None
 
-    def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData):
+    def performValidityCheckForExecuteOptions(self,executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,buySellAll=3):
         isValid = True
-        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27,28]:
+        if executeOption not in [11,12,13,14,15,16,17,18,19,20,23,24,25,27,28,30]:
             return True
         if executeOption == 11:
             isValid = screener.validateShortTermBullish(
@@ -721,6 +721,8 @@ class StockScreener:
             isValid = screener.findATRCross(processedData,saveDictionary, screeningDictionary)
         elif executeOption == 28:
             isValid = screener.findHigherBullishOpens(processedData)
+        elif executeOption == 30: # findBuySellSignalsFromATRTrailing # findATRTrailingStops
+            isValid = screener.findATRTrailingStops(fullData,buySellAll=buySellAll,saveDict=saveDictionary,screenDict=screeningDictionary)
         
         return isValid        
                     
