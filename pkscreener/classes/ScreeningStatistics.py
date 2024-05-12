@@ -446,6 +446,410 @@ class ScreeningStatistics:
             
         return dataframe
 
+    # def identify_demand_zone(self,data, cmp):
+    #     demand_zones = []
+    #     drop_base_rally_zone = False
+    #     rally_base_rally_zone = False
+        
+    #     # Additional variables to track base candle prices for proximal line calculation
+    #     base_candle_prices = []
+        
+    #     for i in range(len(data) - 2):
+    #         if data['Candle Type'][i] == 'Drop Candle' and data['Candle Type'][i + 1] == 'Base Candle':
+    #             base_count = 1
+    #             j = i + 2
+    #             while j < len(data) and data['Candle Type'][j] == 'Base Candle':
+    #                 base_count += 1
+    #                 j += 1
+                
+    #             if base_count <= 4:  # Maximum of 4 base candles for weekly or monthly timeframe, else 3 for daily
+    #                 if j < len(data) and data['Candle Type'][j] == 'Rally Candle':
+    #                     if data['Close'][j] > data['Low'][i] + 0.6 * data['Candle Range'][i] and data['High'][i] <= cmp:
+    #                         # Check for one more rally candle or green base candle
+    #                         k = j + 1
+    #                         while k < len(data):
+    #                             if data['Candle Type'][k] == 'Rally Candle' or (data['Candle Type'][k] == 'Base Candle' and data['Close'][k] > data['Open'][k]):
+    #                                 demand_zones.append((i, j, 'Drop Base Rally', base_count))
+    #                                 drop_base_rally_zone = True
+    #                                 break
+    #                             k += 1
+    #         elif data['Candle Type'][i] == 'Rally Candle' and data['Candle Type'][i + 1] == 'Base Candle':
+    #             base_count = 1
+    #             j = i + 2
+    #             while j < len(data) and data['Candle Type'][j] == 'Base Candle':
+    #                 base_count += 1
+    #                 j += 1
+                
+    #             if base_count >= 1:  # At least one base candle required
+    #                 if j < len(data) and data['Candle Type'][j] == 'Rally Candle':
+    #                     if data['Close'][j] > data['Close'][i] and data['High'][i] <= cmp:  # New condition: close of 2nd rally candle > 1st rally candle
+    #                         # Check for one more rally candle or green base candle
+    #                         k = j + 1
+    #                         while k < len(data):
+    #                             if data['Candle Type'][k] == 'Rally Candle' or (data['Candle Type'][k] == 'Base Candle' and data['Close'][k] > data['Open'][k]):
+    #                                 demand_zones.append((i, j, 'Rally Base Rally', base_count))
+    #                                 rally_base_rally_zone = True
+    #                                 break
+    #                             k += 1
+                            
+    #         # Collect base candle prices for proximal line calculation
+    #         if data['Candle Type'][i] == 'Base Candle':
+    #             base_candle_prices.append(data['Close'][i])
+
+    #     # Calculate proximal line price (highest price among base candles)
+    #     proximal_line_price = max(base_candle_prices) if base_candle_prices else None
+
+    #     return demand_zones, drop_base_rally_zone, rally_base_rally_zone, proximal_line_price
+
+    # def identify_supply_zone(self,data, cmp):
+    #     supply_zones = []
+    #     rally_base_drop_zone = False
+    #     drop_base_drop_zone = False
+        
+    #     # Additional variables to track base candle prices for proximal line calculation
+    #     base_candle_prices = []
+        
+    #     for i in range(len(data) - 2):
+    #         if data['Candle Type'][i] == 'Drop Candle' and data['Candle Type'][i + 1] == 'Base Candle':
+    #             base_count = 1
+    #             j = i + 2
+    #             while j < len(data) and data['Candle Type'][j] == 'Base Candle':
+    #                 base_count += 1
+    #                 j += 1
+                
+    #             if base_count <= 4:  # Maximum of 4 base candles for weekly or monthly timeframe, else 3 for daily
+    #                 if j < len(data) and data['Candle Type'][j] == 'Drop Candle':
+    #                     if data['Close'][i] < data['Low'][j] and data['Low'][i] >= cmp:  # New condition: close of drop candle < low of base candle
+    #                         # New logic: Look for one more drop candle or red base candle
+    #                         k = j + 1
+    #                         while k < len(data) and (data['Candle Type'][k] == 'Drop Candle' or data['Close'][k] < data['Open'][k]):
+    #                             k += 1
+    #                         if k < len(data) and (data['Candle Type'][k] == 'Drop Candle' or data['Close'][k] < data['Open'][k]):
+    #                             supply_zones.append((i, j, 'Drop Base Drop', base_count))
+    #                             drop_base_drop_zone = True
+    #         elif data['Candle Type'][i] == 'Rally Candle' and data['Candle Type'][i + 1] == 'Base Candle':
+    #             base_count = 1
+    #             j = i + 2
+    #             while j < len(data) and data['Candle Type'][j] == 'Base Candle':
+    #                 base_count += 1
+    #                 j += 1
+                
+    #             if base_count >= 1:  # At least one base candle required
+    #                 if j < len(data) and data['Candle Type'][j] == 'Drop Candle':
+    #                     if data['Close'][j] < data['Open'][j] and data['Low'][i] >= cmp:  # Modified condition: close of drop candle < open of drop candle
+    #                         supply_zones.append((i, j, 'Rally Base Drop', base_count))
+    #                         rally_base_drop_zone = True
+                            
+    #         # Collect base candle prices for proximal line calculation
+    #         if data['Candle Type'][i] == 'Base Candle':
+    #             base_candle_prices.append(data['Close'][i])
+
+    #     # Calculate proximal line price (lowest price among base candles)
+    #     proximal_line_price = min(base_candle_prices) if base_candle_prices else None
+
+    #     return supply_zones, rally_base_drop_zone, drop_base_drop_zone, proximal_line_price
+
+    # def calculate_demand_proximal_lines(self,data, demand_zones):
+    #     proximal_line_prices = []
+    #     for start, end, _, _ in demand_zones:
+    #         base_candle_prices = data.loc[(data['Candle Type'] == 'Base Candle') & (data.index >= data.index[start]) & (data.index <= data.index[end]), ['Open', 'Close']]
+    #         max_price = base_candle_prices.max(axis=1).max()  # Get the maximum price among all base candles' open and close prices
+    #         proximal_line_prices.append(max_price)
+    #     return proximal_line_prices
+
+    # def calculate_supply_proximal_lines(self,data, supply_zones):
+    #     proximal_line_prices = []
+    #     for start, end, _, _ in supply_zones:
+    #         base_candle_prices = data.loc[(data['Candle Type'] == 'Base Candle') & (data.index >= data.index[start]) & (data.index <= data.index[end]), ['Open', 'Close']]
+    #         min_price = base_candle_prices.min(axis=1).min()  # Get the minimum price among all base candles' open and close prices
+    #         proximal_line_prices.append(min_price)
+    #     return proximal_line_prices
+        
+    # def calculate_demand_distal_lines(self,data, demand_zones):
+    #     distal_line_prices = []
+    #     for start, end, pattern, _ in demand_zones:
+    #         if pattern == 'Drop Base Rally':
+    #             # Logic for Drop Base Rally pattern: Take the lowest price among all components of the zone
+    #             lowest_price = min(data['Low'][start:end + 1])  # Get the lowest price within the zone
+    #             distal_line_prices.append(lowest_price)
+    #         elif pattern == 'Rally Base Rally':
+    #             # Logic for Rally Base Rally pattern: Take the lowest of only all base candle and followed rally candle
+    #             base_candle_prices = data.loc[(data['Candle Type'] == 'Base Candle') & (data.index >= data.index[start]) & (data.index <= data.index[end]), 'Low']
+    #             rally_candle_prices = data.loc[(data['Candle Type'] == 'Rally Candle') & (data.index >= data.index[end]) & (data.index < data.index[end+1]), 'Low']
+    #             all_prices = pd.concat([base_candle_prices, rally_candle_prices])
+    #             lowest_price = all_prices.min() if not all_prices.empty else None
+    #             distal_line_prices.append(lowest_price)
+    #     return distal_line_prices
+
+    # def calculate_supply_distal_lines(self,data, supply_zones):
+    #     distal_line_prices = []
+    #     for start, end, pattern, _ in supply_zones:
+    #         if pattern == 'Rally Base Drop':
+    #             # Logic for Rally Base Drop pattern: Take the highest price among all components of the zone
+    #             highest_price = max(data['High'][start:end + 1])  # Get the highest price within the zone
+    #             distal_line_prices.append(highest_price)
+    #         elif pattern == 'Drop Base Drop':
+    #             # Logic for Drop Base Drop pattern: Take the highest of only all base candles and followed drop candle
+    #             base_candle_prices = data.loc[(data['Candle Type'] == 'Base Candle') & (data.index >= data.index[start]) & (data.index <= data.index[end]), 'High']
+    #             drop_candle_prices = data.loc[(data['Candle Type'] == 'Drop Candle') & (data.index >= data.index[start]) & (data.index <= data.index[end]), 'High']
+    #             all_prices = pd.concat([base_candle_prices, drop_candle_prices])
+    #             highest_price = all_prices.max() if not all_prices.empty else None
+    #             distal_line_prices.append(highest_price)
+    #     return distal_line_prices
+
+    # def is_zone_tested(self,data, start_index, end_index, proximal_line_price):
+    #     """
+    #     Check if the proximal line price has been tested by future prices.
+        
+    #     Args:
+    #     - data: DataFrame containing stock data
+    #     - start_index: Start index of the demand/supply zone
+    #     - end_index: End index of the demand/supply zone
+    #     - proximal_line_price: Proximal line price
+        
+    #     Returns:
+    #     - True if the proximal line price is tested, False otherwise
+    #     """
+    #     for i in range(end_index + 1, len(data)):
+    #         if data['Low'][i] <= proximal_line_price <= data['High'][i]:
+    #             return True
+    #     return False
+
+    # def calculate_zone_range(self,proximal_line, distal_line):
+    #     """
+    #     Calculate the range of a zone given its proximal and distal lines.
+        
+    #     Args:
+    #     - proximal_line: Proximal line price
+    #     - distal_line: Distal line price
+        
+    #     Returns:
+    #     - Range of the zone
+    #     """
+    #     if proximal_line is not None and distal_line is not None:
+    #         return abs(proximal_line - distal_line)
+    #     else:
+    #         return None
+
+    # def calculate_demand_zone_ranges(self,demand_zones, demand_proximal_lines, demand_distal_lines):
+    #     """
+    #     Calculate the range of each demand zone.
+        
+    #     Args:
+    #     - demand_zones: List of demand zone tuples (start, end, pattern, base_count)
+    #     - demand_proximal_lines: List of proximal line prices for demand zones
+    #     - demand_distal_lines: List of distal line prices for demand zones
+        
+    #     Returns:
+    #     - List of ranges corresponding to each demand zone
+    #     """
+    #     demand_zone_ranges = []
+    #     for i, (start, end, _, _) in enumerate(demand_zones):
+    #         range_of_zone = self.calculate_zone_range(demand_proximal_lines[i], demand_distal_lines[i])
+    #         demand_zone_ranges.append(range_of_zone)
+    #     return demand_zone_ranges
+
+    # def calculate_supply_zone_ranges(self,supply_zones, supply_proximal_lines, supply_distal_lines):
+    #     """
+    #     Calculate the range of each supply zone.
+        
+    #     Args:
+    #     - supply_zones: List of supply zone tuples (start, end, pattern, base_count)
+    #     - supply_proximal_lines: List of proximal line prices for supply zones
+    #     - supply_distal_lines: List of distal line prices for supply zones
+        
+    #     Returns:
+    #     - List of ranges corresponding to each supply zone
+    #     """
+    #     supply_zone_ranges = []
+    #     for i, (start, end, _, _) in enumerate(supply_zones):
+    #         range_of_zone = self.calculate_zone_range(supply_proximal_lines[i], supply_distal_lines[i])
+    #         supply_zone_ranges.append(range_of_zone)
+    #     return supply_zone_ranges
+
+    # def filter_stocks_by_distance(self,data,symbol_list, threshold_percent, timeframe):
+    #     filtered_stocks = []
+    #     for symbol in symbol_list:
+    #         if data is not None:
+    #             cmp = data.iloc[-1]['Close']  # Current market price
+    #             demand_zones, _, _, demand_proximal_line = self.identify_demand_zone(data, cmp)  # Pass cmp argument here
+    #             supply_zones, _, _, supply_proximal_line = self.identify_supply_zone(data, cmp)  # Pass cmp argument here
+                
+    #             # Check if either demand or supply zones exist for the stock
+    #             if demand_zones or supply_zones:
+    #                 filtered_stocks.append(symbol)
+
+    #     return filtered_stocks
+    
+    # def findDemandSupplyZones(self,data,threshold_percent=1):        
+    #     # Initialize count for filtered stocks
+    #     count_filtered_stocks = 0
+
+    #     # Analyze demand and supply zones for each stock and save results in a file
+    #     with open("demand_supply_zones.txt", "w") as file:
+    #         for symbol in data["Stock"]:
+    #             if data is not None:
+    #                 cmp = data.iloc[-1]['Close']  # Current market price
+    #                 demand_zones, _, _, demand_proximal_line = self.identify_demand_zone(data, cmp)
+    #                 supply_zones, _, _, supply_proximal_line = self.identify_supply_zone(data, cmp)
+
+    #                 # Step 1: Calculate proximal lines for demand and supply zones
+    #                 demand_proximal_lines = self.calculate_demand_proximal_lines(data, demand_zones)
+    #                 supply_proximal_lines = self.calculate_supply_proximal_lines(data, supply_zones)
+                    
+    #                 # Step 2: Calculate distal lines for demand zones and supply zones
+    #                 demand_distal_lines = self.calculate_demand_distal_lines(data, demand_zones)
+    #                 supply_distal_lines = self.calculate_supply_distal_lines(data, supply_zones)
+
+    #                 # Calculate range of demand and supply zones
+    #                 demand_zone_ranges = self.calculate_demand_zone_ranges(demand_zones, demand_proximal_lines, demand_distal_lines)
+    #                 supply_zone_ranges = self.calculate_supply_zone_ranges(supply_zones, supply_proximal_lines, supply_distal_lines)
+                    
+    #                 file.write(f"\n\nAnalysis for {symbol} ({timeframe}):")
+                    
+    #                 # Demand Zones
+    #                 file.write("\n\nDemand Zones:")
+    #                 if demand_zones:  # Check if demand_zones is not empty
+    #                     for i, (start, end, pattern, base_count) in enumerate(demand_zones):
+    #                         dist_from_cmp = abs((cmp - demand_proximal_lines[i]) / cmp) * 100
+    #                         file.write(f"\n\nZone {i+1}: Start Date: {data.index[start].date()}, End Date: {data.index[end].date()}")
+    #                         file.write(f"\nPattern Name: {pattern}, Number of Base Candle: {base_count}")
+    #                         file.write(f"\nDistance from CMP: {dist_from_cmp:.2f}%")
+    #                         if demand_proximal_lines:
+    #                             file.write(f"\nProximal Line Price: {demand_proximal_lines[i]:.2f}")
+    #                         if demand_distal_lines:  # Include distal line price if available
+    #                             file.write(f"\nDistal Line Price: {demand_distal_lines[i]:.2f}")
+    #                         # Include zone range
+    #                             file.write(f"\nZone Range: {demand_zone_ranges[i]:.2f}")       
+    #                         # Check if proximal line is tested
+    #                         tested = self.is_zone_tested(data, start, end, demand_proximal_lines[i])
+    #                         if tested:
+    #                             file.write("\nZone is Tested")
+    #                         else:
+    #                             file.write("\nFresh Zone")
+    #                 else:
+    #                     file.write("\nNo demand zone patterns found.")
+
+    #                 # Supply Zones
+    #                 file.write("\n\nSupply Zones:")
+    #                 if supply_zones:  # Check if supply_zones is not empty
+    #                     for i, (start, end, pattern, base_count) in enumerate(supply_zones):
+    #                         dist_from_cmp = abs((cmp - supply_proximal_lines[i]) / cmp) * 100
+    #                         file.write(f"\n\nZone {i+1}: Start Date: {data.index[start].date()}, End Date: {data.index[end].date()}")
+    #                         file.write(f"\nPattern Name: {pattern}, Number of Base Candle: {base_count}")
+    #                         file.write(f"\nDistance from CMP: {dist_from_cmp:.2f}%")
+    #                         if supply_proximal_lines:
+    #                             file.write(f"\nProximal Line Price: {supply_proximal_lines[i]:.2f}")
+    #                         if supply_distal_lines:  # Include distal line price if available
+    #                             file.write(f"\nDistal Line Price: {supply_distal_lines[i]:.2f}")
+    #                         # Include zone range
+    #                             file.write(f"\nZone Range: {supply_zone_ranges[i]:.2f}")
+    #                         # Check if proximal line is tested
+    #                         tested = is_zone_tested(data, start, end, supply_proximal_lines[i])
+    #                         if tested:
+    #                             file.write("\nZone is Tested")
+    #                         else:
+    #                             file.write("\nFresh Zone")
+    #                 else:
+    #                     file.write("\nNo supply zone patterns found.")
+
+    #                 # Check if the stock has either demand or supply zone within the threshold
+    #                 has_demand_or_supply_within_threshold = any(
+    #                     abs((cmp - price) / cmp) * 100 <= threshold_percent
+    #                     for price in demand_proximal_lines + supply_proximal_lines
+    #                 )
+                    
+    #                 # If the stock has demand or supply zone within the threshold, increment the count
+    #                 if has_demand_or_supply_within_threshold:
+    #                     count_filtered_stocks += 1
+
+    #     # Filter stocks based on the percentage threshold and save the results in another file
+    #     filtered_stocks = self.filter_stocks_by_distance(stock_symbols, threshold_percent, timeframe)
+
+    #     with open("filtered_stocks_data.txt", "w") as file:
+    #         file.write(f"Number of stocks Filtered: {count_filtered_stocks}\n\n")
+    #         file.write("Filtered Stock Data:\n\n")
+            
+    #         for symbol in filtered_stocks:
+    #             if data is not None:
+    #                 cmp = data.iloc[-1]['Close']  # Current market price
+    #                 demand_zones, _, _, demand_proximal_line = self.identify_demand_zone(data, cmp)
+    #                 supply_zones, _, _, supply_proximal_line = self.identify_supply_zone(data, cmp)
+
+    #                 # Step 1: Calculate proximal lines for demand and supply zones
+    #                 demand_proximal_lines = self.calculate_demand_proximal_lines(data, demand_zones)
+    #                 supply_proximal_lines = self.calculate_supply_proximal_lines(data, supply_zones)
+                    
+    #                 # Step 2: Calculate distal lines for demand zones and supply zones
+    #                 demand_distal_lines = self.calculate_demand_distal_lines(data, demand_zones)
+    #                 supply_distal_lines = self.calculate_supply_distal_lines(data, supply_zones)
+                    
+    #                 # Calculate range of demand and supply zones
+    #                 demand_zone_ranges = self.calculate_demand_zone_ranges(demand_zones, demand_proximal_lines, demand_distal_lines)
+    #                 supply_zone_ranges = self.calculate_supply_zone_ranges(supply_zones, supply_proximal_lines, supply_distal_lines)
+                                    
+    #                 # Check if the stock has either demand or supply zone within the threshold
+    #                 has_demand_or_supply_within_threshold = any(
+    #                     abs((cmp - price) / cmp) * 100 <= threshold_percent
+    #                     for price in demand_proximal_lines + supply_proximal_lines
+    #                 )
+                    
+    #                 # If the stock has demand or supply zone within the threshold, write its analysis
+    #                 if has_demand_or_supply_within_threshold:
+    #                     file.write(f"Analysis for {symbol} ({timeframe}):\n")
+                        
+    #                     # Demand Zones
+    #                     file.write("\n\nDemand Zones:")
+    #                     if demand_zones:  # Check if demand_zones is not empty
+    #                         for i, (start, end, pattern, base_count) in enumerate(demand_zones):
+    #                             dist_from_cmp = abs((cmp - demand_proximal_lines[i]) / cmp) * 100
+    #                             if abs(dist_from_cmp) <= threshold_percent:  # Check if dist_from_cmp is within threshold
+    #                                 file.write(f"\n\nZone {i+1}: Start Date: {data.index[start].date()}, End Date: {data.index[end].date()}")
+    #                                 file.write(f"\nPattern Name: {pattern}, Number of Base Candle: {base_count}")
+    #                                 file.write(f"\nDistance from CMP: {dist_from_cmp:.2f}%")
+    #                                 if demand_proximal_lines:
+    #                                     file.write(f"\nProximal Line Price: {demand_proximal_lines[i]:.2f}")
+    #                                 if demand_distal_lines:  # Include distal line price if available
+    #                                     file.write(f"\nDistal Line Price: {demand_distal_lines[i]:.2f}")
+    #                                 # Include zone range
+    #                                     file.write(f"\nZone Range: {demand_zone_ranges[i]:.2f}")
+    #                                 # Check if proximal line is tested
+    #                                 tested = is_zone_tested(data, start, end, demand_proximal_lines[i])
+    #                                 if tested:
+    #                                     file.write("\nZone is Tested")
+    #                                 else:
+    #                                     file.write("\nFresh Zone")
+    #                     else:
+    #                         file.write("\nNo demand zone patterns found.")
+
+    #                     # Supply Zones
+    #                     file.write("\n\nSupply Zones:")
+    #                     if supply_zones:  # Check if supply_zones is not empty
+    #                         for i, (start, end, pattern, base_count) in enumerate(supply_zones):
+    #                             dist_from_cmp = abs((cmp - supply_proximal_lines[i]) / cmp) * 100
+    #                             if abs(dist_from_cmp) <= threshold_percent:  # Check if dist_from_cmp is within threshold
+    #                                 file.write(f"\n\nZone {i+1}: Start Date: {data.index[start].date()}, End Date: {data.index[end].date()}")
+    #                                 file.write(f"\nPattern Name: {pattern}, Number of Base Candle: {base_count}")
+    #                                 file.write(f"\nDistance from CMP: {dist_from_cmp:.2f}%")
+    #                                 if supply_proximal_lines:
+    #                                     file.write(f"\nProximal Line Price: {supply_proximal_lines[i]:.2f}")
+    #                                 if supply_distal_lines:  # Include distal line price if available
+    #                                     file.write(f"\nDistal Line Price: {supply_distal_lines[i]:.2f}")
+    #                                 # Include zone range
+    #                                     file.write(f"\nZone Range: {supply_zone_ranges[i]:.2f}")
+    #                                 # Check if proximal line is tested
+    #                                 tested = self.is_zone_tested(data, start, end, supply_proximal_lines[i])
+    #                                 if tested:
+    #                                     file.write("\nZone is Tested")
+    #                                 else:
+    #                                     file.write("\nFresh Zone")
+    #                     else:
+    #                         file.write("\nNo supply zone patterns found.")
+
+    #                     file.write("\n\n")
+                    
+    #     print("Analysis completed and results saved.")
+        
     # Find accurate breakout value
     def findBreakingoutNow(self, df, fullData, saveDict, screenDict):
         if df is None or len(df) == 0:
