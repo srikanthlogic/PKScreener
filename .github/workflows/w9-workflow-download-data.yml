@@ -54,7 +54,7 @@ on:
       scanOptions:
         description: 'Scan options for historical scans. cleanuphistoricalscans MUST to be left empty to run historical scans.'
         required: false
-        default: '--reScanForZeroSize --scanDaysInPast 3 -s2 42,0,21,22,29,30,31,M,Z -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s3 "0" -s4 "0" --branchname actions-data-download --scans --triggerRemotely -f'
+        default: '--reScanForZeroSize --scanDaysInPast 3 -s2 42,0,21,22,29,31,M,Z -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s3 "0" -s4 "0" --branchname actions-data-download --scans --triggerRemotely -f'
 
   schedule:
   - cron: '58 9 * * 0-6'
@@ -270,7 +270,7 @@ jobs:
       env:
         RUNNER : "LOCAL_RUN_SCANNER"
       run: |
-        python3 .github/workflows/workflowtriggers.py -f --cleanuphistoricalscans --scanDaysInPast 251 -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s2 0,22,29,30,42,M,Z -s3 0 -s4 0 --branchname actions-data-download
+        python3 .github/workflows/workflowtriggers.py -f --cleanuphistoricalscans --scanDaysInPast 251 -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s2 0,22,29,42,M,Z -s3 0 -s4 0 --branchname actions-data-download
 
     - name: Setup Python environment for triggers on Ubuntu
       shell: bash
@@ -359,7 +359,7 @@ jobs:
         gh run list --status cancelled --limit 400 --json databaseId -q '.[].databaseId' | xargs -IID gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/actions/runs/ID" -X DELETE
       env:
         GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
-  # || '--reScanForZeroSize --scans --local --scanDaysInPast 3 -s2 0,22,29,30,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s3 "0" -s4 "0" --branchname actions-data-download -f' }}
+  # || '--reScanForZeroSize --scans --local --scanDaysInPast 3 -s2 0,22,29,31,42,M,Z -s0 S,T,E,U,Z,H,Y,B,G,C,M,D,I,L -s1 W,N,E,M,Z,0,2,3,4,6,7,9,10,13,15 -s3 "0" -s4 "0" --branchname actions-data-download -f' }}
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04
   #   needs: [Download_Stock_Data]
