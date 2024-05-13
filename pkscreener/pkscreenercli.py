@@ -255,7 +255,10 @@ def removeMonitorFile():
         except:
             pass
         index += 1
-    resetConfigToDefault()
+    argsv = argParser.parse_known_args()
+    args = argsv[0]
+    if args is not None and args.options is not None and not args.options.upper().startswith("T"):
+        resetConfigToDefault()
 
 def logFilePath():
     try:

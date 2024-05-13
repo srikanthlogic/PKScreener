@@ -722,7 +722,7 @@ class StockScreener:
         elif executeOption == 28:
             isValid = screener.findHigherBullishOpens(processedData)
         elif executeOption == 30: # findBuySellSignalsFromATRTrailing # findATRTrailingStops
-            isValid = screener.findATRTrailingStops(fullData,sensitivity=configManager.atrTrailingStopSensitivity, atr_period=configManager.atrTrailingStopPeriod,buySellAll=buySellAll,saveDict=saveDictionary,screenDict=screeningDictionary)
+            isValid = screener.findATRTrailingStops(fullData,sensitivity=configManager.atrTrailingStopSensitivity, atr_period=configManager.atrTrailingStopPeriod,ema_period=configManager.atrTrailingStopEMAPeriod,buySellAll=buySellAll,saveDict=saveDictionary,screenDict=screeningDictionary)
         
         return isValid        
                     

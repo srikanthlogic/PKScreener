@@ -248,7 +248,7 @@ class ScreeningStatistics:
         else:
             return close + nloss
     
-    def findATRTrailingStops(self,df,sensitivity=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
+    def findATRTrailingStops(self,df,sensitivity=1, atr_period=10, ema_period=1,buySellAll=1,saveDict=None,screenDict=None):
         if df is None or len(df) == 0:
             return False
         data = df.copy()

@@ -380,6 +380,7 @@ def handleScannerExecuteOption4(executeOption, options):
 def handleSecondaryMenuChoices(
     menuOption, testing=False, defaultAnswer=None, user=None
 ):
+    global userPassedArgs
     if menuOption == "H":
         showSendHelpInfo(defaultAnswer, user)
     elif menuOption == "U":
@@ -387,7 +388,49 @@ def handleSecondaryMenuChoices(
         if defaultAnswer is None:
             input("Press <Enter> to continue...")
     elif menuOption == "T":
-        toggleUserConfig()
+        if userPassedArgs is None or userPassedArgs.options is None:
+            selectedMenu = m0.find(menuOption)
+            m1.renderForMenu(selectedMenu=selectedMenu)
+            periodOption = input(
+                    colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                )
+            OutputControls().printOutput(colorText.END, end="")
+            if periodOption is None or periodOption.upper() not in ["L","S"]:
+                return
+            if periodOption.upper() in ["L","S"]:
+                selectedMenu = m1.find(periodOption)
+                m2.renderForMenu(selectedMenu=selectedMenu)
+                durationOption = input(
+                        colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                    )
+                OutputControls().printOutput(colorText.END, end="")
+                if durationOption is None or durationOption.upper() not in ["1","2","3","4","5"]:
+                    return
+                if durationOption.upper() in ["1","2","3","4"]:
+                    selectedMenu = m2.find(durationOption)
+                    periodDurations = selectedMenu.menuText.split("(")[1].split(")")[0].split(", ")
+                    configManager.period = periodDurations[0]
+                    configManager.duration = periodDurations[1]
+                    configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
+                elif durationOption.upper() in ["5"]:
+                    configManager.setConfig(ConfigManager.parser, default=False, showFileCreatedText=True)
+                return
+        elif userPassedArgs is not None and userPassedArgs.options is not None:
+            options = userPassedArgs.options.split(":")
+            selectedMenu = m0.find(options[0])
+            m1.renderForMenu(selectedMenu=selectedMenu, asList=True)
+            selectedMenu = m1.find(options[1])
+            m2.renderForMenu(selectedMenu=selectedMenu)
+            if options[2] in ["1","2","3","4"]:
+                selectedMenu = m2.find(options[2])
+                periodDurations = selectedMenu.menuText.split("(")[1].split(")")[0].split(", ")
+                configManager.period = periodDurations[0]
+                configManager.duration = periodDurations[1]
+                configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
+            else:
+                toggleUserConfig()
+        else:
+            toggleUserConfig()
     elif menuOption == "E":
         configManager.setConfig(ConfigManager.parser)
     elif menuOption == "Y":

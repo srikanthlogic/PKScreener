@@ -71,6 +71,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.showPastStrategyData = False
         self.atrTrailingStopSensitivity = 1
         self.atrTrailingStopPeriod = 10
+        self.atrTrailingStopEMAPeriod = 1
         # This determines how many days apart the backtest calculations are run.
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
@@ -143,6 +144,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 pass
             parser.add_section("config")
             parser.add_section("filters")
+            parser.set("config", "atrtrailingstopemaperiod", str(self.atrTrailingStopEMAPeriod))
             parser.set("config", "atrtrailingstopperiod", str(self.atrTrailingStopPeriod))
             parser.set("config", "atrtrailingstopsensitivity", str(self.atrTrailingStopSensitivity))
             parser.set("config", "backtestPeriod", str(self.backtestPeriod))
@@ -212,13 +214,13 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 + colorText.END
             )
             self.period = input(
-                "[+] Enter number of days for which stock data to be downloaded (Days)(Optimal = 280): "
+                "[+] Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max\n[+] Enter number of days for which stock data to be downloaded (Days).(Optimal = 280): "
             )
             self.daysToLookback = input(
                 "[+] Number of recent trading periods (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 22): "
             )
             self.duration = input(
-                "[+] Enter Duration of each candle (Days)(Optimal = 1): "
+                "[+] Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo\n[+] Enter Duration of each candle (Days)(Optimal = 1): "
             )
             self.minLTP = input(
                 "[+] Minimum Price of Stock to Buy (in RS)(Optimal = 20): "
@@ -316,6 +318,10 @@ class tools(SingletonMixin, metaclass=SingletonType):
             self.atrTrailingStopSensitivity = input(
                 "[+] ATR Trailing Stop Sensitivity. (number)(Optimal = 1): "
             )
+            self.atrTrailingStopEMAPeriod = input(
+                "[+] ATR Trailing Stop EMA Period. (number)(Optimal = 1 to 200): "
+            )
+            parser.set("config", "atrtrailingstopemaperiod", self.atrTrailingStopEMAPeriod)
             parser.set("config", "atrtrailingstopperiod", self.atrTrailingStopPeriod)
             parser.set("config", "atrtrailingstopsensitivity", self.atrTrailingStopSensitivity)
             parser.set("config", "backtestPeriod", self.backtestPeriod)
@@ -441,6 +447,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     if "y" not in str(parser.get("config", "calculatersiintraday")).lower()
                     else True
                 )
+                self.atrTrailingStopEMAPeriod = int(parser.get("config", "atrtrailingstopemaperiod"))
                 self.atrTrailingStopPeriod = int(parser.get("config", "atrtrailingstopperiod"))
                 self.atrTrailingStopSensitivity = float(parser.get("config", "atrtrailingstopsensitivity"))
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))

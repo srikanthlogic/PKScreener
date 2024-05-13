@@ -52,6 +52,29 @@ level0MenuDict = {
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",
 }
+level1_T_MenuDict = {
+    "L": "Long Term",
+    "S": "Short Term (Intraday)",
+    "M": "Back to the Top/Main menu",
+}
+# Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+# Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+level2_T_MenuDict_L = {
+    "1": "Daily (280d, 1d)",
+    "2": "Weekly (280d, 1wk)",
+    "3": "Monthly (280d, 1mo)",
+    "4": "Hourly (280d, 1h)",
+    "5": "Custom",
+    "M": "Back to the Top/Main menu",
+}
+level2_T_MenuDict_S = {
+    "1": "1m (1d, 1m)",
+    "2": "5m (1d, 5m)",
+    "3": "15m (1d, 15m)",
+    "4": "30m (1d, 30m)",
+    "5": "Custom",
+    "M": "Back to the Top/Main menu",
+}
 level1_S_MenuDict = {
     "S": "Summary",
     "M": "Back to the Top/Main menu",
@@ -260,16 +283,17 @@ class menu:
         configManager.getConfig(ConfigManager.parser)
         menuText = "~"
         if self.level == 0 and menuKey == "T":
+            currentConfig = f" [Current ({configManager.period}, {configManager.duration})]"
             menuText = (
                 "Toggle between long-term (Default)"
                 + colorText.WARN
-                + " [Current]"
+                + currentConfig
                 + colorText.END
                 + " and Intraday user configuration\n"
                 if not configManager.isIntradayConfig()
                 else "Toggle between long-term (Default) and Intraday"
                 + colorText.WARN
-                + " [Current]"
+                + currentConfig
                 + colorText.END
                 + " user configuration"
             )
@@ -366,14 +390,14 @@ class menus:
                 menuText = menuText + m.render(coloredValues=([] if asList else coloredValues))
         return menuText
 
-    def renderForMenu(self, selectedMenu=None, skip=[], asList=False, renderStyle=None):
+    def renderForMenu(self, selectedMenu:menu=None, skip=[], asList=False, renderStyle=None):
         if selectedMenu is None and self.level == 0:
             # Top level Application Main menu
             return self.renderLevel0Menus(
                 skip=skip, asList=asList, renderStyle=renderStyle, parent=selectedMenu
             )
         elif selectedMenu is not None:
-            if selectedMenu.menuKey == "S":
+            if selectedMenu.menuKey == "S" and selectedMenu.level == 0:
                     return self.renderLevel1_S_Menus(
                     skip=skip,
                     asList=asList,
@@ -382,22 +406,46 @@ class menus:
                 )
             if selectedMenu.level == 0:
                 self.level = 1
-                # sub-menu of the top level main selected menu
-                return self.renderLevel1_X_Menus(
-                    skip=skip,
-                    asList=asList,
-                    renderStyle=renderStyle,
-                    parent=selectedMenu,
-                )
+                if selectedMenu.menuKey in ["T"]:
+                    return self.renderLevel1_T_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+                else:
+                    # sub-menu of the top level main selected menu
+                    return self.renderLevel1_X_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
             elif selectedMenu.level == 1:
                 self.level = 2
-                # next levelsub-menu of the selected sub-menu
-                return self.renderLevel2_X_Menus(
-                    skip=skip,
-                    asList=asList,
-                    renderStyle=renderStyle,
-                    parent=selectedMenu,
-                )
+                if selectedMenu.parent.menuKey in ["T"]:
+                    if selectedMenu.menuKey in ["L"]:
+                        return self.level2_T_MenuDict_L(
+                            skip=skip,
+                            asList=asList,
+                            renderStyle=renderStyle,
+                            parent=selectedMenu,
+                        )
+                    elif selectedMenu.menuKey in ["S"]:
+                        return self.level2_T_MenuDict_S(
+                            skip=skip,
+                            asList=asList,
+                            renderStyle=renderStyle,
+                            parent=selectedMenu,
+                        )
+                else:
+                    # next levelsub-menu of the selected sub-menu
+                    return self.renderLevel2_X_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
             elif selectedMenu.level == 2:
                 self.level = 3
                 # next levelsub-menu of the selected sub-menu
@@ -549,6 +597,42 @@ class menus:
                 )
             return menuText
         
+    def renderLevel1_T_Menus(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level1_T_MenuDict,
+            renderExceptionKeys=["M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select a configuration period for Screening:"
+                    + colorText.END
+                )
+                defaultKey = 'L' if configManager.period == '280d' else 'S'
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find(defaultKey).keyTextLabel()
+                    + ")  "
+                    "" + colorText.END
+                )
+            return menuText
+                
     def renderLevel1_X_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):
@@ -584,6 +668,70 @@ class menus:
                 )
             return menuText
 
+    def level2_T_MenuDict_L(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level2_T_MenuDict_L,
+            renderExceptionKeys=["4","5","M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select a config period/candle-duration combination: "
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+            """
+                    + colorText.END
+                )
+            return menuText
+
+    def level2_T_MenuDict_S(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level2_T_MenuDict_S,
+            renderExceptionKeys=["5", "M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select a config period/candle-duration combination: "
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+            """
+                    + colorText.END
+                )
+            return menuText
+        
     def renderLevel2_X_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):
