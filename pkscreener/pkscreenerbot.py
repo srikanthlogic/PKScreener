@@ -336,6 +336,8 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
     keyboard = [inlineMenus]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    if query.message.text == menuText:
+        menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
     await query.edit_message_text(text=menuText, reply_markup=reply_markup)
     return START_ROUTES
 
@@ -968,7 +970,7 @@ def _shouldAvoidResponse(update):
             sentFrom.append(abs(update.channel_post.sender_chat.id))
             sentFrom.append(update.channel_post.sender_chat.username)
     if update.edited_channel_post is not None:
-        sentFrom.append(abs(update.edited_channel_post.sender_chat.username))
+        sentFrom.append(abs(update.edited_channel_post.sender_chat.id))
 
     if (
         abs(int(Channel_Id)) in sentFrom
