@@ -213,148 +213,171 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 + "[+] PKScreener User Configuration:"
                 + colorText.END
             )
-            self.period = input(
-                "[+] Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max\n[+] Enter number of days for which stock data to be downloaded (Days).(Optimal = 280): "
-            )
-            self.daysToLookback = input(
-                "[+] Number of recent trading periods (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 22): "
-            )
-            self.duration = input(
-                "[+] Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo\n[+] Enter Duration of each candle (Days)(Optimal = 1): "
-            )
-            self.minLTP = input(
-                "[+] Minimum Price of Stock to Buy (in RS)(Optimal = 20): "
-            )
-            self.maxLTP = input(
-                "[+] Maximum Price of Stock to Buy (in RS)(Optimal = 50000): "
-            )
-            self.volumeRatio = input(
-                "[+] How many times the volume should be more than average for the breakout? (Number)(Optimal = 2.5): "
-            )
-            self.consolidationPercentage = input(
-                "[+] How many % the price should be in range to consider it as consolidation? (Number)(Optimal = 10): "
-            )
-            self.shuffle = str(
-                input(
-                    "[+] Shuffle stocks rather than screening alphabetically? (Y/N): "
-                )
-            ).lower()
-            self.cacheStockData = str(
-                input(
-                    "[+] Enable High-Performance and Data-Saver mode? (This uses little bit more CPU but performs High Performance Screening) (Y/N): "
-                )
-            ).lower()
-            self.stageTwoPrompt = str(
-                input(
-                    "[+] Screen only for Stage-2 stocks?\n(What are the stages? => https://www.investopedia.com/articles/trading/08/stock-cycle-trend-price.asp)\n(Y/N): "
-                )
-            ).lower()
-            self.useEmaPrompt = str(
-                input(
-                    "[+] Use EMA instead of SMA? (EMA is good for Short-term & SMA for Mid/Long-term trades)[Y/N]: "
-                )
-            ).lower()
-            self.showunknowntrendsPrompt = str(
-                input(
-                    "[+] Show even those results where trends are not known[Y/N] (Recommended Y): "
-                )
-            ).lower()
-            self.logsEnabledPrompt = str(
-                input(
-                    "[+] Enable Viewing logs? You can enable if you are having problems.[Y/N]: "
-                )
-            ).lower()
-            self.enablePortfolioCalculations = str(
-                input(
-                    "[+] Enable calculating portfolio values? [Y/N]: "
-                )
-            ).lower()
-            self.showPastStrategyData = str(
-                input(
-                    "[+] Enable showing past strategy data? [Y/N]: "
-                )
-            ).lower()
-            self.calculatersiintraday = str(
-                input(
-                    "[+] Calculate intraday RSI during trading hours? [Y/N]: "
-                )
-            ).lower()
-            self.generalTimeout = input(
-                "[+] General network timeout (in seconds)(Optimal = 2 for good networks): "
-            )
-            self.longTimeout = input(
-                "[+] Long network timeout for heavier downloads(in seconds)(Optimal = 4 for good networks): "
-            )
-            self.maxNetworkRetryCount = input(
-                "[+] Maximum number of retries in case of network timeout(in seconds)(Optimal = 10 for slow networks): "
-            )
-            self.defaultIndex = input(
-                "[+] Default Index(NSE=12, NASDAQ=15): "
-            )
-            self.backtestPeriod = input(
-                "[+] Number of days in the past for backtesting(in days)(Optimal = 30): "
-            )
-            self.maxBacktestWindow = input(
-                "[+] Number of days to show the results for backtesting(in days)(Optimal = 1 to 30): "
-            )
-            self.morninganalysiscandlenumber = input(
-                "[+] Candle number since the market open time(Optimal = 15 to 60): "
-            )
-            self.morninganalysiscandleduration = input(
-                "[+] Enter Duration of each candle (minutes)(Optimal = 1 to 5): "
-            )
-            self.minVolume = input(
-                "[+] Minimum per day traded volume of any stock (number)(Optimal = 100000): "
-            )
-            self.backtestPeriodFactor = input(
-                "[+] Factor for backtest periods. If you choose 5, 1-Pd would mean 5-Pd returns. (number)(Optimal = 1): "
-            )
-            self.minimumChangePercentage = input(
-                "[+] Minimun change in stock price (in percentage). (number)(Optimal = 0): "
-            )
-            self.atrTrailingStopPeriod = input(
-                "[+] ATR Trailing Stop Periods. (number)(Optimal = 10): "
-            )
-            self.atrTrailingStopSensitivity = input(
-                "[+] ATR Trailing Stop Sensitivity. (number)(Optimal = 1): "
-            )
-            self.atrTrailingStopEMAPeriod = input(
-                "[+] ATR Trailing Stop EMA Period. (number)(Optimal = 1 to 200): "
-            )
-            parser.set("config", "atrtrailingstopemaperiod", self.atrTrailingStopEMAPeriod)
-            parser.set("config", "atrtrailingstopperiod", self.atrTrailingStopPeriod)
-            parser.set("config", "atrtrailingstopsensitivity", self.atrTrailingStopSensitivity)
-            parser.set("config", "backtestPeriod", self.backtestPeriod)
-            parser.set("config", "backtestPeriodFactor", self.backtestPeriodFactor)
-            parser.set("config", "cacheStockData", self.cacheStockData)
-            parser.set("config", "calculatersiintraday", self.calculatersiintraday)
-            parser.set("config", "daysToLookback", self.daysToLookback)
-            parser.set("config", "defaultIndex", self.defaultIndex)
-            parser.set("config", "defaultMonitorOptions", self.defaultMonitorOptions)
-            parser.set("config", "duration", self.duration + "d")
-            parser.set("config", "enablePortfolioCalculations", self.enablePortfolioCalculations)
-            parser.set("config", "generalTimeout", self.generalTimeout)
-            parser.set("config", "logsEnabled", self.logsEnabledPrompt)
-            parser.set("config", "longTimeout", self.longTimeout)
-            parser.set("config", "maxBacktestWindow", self.maxBacktestWindow)
-            parser.set("config", "maxNetworkRetryCount", self.maxNetworkRetryCount)
-            parser.set("config", "maxDashboardWidgetsPerRow", self.maxDashboardWidgetsPerRow)
-            parser.set("config", "maxNumResultRowsInMonitor", self.maxNumResultRowsInMonitor)
-            parser.set("config", "morninganalysiscandleduration", self.morninganalysiscandleduration + "m")
-            parser.set("config", "morninganalysiscandlenumber", self.morninganalysiscandlenumber)
-            parser.set("config", "onlyStageTwoStocks", self.stageTwoPrompt)
-            parser.set("config", "period", self.period + "d")
-            parser.set("config", "showPastStrategyData", self.showPastStrategyData)
-            parser.set("config", "showunknowntrends", self.showunknowntrendsPrompt)
-            parser.set("config", "shuffle", self.shuffle)
-            parser.set("config", "useEMA", self.useEmaPrompt)
+            try:
+                self.period = input(
+                    f"[+] Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max\n[+] Enter number of days for which stock data to be downloaded (Days).(Optimal = 280, Current: {colorText.FAIL}{self.period}{colorText.END}): "
+                ) or self.period
+                self.daysToLookback = input(
+                    f"[+] Number of recent trading periods (TimeFrame) to screen for Breakout/Consolidation (Days)(Optimal = 22, Current: {colorText.FAIL}{self.daysToLookback}{colorText.END}): "
+                ) or self.daysToLookback
+                self.duration = input(
+                    f"[+] Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo\n[+] Enter Duration of each candle (Days)(Optimal = 1, Current: {colorText.FAIL}{self.duration}{colorText.END}): "
+                ) or self.duration
+                self.minLTP = input(
+                    f"[+] Minimum Price of Stock to Buy (in RS)(Optimal = 20, Current: {colorText.FAIL}{self.minLTP}{colorText.END}): "
+                ) or self.minLTP
+                self.maxLTP = input(
+                    f"[+] Maximum Price of Stock to Buy (in RS)(Optimal = 50000, Current: {colorText.FAIL}{self.maxLTP}{colorText.END}): "
+                ) or self.maxLTP
+                self.volumeRatio = input(
+                    f"[+] How many times the volume should be more than average for the breakout? (Number)(Optimal = 2.5, Current: {colorText.FAIL}{self.volumeRatio}{colorText.END}): "
+                ) or self.volumeRatio
+                self.consolidationPercentage = input(
+                    f"[+] How much % the price should be in range, to consider it as consolidation? (Number)(Optimal = 10, Current: {colorText.FAIL}{self.consolidationPercentage}{colorText.END}): "
+                ) or self.consolidationPercentage
+                self.shuffle = str(
+                    input(
+                        f"[+] Shuffle stocks rather than screening alphabetically? (Y/N, Current: {colorText.FAIL}{'y' if self.shuffleEnabled else 'n'}{colorText.END}): "
+                    ) or ('y' if self.shuffleEnabled else 'n')
+                ).lower()
+                self.cacheStockData = str(
+                    input(
+                        f"[+] Enable High-Performance and Data-Saver mode? (This uses little bit more CPU but performs High Performance Screening) (Y/N, Current: {colorText.FAIL}{('y' if self.cacheEnabled else 'n')}{colorText.END}): "
+                    ) or ('y' if self.cacheEnabled else 'n')
+                ).lower()
+                self.stageTwoPrompt = str(
+                    input(
+                        f"[+] Screen only for Stage-2 stocks?\n(What are the stages? => https://www.investopedia.com/articles/trading/08/stock-cycle-trend-price.asp)\n(Y/N, Current: {colorText.FAIL}{'y' if self.stageTwo else 'n'}{colorText.END}): "
+                    ) or ('y' if self.stageTwo else 'n')
+                ).lower()
+                self.useEmaPrompt = str(
+                    input(
+                        f"[+] Use EMA instead of SMA? (EMA is good for Short-term & SMA for Mid/Long-term trades)[Y/N, Current: {colorText.FAIL}{'y' if self.useEMA else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.useEMA else 'n')
+                ).lower()
+                self.showunknowntrendsPrompt = str(
+                    input(
+                        f"[+] Show even those results where trends are not known[Y/N] (Recommended Y, Current: {colorText.FAIL}{'y' if self.showunknowntrends else 'n'}{colorText.END}): "
+                    ) or ('y' if self.showunknowntrends else 'n')
+                ).lower()
+                self.logsEnabledPrompt = str(
+                    input(
+                        f"[+] Enable Viewing logs? You can enable if you are having problems.[Y/N, Current: {colorText.FAIL}{'y' if self.logsEnabled else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.logsEnabled else 'n')
+                ).lower()
+                self.enablePortfolioCalculations = str(
+                    input(
+                        f"[+] Enable calculating portfolio values? [Y/N, Current: {colorText.FAIL}{'y' if self.enablePortfolioCalculations else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.enablePortfolioCalculations else 'n')
+                ).lower()
+                self.showPastStrategyData = str(
+                    input(
+                        f"[+] Enable showing past strategy data? [Y/N, Current: {colorText.FAIL}{'y' if self.showPastStrategyData else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.showPastStrategyData else 'n')
+                ).lower()
+                self.calculatersiintraday = str(
+                    input(
+                        f"[+] Calculate intraday RSI during trading hours? [Y/N, Current: {colorText.FAIL}{'y' if self.calculatersiintraday else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.calculatersiintraday else 'n')
+                ).lower()
+                self.generalTimeout = input(
+                    f"[+] General network timeout (in seconds)(Optimal = 2 for good networks, Current: {colorText.FAIL}{self.generalTimeout}{colorText.END}): "
+                ) or self.generalTimeout
+                self.longTimeout = input(
+                    f"[+] Long network timeout for heavier downloads(in seconds)(Optimal = 4 for good networks, Current: {colorText.FAIL}{self.longTimeout}{colorText.END}): "
+                ) or self.longTimeout
+                self.maxNetworkRetryCount = input(
+                    f"[+] Maximum number of retries in case of network timeout(in seconds)(Optimal = 10 for slow networks, Current: {colorText.FAIL}{self.maxNetworkRetryCount}{colorText.END}): "
+                ) or self.maxNetworkRetryCount
+                self.defaultIndex = input(
+                    f"[+] Default Index(NSE=12, NASDAQ=15, Current: {colorText.FAIL}{self.defaultIndex}{colorText.END}): "
+                ) or self.defaultIndex
+                self.backtestPeriod = input(
+                    f"[+] Number of days in the past for backtesting(in days)(Optimal = 30, Current: {colorText.FAIL}{self.backtestPeriod}{colorText.END}): "
+                ) or self.backtestPeriod
+                self.maxBacktestWindow = input(
+                    f"[+] Number of days to show the results for backtesting(in days)(Optimal = 1 to 30, Current: {colorText.FAIL}{self.maxBacktestWindow}{colorText.END}): "
+                ) or self.maxBacktestWindow
+                self.morninganalysiscandlenumber = input(
+                    f"[+] Candle number since the market open time(Optimal = 15 to 60, Current: {colorText.FAIL}{self.morninganalysiscandlenumber}{colorText.END}): "
+                ) or self.morninganalysiscandlenumber
+                self.morninganalysiscandleduration = input(
+                    f"[+] Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo\n[+] Enter Duration of each candle (minutes)(Optimal = 1 to 5, Current: {colorText.FAIL}{self.morninganalysiscandleduration}{colorText.END}): "
+                ) or self.morninganalysiscandleduration
+                self.minVolume = input(
+                    f"[+] Minimum per day traded volume of any stock (number)(Optimal = 100000, Current: {colorText.FAIL}{self.minVolume}{colorText.END}): "
+                ) or self.minVolume
+                self.backtestPeriodFactor = input(
+                    f"[+] Factor for backtest periods. If you choose 5, 1-Pd would mean 5-Pd returns. (number)(Optimal = 1, Current: {colorText.FAIL}{self.backtestPeriodFactor}{colorText.END}): "
+                ) or self.backtestPeriodFactor
+                self.minimumChangePercentage = input(
+                    f"[+] Minimun change in stock price (in percentage). (number)(Optimal = 0, Current: {colorText.FAIL}{self.minimumChangePercentage}{colorText.END}): "
+                ) or self.minimumChangePercentage
+                self.atrTrailingStopPeriod = input(
+                    f"[+] ATR Trailing Stop Periods. (number)(Optimal = 10, Current: {colorText.FAIL}{self.atrTrailingStopPeriod}{colorText.END}): "
+                ) or self.atrTrailingStopPeriod
+                self.atrTrailingStopSensitivity = input(
+                    f"[+] ATR Trailing Stop Sensitivity. (number)(Optimal = 1, Current: {colorText.FAIL}{self.atrTrailingStopSensitivity}{colorText.END}): "
+                ) or self.atrTrailingStopSensitivity
+                self.atrTrailingStopEMAPeriod = input(
+                    f"[+] ATR Trailing Stop EMA Period. (number)(Optimal = 1 to 200, Current: {colorText.FAIL}{self.atrTrailingStopEMAPeriod}{colorText.END}): "
+                ) or self.atrTrailingStopEMAPeriod
+            except Exception as e:
+                default_logger().debug(e,exc_info=True)
+                from time import sleep
+                OutputControls().printOutput(colorText.FAIL + "Could not save configuration! Please check!" + colorText.END)
+                sleep(3)
+                pass
+            try:
+                parser.set("config", "atrtrailingstopemaperiod", str(self.atrTrailingStopEMAPeriod))
+                parser.set("config", "atrtrailingstopperiod", str(self.atrTrailingStopPeriod))
+                parser.set("config", "atrtrailingstopsensitivity", str(self.atrTrailingStopSensitivity))
+                parser.set("config", "backtestPeriod", str(self.backtestPeriod))
+                parser.set("config", "backtestPeriodFactor", str(self.backtestPeriodFactor))
+                parser.set("config", "cacheStockData", str(self.cacheStockData))
+                parser.set("config", "calculatersiintraday", str(self.calculatersiintraday))
+                parser.set("config", "daysToLookback", str(self.daysToLookback))
+                parser.set("config", "defaultIndex", str(self.defaultIndex))
+                parser.set("config", "defaultMonitorOptions", str(self.defaultMonitorOptions))
+                if self.duration:
+                    endDuration = str(self.duration)[-1].lower()
+                    endDuration = "d" if endDuration not in ["m","h","d","k","o"] else ""
+                parser.set("config", "duration", str(self.duration + endDuration))
+                parser.set("config", "enablePortfolioCalculations", str(self.enablePortfolioCalculations))
+                parser.set("config", "generalTimeout", str(self.generalTimeout))
+                parser.set("config", "logsEnabled", str(self.logsEnabledPrompt))
+                parser.set("config", "longTimeout", str(self.longTimeout))
+                parser.set("config", "maxBacktestWindow", str(self.maxBacktestWindow))
+                parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
+                parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
+                parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
+                if self.morninganalysiscandleduration:
+                    endMDuration = str(self.morninganalysiscandleduration)[-1].lower()
+                    endMDuration = "d" if endMDuration not in ["m","h","d","k","o"] else ""
+                parser.set("config", "morninganalysiscandleduration", str(self.morninganalysiscandleduration + endMDuration))
+                parser.set("config", "morninganalysiscandlenumber", str(self.morninganalysiscandlenumber))
+                parser.set("config", "onlyStageTwoStocks", str(self.stageTwoPrompt))
+                if self.period:
+                    endPeriod = str(self.period)[-1].lower()
+                    endPeriod = "d" if endPeriod not in ["d","o","y","x"] else ""
+                parser.set("config", "period", str(self.period + endPeriod))
+                parser.set("config", "showPastStrategyData", str(self.showPastStrategyData))
+                parser.set("config", "showunknowntrends", str(self.showunknowntrendsPrompt))
+                parser.set("config", "shuffle", str(self.shuffle))
+                parser.set("config", "useEMA", str(self.useEmaPrompt))
 
-            parser.set("filters", "consolidationPercentage", self.consolidationPercentage)
-            parser.set("filters", "maxPrice", self.maxLTP)
-            parser.set("filters", "minimumChangePercentage", self.minimumChangePercentage)
-            parser.set("filters", "minimumVolume", self.minVolume)
-            parser.set("filters", "minPrice", self.minLTP)
-            parser.set("filters", "volumeRatio", self.volumeRatio)
+                parser.set("filters", "consolidationPercentage", str(self.consolidationPercentage))
+                parser.set("filters", "maxPrice", str(self.maxLTP))
+                parser.set("filters", "minimumChangePercentage", str(self.minimumChangePercentage))
+                parser.set("filters", "minimumVolume", str(self.minVolume))
+                parser.set("filters", "minPrice", str(self.minLTP))
+                parser.set("filters", "volumeRatio", str(self.volumeRatio))
+            except Exception as e:
+                default_logger().debug(e,exc_info=True)
+                from time import sleep
+                OutputControls().printOutput(colorText.FAIL + "Could not save configuration! Please check!" + colorText.END)
+                sleep(3)
+                pass
 
             # delete stock data due to config change
             self.deleteFileWithPattern()
@@ -369,6 +392,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 fp = open("pkscreener.ini", "w")
                 parser.write(fp)
                 fp.close()
+                self.getConfig(parser=parser)
                 OutputControls().printOutput(
                     colorText.BOLD
                     + colorText.GREEN
