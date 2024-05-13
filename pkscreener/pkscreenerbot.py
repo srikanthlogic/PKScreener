@@ -44,6 +44,12 @@ import json
 import logging
 import re
 import sys
+import threading
+try:
+    import thread
+except ImportError:
+    import _thread as thread
+
 import traceback
 from datetime import datetime
 from time import sleep
@@ -51,7 +57,7 @@ from telegram import __version__ as TG_VER
 from telegram.constants import ParseMode
 
 start_time = datetime.now()
-MINUTES_5_IN_SECONDS = 300
+MINUTES_2_IN_SECONDS = 120
 OWNER_USER = "Itsonlypk"
 
 from PKDevTools.classes.Telegram import get_secrets
@@ -106,6 +112,7 @@ m0 = menus()
 m1 = menus()
 m2 = menus()
 m3 = menus()
+int_timer = None
 
 TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI","DV"]
 TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "T", "D", "I", "E", "U", "L", "Z"]
@@ -122,6 +129,23 @@ INDEX_COMMANDS_SKIP_MENUS_SCANNER = ["W", "E", "M", "Z"]
 INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
 UNSUPPORTED_COMMAND_MENUS =["22","42","M","Z"]
 SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
+
+def initializeIntradayTimer():
+    try:
+        if (not PKDateUtilities.isTodayHoliday()[0]):
+            now = PKDateUtilities.currentDateTime()
+            marketStartTime = PKDateUtilities.currentDateTime(simulate=True,hour=9,minute=15)
+            morning745am = PKDateUtilities.currentDateTime(simulate=True,hour=7,minute=45)
+            if now < marketStartTime and now >= morning745am: # Telegram bot might keep running beyond an hour. So let's start watching around 7:45AM
+                difference = (marketStartTime - now).total_seconds() + 1
+                global int_timer
+                int_timer = threading.Timer(difference, launchIntradayMonitor, args=[])
+                int_timer.start()
+            elif now >= marketStartTime:
+                launchIntradayMonitor()
+    except:
+        launchIntradayMonitor()
+        pass
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None, monitorIndex=0,chosenBotMenuOption="") -> int:
     """Send message on `/start`."""
@@ -205,6 +229,9 @@ def removeMonitorFile():
 
 def launchIntradayMonitor():
     from PKDevTools.classes import Archiver
+    global int_timer
+    if int_timer is not None:
+        int_timer.cancel()
     filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
     result_outputs = ""
     if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys() or sys.argv[0].endswith(".py")):
@@ -655,11 +682,17 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         "telegram.error.Conflict" in tb_string
     ):  # A newer 2nd instance was registered. We should politely shutdown.
         if (
-            timeSinceStarted.total_seconds() >= MINUTES_5_IN_SECONDS
+            timeSinceStarted.total_seconds() >= MINUTES_2_IN_SECONDS
         ):  # shutdown only if we have been running for over 5 minutes
             print(
                 f"Stopping due to conflict after running for {timeSinceStarted.total_seconds()/60} minutes."
             )
+            try:
+                global int_timer
+                if int_timer is not None:
+                    int_timer.cancel()
+            except:
+                pass
             try:
                 context.application.stop()
                 sys.exit(0)
@@ -1130,7 +1163,7 @@ def runpkscreenerbot() -> None:
     # ...and the error handler
     application.add_error_handler(error_handler)
     # Run the intraday monitor
-    launchIntradayMonitor()
+    initializeIntradayTimer()
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
