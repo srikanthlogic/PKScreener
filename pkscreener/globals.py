@@ -1644,7 +1644,8 @@ def resetConfigToDefault():
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
     if "PKDevTools_Default_Log_Level" in os.environ.keys():
-        del os.environ['PKDevTools_Default_Log_Level']
+        if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.options is not None and "|" not in userPassedArgs.options):
+            del os.environ['PKDevTools_Default_Log_Level']
     configManager.logsEnabled = False
     configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
 
