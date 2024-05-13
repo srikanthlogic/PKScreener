@@ -1464,18 +1464,21 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 OutputControls().printOutput(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
         pass
-    if userPassedArgs.runintradayanalysis:
-        analysis_df = screenResults.copy()
-        analysis_df.reset_index(inplace=True)
-        if 'index' in analysis_df.columns:
-            analysis_df.drop('index', axis=1, inplace=True, errors="ignore")
-        if optionalFinalOutcome_df is None:
-            optionalFinalOutcome_df = analysis_df
+    if userPassedArgs is not None:
+        if userPassedArgs.runintradayanalysis:
+            analysis_df = screenResults.copy()
+            analysis_df.reset_index(inplace=True)
+            if 'index' in analysis_df.columns:
+                analysis_df.drop('index', axis=1, inplace=True, errors="ignore")
+            if optionalFinalOutcome_df is None:
+                optionalFinalOutcome_df = analysis_df
+            else:
+                optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
+            return optionalFinalOutcome_df, saveResults
         else:
-            optionalFinalOutcome_df = pd.concat([optionalFinalOutcome_df, analysis_df], axis=0)
-        return optionalFinalOutcome_df, saveResults
-    else:
-        return screenResults, saveResults
+            existingTitle = f"{userPassedArgs.pipedtitle}|" if userPassedArgs.pipedtitle is not None else ""
+            userPassedArgs.pipedtitle = f'{existingTitle}{menuChoiceHierarchy.split(">")[-1]}'
+            return screenResults, saveResults
 
 def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):
     global stockDictPrimary,stockDictSecondary, configManager, defaultAnswer, userPassedArgs, loadedStockData
@@ -1863,10 +1866,11 @@ def printNotifySaveScreenedResults(
         if "Stock" in saveResults.columns:
             saveResults.drop_duplicates(keep="first", inplace=True)
 
+    reportTitle = f"{userPassedArgs.pipedtitle}|" if userPassedArgs is not None and userPassedArgs.pipedtitle is not None else ""
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
-        + f"[+] You chose: {menuChoiceHierarchy}"
+        + f"[+] You chose: {reportTitle}{menuChoiceHierarchy}"
         + colorText.END
         , enableMultipleLineOutput=True
     )
@@ -1906,7 +1910,7 @@ def printNotifySaveScreenedResults(
     if screenResults is not None and len(screenResults) >= 1:
         choiceSegments = menuChoiceHierarchy.split(">")
         choiceSegments = f"{choiceSegments[-2]} > {choiceSegments[-1]}" if len(choiceSegments)>=4 else f"{choiceSegments[-1]}"
-        title = f'<b>{choiceSegments}</b>{"" if selectedChoice["0"] != "G" else " for Date:"+ targetDateG10k}'
+        title = f'<b>{reportTitle}{choiceSegments}</b>{"" if selectedChoice["0"] != "G" else " for Date:"+ targetDateG10k}'
         if (
             ("RUNNER" in os.environ.keys() and os.environ["RUNNER"] != "LOCAL_RUN_SCANNER")
             or "PKDevTools_Default_Log_Level" in os.environ.keys()
@@ -1967,7 +1971,7 @@ def printNotifySaveScreenedResults(
                     caption = f"{caption}.Open attached image for more. Samples:<pre>{caption_results}</pre>{elapsed_text}" #<i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
                 if not testing: # and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
-                        menuChoiceHierarchy,
+                        f"{reportTitle}{menuChoiceHierarchy}",
                         user,
                         tabulated_results,
                         markdown_results,

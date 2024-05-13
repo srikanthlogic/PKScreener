@@ -234,6 +234,11 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument("-v", action="store_true")  # Dummy Arg for pytest -v
+argParser.add_argument(
+    "--pipedtitle",
+    help="Piped Titles",
+    required=False,
+)
 argsv = argParser.parse_known_args()
 args = argsv[0]
 results = None
@@ -502,7 +507,8 @@ def pipeResults(prevOutput,args):
                 prevOutput_results = ",".join(prevOutput_results)
                 monitorOption = f"{monitorOption}:{prevOutput_results}"
         args.options = monitorOption.replace("::",":")
-        args.options = args.options + ":D:;".join(nextOnes[2:])
+        args.options = args.options + ":D:;" + ":D:;".join(nextOnes[2:])
+        args.options = args.options.replace("::",":")
         return True
     return False
 
