@@ -289,11 +289,12 @@ rm updater.sh
                     + OTAUpdater.checkForUpdate.url
                     + colorText.END
                 )
-            OutputControls().printOutput(e)
-            OutputControls().printOutput(
-                colorText.BOLD
-                + colorText.FAIL
-                + "[+] Failure while checking update!"
-                + colorText.END
-            )
+            if not skipDownload:
+                OutputControls().printOutput(e)
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.FAIL
+                    + "[+] Failure while checking update!"
+                    + colorText.END
+                )
         return

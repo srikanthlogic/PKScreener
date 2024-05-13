@@ -34,6 +34,8 @@ from pkscreener.classes import VERSION
 configManager = ConfigManager.tools()
 MENU_SEPARATOR = ""
 LINE_SEPARATOR = "\n"
+MAX_SUPPORTED_MENU_OPTION = 33
+MAX_MENU_OPTION = 41
 
 level0MenuDict = {
     "X": "Scanners",
@@ -98,7 +100,7 @@ level1_X_MenuDict = {
     "11": "Nifty Midcap 150 ",
     "12": "Nifty (All Stocks)",
     "13": "Newly Listed (IPOs in last 2 Year)           ",
-    "14": "F&O Stocks Only",
+    # "14": "F&O Stocks Only", Discontinued:  https://nsearchives.nseindia.com/content/circulars/FAOP61157.pdf
     "15": "NASDAQ",
     "M": "Back to the Top/Main menu",
     "Z": "Exit (Ctrl + C)",
@@ -135,6 +137,8 @@ level2_X_MenuDict = {
     "28": "Bullish Higher Opens           ",
     "29": "Intraday Bid/Ask Build-up      ",
     "30": "ATR Trailing Stops(Swing Paper Trading)",
+    "31": "High Momentum(RSI,MFI,CCI)     ",
+    # "32": "High Momentum(14)",
     # "28": "Extremely bullish daily close      ",
     # "29": "Rising RSI                      ",
     # "30": "RSI entering bullish territory",

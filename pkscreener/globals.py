@@ -80,6 +80,8 @@ from pkscreener.classes.MenuOptions import (
     level4_X_ChartPattern_Confluence_MenuDict,
     level4_X_ChartPattern_BBands_SQZ_MenuDict,
     menus,
+    MAX_SUPPORTED_MENU_OPTION,
+    MAX_MENU_OPTION
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.Portfolio import PortfolioCollection
@@ -628,6 +630,9 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         elif executeOption == 27: # ATR Cross
             sortKey = ["ATR"] if "ATR" in screenResults.columns else ["Volume"]
             ascending = [False]
+        elif executeOption == 31: # DEEL Momentum
+            sortKey = ["Volume"]
+            ascending = [False]
         try:
             try:
                 screenResults[sortKey] = screenResults[sortKey].replace("", np.nan).replace(np.inf, np.nan).replace(-np.inf, np.nan).astype(float)
@@ -1149,11 +1154,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
         return None, None
-    if executeOption >= 31 and executeOption <= 41:
+    if executeOption >= MAX_SUPPORTED_MENU_OPTION and executeOption <= MAX_MENU_OPTION:
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.FAIL
-            + "\n[+] Error: Option 31 to 41 Not implemented yet! Press <Enter> to continue."
+            + F"\n[+] Error: Option {MAX_SUPPORTED_MENU_OPTION} to {MAX_MENU_OPTION} Not implemented yet! Press <Enter> to continue."
             + colorText.END
         )
         input("Press <Enter> to continue...")

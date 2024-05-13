@@ -151,6 +151,14 @@ class pktalib:
             return talib.MACD(close, fast, slow, signal)
 
     @classmethod
+    def MFI(self, high, low, close,volume, timeperiod=14):
+        try:
+            return talib.mfi(high, low, close,volume, length= timeperiod)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return talib.MFI(high, low, close,volume, timeperiod=timeperiod)
+
+    @classmethod
     def RSI(self, close, timeperiod):
         try:
             return talib.rsi(close, timeperiod)

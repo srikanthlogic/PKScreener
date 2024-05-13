@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240513.367] release
+* High Momentum scanner added. Try X > 12 > 31.
 * Now, change config periods using menus within the app (1d, 280d, 1m, 5m, 30m, 1H, 1d, 1w, 1M)
 * ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell). You can change the sensitivity and atr periods in the config file.
 * Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:;|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.

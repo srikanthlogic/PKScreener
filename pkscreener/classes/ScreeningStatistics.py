@@ -216,7 +216,26 @@ class ScreeningStatistics:
         if diff.eq(0).any().any():
             diff += sflt.epsilon
         return diff
-
+    
+    # Find DEEL Momentum
+    def findHighMomentum(self, df):
+        #https://chartink.com/screener/deel-momentum-rsi-14-mfi-14-cci-14
+        if df is None or len(df) < 2:
+            return False
+        data = df.copy()
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]  # Reverse the dataframe so that its the oldest date first
+        mfis = pktalib.MFI(data["High"],data["Low"],data["Close"],data["Volume"], 14)
+        ccis = pktalib.CCI(data["High"],data["Low"],data["Close"], 14)
+        recent = data.tail(2)
+        percentChange = round((recent["Close"].iloc[1] - recent["Close"].iloc[0]) *100/recent["Close"].iloc[0],1)
+        rsi = recent["RSI"].iloc[1]
+        mfi = mfis.tail(1).iloc[0]
+        cci = ccis.tail(1).iloc[0]
+        hasDeelMomentum = percentChange >= 1 and rsi>= 68 and mfi >= 68 and cci >= 110
+        return hasDeelMomentum
+    
     # Find ATR cross stocks
     def findATRCross(self, df,saveDict, screenDict):
         #https://chartink.com/screener/stock-crossing-atr
