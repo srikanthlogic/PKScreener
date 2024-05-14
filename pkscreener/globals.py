@@ -778,6 +778,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             os.system(f"{launcher} -a Y -l")
         sys.exit(0)
     if menuOption in ["P"]:
+        Utility.tools.clearScreen(forceTop=True)
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu)
         predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
@@ -785,12 +786,14 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         if predefinedOption not in ["1","2"]:
             return None, None
         if predefinedOption == "1":
+            Utility.tools.clearScreen(forceTop=True)
             selectedMenu = m1.find(predefinedOption)
             m2.renderForMenu(selectedMenu=selectedMenu)
             selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
             OutputControls().printOutput(colorText.END, end="")
             if selPredefinedOption in ["1","2","3","4","5","6","7"]:
                 scannerOption = PIPED_SCANNERS[selPredefinedOption]
+                Utility.tools.clearScreen(forceTop=True)
                 if userPassedArgs.pipedmenus is not None:
                     chosenOptions = scannerOption.split("-o ")[1]
                     userPassedArgs.options = chosenOptions.replace("'","")
