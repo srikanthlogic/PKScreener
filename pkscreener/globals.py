@@ -81,7 +81,8 @@ from pkscreener.classes.MenuOptions import (
     level4_X_ChartPattern_BBands_SQZ_MenuDict,
     menus,
     MAX_SUPPORTED_MENU_OPTION,
-    MAX_MENU_OPTION
+    MAX_MENU_OPTION,
+    PIPED_SCANNERS
 )
 from pkscreener.classes.OtaUpdater import OTAUpdater
 from pkscreener.classes.Portfolio import PortfolioCollection
@@ -481,6 +482,8 @@ def initExecution(menuOption=None):
                 Utility.tools.clearScreen(forceTop=True)
                 selectedChoice["0"] = selectedMenu.menuKey
                 return selectedMenu
+            elif selectedMenu.menuKey in ["P"]:
+                return selectedMenu
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except Exception as e:  # pragma: no cover
@@ -774,7 +777,47 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             sleep(2)
             os.system(f"{launcher} -a Y -l")
         sys.exit(0)
-    elif menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
+    if menuOption in ["P"]:
+        selectedMenu = m0.find(menuOption)
+        m1.renderForMenu(selectedMenu)
+        predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+        OutputControls().printOutput(colorText.END, end="")
+        if predefinedOption not in ["1","2"]:
+            return None, None
+        if predefinedOption == "1":
+            selectedMenu = m1.find(predefinedOption)
+            m2.renderForMenu(selectedMenu=selectedMenu)
+            selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+            OutputControls().printOutput(colorText.END, end="")
+            if selPredefinedOption in ["1","2","3","4","5","6","7"]:
+                scannerOption = PIPED_SCANNERS[selPredefinedOption]
+                if userPassedArgs.pipedmenus is not None:
+                    chosenOptions = scannerOption.split("-o ")[1]
+                    userPassedArgs.options = chosenOptions.replace("'","")
+                    return addOrRunPipedMenus()
+                launcher = sys.argv[0]
+                launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOption}{colorText.END}")
+                sleep(2)
+                os.system(f"{launcher} {scannerOption}")
+                OutputControls().printOutput(
+                        colorText.GREEN
+                        + f"[+] Finished running all piped scanners!"
+                        + colorText.END
+                    )
+                if defaultAnswer is None:
+                    input("Press <Enter> to exit...")
+                sys.exit(0)
+            else:
+                return None, None
+        elif predefinedOption == "2":
+            # User chose custom
+            menuOption = "X" # Let's have the user choose various scan options
+            selectedMenu = m0.find(menuOption)
+            selectedChoice["0"] = selectedMenu.menuKey
+            if userPassedArgs.pipedmenus is None:
+                userPassedArgs.pipedmenus = ""
+    if menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
         # Print Level 2 menu options
         menuOption, indexOption, executeOption, selectedChoice = getScannerMenuChoices(
             testBuild or testing,
@@ -1238,6 +1281,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             userPassedArgs.options = ""
             for choice in selectedChoice.keys():
                 userPassedArgs.options = (f"{userPassedArgs.options}:" if len(userPassedArgs.options) > 0  else '') + f"{selectedChoice[choice]}"
+        if userPassedArgs.pipedmenus is not None:
+            return addOrRunPipedMenus()
 
         if (menuOption in ["X", "B", "G", "S"] and not loadedStockData) or (
             # not downloadOnly
@@ -1569,6 +1614,37 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
     
     return summary_df,sorting,sortKeys
 
+def addOrRunPipedMenus():
+    global userPassedArgs
+    # User must have selected menu "P" earlier
+    savedPipes = f"{userPassedArgs.pipedmenus}:;|" if len(userPassedArgs.pipedmenus) > 0 else ""
+    userPassedArgs.pipedmenus = f"{savedPipes}{userPassedArgs.options}"
+    userPassedArgs.pipedmenus = userPassedArgs.pipedmenus.replace("::",":D:")
+    OutputControls().printOutput(
+            colorText.GREEN
+            + f"[+] {len(userPassedArgs.pipedmenus.split('|'))} Scanners piped so far: {colorText.END}{colorText.WARN+userPassedArgs.pipedmenus+colorText.END}\n{colorText.GREEN}[+] Do you want to add any more scanners into the pipe?"
+            + colorText.END
+        )
+    shouldAddMoreIntoPipe = input(colorText.FAIL + "[+] Select [Y/N] (Default:N): " + colorText.END) or 'n'
+    if shouldAddMoreIntoPipe.lower() != 'y':
+        launcher = sys.argv[0]
+        launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+        OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o '{userPassedArgs.pipedmenus}'{colorText.END}")
+        sleep(2)
+        os.system(f"{launcher} -a Y -e -o '{userPassedArgs.pipedmenus}'")
+        userPassedArgs.pipedmenus = None
+        OutputControls().printOutput(
+                colorText.GREEN
+                + f"[+] Finished running all piped scanners!"
+                + colorText.END
+            )
+        if defaultAnswer is None:
+            input("Press <Enter> to exit...")
+        sys.exit(0)
+    else:
+        userPassedArgs.options = None
+        return None, None
+    
 def prepareGroupedXRay(backtestPeriod, backtest_df):
     df_grouped = backtest_df.groupby("Date")
     userPassedArgs.backtestdaysago = backtestPeriod
@@ -1757,12 +1833,13 @@ def handleRequestForSpecificStocks(options, indexOption):
     listStockCodes = []
     strOptions = ""
     if isinstance(options, list):
-        strOptions = ":".join(options)
+        strOptions = ":".join(options).split(";")[0]
     else:
-        strOptions = options
-
+        strOptions = options.split(";")[0]
+    
     if indexOption == 0:
         if len(strOptions) >= 4:
+            strOptions = strOptions.replace(":D:",":").replace(";","")
             providedOptions = strOptions.split(":")
             for option in providedOptions:
                 if not "".join(str(option).split(".")).isdecimal() and len(option.strip()) > 1:

@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.44.20240514.371] release
+* Enabled Piped scanners from the menu. To try out, select "P" from the main menu, then select your index and scanner options as you would. Keep adding scanners to piped scan list, just always select "P > Piped Scanners" on the main menu list to keep adding. Alternatively you can select from a predfined set of piped scanners or use the predefined piped scanners into your custom defined scanners.
 * High Momentum scanner added. Try X > 12 > 31.
 * Now, change config periods using menus within the app (1d, 280d, 1m, 5m, 30m, 1H, 1d, 1w, 1M)
 * ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell). You can change the sensitivity and atr periods in the config file.

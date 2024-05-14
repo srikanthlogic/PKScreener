@@ -44,6 +44,7 @@ level0MenuDict = {
     "B": "Backtests",
     "G": "Growth of 10k",
     "C": "Analyse morning vs close outcomes",
+    "P": "Piped Scanners",
     "T": "~",
     "D": "Download Daily OHLC Data for the Past Year",
     "I": "Download Intraday OHLC Data for the Last Trading Day",
@@ -54,6 +55,31 @@ level0MenuDict = {
     "H": "Help / About Developer",
     "Z": "Exit (Ctrl + C)",
 }
+level1_P_MenuDict = {
+    "1": "Predefined Piped Scanners",
+    "2": "Define my custom Piped Scanner",
+    "M": "Back to the Top/Main menu",
+}
+level2_P_MenuDict = {
+    "1": "Volume Scanners | High Momentum | ATR Cross",
+    "2": "Volume Scanners | High Momentum",
+    "3": "Volume Scanners | ATR Cross",
+    "4": "Volume Scanners | High Bid/Ask Build Up",
+    "5": "High Momentum | ATR Cross",
+    "6": "High Momentum | ATR Trailing Stop",
+    "7": "ATR Cross | ATR Trailing Stop",
+
+    "M": "Back to the Top/Main menu",
+}
+PIPED_SCANNERS = {"1": "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:27:'",
+                  "2": "-a y -e -o 'X:12:9:2.5:;|X:0:31:'",
+                  "3": "-a y -e -o 'X:12:9:2.5:;|X:0:27:'",
+                  "4": "-a y -e -o 'X:12:9:2.5:;|X:0:29:'",
+                  "5": "-a y -e -o 'X:12:31:;|X:0:27:'",
+                  "6": "-a y -e -o 'X:12:31:;|X:0:30:'",
+                  "7": "-a y -e -o 'X:12:27:;|X:0:30:'",
+                  }
+
 level1_T_MenuDict = {
     "L": "Long Term",
     "S": "Short Term (Intraday)",
@@ -417,6 +443,13 @@ class menus:
                         renderStyle=renderStyle,
                         parent=selectedMenu,
                     )
+                elif selectedMenu.menuKey in ["P"]:
+                    return self.renderLevel1_P_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
                 else:
                     # sub-menu of the top level main selected menu
                     return self.renderLevel1_X_Menus(
@@ -442,6 +475,13 @@ class menus:
                             renderStyle=renderStyle,
                             parent=selectedMenu,
                         )
+                elif selectedMenu.parent.menuKey in ["P"]:
+                    return self.renderLevel2_P_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
                 else:
                     # next levelsub-menu of the selected sub-menu
                     return self.renderLevel2_X_Menus(
@@ -526,7 +566,7 @@ class menus:
     def renderLevel0Menus(self, asList=False, renderStyle=None, parent=None, skip=None):
         menuText = self.fromDictionary(
             level0MenuDict,
-            renderExceptionKeys=["T", "E", "U", "Z", "L", "D"],
+            renderExceptionKeys=["P", "T", "E", "U", "Z", "L", "D"],
             renderStyle=renderStyle
             if renderStyle is not None
             else MenuRenderStyle.STANDALONE,
@@ -636,7 +676,77 @@ class menus:
                     "" + colorText.END
                 )
             return menuText
-                
+        
+    def renderLevel1_P_Menus(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level1_P_MenuDict,
+            renderExceptionKeys=["M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList, coloredValues=["2"])
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select an option:"
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find('1').keyTextLabel()
+                    + ")  "
+                    "" + colorText.END
+                )
+            return menuText
+
+    def renderLevel2_P_Menus(
+        self, skip=[], asList=False, renderStyle=None, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level2_P_MenuDict,
+            renderExceptionKeys=["M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList)
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select a scanner:"
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find('1').keyTextLabel()
+                    + ")  "
+                    "" + colorText.END
+                )
+            return menuText
+        
     def renderLevel1_X_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):

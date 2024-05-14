@@ -239,6 +239,11 @@ argParser.add_argument(
     help="Piped Titles",
     required=False,
 )
+argParser.add_argument(
+    "--pipedmenus",
+    help="Piped Menus",
+    required=False,
+)
 argsv = argParser.parse_known_args()
 args = argsv[0]
 results = None
@@ -332,8 +337,14 @@ def runApplication():
     from pkscreener.globals import main, sendQuickScanResult,sendMessageToTelegramChannel, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData, closeWorkersAndExit
     # From a previous call to main with args, it may have been mutated.
     # Let's stock to the original args passed by user
+    try:
+        savedPipedArgs = None
+        savedPipedArgs = args.pipedmenus if args is not None and args.pipedmenus is not None else None
+    except:
+        pass
     argsv = argParser.parse_known_args()
     args = argsv[0]
+    args.pipedmenus = savedPipedArgs
     if args.options is not None:
         args.options = args.options.replace("::",":")
     if args.runintradayanalysis:
@@ -454,12 +465,27 @@ def runApplication():
                 plainResults = None
                 resultStocks = None
                 results, plainResults = main(userArgs=args)
+                if args.pipedmenus is not None:
+                    while args.pipedmenus is not None:
+                        main(userArgs=args)
+                    sys.exit(0)
                 if isInterrupted():
                     closeWorkersAndExit()
                     removeMonitorFile()
                     sys.exit(0)
-                while pipeResults(plainResults,args):
-                    results, plainResults = main(userArgs=args)
+                runPipedScans = True
+                while runPipedScans:
+                    runPipedScans = pipeResults(plainResults,args)
+                    if runPipedScans:
+                        results, plainResults = main(userArgs=args)
+                    else:
+                        OutputControls().printOutput(
+                                colorText.GREEN
+                                + f"[+] Finished running all piped scanners! Try reducing number of piped scans if no stocks could be found eventually."
+                                + colorText.END
+                            )
+                        if args.answerdefault is None:
+                            input("Press <Enter> to continue...")
             except SystemExit:
                 closeWorkersAndExit()
                 removeMonitorFile()
@@ -472,14 +498,15 @@ def runApplication():
                 plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
                 results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
-            if args.monitor:
+            if args.monitor is not None:
                 MarketMonitor().saveMonitorResultStocks(plainResults)
-            if results is not None and args.monitor and len(monitorOption_org) > 0:
-                MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
+                if results is not None and len(monitorOption_org) > 0:
+                    MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
 
 
 def pipeResults(prevOutput,args):
     nextOnes = args.options.split(";")
+    hasFoundStocks = False
     if len(nextOnes) > 1:
         monitorOption = nextOnes[1]
         if len(monitorOption) == 0:
@@ -504,12 +531,14 @@ def pipeResults(prevOutput,args):
             if prevOutput is not None and not prevOutput.empty:
                 prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
                 prevOutput_results = prevOutput_results.index
+                hasFoundStocks = len(prevOutput_results) > 0
                 prevOutput_results = ",".join(prevOutput_results)
+                monitorOption = monitorOption.replace(":D:",":")
                 monitorOption = f"{monitorOption}:{prevOutput_results}"
         args.options = monitorOption.replace("::",":")
         args.options = args.options + ":D:;" + ":D:;".join(nextOnes[2:])
         args.options = args.options.replace("::",":")
-        return True
+        return True and hasFoundStocks
     return False
 
 def pkscreenercli():
