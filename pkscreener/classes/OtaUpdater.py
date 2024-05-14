@@ -160,6 +160,7 @@ rm updater.sh
     def checkForUpdate(VERSION=VERSION, skipDownload=False):
         OTAUpdater.checkForUpdate.url = None
         resp = None
+        updateType = "minor"
         try:
             now_components = str(VERSION).split(".")
             now_major_minor = ".".join([now_components[0], now_components[1]])
@@ -171,6 +172,7 @@ rm updater.sh
             last_release = float(major_minor)
             prod_update = False
             if last_release > now:
+                updateType = "major"
                 prod_update = True
             elif last_release == now and (
                 len(now_components) < len(version_components)
@@ -190,7 +192,7 @@ rm updater.sh
                     OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.GREEN
-                        + f"    [+] A software update (v{tag} [{size} MB]) is available. Check out with the menu option U."
+                        + f"    [+] A {updateType} software update (v{tag} [{size} MB]) is available. Check out with the menu option U."
                         + colorText.END
                     )
                     return
@@ -208,7 +210,7 @@ rm updater.sh
                             colorText.BOLD
                             + colorText.FAIL
                             + (
-                                "\n[+] New Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
+                                f"\n[+] New {updateType} Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
                                 % (str(tag), size)
                             )
                         )
