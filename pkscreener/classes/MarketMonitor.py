@@ -31,6 +31,7 @@ from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.ColorText import colorText
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.SuppressOutput import SuppressOutput
+from PKDevTools.classes.log import default_logger
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
     def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2):
@@ -84,6 +85,8 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         else:
             prevOutput_results = results_df[~results_df.index.duplicated(keep='first')]
             prevOutput_results = prevOutput_results.index
+            # Maybe the index is an int ?
+            prevOutput_results = [str(stock) for stock in prevOutput_results]
             prevOutput_results = ",".join(prevOutput_results)
         self.monitorResultStocks[str(self.monitorIndex)] = prevOutput_results
 
