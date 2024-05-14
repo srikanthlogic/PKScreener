@@ -1189,6 +1189,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 maLength = int(options[3])
             elif str(options[3]).upper() == "D":
                 maLength = 1
+            else:
+                maLength = 1
         elif len(options) >= 3:
             maLength = 1 # By default buy option
         else:
@@ -1525,7 +1527,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             return optionalFinalOutcome_df, saveResults
         else:
             existingTitle = f"{userPassedArgs.pipedtitle}|" if userPassedArgs.pipedtitle is not None else ""
-            userPassedArgs.pipedtitle = f'{existingTitle}{menuChoiceHierarchy.split(">")[-1]}'
+            choiceSegments = menuChoiceHierarchy.split(">")
+            choiceSegments = f"{choiceSegments[-2]} > {choiceSegments[-1]}" if len(choiceSegments)>=4 else f"{choiceSegments[-1]}"
+            userPassedArgs.pipedtitle = f'{existingTitle}{choiceSegments}[{len(saveResults)}]'
             return screenResults, saveResults
 
 def loadDatabaseOrFetch(downloadOnly, listStockCodes, menuOption, indexOption):

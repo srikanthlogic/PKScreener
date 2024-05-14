@@ -479,13 +479,14 @@ def runApplication():
                     if runPipedScans:
                         results, plainResults = main(userArgs=args)
                     else:
-                        OutputControls().printOutput(
-                                colorText.GREEN
-                                + f"[+] Finished running all piped scanners! Try reducing number of piped scans if no stocks could be found eventually."
-                                + colorText.END
-                            )
-                        if args.answerdefault is None:
-                            input("Press <Enter> to continue...")
+                        if args is not None and args.pipedtitle is not None and "|" in args.pipedtitle:
+                            OutputControls().printOutput(
+                                    colorText.WARN
+                                    + f"[+] Pipe Results Found: {args.pipedtitle}. {'Reduce number of piped scans if no stocks could be found.' if '[0]' in args.pipedtitle else ''}"
+                                    + colorText.END
+                                )
+                            if args.answerdefault is None:
+                                input("Press <Enter> to continue...")
             except SystemExit:
                 closeWorkersAndExit()
                 removeMonitorFile()
