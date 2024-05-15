@@ -213,7 +213,7 @@ rm updater.sh
                                 f"\n[+] New {updateType} Software update (v%s) available. Download Now (Size: %dMB)? [Y/N]: "
                                 % (str(tag), size)
                             )
-                        )
+                        ) or "y"
                 except EOFError: # user pressed enter
                     action = "y"
                     pass

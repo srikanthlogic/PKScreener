@@ -1133,8 +1133,8 @@ class tools:
                     input(
                         colorText.BOLD
                         + colorText.WARN
-                        + "[>] Do you want to save the results in excel file? [Y/N]: "
-                    )
+                        + "[>] Do you want to save the results in excel file? [Y/N](Default:Y): "
+                    ) or "Y"
                 ).upper()
             else:
                 response = defaultAnswer
@@ -1216,9 +1216,8 @@ class tools:
                         + colorText.WARN
                         + "[>] "
                         + cache_file
-                        + " already exists. Do you want to replace this? [Y/N]: "
-                    )
-                ).upper()
+                        + " already exists. Do you want to replace this? [Y/N] (Default: Y): "
+                ) or "Y").upper()
             else:
                 response = defaultAnswer
         except ValueError as e:  # pragma: no cover
@@ -1228,21 +1227,22 @@ class tools:
 
     # Prompt for asking RSI
     def promptRSIValues():
+        tools.clearScreen(forceTop=True)
         try:
             minRSI, maxRSI = int(
                 input(
                     colorText.BOLD
                     + colorText.WARN
-                    + "\n[+] Enter Min RSI value: "
+                    + "\n[+] Enter Min RSI value (Default=55): "
                     + colorText.END
-                )
+                ) or 55
             ), int(
                 input(
                     colorText.BOLD
                     + colorText.WARN
-                    + "[+] Enter Max RSI value: "
+                    + "[+] Enter Max RSI value (Default=68): "
                     + colorText.END
-                )
+                ) or "68"
             )
             if (
                 (minRSI >= 0 and minRSI <= 100)
@@ -1257,6 +1257,7 @@ class tools:
 
     # Prompt for asking CCI
     def promptCCIValues(minCCI=None, maxCCI=None):
+        tools.clearScreen(forceTop=True)
         if minCCI is not None and maxCCI is not None:
             return minCCI, maxCCI
         try:
@@ -1264,16 +1265,16 @@ class tools:
                 input(
                     colorText.BOLD
                     + colorText.WARN
-                    + "\n[+] Enter Min CCI value: "
+                    + "\n[+] Enter Min CCI value (Default=110): "
                     + colorText.END
-                )
+                ) or "110"
             ), int(
                 input(
                     colorText.BOLD
                     + colorText.WARN
-                    + "[+] Enter Max CCI value: "
+                    + "[+] Enter Max CCI value (Default=300): "
                     + colorText.END
-                )
+                ) or "300"
             )
             if minCCI <= maxCCI:
                 return (minCCI, maxCCI)
@@ -1284,6 +1285,7 @@ class tools:
 
     # Prompt for asking Volume ratio
     def promptVolumeMultiplier(volumeRatio=None):
+        tools.clearScreen(forceTop=True)
         if volumeRatio is not None:
             return volumeRatio
         try:
@@ -1293,7 +1295,7 @@ class tools:
                     + colorText.WARN
                     + "\n[+] Enter Min Volume ratio value (Default = 2.5): "
                     + colorText.END
-                )
+                ) or "2.5"
             )
             if volumeRatio > 0:
                 return volumeRatio
@@ -1303,11 +1305,13 @@ class tools:
             return 2
 
     def promptMenus(menu):
+        tools.clearScreen(forceTop=True)
         m = menus()
         m.level = menu.level if menu is not None else 0
         return m.renderForMenu(menu)
 
     def promptChartPatternSubMenu(menu,respChartPattern):
+        tools.clearScreen(forceTop=True)
         m3 = menus()
         m3.renderForMenu(menu,asList=True)
         lMenu =  m3.find(str(respChartPattern))
@@ -1324,7 +1328,7 @@ class tools:
                     + colorText.WARN
                     + """[+] Select Option:"""
                     + colorText.END
-                )
+                ) or "1"
             )
             if resp >= 0 and resp <= 10:
                 return resp
@@ -1349,7 +1353,7 @@ class tools:
                     + colorText.WARN
                     + """[+] Select Option:"""
                     + colorText.END
-                )
+                ) or "3"
             )
             if resp >= 0 and resp <= 10:
                 if resp == 4:
@@ -1358,9 +1362,9 @@ class tools:
                             input(
                                 colorText.BOLD
                                 + colorText.WARN
-                                + "\n[+] Enter MA Length (E.g. 50 or 200): "
+                                + "\n[+] Enter MA Length (E.g. 50 or 200) (Default=50): "
                                 + colorText.END
-                            )
+                            ) or "50"
                         )
                         return resp, maLength
                     except ValueError as e:  # pragma: no cover
@@ -1378,9 +1382,9 @@ class tools:
                             input(
                                 colorText.BOLD
                                 + colorText.WARN
-                                + "\n[+] Enter NR timeframe [Integer Number] (E.g. 4, 7, etc.): "
+                                + "\n[+] Enter NR timeframe [Integer Number] (E.g. 4, 7, etc.) (Default=4): "
                                 + colorText.END
-                            )
+                            ) or "4"
                         )
                         return resp, maLength
                     except ValueError as e:  # pragma: no cover
@@ -1419,16 +1423,16 @@ class tools:
                     + colorText.WARN
                     + """[+] Select Option:"""
                     + colorText.END
-                )
+                ) or "3"
             )
             if resp == 1 or resp == 2:
                 candles = int(
                     input(
                         colorText.BOLD
                         + colorText.WARN
-                        + "\n[+] How many candles (TimeFrame) to look back Inside Bar formation? : "
+                        + "\n[+] How many candles (TimeFrame) to look back Inside Bar formation? (Default=3): "
                         + colorText.END
-                    )
+                    ) or "3"
                 )
                 return (resp, candles)
             if resp == 3:
@@ -1436,9 +1440,9 @@ class tools:
                     input(
                         colorText.BOLD
                         + colorText.WARN
-                        + "\n[+] Enter Percentage within which all MA/EMAs should be (Ideal: 1-2%)? : "
+                        + "\n[+] Enter Percentage within which all MA/EMAs should be (Ideal: 1-2%)? (Default=2): "
                         + colorText.END
-                    )
+                    ) or "2"
                 )
                 return (resp, percent / 100.0)
             if resp >= 0 and resp <= 7:

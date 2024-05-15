@@ -572,7 +572,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["X"])
         if asList:
             return menuText
         else:
@@ -644,6 +644,7 @@ class menus:
     def renderLevel1_T_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):
+        defaultKey = 'L' if configManager.period == '280d' else 'S'
         menuText = self.fromDictionary(
             level1_T_MenuDict,
             renderExceptionKeys=["M"],
@@ -652,7 +653,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=[defaultKey])
         if asList:
             return menuText
         else:
@@ -663,7 +664,6 @@ class menus:
                     + "[+] Select a configuration period for Screening:"
                     + colorText.END
                 )
-                defaultKey = 'L' if configManager.period == '280d' else 'S'
                 OutputControls().printOutput(
                     colorText.BOLD
                     + menuText
@@ -688,7 +688,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["2"])
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -723,7 +723,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -758,7 +758,7 @@ class menus:
             else MenuRenderStyle.THREE_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["15"])
+        ).render(asList=asList, coloredValues=["15",str(configManager.defaultIndex)])
         if asList:
             return menuText
         else:
@@ -793,7 +793,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -809,8 +809,11 @@ class menus:
                     + menuText
                     + """
 
-            """
-                    + colorText.END
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel()
+                    + ")  "
+                    "" + colorText.END
                 )
             return menuText
 
@@ -825,7 +828,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -841,8 +844,11 @@ class menus:
                     + menuText
                     + """
 
-            """
-                    + colorText.END
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel()
+                    + ")  "
+                    "" + colorText.END
                 )
             return menuText
         
@@ -857,7 +863,7 @@ class menus:
             else MenuRenderStyle.TWO_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["9"])
         if asList:
             return menuText
         else:
@@ -873,7 +879,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("9").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -889,7 +897,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["3"])
         if asList:
             return menuText
         else:
@@ -905,7 +913,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("3").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -921,7 +931,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["3"])
         if asList:
             return menuText
         else:
@@ -937,7 +947,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("3").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -953,7 +965,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -969,7 +981,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -985,7 +999,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -1001,7 +1015,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1017,7 +1033,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -1033,7 +1049,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1050,7 +1068,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList, coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -1066,7 +1084,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1083,7 +1103,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList)
+        ).render(asList=asList,coloredValues=["1"])
         if asList:
             return menuText
         else:
@@ -1099,7 +1119,9 @@ class menus:
                     + menuText
                     + """
 
-            """
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + self.find("1").keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText

@@ -360,8 +360,8 @@ def handleScannerExecuteOption4(executeOption, options):
                 input(
                     colorText.BOLD
                     + colorText.WARN
-                    + "\n[+] The Volume should be lowest since last how many candles? "
-                )
+                    + "\n[+] The Volume should be lowest since last how many candles? (Default = 5)"
+                ) or "5"
             )
     except ValueError as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
@@ -396,19 +396,21 @@ def handleSecondaryMenuChoices(
             m1.renderForMenu(selectedMenu=selectedMenu)
             periodOption = input(
                     colorText.BOLD + colorText.FAIL + "[+] Select option: "
-                )
+                ) or ('L' if configManager.period == '280d' else 'S')
             OutputControls().printOutput(colorText.END, end="")
             if periodOption is None or periodOption.upper() not in ["L","S"]:
                 return
+            Utility.tools.clearScreen(forceTop=True)
             if periodOption.upper() in ["L","S"]:
                 selectedMenu = m1.find(periodOption)
                 m2.renderForMenu(selectedMenu=selectedMenu)
                 durationOption = input(
                         colorText.BOLD + colorText.FAIL + "[+] Select option: "
-                    )
+                    ) or "1"
                 OutputControls().printOutput(colorText.END, end="")
                 if durationOption is None or durationOption.upper() not in ["1","2","3","4","5"]:
                     return
+                Utility.tools.clearScreen(forceTop=True)
                 if durationOption.upper() in ["1","2","3","4"]:
                     selectedMenu = m2.find(durationOption)
                     periodDurations = selectedMenu.menuText.split("(")[1].split(")")[0].split(", ")
@@ -575,7 +577,7 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
             if executeOption is None:
                 executeOption = input(
                     colorText.BOLD + colorText.FAIL + "[+] Select option: "
-                )
+                ) or "9"
                 OutputControls().printOutput(colorText.END, end="")
             if executeOption == "":
                 executeOption = 1
@@ -1199,6 +1201,16 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             return None, None
         else:
             selectedChoice["3"] = str(maLength)
+        if userPassedArgs.options is None:
+            Utility.tools.clearScreen(forceTop=True)
+            atrSensitivity = input(colorText.WARN + f"Enter the ATR Trailing Stop Sensitivity (Multiplier) value (Optimal:1, Current={configManager.atrTrailingStopSensitivity}):") or configManager.atrTrailingStopSensitivity
+            configManager.atrTrailingStopSensitivity = atrSensitivity
+            atrPeriod = input(colorText.WARN + f"Enter the ATR Period value (Optimal:10, Current={configManager.atrTrailingStopPeriod}):") or configManager.atrTrailingStopPeriod
+            configManager.atrTrailingStopPeriod = atrPeriod
+            atrEma = input(colorText.WARN + f"Enter the ATR EMA period (Optimal:200, Current={configManager.atrTrailingStopEMAPeriod}):") or configManager.atrTrailingStopEMAPeriod
+            configManager.atrTrailingStopEMAPeriod = atrEma
+            configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
+
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)
         return None, None
@@ -1225,7 +1237,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     input(
                         colorText.BOLD
                         + colorText.FAIL
-                        + f"[+] Create the watchlist.xlsx file in {os.getcwd()} and Restart the Program!"
+                        + f"[+] Please create the watchlist.xlsx file in {os.getcwd()} and Restart the Program!"
                         + colorText.END
                     )
                     sys.exit(0)
