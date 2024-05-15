@@ -83,10 +83,10 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         if results_df is None or results_df.empty:
             prevOutput_results = "NONE"
         else:
-            prevOutput_results = results_df[~results_df.index.duplicated(keep='first')]
-            prevOutput_results = prevOutput_results.index
-            # Maybe the index is an int ?
-            prevOutput_results = [str(stock) for stock in prevOutput_results]
+            # prevOutput_results = results_df[~results_df.index.duplicated(keep='first')]
+            prevOutput_results = results_df.index
+            # # Maybe the index is an int ?
+            # prevOutput_results = [str(stock) for stock in prevOutput_results]
             prevOutput_results = ",".join(prevOutput_results)
         self.monitorResultStocks[str(self.monitorIndex)] = prevOutput_results
 

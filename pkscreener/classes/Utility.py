@@ -27,6 +27,7 @@ import datetime
 import glob
 import math
 import os
+import shutil
 import sys
 import textwrap
 import random
@@ -873,11 +874,15 @@ class tools:
             # We don't want to download from local stale pkl file or stale file at server
             return stockDict
         
-        default_logger().info(
+        default_logger().debug(
             f"Stock data cache file:{cache_file} exists ->{str(exists)}"
         )
         stockDataLoaded = False
-        if exists and not forceRedownload:
+        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        if os.path.exists(copyFilePath):
+            shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
+        if os.path.exists(srcFilePath) and not forceRedownload:
             stockDict, stockDataLoaded = tools.loadDataFromLocalPickle(stockDict,configManager, downloadOnly, defaultAnswer, exchangeSuffix, cache_file, isTrading)
         if (
             not stockDataLoaded
@@ -904,9 +909,8 @@ class tools:
 
     def loadDataFromLocalPickle(stockDict, configManager, downloadOnly, defaultAnswer, exchangeSuffix, cache_file, isTrading):
         stockDataLoaded = False
-        with open(
-                os.path.join(Archiver.get_user_outputs_dir(), cache_file), "rb"
-            ) as f:
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        with open(srcFilePath, "rb") as f:
             try:
                 stockData = pickle.load(f)
                 if not downloadOnly:
@@ -1088,6 +1092,12 @@ class tools:
                                     # and so, was not found in stockDict
                                 continue
                         stockDataLoaded = True
+                        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+                        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+                        if os.path.exists(copyFilePath) and os.path.exists(srcFilePath):
+                            shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
+                        if not os.path.exists(copyFilePath) and os.path.exists(srcFilePath): # Let's make a copy of the original one
+                            shutil.copy(srcFilePath,copyFilePath)
                         # Remove the progress bar now!
                         sys.stdout.write("\x1b[1A")  # cursor up one line
                         sys.stdout.write("\x1b[2K")  # delete the last line

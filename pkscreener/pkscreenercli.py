@@ -246,6 +246,9 @@ argParser.add_argument(
 )
 argsv = argParser.parse_known_args()
 args = argsv[0]
+# if sys.argv[0].endswith(".py"):
+#     args.monitor = 'X'
+#     args.answerdefault = 'Y'
 results = None
 resultStocks = None
 plainResults = None
@@ -344,6 +347,9 @@ def runApplication():
         pass
     argsv = argParser.parse_known_args()
     args = argsv[0]
+    # if sys.argv[0].endswith(".py"):
+    #     args.monitor = 'X'
+    #     args.answerdefault = 'Y'
     args.pipedmenus = savedPipedArgs
     if args.options is not None:
         args.options = args.options.replace("::",":")
@@ -435,7 +441,7 @@ def runApplication():
                     args.intraday = None
                     configManager.toggleConfig(candleDuration='1d', clearCache=False)
                 if monitorOption.startswith("|"):
-                    monitorOption = monitorOption.replace("|","")
+                    monitorOption = monitorOption[1:]
                     monitorOptions = monitorOption.split(":")
                     if monitorOptions[1] != "0":
                         monitorOptions[1] = "0"
@@ -448,7 +454,13 @@ def runApplication():
                             srcIndex = int(srcIndex)
                             # Let's get the previously saved result for the monitor
                             savedStocks = MarketMonitor().monitorResultStocks[str(srcIndex)]
-                            monitorOption = f"{monitorOption}:{savedStocks}"
+                            innerPipes = monitorOption.split("|")
+                            nextPipe = innerPipes[0]
+                            nextMonitor = nextPipe.split(">")[0]
+                            innerPipes[0] = f"{nextMonitor}:{savedStocks}"
+                            monitorOption = ":>|".join(innerPipes)
+                            monitorOption = monitorOption.replace("::",":").replace(":>:>",":>")
+                            # monitorOption = f"{monitorOption}:{savedStocks}:"
                         except:
                             # Probably wrong (non-integer) index passed. Let's continue anyway
                             pass
@@ -460,14 +472,14 @@ def runApplication():
                 if (MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None):
                     # Load the stock data afresh for each cycle
                     refreshStockData(args.options)
-            try: 
+            try:
                 results = None
                 plainResults = None
                 resultStocks = None
                 results, plainResults = main(userArgs=args)
                 if args.pipedmenus is not None:
                     while args.pipedmenus is not None:
-                        main(userArgs=args)
+                        results, plainResults = main(userArgs=args)
                     sys.exit(0)
                 if isInterrupted():
                     closeWorkersAndExit()
@@ -496,8 +508,16 @@ def runApplication():
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
-                plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
-                results = results[~results.index.duplicated(keep='first')]
+                try:
+                    plainResults.set_index("Stock", inplace=True)
+                except:
+                    pass
+                try:
+                    results.set_index("Stock", inplace=True)
+                except:
+                    pass
+                # plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
+                # results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
             if args.monitor is not None:
                 MarketMonitor().saveMonitorResultStocks(plainResults)
@@ -506,7 +526,7 @@ def runApplication():
 
 
 def pipeResults(prevOutput,args):
-    nextOnes = args.options.split(";")
+    nextOnes = args.options.split(">")
     hasFoundStocks = False
     if len(nextOnes) > 1:
         monitorOption = nextOnes[1]
@@ -530,14 +550,18 @@ def pipeResults(prevOutput,args):
                 monitorOption = ":".join(monitorOptions)
             # We need to pipe the output from previous run into the next one
             if prevOutput is not None and not prevOutput.empty:
-                prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
-                prevOutput_results = prevOutput_results.index
+                try:
+                    prevOutput.set_index("Stock", inplace=True)
+                except:
+                    pass
+                # prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
+                prevOutput_results = prevOutput.index
                 hasFoundStocks = len(prevOutput_results) > 0
                 prevOutput_results = ",".join(prevOutput_results)
                 monitorOption = monitorOption.replace(":D:",":")
                 monitorOption = f"{monitorOption}:{prevOutput_results}"
         args.options = monitorOption.replace("::",":")
-        args.options = args.options + ":D:;" + ":D:;".join(nextOnes[2:])
+        args.options = args.options + ":D:>" + ":D:>".join(nextOnes[2:])
         args.options = args.options.replace("::",":")
         return True and hasFoundStocks
     return False

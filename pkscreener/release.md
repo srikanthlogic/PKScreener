@@ -6,7 +6,7 @@
 * High Momentum scanner added. Try X > 12 > 31.
 * Now, change config periods using menus within the app (1d, 280d, 1m, 5m, 30m, 1H, 1d, 1w, 1M)
 * ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell). You can change the sensitivity and atr periods in the config file.
-* Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:;|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
+* Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:>|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
 * Added ability to filter your results. For now you can filter using the defined keys in the filters section of user config file. For example, to only show those stocks that have changed by at least 4% and have volume more than 9 million, you can change the config to:
 
   minimumchangepercentage = 4
@@ -21,7 +21,7 @@
 * Menus had disappeared on Windows. That's fixed now. You should see all menus.
 * Export to Excel is working back again! It was broken inadvertently for a while. Thanks for reporting!
 * Monitoring, download data as pkl (both daily and intraday), and enabling logging from within the console app via menus is now added.
-* Piping the results from previous scans to the next one is added for all standard screener options (for example X:12:9:2.5;|X:12:23 will first scan all volume gaimers and then only scan for ATR cross from within those volume gainers). Use ; and | to separate scans and pipe results. Piping for monitoring dashboard is enabled as well but using , instead of ;.
+* Piping the results from previous scans to the next one is added for all standard screener options (for example X:12:9:2.5:>|X:12:23 will first scan all volume gaimers and then only scan for ATR cross from within those volume gainers). Use > and | to separate scans and pipe results. Piping for monitoring dashboard is enabled as well but using , instead of >.
 * Multiple other bug fixes.
 * NOTE: To fit all result columns on your screen, switch to smaller font size in your console.
 

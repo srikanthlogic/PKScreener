@@ -60,25 +60,34 @@ level1_P_MenuDict = {
     "2": "Define my custom Piped Scanner",
     "M": "Back to the Top/Main menu",
 }
-level2_P_MenuDict = {
-    "1": "Volume Scanners | High Momentum | ATR Cross",
-    "2": "Volume Scanners | High Momentum",
-    "3": "Volume Scanners | ATR Cross",
-    "4": "Volume Scanners | High Bid/Ask Build Up",
-    "5": "High Momentum | ATR Cross",
-    "6": "High Momentum | ATR Trailing Stop",
-    "7": "ATR Cross | ATR Trailing Stop",
-
-    "M": "Back to the Top/Main menu",
-}
-PIPED_SCANNERS = {"1": "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:27:'",
-                  "2": "-a y -e -o 'X:12:9:2.5:;|X:0:31:'",
-                  "3": "-a y -e -o 'X:12:9:2.5:;|X:0:27:'",
-                  "4": "-a y -e -o 'X:12:9:2.5:;|X:0:29:'",
-                  "5": "-a y -e -o 'X:12:31:;|X:0:27:'",
-                  "6": "-a y -e -o 'X:12:31:;|X:0:30:1:'",
-                  "7": "-a y -e -o 'X:12:27:;|X:0:30:1:'",
-                  }
+PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8"]
+PREDEFINED_SCAN_MENU_TEXTS = [
+    "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross",
+    "Volume Scanners | High Momentum | ATR Cross",
+    "Volume Scanners | High Momentum",
+    "Volume Scanners | ATR Cross",
+    "Volume Scanners | High Bid/Ask Build Up",
+    "High Momentum | ATR Cross",
+    "High Momentum | ATR Trailing Stop",
+    "ATR Cross | ATR Trailing Stop",
+]
+level2_P_MenuDict = {}
+for key in PREDEFINED_SCAN_MENU_KEYS:
+    level2_P_MenuDict[key] = PREDEFINED_SCAN_MENU_TEXTS[int(key)-1]
+level2_P_MenuDict["M"] = "Back to the Top/Main menu"
+PREDEFINED_SCAN_MENU_VALUES =[
+    "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:23:;|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:;|X:0:31:'",
+    "-a y -e -o 'X:12:9:2.5:;|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:;|X:0:29:'",
+    "-a y -e -o 'X:12:31:;|X:0:27:'",
+    "-a y -e -o 'X:12:31:;|X:0:30:1:'",
+    "-a y -e -o 'X:12:27:;|X:0:30:1:'",
+]
+PIPED_SCANNERS = {}
+for key in PREDEFINED_SCAN_MENU_KEYS:
+    PIPED_SCANNERS[key] = PREDEFINED_SCAN_MENU_VALUES[int(key)-1]
 
 level1_T_MenuDict = {
     "L": "Long Term",
@@ -337,10 +346,11 @@ class menus:
     def allMenus(topLevel="X",index=12):
         menuOptions = [topLevel]
         indexOptions =[index]
-        scanOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,27,28]
+        scanOptions = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,23,24,25,27,28,30,31]
         scanSubOptions = {
-                            6:[1,2,3,4,5,6,{7:[1,2]},8,9],
+                            6:[1,2,3,4,5,6,{7:[1,2]},8,9,10],
                             7:[1,2,{3:[1,2]},4,5,{6:[1,3]},7],
+                            30:[1,2],
                             # 21:[3,5,6,7,8,9]
                          }
         runOptions = []

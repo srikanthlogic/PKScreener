@@ -86,11 +86,11 @@ class PKMarketOpenCloseAnalyser:
             Utility.tools.saveStockData(updatedCandleData,PKMarketOpenCloseAnalyser.configManager,1,False,False, True)
         return updatedCandleData, allDailyCandles
 
-    def runOpenCloseAnalysis(updatedCandleData,allDailyCandles,screen_df,save_df,runOptionName=None):
+    def runOpenCloseAnalysis(updatedCandleData,allDailyCandles,screen_df,save_df,runOptionName=None,filteredListOfStocks=[]):
         # stockListFromMorningTrade,morningIntraday_df = PKMarketOpenCloseAnalyser.simulateMorningTrade(updatedCandleData)
         # latest_daily_df = PKMarketOpenCloseAnalyser.runScanForStocksFromMorningTrade(stockListFromMorningTrade,allDailyCandles)
         try:
-            PKMarketOpenCloseAnalyser.diffMorningCandleDataWithLatestDailyCandleData(screen_df,save_df, updatedCandleData, allDailyCandles,runOptionName=runOptionName)
+            PKMarketOpenCloseAnalyser.diffMorningCandleDataWithLatestDailyCandleData(screen_df,save_df, updatedCandleData, allDailyCandles,runOptionName=runOptionName,filteredListOfStocks=filteredListOfStocks)
         except:
             pass
         Utility.tools.saveStockData(allDailyCandles,PKMarketOpenCloseAnalyser.configManager,1,False,False, True)
@@ -98,6 +98,16 @@ class PKMarketOpenCloseAnalyser:
     def ensureIntradayStockDataExists():
         # Ensure that the intraday_stock_data_<date>.pkl file exists
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=True)
+        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        srcFileSize = os.stat(srcFilePath).st_size
+        if exists and srcFileSize < 1024*1024*50:
+             # File less than 30MB ? Must have been corrupted
+            try:
+                os.remove(srcFilePath)
+                exists = False
+            except:
+                pass
         if not exists:
             savedPeriod = PKMarketOpenCloseAnalyser.configManager.period
             savedDuration = PKMarketOpenCloseAnalyser.configManager.duration
@@ -113,8 +123,6 @@ class PKMarketOpenCloseAnalyser:
                 input("Press any key to continue...")
             PKMarketOpenCloseAnalyser.configManager.period = savedPeriod
             PKMarketOpenCloseAnalyser.configManager.duration = savedDuration
-        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
-        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
         try:
             if os.path.exists(copyFilePath) and exists:
                 shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
@@ -127,6 +135,16 @@ class PKMarketOpenCloseAnalyser:
     def ensureDailyStockDataExists():
         # Ensure that the stock_data_<date>.pkl file exists
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=False)
+        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
+        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
+        srcFileSize = os.stat(srcFilePath).st_size
+        if exists and srcFileSize < 1024*1024*50:
+             # File less than 30MB ? Must have been corrupted
+            try:
+                os.remove(srcFilePath)
+                exists = False
+            except:
+                pass
         if not exists:
             OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
         # We should download a fresh copy anyways because we may have altered the existing copy in
@@ -138,8 +156,6 @@ class PKMarketOpenCloseAnalyser:
                 OutputControls().printOutput(f"[+] {colorText.FAIL}{cache_file}{colorText.END} not found under {Archiver.get_user_outputs_dir()} !")
                 OutputControls().printOutput(f"[+] Please run {colorText.FAIL}pkscreener{colorText.END}{colorText.GREEN} -a Y -e -d{colorText.END} and then run this menu option again.")
                 input("Press any key to continue...")
-        copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
-        srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
         try:
             if os.path.exists(copyFilePath) and exists:
                 shutil.copy(copyFilePath,srcFilePath) # copy is the saved source of truth
@@ -280,7 +296,7 @@ class PKMarketOpenCloseAnalyser:
         latest_daily_df = None
         return latest_daily_df
 
-    def diffMorningCandleDataWithLatestDailyCandleData(screen_df,save_df, updatedCandleData, allDailyCandles,runOptionName=None):
+    def diffMorningCandleDataWithLatestDailyCandleData(screen_df,save_df, updatedCandleData, allDailyCandles,runOptionName=None,filteredListOfStocks=[]):
         save_df.reset_index(inplace=True)
         screen_df.reset_index(inplace=True)
         save_df.drop(f"index", axis=1, inplace=True, errors="ignore")
@@ -289,6 +305,7 @@ class PKMarketOpenCloseAnalyser:
         eodLTPs = []
         dayHighLTPs = []
         morningTimestamps = []
+        morningAlertLTPs = []
         sellTimestamps = []
         dayHighTimestamps = []
         sellLTPs = []
@@ -330,6 +347,7 @@ class PKMarketOpenCloseAnalyser:
                 eodDiffs.append(round(endOfDayLTP - morningLTP,2))
                 dayHighDiffs.append(round(dayHighLTP - morningLTP,2))
                 sqrOffDiffs.append(round(row["High"][-1] - morningLTP,2))
+                morningAlertLTPs.append(str(int(round(morningLTP,0))))
                 index += 1
             except:
                 eodLTPs.append("0")
@@ -337,12 +355,12 @@ class PKMarketOpenCloseAnalyser:
                 dayHighLTPs.append("0")
                 dayHighDiffs.append("0")
                 continue
-        diffColumns = ["AlertTime", "SqrOff", "SqrOffLTP", "SqrOffDiff","DayHighTime","DayHigh","DayHighDiff", "EoDLTP", "EoDDiff"]
-        diffValues = [morningTimestamps, sellTimestamps, sellLTPs, sqrOffDiffs,dayHighTimestamps,dayHighLTPs, dayHighDiffs,eodLTPs, eodDiffs]
+        diffColumns = ["LTP@Alert", "AlertTime", "SqrOff", "SqrOffLTP", "SqrOffDiff","DayHighTime","DayHigh","DayHighDiff", "EoDLTP", "EoDDiff"]
+        diffValues = [morningAlertLTPs, morningTimestamps, sellTimestamps, sellLTPs, sqrOffDiffs,dayHighTimestamps,dayHighLTPs, dayHighDiffs,eodLTPs, eodDiffs]
         for col in diffColumns:
             save_df[col] = diffValues[diffColumns.index(col)]
             screen_df.loc[:, col] = save_df.loc[:, col].apply(
-                lambda x: x if col in ["AlertTime", "SqrOff", "SqrOffLTP", "EoDLTP","DayHigh","DayHighTime"] else ((colorText.GREEN if x >= 0 else colorText.FAIL) + str(x) + colorText.END)
+                lambda x: x if col in ["LTP@Alert","AlertTime", "SqrOff", "SqrOffLTP", "EoDLTP","DayHigh","DayHighTime"] else ((colorText.GREEN if x >= 0 else colorText.FAIL) + str(x) + colorText.END)
             )
 
         columns = save_df.columns
