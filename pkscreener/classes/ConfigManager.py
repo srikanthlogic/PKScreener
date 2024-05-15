@@ -70,8 +70,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.logger = None
         self.showPastStrategyData = False
         self.atrTrailingStopSensitivity = 1
-        self.atrTrailingStopPeriod = 21
-        self.atrTrailingStopEMAPeriod = 9
+        self.atrTrailingStopPeriod = 10
+        self.atrTrailingStopEMAPeriod = 200
         # This determines how many days apart the backtest calculations are run.
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
