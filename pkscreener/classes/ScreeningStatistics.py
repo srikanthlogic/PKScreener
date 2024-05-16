@@ -1599,7 +1599,7 @@ class ScreeningStatistics:
         return False
 
     # @measure_time
-    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None,exchangeName="INDIA"):
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None,exchangeName="INDIA",refreshMFAndFV=True):
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
@@ -1642,40 +1642,42 @@ class ScreeningStatistics:
         dma50decision = 't:▲' if is50DMAUptrend else ('t:▼' if is50DMADowntrend else '')
         mf_inst_ownershipChange = 0
         change_millions =""
-        try:
-            mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
-            if isinstance(mf_inst_ownershipChange, pd.Series):
-                mf_inst_ownershipChange = 0
-            roundOff = 2
-            millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            while float(millions) == 0 and roundOff <=5:
-                roundOff +=1
-                millions = round(mf_inst_ownershipChange/1000000,roundOff)
-            change_millions = f"({millions}M)"
-        except Exception as e:  # pragma: no cover
-            self.default_logger.debug(e, exc_info=True)
-            pass
-        try:
-            #Let's get the fair value, either saved or fresh from service
-            fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns),exchangeName=exchangeName)
-            if fairValue is not None and fairValue != 0:
-                ltp = saveDict["LTP"]
-                fairValueDiff = round(fairValue - ltp,0)
-                saveDict["FairValue"] = str(fairValue)
-                saveDict["FVDiff"] = fairValueDiff
-                screenDict["FVDiff"] = fairValueDiff
-                screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + saveDict["FairValue"] + colorText.END
-        except Exception as e:  # pragma: no cover
-            self.default_logger.debug(e, exc_info=True)
-            pass
         mf = ""
         mfs = ""
-        if mf_inst_ownershipChange > 0:
-            mf = f"MFI:▲ {change_millions}"
-            mfs = colorText.GREEN + mf + colorText.END
-        elif mf_inst_ownershipChange < 0:
-            mf = f"MFI:▼ {change_millions}"
-            mfs = colorText.FAIL + mf + colorText.END
+        if refreshMFAndFV:
+            try:
+                mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
+                if isinstance(mf_inst_ownershipChange, pd.Series):
+                    mf_inst_ownershipChange = 0
+                roundOff = 2
+                millions = round(mf_inst_ownershipChange/1000000,roundOff)
+                while float(millions) == 0 and roundOff <=5:
+                    roundOff +=1
+                    millions = round(mf_inst_ownershipChange/1000000,roundOff)
+                change_millions = f"({millions}M)"
+            except Exception as e:  # pragma: no cover
+                self.default_logger.debug(e, exc_info=True)
+                pass
+            try:
+                #Let's get the fair value, either saved or fresh from service
+                fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns),exchangeName=exchangeName)
+                if fairValue is not None and fairValue != 0:
+                    ltp = saveDict["LTP"]
+                    fairValueDiff = round(fairValue - ltp,0)
+                    saveDict["FairValue"] = str(fairValue)
+                    saveDict["FVDiff"] = fairValueDiff
+                    screenDict["FVDiff"] = fairValueDiff
+                    screenDict["FairValue"] = (colorText.GREEN if fairValue >= ltp else colorText.FAIL) + saveDict["FairValue"] + colorText.END
+            except Exception as e:  # pragma: no cover
+                self.default_logger.debug(e, exc_info=True)
+                pass
+            
+            if mf_inst_ownershipChange > 0:
+                mf = f"MFI:▲ {change_millions}"
+                mfs = colorText.GREEN + mf + colorText.END
+            elif mf_inst_ownershipChange < 0:
+                mf = f"MFI:▼ {change_millions}"
+                mfs = colorText.FAIL + mf + colorText.END
 
         saved = self.findCurrentSavedValue(screenDict,saveDict,"Trend")
         decision_scr = (colorText.GREEN if isUptrend else (colorText.FAIL if isDowntrend else colorText.WARN)) + f"{decision}" + colorText.END
@@ -2585,8 +2587,8 @@ class ScreeningStatistics:
                 saveDict[f"Growth{prd}"] = round(ltpTdy - prevLtp, 2)
                 if prd == 22 or (prd == requestedPeriod):
                     changePercent = round(((prevLtp-ltpTdy) if requestedPeriod ==0 else (ltpTdy - prevLtp))*100/ltpTdy, 2)
-                    saveDict[f"{prd}-Pd %"] = f"{changePercent}%"
-                    screenDict[f"{prd}-Pd %"] = (colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END
+                    saveDict[f"{prd}-Pd %"] = f"{changePercent}%" if not pd.isna(changePercent) else '-'
+                    screenDict[f"{prd}-Pd %"] = ((colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END) if not pd.isna(changePercent) else '-'
                 screenDict["Date"] = calc_date
                 saveDict["Date"] = calc_date
             else:

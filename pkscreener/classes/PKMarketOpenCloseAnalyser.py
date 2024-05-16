@@ -100,7 +100,7 @@ class PKMarketOpenCloseAnalyser:
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=True)
         copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
         srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
-        srcFileSize = os.stat(srcFilePath).st_size
+        srcFileSize = os.stat(srcFilePath).st_size if os.path.exists(srcFilePath) else 0
         if exists and srcFileSize < 1024*1024*50:
              # File less than 30MB ? Must have been corrupted
             try:
@@ -137,7 +137,7 @@ class PKMarketOpenCloseAnalyser:
         exists, cache_file = Utility.tools.afterMarketStockDataExists(intraday=False)
         copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{cache_file}")
         srcFilePath = os.path.join(Archiver.get_user_outputs_dir(), cache_file)
-        srcFileSize = os.stat(srcFilePath).st_size
+        srcFileSize = os.stat(srcFilePath).st_size if os.path.exists(srcFilePath) else 0
         if exists and srcFileSize < 1024*1024*50:
              # File less than 30MB ? Must have been corrupted
             try:
@@ -366,7 +366,7 @@ class PKMarketOpenCloseAnalyser:
         columns = save_df.columns
         lastIndex = len(save_df)
         for col in columns:
-            if col in ["Stock", "Pattern", "LTP", "SqrOffLTP","SqrOffDiff","DayHigh","DayHighDiff","AlertTime", "EoDLTP", "EoDDiff", "%Chng"]:
+            if col in ["Stock", "Pattern", "LTP", "SqrOffLTP","SqrOffDiff","DayHigh","DayHighDiff", "EoDLTP", "EoDDiff", "%Chng"]:
                 if col == "Stock":
                     save_df.loc[lastIndex,col] = "PORTFOLIO"
                 elif col == "Pattern":

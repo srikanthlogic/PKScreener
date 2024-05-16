@@ -2061,7 +2061,7 @@ def printNotifySaveScreenedResults(
                         lambda x: f'{int(round(float(x.replace("%","")),0))}%'
                     )
                     caption_df.loc[:, "Volume"] = caption_df.loc[:, "Volume"].apply(
-                        lambda x: f'{int(round(float(x.replace("x","")),0))}x'
+                        lambda x: f'{int(round(float(x.replace("x","")),0))}x' if (len(x.replace("x","").strip()) > 0 and not pd.isna(float(x.replace("x","")))) else ''
                     )
                     caption_df.rename(columns={"%Chng": "Ch%","Volume":"Vol"}, inplace=True)
                     for col in caption_df.columns:

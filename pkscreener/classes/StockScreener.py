@@ -442,7 +442,8 @@ class StockScreener:
                                 stock,
                                 onlyMF=(executeOption == 21 and reversalOption in [5,6]),
                                 hostData=data,
-                                exchangeName=exchangeName
+                                exchangeName=exchangeName,
+                                refreshMFAndFV=(menuOption in ["X"])
                             )
                             hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
@@ -865,15 +866,18 @@ class StockScreener:
             except (ValueError, AssertionError) as e:
                 # 9 columns passed, passed data had 11 columns
                 # 10 columns passed, passed data had 11 columns
-                hostRef.default_logger.debug(e, exc_info=True)
-                e_diff = str(e).replace(" columns passed, passed data had ",",").replace(" columns","").split(",")
-                num_diff = int(e_diff[1]) - int(e_diff[0])
-                while (num_diff > 0):
-                    columns.append(f"temp{num_diff}")
-                    num_diff -= 1
-                data = pd.DataFrame(
-                        hostData["data"], columns=columns, index=hostData["index"]
-                    )
+                excLookingFor = " columns passed, passed data had "
+                if excLookingFor in str(e):
+                    e_diff = str(e).replace(excLookingFor,",").replace(" columns","").split(",")
+                    num_diff = int(e_diff[1]) - int(e_diff[0])
+                    while (num_diff > 0):
+                        columns.append(f"temp{num_diff}")
+                        num_diff -= 1
+                    data = pd.DataFrame(
+                            hostData["data"], columns=columns, index=hostData["index"]
+                        )
+                else:
+                    hostRef.default_logger.debug(e, exc_info=True)
                 pass
 
         if ((shouldCache and not self.isTradingTime and (hostData is None  or hostDataLength == 0)) or downloadOnly) \

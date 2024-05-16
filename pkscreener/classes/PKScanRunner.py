@@ -307,10 +307,10 @@ class PKScanRunner:
                         logging_queue,
                         screenCounter,
                         screenResultsCounter,
-                        stockDictPrimary,
-                        stockDictSecondary,
-                        # (stockDictPrimary if menuOption not in ["C"] else None),
-                        # (stockDictSecondary if menuOption not in ["C"] else None),
+                        # stockDictPrimary,
+                        # stockDictSecondary,
+                        (stockDictPrimary if menuOption not in ["C"] else None),
+                        (stockDictSecondary if menuOption not in ["C"] else None),
                         PKScanRunner.fetcher.proxyServer,
                         keyboardInterruptEvent,
                         default_logger(),
@@ -318,10 +318,10 @@ class PKScanRunner:
                         PKScanRunner.configManager,
                         PKScanRunner.candlePatterns,
                         scr,
-                        None,
-                        None
-                        # (cache_file if (exists and menuOption in ["C"]) else None),
-                        # (sec_cache_file if (exists and menuOption in ["C"]) else None),
+                        # None,
+                        # None
+                        (cache_file if (exists and menuOption in ["C"]) else None),
+                        (sec_cache_file if (exists and menuOption in ["C"]) else None),
                     )
                     for _ in range(totalConsumers)
                 ]
@@ -332,7 +332,7 @@ class PKScanRunner:
         PKScanRunner.startWorkers(consumers)
         return tasks_queue,results_queue,consumers,logging_queue
 
-    @exit_after(180) # Should not remain stuck starting the multiprocessing clients beyond this time
+    @exit_after(120) # Should not remain stuck starting the multiprocessing clients beyond this time
     def startWorkers(consumers):
         try:
             from pytest_cov.embed import cleanup_on_signal, cleanup_on_sigterm
