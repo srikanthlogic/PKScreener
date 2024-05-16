@@ -604,7 +604,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("X").keyTextLabel().strip()
+                    + (self.find("X") or menu().create('?','?')).keyTextLabel().strip()
                     + ") "
                     "" + colorText.END
                 )
@@ -685,7 +685,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find(defaultKey).keyTextLabel().strip()
+                    + (self.find(defaultKey) or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -720,7 +720,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find('1').keyTextLabel().strip()
+                    + (self.find('1') or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -755,7 +755,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find('1').keyTextLabel().strip()
+                    + (self.find('1') or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -790,7 +790,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find(str(configManager.defaultIndex)).keyTextLabel().strip()
+                    + (self.find(str(configManager.defaultIndex)) or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -825,7 +825,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip()
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -860,7 +860,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip()
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -895,7 +895,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("9").keyTextLabel().strip() + ")"
+                    + (self.find("9") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -929,7 +929,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("3").keyTextLabel().strip() + ")"
+                    + (self.find("3") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -963,7 +963,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("3").keyTextLabel().strip() + ")"
+                    + (self.find("3") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -997,7 +997,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip() + ")"
+                    + ((self.find("1")) or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1031,7 +1031,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip() + ")"
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1065,7 +1065,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip() + ")"
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1100,7 +1100,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip() + ")"
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
@@ -1135,7 +1135,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel().strip() + ")"
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip() + ")"
                     + colorText.END
                 )
             return menuText
