@@ -62,15 +62,15 @@ level1_P_MenuDict = {
 }
 PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10"]
 PREDEFINED_SCAN_MENU_TEXTS = [
-    "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross",
+    "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross     ",
     "Volume Scanners | High Momentum | ATR Cross",
-    "Volume Scanners | High Momentum",
+    "Volume Scanners | High Momentum                                    ",
     "Volume Scanners | ATR Cross",
-    "Volume Scanners | High Bid/Ask Build Up",
+    "Volume Scanners | High Bid/Ask Build Up                            ",
     "High Momentum | ATR Cross",
-    "High Momentum | ATR Trailing Stop",
+    "High Momentum | ATR Trailing Stop                                  ",
     "ATR Cross | ATR Trailing Stop",
-    "TTM Sqeeze Buy | Intraday RSI b/w 0 to 54",
+    "TTM Sqeeze Buy | Intraday RSI b/w 0 to 54                          ",
     "Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54",
 ]
 level2_P_MenuDict = {}
@@ -604,7 +604,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("X").keyTextLabel()
+                    + self.find("X").keyTextLabel().strip()
                     + ") "
                     "" + colorText.END
                 )
@@ -685,7 +685,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find(defaultKey).keyTextLabel()
+                    + self.find(defaultKey).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -720,7 +720,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find('1').keyTextLabel()
+                    + self.find('1').keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -734,7 +734,7 @@ class menus:
             renderExceptionKeys=["M"],
             renderStyle=renderStyle
             if renderStyle is not None
-            else MenuRenderStyle.STANDALONE,
+            else MenuRenderStyle.TWO_PER_ROW,
             skip=skip,
             parent=parent,
         ).render(asList=asList,coloredValues=["1"])
@@ -755,7 +755,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find('1').keyTextLabel()
+                    + self.find('1').keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -790,7 +790,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find(str(configManager.defaultIndex)).keyTextLabel()
+                    + self.find(str(configManager.defaultIndex)).keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -825,7 +825,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel()
+                    + self.find("1").keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
@@ -860,7 +860,7 @@ class menus:
 
     Enter your choice > (default is """
                     + colorText.WARN
-                    + self.find("1").keyTextLabel()
+                    + self.find("1").keyTextLabel().strip()
                     + ")  "
                     "" + colorText.END
                 )
