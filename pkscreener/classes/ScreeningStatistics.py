@@ -1757,10 +1757,14 @@ class ScreeningStatistics:
                     pass
                 try:
                     latest_mfdate = hostData.loc[hostData.index[-1],"MF_Date"]
+                    if isinstance(latest_mfdate, float):
+                        latest_mfdate = datetime.datetime.fromtimestamp(latest_mfdate).strftime('%Y-%m-%d')
                 except (KeyError,IndexError):
                     pass
                 try:
                     latest_instdate = hostData.loc[hostData.index[-1],"FII_Date"]
+                    if isinstance(latest_instdate, float):
+                        latest_instdate = datetime.datetime.fromtimestamp(latest_instdate).strftime('%Y-%m-%d')
                 except (KeyError,IndexError):
                     pass
                 if latest_mfdate is not None:
