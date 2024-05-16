@@ -1638,9 +1638,10 @@ def FinishBacktestDataCleanup(backtest_df, df_xray):
 def addOrRunPipedMenus():
     global userPassedArgs
     # User must have selected menu "P" earlier
-    savedPipes = f"{userPassedArgs.pipedmenus}:;|" if len(userPassedArgs.pipedmenus) > 0 else ""
+    savedPipes = f"{userPassedArgs.pipedmenus}:>|" if len(userPassedArgs.pipedmenus) > 0 else ""
     userPassedArgs.pipedmenus = f"{savedPipes}{userPassedArgs.options}"
     userPassedArgs.pipedmenus = userPassedArgs.pipedmenus.replace("::",":D:")
+    userPassedArgs.pipedmenus = f"{userPassedArgs.pipedmenus}{('i '+configManager.duration) if configManager.isIntradayConfig() else ''}"
     OutputControls().printOutput(
             colorText.GREEN
             + f"[+] {len(userPassedArgs.pipedmenus.split('|'))} Scanners piped so far: {colorText.END}{colorText.WARN+userPassedArgs.pipedmenus+colorText.END}\n{colorText.GREEN}[+] Do you want to add any more scanners into the pipe?"
@@ -1737,13 +1738,15 @@ def showSortedBacktestData(backtest_df, summary_df, sortKeys):
     return sorting
 
 def resetConfigToDefault():
+    global userPassedArgs
     isIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
-    if "PKDevTools_Default_Log_Level" in os.environ.keys():
-        if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.options is not None and "|" not in userPassedArgs.options):
-            del os.environ['PKDevTools_Default_Log_Level']
-    configManager.logsEnabled = False
+    if userPassedArgs.monitor is None:
+        if "PKDevTools_Default_Log_Level" in os.environ.keys():
+            if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.options is not None and "|" not in userPassedArgs.options):
+                del os.environ['PKDevTools_Default_Log_Level']
+        configManager.logsEnabled = False
     configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
 
 def prepareStocksForScreening(testing, downloadOnly, listStockCodes, indexOption):
@@ -1854,13 +1857,13 @@ def handleRequestForSpecificStocks(options, indexOption):
     listStockCodes = []
     strOptions = ""
     if isinstance(options, list):
-        strOptions = ":".join(options).split(";")[0]
+        strOptions = ":".join(options).split(">")[0]
     else:
-        strOptions = options.split(";")[0]
+        strOptions = options.split(">")[0]
     
     if indexOption == 0:
         if len(strOptions) >= 4:
-            strOptions = strOptions.replace(":D:",":").replace(";","")
+            strOptions = strOptions.replace(":D:",":").replace(">","")
             providedOptions = strOptions.split(":")
             for option in providedOptions:
                 if not "".join(str(option).split(".")).isdecimal() and len(option.strip()) > 1:

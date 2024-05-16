@@ -1368,13 +1368,14 @@ class tools:
             if resp >= 0 and resp <= 10:
                 if resp == 4:
                     try:
+                        defaultMALength = 9 if configManager.duration.endswith("m") else 50
                         maLength = int(
                             input(
                                 colorText.BOLD
                                 + colorText.WARN
-                                + "\n[+] Enter MA Length (E.g. 50 or 200) (Default=50): "
+                                + f"\n[+] Enter MA Length (E.g. 9,10,20,50 or 200) (Default={defaultMALength}): "
                                 + colorText.END
-                            ) or "50"
+                            ) or str(defaultMALength)
                         )
                         return resp, maLength
                     except ValueError as e:  # pragma: no cover

@@ -272,6 +272,12 @@ def removeMonitorFile():
     args = argsv[0]
     if args is not None and args.options is not None and not args.options.upper().startswith("T"):
         resetConfigToDefault()
+    if args.monitor is not None:
+        if "PKDevTools_Default_Log_Level" in os.environ.keys():
+            if args is None or (args is not None and args.options is not None and "|" not in args.options):
+                del os.environ['PKDevTools_Default_Log_Level']
+        configManager.logsEnabled = False
+    configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
 
 def logFilePath():
     try:
@@ -429,17 +435,7 @@ def runApplication():
                         start_time = time.time()
                 monitorOption_org = MarketMonitor().currentMonitorOption()
                 monitorOption = monitorOption_org
-                lastComponent = monitorOption.split(":")[-1]
-                # previousCandleDuration = configManager.duration
-                if "i" in lastComponent:
-                    # We need to switch to intraday scan
-                    monitorOption = monitorOption.replace(lastComponent,"")
-                    args.intraday = lastComponent.replace("i","").strip()
-                    configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
-                else:
-                    # We need to switch to daily scan
-                    args.intraday = None
-                    configManager.toggleConfig(candleDuration='1d', clearCache=False)
+                monitorOption = checkIntradayComponent(args, monitorOption)
                 if monitorOption.startswith("|"):
                     monitorOption = monitorOption[1:]
                     monitorOptions = monitorOption.split(":")
@@ -523,6 +519,21 @@ def runApplication():
                 MarketMonitor().saveMonitorResultStocks(plainResults)
                 if results is not None and len(monitorOption_org) > 0:
                     MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
+
+def checkIntradayComponent(args, monitorOption):
+    lastComponent = monitorOption.split(":")[-1]
+                # previousCandleDuration = configManager.duration
+    if "i" in lastComponent:
+                    # We need to switch to intraday scan
+        monitorOption = monitorOption.replace(lastComponent,"")
+        args.intraday = lastComponent.replace("i","").strip()
+        configManager.toggleConfig(candleDuration=args.intraday, clearCache=False)
+        # args.options = f"{monitorOption}:{args.options[len(lastComponent):]}"
+    else:
+                    # We need to switch to daily scan
+        args.intraday = None
+        configManager.toggleConfig(candleDuration='1d', clearCache=False)
+    return monitorOption
 
 
 def pipeResults(prevOutput,args):

@@ -1221,14 +1221,14 @@ class ScreeningStatistics:
         if df is None or len(df) == 0:
             return False
         data = df.copy()
-        maRange = [10, 20, 50, 200]
+        maRange = [9, 10, 20, 50, 200] if maLength is None else [maLength]
         results = []
         hasReversals = False
         data = data[::-1]
         saved = self.findCurrentSavedValue(screenDict,saveDict, "MA-Signal")
         for maLength in maRange:
             dataCopy = data
-            if self.configManager.useEMA:
+            if self.configManager.useEMA or maLength == 9:
                 maRev = pktalib.EMA(dataCopy["Close"], timeperiod=maLength)
             else:
                 maRev = pktalib.MA(dataCopy["Close"], timeperiod=maLength)
@@ -1237,34 +1237,28 @@ class ScreeningStatistics:
             except Exception:# pragma: no cover
                 pass
             dataCopy.insert(len(dataCopy.columns), "maRev", maRev)
-            dataCopy = dataCopy[::-1].head(3)
-            if (
-                dataCopy.equals(
-                    dataCopy[
-                        (
-                            dataCopy.Close
-                            >= (dataCopy.maRev - (dataCopy.maRev * percentage))
-                        )
-                        & (
-                            dataCopy.Close
-                            <= (dataCopy.maRev + (dataCopy.maRev * percentage))
-                        )
-                    ]
-                )
-                and dataCopy.head(1)["Close"].iloc[0]
-                >= dataCopy.head(1)["maRev"].iloc[0]
-            ):
+            dataCopy = dataCopy[::-1].head(4)
+            bullishMAReversal = dataCopy["maRev"].iloc[0] >= dataCopy["maRev"].iloc[1] and \
+                dataCopy["maRev"].iloc[1] >= dataCopy["maRev"].iloc[2] and \
+                    dataCopy["maRev"].iloc[2] < dataCopy["maRev"].iloc[3]
+            bullishClose = dataCopy.head(1)["Close"].iloc[0] >= dataCopy.head(1)["maRev"].iloc[0]
+            bearishMAReversal = dataCopy["maRev"].iloc[0] <= dataCopy["maRev"].iloc[1] and \
+                dataCopy["maRev"].iloc[1] <= dataCopy["maRev"].iloc[2] and \
+                    dataCopy["maRev"].iloc[2] > dataCopy["maRev"].iloc[3]
+            isRecentCloseWithinPercentRange = dataCopy.equals(dataCopy[(dataCopy.Close >= (dataCopy.maRev - (dataCopy.maRev * percentage))) & (dataCopy.Close <= (dataCopy.maRev + (dataCopy.maRev * percentage)))])
+            if (isRecentCloseWithinPercentRange and bullishClose and bullishMAReversal) or \
+                (isRecentCloseWithinPercentRange and not bullishClose and bearishMAReversal):
                 hasReversals = True
                 results.append(str(maLength))
         if hasReversals:
             screenDict["MA-Signal"] = (
                 saved[0] 
                 + colorText.BOLD
-                + colorText.GREEN
-                + f"Reversal-[{','.join(results)}]MA"
+                + (colorText.GREEN if bullishMAReversal else (colorText.FAIL if bearishMAReversal else colorText.WARN))
+                + f"Reversal-[{','.join(results)}]{'EMA' if (maLength == 9 or self.configManager.useEMA) else 'MA'}"
                 + colorText.END
             )
-            saveDict["MA-Signal"] = saved[1] + f"Reversal-[{','.join(results)}]MA"
+            saveDict["MA-Signal"] = saved[1] + f"Reversal-[{','.join(results)}]{'EMA' if (maLength == 9 or self.configManager.useEMA) else 'MA'}"
         return hasReversals
 
     def findCurrentSavedValue(self, screenDict, saveDict, key):

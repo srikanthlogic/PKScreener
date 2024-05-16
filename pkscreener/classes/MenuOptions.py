@@ -60,7 +60,7 @@ level1_P_MenuDict = {
     "2": "Define my custom Piped Scanner",
     "M": "Back to the Top/Main menu",
 }
-PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8"]
+PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10"]
 PREDEFINED_SCAN_MENU_TEXTS = [
     "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross",
     "Volume Scanners | High Momentum | ATR Cross",
@@ -70,20 +70,24 @@ PREDEFINED_SCAN_MENU_TEXTS = [
     "High Momentum | ATR Cross",
     "High Momentum | ATR Trailing Stop",
     "ATR Cross | ATR Trailing Stop",
+    "TTM Sqeeze Buy | Intraday RSI b/w 0 to 54",
+    "Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54",
 ]
 level2_P_MenuDict = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
     level2_P_MenuDict[key] = PREDEFINED_SCAN_MENU_TEXTS[int(key)-1]
 level2_P_MenuDict["M"] = "Back to the Top/Main menu"
 PREDEFINED_SCAN_MENU_VALUES =[
-    "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:23:;|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:;|X:0:31:;|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:;|X:0:31:'",
-    "-a y -e -o 'X:12:9:2.5:;|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:;|X:0:29:'",
-    "-a y -e -o 'X:12:31:;|X:0:27:'",
-    "-a y -e -o 'X:12:31:;|X:0:30:1:'",
-    "-a y -e -o 'X:12:27:;|X:0:30:1:'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:23:>|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:31:'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:27:'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:29:'",
+    "-a y -e -o 'X:12:31:>|X:0:27:'",
+    "-a y -e -o 'X:12:31:>|X:0:30:1:'",
+    "-a y -e -o 'X:12:27:>|X:0:30:1:'",
+    "-a y -e -o 'X:12:7:6:1:>|X:0:5:0:54:i 1m'",
+    "-a y -e -o 'X:12:9:2.5:>|X:0:27:>|X:0:5:0:54:i 1m'"
 ]
 PIPED_SCANNERS = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
@@ -185,7 +189,7 @@ level3_X_Reversal_MenuDict = {
     "1": "Buy Signals (Bullish Reversal)",
     "2": "Sell Signals (Bearish Reversal)",
     "3": "Momentum Gainers (Rising Bullish Momentum)",
-    "4": "Reversal at Moving Average (Bullish Reversal)",
+    "4": "Reversal at Moving Average (Bullish/Bearish Reversal)",
     "5": "Volume Spread Analysis (Bullish VSA Reversal)",
     "6": "Narrow Range (NRx) Reversal",
     "7": "Lorentzian Classifier (Machine Learning based indicator)",
