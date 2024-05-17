@@ -22,4 +22,4 @@ The MIT License (MIT)
     SOFTWARE.
 
 """
-VERSION = '0.45'
+VERSION = '0.45.20240517.382'

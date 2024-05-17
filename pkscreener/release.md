@@ -1,7 +1,7 @@
 [![MADE-IN-INDIA](https://img.shields.io/badge/MADE%20WITH%20%E2%9D%A4%20IN-INDIA-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/India) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pkjmesra/PKScreener?style=for-the-badge)](#) [![GitHub all releases](https://img.shields.io/github/downloads/pkjmesra/PKScreener/total?color=Green&label=Downloads&style=for-the-badge)](#) [![MADE_WITH](https://img.shields.io/badge/BUILT%20USING-PYTHON-yellow?style=for-the-badge&logo=python&logoColor=yellow)](https://www.python.org/)
 
 ## What's New?
-1. [v0.44.20240517.381] release
+1. [v0.45.20240517.382] release
 * Added option to "Pin" a scan category or stocks from a scan results. Use this after you've found results after running a scan. You can track either a category (or a previously launched piped scan) or a set of stocks.
 * Enabled Piped scanners from the menu. To try out, select "P" from the main menu, then select your index and scanner options as you would. Keep adding scanners to piped scan list, just always select "P > Piped Scanners" on the main menu list to keep adding. Alternatively you can select from a predfined set of piped scanners or use the predefined piped scanners into your custom defined scanners.
 * High Momentum scanner added. Try X > 12 > 31.
