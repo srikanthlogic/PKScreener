@@ -660,9 +660,9 @@ def pkscreenercli():
         # Launched by bot for intraday monitor?
         if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
             from PKDevTools.classes import Archiver
-            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs_0.txt")
+            filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs_1.txt")
             if os.path.exists(filePath):
-                default_logger().info("monitor_outputs_0.txt already exists! This means an instance may already be running. Exiting now...")
+                default_logger().info("monitor_outputs_1.txt already exists! This means an instance may already be running. Exiting now...")
                 # Since the file exists, it means, there is another instance running
                 sys.exit(0)
         else:
