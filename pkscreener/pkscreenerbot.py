@@ -500,7 +500,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G")
         )
     optionChoices = ""
-    if len(selection) <= 3:
+    if len(selection) <= 3 and mns is not None:
         for mnu in mns:
             inlineMenus.append(
                 InlineKeyboardButton(

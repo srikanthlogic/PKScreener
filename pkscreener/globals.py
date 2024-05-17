@@ -454,9 +454,16 @@ def showSendHelpInfo(defaultAnswer=None, user=None):
         sendMessageToTelegramChannel(message=Utility.tools.removeAllColorStyles(helpData), user=user)
 
 def initExecution(menuOption=None):
-    global selectedChoice
+    global selectedChoice, userPassedArgs
     Utility.tools.clearScreen()
-
+    if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None):
+        OutputControls().printOutput(
+        colorText.BOLD
+        + colorText.FAIL
+        + "[+] You chose: "
+        + f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]"
+        + colorText.END
+    )
     m0.renderForMenu(selectedMenu=None)
     try:
         if menuOption is None:
@@ -501,7 +508,7 @@ def initExecution(menuOption=None):
 def initPostLevel0Execution(
     menuOption=None, indexOption=None, executeOption=None, skip=[], retrial=False
 ):
-    global newlyListedOnly, selectedChoice
+    global newlyListedOnly, selectedChoice, userPassedArgs
     Utility.tools.clearScreen()
     if menuOption is None:
         OutputControls().printOutput('You must choose an option from the previous menu! Defaulting to "X"...')
@@ -510,7 +517,8 @@ def initPostLevel0Execution(
         colorText.BOLD
         + colorText.FAIL
         + "[+] You chose: "
-        + level0MenuDict[menuOption].strip()
+        + level0MenuDict[menuOption].strip() 
+        + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
         + colorText.END
     )
     if indexOption is None:
@@ -558,7 +566,7 @@ def initPostLevel0Execution(
 
 
 def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=False):
-    global selectedChoice
+    global selectedChoice, userPassedArgs
     if executeOption is None:
         if indexOption is not None and indexOption != "W":
             Utility.tools.clearScreen()
@@ -569,6 +577,7 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
                 + level0MenuDict[selectedChoice["0"]].strip()
                 + " > "
                 + level1_X_MenuDict[selectedChoice["1"]].strip()
+                + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
                 + colorText.END
             )
             selectedMenu = m1.find(indexOption)
@@ -753,6 +762,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     backtestPeriod = 0
     reversalOption = None
     listStockCodes = None
+    if userPassedArgs.log:
+        default_logger().debug(f"User Passed args: {userPassedArgs}")
     screenResults, saveResults = PKScanRunner.initDataframes()
     options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         startupoptions, testBuild, downloadOnly, defaultAnswer=defaultAnswer
@@ -781,22 +792,22 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             os.system(f"{launcher} -a Y -l")
         sys.exit(0)
     if menuOption in ["P"]:
-        Utility.tools.clearScreen(forceTop=True)
+        updateMenuChoiceHierarchy()
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu)
         predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
         OutputControls().printOutput(colorText.END, end="")
-        if predefinedOption not in ["1","2"]:
+        if predefinedOption not in ["1","2","3"]:
             return None, None
         if predefinedOption == "1":
-            Utility.tools.clearScreen(forceTop=True)
+            updateMenuChoiceHierarchy()
             selectedMenu = m1.find(predefinedOption)
             m2.renderForMenu(selectedMenu=selectedMenu)
             selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
             OutputControls().printOutput(colorText.END, end="")
             if selPredefinedOption in PREDEFINED_SCAN_MENU_KEYS:
                 scannerOption = PIPED_SCANNERS[selPredefinedOption]
-                Utility.tools.clearScreen(forceTop=True)
+                updateMenuChoiceHierarchy()
                 if userPassedArgs.pipedmenus is not None:
                     chosenOptions = scannerOption.split("-o ")[1]
                     userPassedArgs.options = chosenOptions.replace("'","")
@@ -823,6 +834,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             selectedChoice["0"] = selectedMenu.menuKey
             if userPassedArgs.pipedmenus is None:
                 userPassedArgs.pipedmenus = ""
+        elif predefinedOption == "3":
+            if userPassedArgs.pipedmenus is not None:
+                return addOrRunPipedMenus()
     if menuOption in ["X", "T", "E", "Y", "U", "H", "C"]:
         # Print Level 2 menu options
         menuOption, indexOption, executeOption, selectedChoice = getScannerMenuChoices(
@@ -1528,6 +1542,30 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 OutputControls().printOutput(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
         pass
+    if userPassedArgs is None or (userPassedArgs is not None and (userPassedArgs.answerdefault is None or userPassedArgs.systemlaunched)):
+        prevOutput_results = saveResults.index if (saveResults is not None and not saveResults.empty) else []
+        hasFoundStocks = len(prevOutput_results) > 0 and (("|" not in userPassedArgs.options) if (userPassedArgs is not None and userPassedArgs.options is not None) else True)
+        if hasFoundStocks:
+            monitorOption = userPassedArgs.systemlaunched if (userPassedArgs is not None and isinstance(userPassedArgs.systemlaunched,str) and userPassedArgs.systemlaunched is not None) else (userPassedArgs.options if (userPassedArgs is not None and userPassedArgs.options is not None) else "")
+            if len(monitorOption) == 0:
+                for choice in selectedChoice.keys():
+                    monitorOption = (f"{monitorOption}:" if len(monitorOption) > 0  else '') + f"{selectedChoice[choice]}"
+            m0.renderPinnedMenu(substitutes=[monitorOption,len(prevOutput_results)])
+            pinOption = input(
+                    colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                ) or 'M'
+            OutputControls().printOutput(colorText.END, end="")
+            if pinOption in ["1","2"]:
+                if pinOption in ["2"]:
+                    monitorOption = "X:0:0"
+                    prevOutput_results = ",".join(prevOutput_results)
+                    monitorOption = f"{monitorOption}:{prevOutput_results}"
+                launcher = sys.argv[0]
+                launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with pinned scan option. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m '{monitorOption}'{colorText.END}")
+                sleep(2)
+                os.system(f"{launcher} -a Y -m '{monitorOption}'")
+
     if userPassedArgs is not None:
         if userPassedArgs.runintradayanalysis:
             analysis_df = screenResults.copy()
@@ -1642,6 +1680,7 @@ def addOrRunPipedMenus():
     userPassedArgs.pipedmenus = f"{savedPipes}{userPassedArgs.options}"
     userPassedArgs.pipedmenus = userPassedArgs.pipedmenus.replace("::",":D:")
     userPassedArgs.pipedmenus = f"{userPassedArgs.pipedmenus}{('i '+configManager.duration) if configManager.isIntradayConfig() else ''}"
+    updateMenuChoiceHierarchy()
     OutputControls().printOutput(
             colorText.GREEN
             + f"[+] {len(userPassedArgs.pipedmenus.split('|'))} Scanners piped so far: {colorText.END}{colorText.WARN+userPassedArgs.pipedmenus+colorText.END}\n{colorText.GREEN}[+] Do you want to add any more scanners into the pipe?"
@@ -1653,7 +1692,7 @@ def addOrRunPipedMenus():
         launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
         OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o '{userPassedArgs.pipedmenus}'{colorText.END}")
         sleep(2)
-        os.system(f"{launcher} -a Y -e -o '{userPassedArgs.pipedmenus}'")
+        os.system(f"{launcher} --systemlaunched -a Y -e -o '{userPassedArgs.pipedmenus}'")
         userPassedArgs.pipedmenus = None
         OutputControls().printOutput(
                 colorText.GREEN
@@ -1895,53 +1934,57 @@ def handleMenu_XBG(menuOption, indexOption, executeOption):
 
 def updateMenuChoiceHierarchy():
     global userPassedArgs, selectedChoice, menuChoiceHierarchy
-    menuChoiceHierarchy = f'{level0MenuDict[selectedChoice["0"]].strip()}>{level1_X_MenuDict[selectedChoice["1"]].strip()}>{level2_X_MenuDict[selectedChoice["2"]].strip()}'
-    if selectedChoice["2"] == "6":
-        menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level3_X_Reversal_MenuDict[selectedChoice["3"]].strip()}'
-        )
-        if len(selectedChoice) >= 5 and selectedChoice["3"] in ["7","10"]:
+    try:
+        menuChoiceHierarchy = f'{level0MenuDict[selectedChoice["0"]].strip()}>{level1_X_MenuDict[selectedChoice["1"]].strip()}>{level2_X_MenuDict[selectedChoice["2"]].strip()}'
+        if selectedChoice["2"] == "6":
             menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["4"]].strip()}'
-        )
-    elif selectedChoice["2"] in ["30"]:
-        if len(selectedChoice) >= 3:
+                menuChoiceHierarchy
+                + f'>{level3_X_Reversal_MenuDict[selectedChoice["3"]].strip()}'
+            )
+            if len(selectedChoice) >= 5 and selectedChoice["3"] in ["7","10"]:
+                menuChoiceHierarchy = (
+                menuChoiceHierarchy
+                + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["4"]].strip()}'
+            )
+        elif selectedChoice["2"] in ["30"]:
+            if len(selectedChoice) >= 3:
+                menuChoiceHierarchy = (
+                menuChoiceHierarchy
+                + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["3"]].strip()}'
+            )
+        elif selectedChoice["2"] == "7":
             menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level4_X_Lorenzian_MenuDict[selectedChoice["3"]].strip()}'
-        )
-    elif selectedChoice["2"] == "7":
-        menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level3_X_ChartPattern_MenuDict[selectedChoice["3"]].strip()}'
-        )
-        if len(selectedChoice) >= 5 and selectedChoice["3"] == "3":
+                menuChoiceHierarchy
+                + f'>{level3_X_ChartPattern_MenuDict[selectedChoice["3"]].strip()}'
+            )
+            if len(selectedChoice) >= 5 and selectedChoice["3"] == "3":
+                menuChoiceHierarchy = (
+                menuChoiceHierarchy
+                + f'>{level4_X_ChartPattern_Confluence_MenuDict[selectedChoice["4"]].strip()}'
+            )
+            elif len(selectedChoice) >= 5 and selectedChoice["3"] == "6":
+                menuChoiceHierarchy = (
+                menuChoiceHierarchy
+                + f'>{level4_X_ChartPattern_BBands_SQZ_MenuDict[selectedChoice["4"]].strip()}'
+            )
+        elif selectedChoice["2"] == "21":
             menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level4_X_ChartPattern_Confluence_MenuDict[selectedChoice["4"]].strip()}'
-        )
-        elif len(selectedChoice) >= 5 and selectedChoice["3"] == "6":
-            menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level4_X_ChartPattern_BBands_SQZ_MenuDict[selectedChoice["4"]].strip()}'
-        )
-    elif selectedChoice["2"] == "21":
-        menuChoiceHierarchy = (
-            menuChoiceHierarchy
-            + f'>{level3_X_PopularStocks_MenuDict[selectedChoice["3"]].strip()}'
-        )
-    intraday = "(Intraday)" if (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig() else ""
-    menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
-    global nValueForMenu
-    menuChoiceHierarchy = menuChoiceHierarchy.replace("N-",f"{nValueForMenu}-")
-    Utility.tools.clearScreen()
+                menuChoiceHierarchy
+                + f'>{level3_X_PopularStocks_MenuDict[selectedChoice["3"]].strip()}'
+            )
+        intraday = "(Intraday)" if (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig() else ""
+        menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
+        global nValueForMenu
+        menuChoiceHierarchy = menuChoiceHierarchy.replace("N-",f"{nValueForMenu}-")
+    except:
+        pass
+    Utility.tools.clearScreen(forceTop=True)
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
         + "[+] You chose: "
         + menuChoiceHierarchy
+        + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
         + colorText.END
     )
     default_logger().info(menuChoiceHierarchy)
@@ -1959,7 +2002,7 @@ def printNotifySaveScreenedResults(
     recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d') if (userPassedArgs.backtestdaysago is None) else (PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago)))
     if user is None and userPassedArgs.user is not None:
         user = userPassedArgs.user
-    Utility.tools.clearScreen()
+    Utility.tools.clearScreen(forceTop=True)
     if screenResults is not None and len(screenResults) > 0:
         screenResults = screenResults[~screenResults.index.duplicated(keep='first')]
         saveResults = saveResults[~saveResults.index.duplicated(keep='first')]
@@ -1967,12 +2010,13 @@ def printNotifySaveScreenedResults(
             screenResults.drop_duplicates(keep="first", inplace=True)
         if "Stock" in saveResults.columns:
             saveResults.drop_duplicates(keep="first", inplace=True)
-
+    
     reportTitle = f"{userPassedArgs.pipedtitle}|" if userPassedArgs is not None and userPassedArgs.pipedtitle is not None else ""
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
         + f"[+] You chose: {reportTitle}{menuChoiceHierarchy}"
+        + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
         + colorText.END
         , enableMultipleLineOutput=True
     )

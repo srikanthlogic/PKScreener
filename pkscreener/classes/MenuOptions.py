@@ -58,9 +58,10 @@ level0MenuDict = {
 level1_P_MenuDict = {
     "1": "Predefined Piped Scanners",
     "2": "Define my custom Piped Scanner",
+    "3": "Run Piped Scans Saved So Far",
     "M": "Back to the Top/Main menu",
 }
-PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10"]
+PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10","11"]
 PREDEFINED_SCAN_MENU_TEXTS = [
     "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross     ",
     "Volume Scanners | High Momentum | ATR Cross",
@@ -71,23 +72,25 @@ PREDEFINED_SCAN_MENU_TEXTS = [
     "High Momentum | ATR Trailing Stop                                  ",
     "ATR Cross | ATR Trailing Stop",
     "TTM Sqeeze Buy | Intraday RSI b/w 0 to 54                          ",
-    "Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54",
+    "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross | Intraday RSI b/w 0 to 54",
+    "Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54             ",
 ]
 level2_P_MenuDict = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
     level2_P_MenuDict[key] = PREDEFINED_SCAN_MENU_TEXTS[int(key)-1]
 level2_P_MenuDict["M"] = "Back to the Top/Main menu"
 PREDEFINED_SCAN_MENU_VALUES =[
-    "-a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:23:>|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:>|X:0:31:'",
-    "-a y -e -o 'X:12:9:2.5:>|X:0:27:'",
-    "-a y -e -o 'X:12:9:2.5:>|X:0:29:'",
-    "-a y -e -o 'X:12:31:>|X:0:27:'",
-    "-a y -e -o 'X:12:31:>|X:0:30:1:'",
-    "-a y -e -o 'X:12:27:>|X:0:30:1:'",
-    "-a y -e -o 'X:12:7:6:1:>|X:0:5:0:54:i 1m'",
-    "-a y -e -o 'X:12:9:2.5:>|X:0:27:>|X:0:5:0:54:i 1m'"
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:23:>|X:0:27:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:27:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:27:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:29:'",
+    "--systemlaunched -a y -e -o 'X:12:31:>|X:0:27:'",
+    "--systemlaunched -a y -e -o 'X:12:31:>|X:0:30:1:'",
+    "--systemlaunched -a y -e -o 'X:12:27:>|X:0:30:1:'",
+    "--systemlaunched -a y -e -o 'X:12:7:6:1:>|X:0:5:0:54:i 1m'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:23:>|X:0:27:>|X:0:5:0:54:i 1m'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:27:>|X:0:5:0:54:i 1m'",
 ]
 PIPED_SCANNERS = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
@@ -250,7 +253,11 @@ level4_X_Lorenzian_MenuDict = {
     "3": "Any/All",
     "0": "Cancel",
 }
-
+Pin_MenuDict = {
+    "1": "Pin this scan category or piped scan {0}",
+    "2": "Pin these {0} stocks in the scan results (Just keep tracking only these {0} stocks)",
+    "M": "Back to the Top/Main menu",
+}
 
 class MenuRenderStyle(Enum):
     STANDALONE = 1
@@ -388,17 +395,23 @@ class menus:
         renderExceptionKeys=[],
         skip=[],
         parent=None,
+        substitutes=[]
     ):
         tabLevel = 0
         self.menuDict = {}
         line = 0
         lineIndex = 1
+        substituteIndex = 0
         for key in rawDictionary:
             if skip is not None and key in skip:
                 continue
             m = menu()
+            menuText = rawDictionary[key]
+            if "{0}" in menuText and len(substitutes) > 0:
+                menuText = menuText.format(f"{colorText.WARN}{substitutes[substituteIndex]}{colorText.END}")
+                substituteIndex += 1
             m.create(
-                str(key).upper(), rawDictionary[key], level=self.level, parent=parent
+                str(key).upper(), menuText, level=self.level, parent=parent
             )
             if key in renderExceptionKeys:
                 m.isException = True
@@ -434,6 +447,9 @@ class menus:
                 menuText = menuText + m.render(coloredValues=([] if asList else coloredValues))
         return menuText
 
+    def renderPinnedMenu(self,substitutes=[]):
+        return self.renderPinSubmenus(substitutes=substitutes)
+    
     def renderForMenu(self, selectedMenu:menu=None, skip=[], asList=False, renderStyle=None):
         if selectedMenu is None and self.level == 0:
             # Top level Application Main menu
@@ -577,6 +593,40 @@ class menus:
                 return None
         return None
 
+    def renderPinSubmenus(self, asList=False, renderStyle=None, parent=None, skip=None, substitutes=[]):
+        menuText = self.fromDictionary(
+            Pin_MenuDict,
+            renderExceptionKeys=["M"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+            substitutes = substitutes
+        ).render(asList=asList,coloredValues=["M"])
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select a menu option:"
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
+
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + (self.find("M") or menu().create('?','?')).keyTextLabel().strip()
+                    + ") "
+                    "" + colorText.END
+                )
+            return menuText
+        
     def renderLevel0Menus(self, asList=False, renderStyle=None, parent=None, skip=None):
         menuText = self.fromDictionary(
             level0MenuDict,

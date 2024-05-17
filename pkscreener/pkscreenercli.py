@@ -165,6 +165,9 @@ argParser.add_argument(
     "-m",
     "--monitor",
     help="Monitor for intraday scanners and their results.",
+    nargs='?',
+    const='X',
+    type=str,
     required=False,
 )
 argParser.add_argument(
@@ -211,6 +214,12 @@ argParser.add_argument(
     "--singlethread",
     action="store_true",
     help="Run analysis for debugging purposes in a single process, single threaded environment",
+    required=False,
+)
+argParser.add_argument(
+    "--systemlaunched",
+    action="store_true",
+    help="Indicator to show that this is a system launched screener, using os.system",
     required=False,
 )
 argParser.add_argument(
@@ -263,7 +272,7 @@ dbTimestamp = None
 elapsed_time = None
 configManager = ConfigManager.tools()
 
-def removeMonitorFile():
+def exitGracefully():
     from PKDevTools.classes import Archiver
     from pkscreener.globals import resetConfigToDefault
     filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
@@ -274,15 +283,16 @@ def removeMonitorFile():
         except:
             pass
         index += 1
+
     argsv = argParser.parse_known_args()
     args = argsv[0]
     if args is not None and args.options is not None and not args.options.upper().startswith("T"):
         resetConfigToDefault()
-    if args.monitor is not None:
-        if "PKDevTools_Default_Log_Level" in os.environ.keys():
-            if args is None or (args is not None and args.options is not None and "|" not in args.options):
-                del os.environ['PKDevTools_Default_Log_Level']
-        configManager.logsEnabled = False
+        
+    if "PKDevTools_Default_Log_Level" in os.environ.keys():
+        if args is None or (args is not None and args.options is not None and "|" not in args.options):
+            del os.environ['PKDevTools_Default_Log_Level']
+    configManager.logsEnabled = False
     configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
 
 def logFilePath():
@@ -359,6 +369,8 @@ def runApplication():
         pass
     argsv = argParser.parse_known_args()
     args = argsv[0]
+    if args.systemlaunched:
+        args.systemlaunched = args.options
     # if sys.argv[0].endswith(".py"):
     #     args.monitor = 'X'
     #     args.answerdefault = 'Y'
@@ -485,7 +497,7 @@ def runApplication():
                     sys.exit(0)
                 if isInterrupted():
                     closeWorkersAndExit()
-                    removeMonitorFile()
+                    exitGracefully()
                     sys.exit(0)
                 runPipedScans = True
                 while runPipedScans:
@@ -503,7 +515,7 @@ def runApplication():
                                 input("Press <Enter> to continue...")
             except SystemExit:
                 closeWorkersAndExit()
-                removeMonitorFile()
+                exitGracefully()
                 sys.exit(0)
             except Exception as e:
                 default_logger().debug(e, exc_info=True)
@@ -518,13 +530,14 @@ def runApplication():
                     results.set_index("Stock", inplace=True)
                 except:
                     pass
-                # plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
-                # results = results[~results.index.duplicated(keep='first')]
+                plainResults = plainResults[~plainResults.index.duplicated(keep='first')]
+                results = results[~results.index.duplicated(keep='first')]
                 resultStocks = plainResults.index
             if args.monitor is not None:
                 MarketMonitor().saveMonitorResultStocks(plainResults)
                 if results is not None and len(monitorOption_org) > 0:
-                    MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=updateMenuChoiceHierarchy(),dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
+                    chosenMenu = args.pipedtitle if args.pipedtitle is not None else updateMenuChoiceHierarchy()
+                    MarketMonitor().refresh(screen_df=results,screenOptions=monitorOption_org, chosenMenu=chosenMenu[:120],dbTimestamp=f"{dbTimestamp} | CycleTime:{elapsed_time}s",telegram=args.telegram)
 
 def checkIntradayComponent(args, monitorOption):
     lastComponent = monitorOption.split(":")[-1]
@@ -571,8 +584,8 @@ def pipeResults(prevOutput,args):
                     prevOutput.set_index("Stock", inplace=True)
                 except:
                     pass
-                # prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
-                prevOutput_results = prevOutput.index
+                prevOutput_results = prevOutput[~prevOutput.index.duplicated(keep='first')]
+                prevOutput_results = prevOutput_results.index
                 hasFoundStocks = len(prevOutput_results) > 0
                 prevOutput_results = ",".join(prevOutput_results)
                 monitorOption = monitorOption.replace(":D:",":")
@@ -598,12 +611,14 @@ def pkscreenercli():
             pass
 
     OutputControls(enableMultipleLineOutput=(args.monitor is None)).printOutput("",end="\r")
-        
+    
     configManager.getConfig(ConfigManager.parser)
+    import atexit
+    atexit.register(exitGracefully)
     # configManager.restartRequestsCache()
     # args.monitor = configManager.defaultMonitorOptions
     if args.monitor is not None:
-        MarketMonitor(monitors=args.monitor.split(",") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split(","),
+        MarketMonitor(monitors=args.monitor.split("~") if len(args.monitor)>5 else configManager.defaultMonitorOptions.split("~"),
                       maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow,
                       maxNumColsInEachResult=6,
                       maxNumRowsInEachResult=10,
@@ -638,6 +653,9 @@ def pkscreenercli():
         configManager.setConfig(
             ConfigManager.parser, default=True, showFileCreatedText=False
         )
+    if args.systemlaunched:
+        args.systemlaunched = args.options
+        
     if args.telegram:
         # Launched by bot for intraday monitor?
         if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()):
@@ -647,8 +665,6 @@ def pkscreenercli():
                 default_logger().info("monitor_outputs_0.txt already exists! This means an instance may already be running. Exiting now...")
                 # Since the file exists, it means, there is another instance running
                 sys.exit(0)
-            import atexit
-            atexit.register(removeMonitorFile)
         else:
             # It should have been launched only during the trading hours
             default_logger().info("--telegram option must be launched ONLY during NSE trading hours. Exiting now...")
@@ -695,7 +711,7 @@ def pkscreenercli():
         runApplication()
         from pkscreener.globals import closeWorkersAndExit
         closeWorkersAndExit()
-        removeMonitorFile()
+        exitGracefully()
         sys.exit(0)
     else:
         runApplicationForScreening()
@@ -720,11 +736,11 @@ def runApplicationForScreening():
             disableSysOut(disable=False)
             return
         closeWorkersAndExit()
-        removeMonitorFile()
+        exitGracefully()
         sys.exit(0)
     except SystemExit:
         closeWorkersAndExit()
-        removeMonitorFile()
+        exitGracefully()
         sys.exit(0)
     except (RuntimeError, Exception) as e:  # pragma: no cover
         default_logger().debug(e, exc_info=True)
@@ -739,7 +755,7 @@ def runApplicationForScreening():
             disableSysOut(disable=False)
             return
         closeWorkersAndExit()
-        removeMonitorFile()
+        exitGracefully()
         sys.exit(0)
 
 

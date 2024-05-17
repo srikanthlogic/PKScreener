@@ -717,7 +717,9 @@ def triggerBacktestWorkflowActions(launchLocal=False):
         if len(df) > 0:
             existing_df= df
     deploymentCounter = 0
-    for key in objectDictionary.keys():
+    backtestKeys = objectDictionary.keys()
+    backtestKeys = sorted(list(backtestKeys),reverse=True)
+    for key in backtestKeys:
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'.replace("::",":")
         if not shouldRunBacktests(scanOptions,existing_df):
@@ -857,6 +859,7 @@ if args.cleanuphistoricalscans:
     cleanuphistoricalscans(daysInPast)
 if args.updateholidays:
     updateHolidays()
-    
+
+triggerBacktestWorkflowActions()    
 print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
 sys.exit(0)

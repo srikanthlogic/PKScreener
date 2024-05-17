@@ -840,6 +840,7 @@ class tools:
                             stockDict[stock] = taskResult.to_dict("split")
                             processedStocks.append(stock)
         leftOutStocks = list(set(stockCodes)-set(processedStocks))
+        default_logger().debug(f"Attempted fresh download of {len(stockCodes)} stocks and downloaded {len(processedStocks)} stocks. {len(leftOutStocks)} stocks remaining.")
         return stockDict, leftOutStocks
 
     def loadStockData(

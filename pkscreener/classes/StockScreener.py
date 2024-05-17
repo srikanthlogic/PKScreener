@@ -555,7 +555,7 @@ class StockScreener:
                         or (executeOption == 26)
                         or (executeOption == 29) and bidGreaterThanAsk
                     ):
-                        isNotMonitoringDashboard = userArgs.monitor is None
+                        isNotMonitoringDashboard = userArgs.monitor is None or (userArgs.monitor is not None and "~" not in userArgs.monitor)
                         # Now screen for common ones to improve performance
                         if isNotMonitoringDashboard and not (executeOption == 6 and reversalOption == 7):
                             if sys.version_info >= (3, 11):

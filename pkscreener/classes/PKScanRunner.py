@@ -102,11 +102,11 @@ class PKScanRunner:
         results_queue = multiprocessing.Queue()
         logging_queue = multiprocessing.Queue()
 
-        totalConsumers = 1 if (userPassedArgs is not None and userPassedArgs.singlethread is not None) else min(minimumCount, multiprocessing.cpu_count())
+        totalConsumers = 1 if (userPassedArgs is not None and userPassedArgs.singlethread) else min(minimumCount, multiprocessing.cpu_count())
         if totalConsumers == 1:
             totalConsumers = 2  # This is required for single core machine
-        if PKScanRunner.configManager.cacheEnabled is True and multiprocessing.cpu_count() > 2:
-            totalConsumers -= 1
+        # if PKScanRunner.configManager.cacheEnabled is True and multiprocessing.cpu_count() > 2:
+        #     totalConsumers -= 1
         return tasks_queue, results_queue, totalConsumers, logging_queue
 
     def populateQueues(items, tasks_queue, exit=False,userPassedArgs=None):
@@ -291,6 +291,10 @@ class PKScanRunner:
             # going to pipe the results from an earlier run
             # or we're running in monitoring mode
             PKScanRunner.terminateAllWorkers(userPassedArgs,consumers, tasks_queue, testing)
+        else:
+            for worker in consumers:
+                worker.paused = True
+                worker._clear()
         return screenResults, saveResults,backtest_df,tasks_queue, results_queue, consumers, logging_queue
 
     @exit_after(180) # Should not remain stuck starting the multiprocessing clients beyond this time
@@ -326,7 +330,11 @@ class PKScanRunner:
                     for _ in range(totalConsumers)
                 ]
         # if executeOption == 29: # Intraday Bid/Ask, for which we need to fetch data from NSE instead of yahoo
-        intradayFetcher = Intra_Day("SBINEQN") # This will initialise the cookies etc.
+        try:
+            intradayFetcher = None
+            intradayFetcher = Intra_Day("SBINEQN") # This will initialise the cookies etc.
+        except:
+            pass
         for consumer in consumers:
             consumer.intradayNSEFetcher = intradayFetcher
         PKScanRunner.startWorkers(consumers)
@@ -440,6 +448,11 @@ class PKScanRunner:
             # If it's being run under unit testing, let's wrap up if we find at least 1
             # stock or if we've already tried screening through 5% of the list.
             if (not shouldContinue) or (testing and counter >= int(numStocksPerIteration * 0.05)):
+                if PKScanRunner.consumers is not None:
+                    consumers = PKScanRunner.consumers
+                    for worker in consumers:
+                        worker.paused = True
+                        worker._clear()
                 break
             # Add to the queue when we're through 75% of the previously added items already
             if counter >= numStocksPerIteration: #int(numStocksPerIteration * 0.75):

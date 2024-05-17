@@ -232,6 +232,7 @@ jobs:
         git fetch
         git add actions-data-download/*.pkl --force
         git add results/*.pkl --force
+        git add results/*.csv --force
         git commit -m "GitHub-Action-Workflow-Market-Data-Download-(Default-Config)"
         git push -v -u origin +actions-data-download
         
