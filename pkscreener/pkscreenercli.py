@@ -252,9 +252,9 @@ argParser.add_argument(
 )
 argsv = argParser.parse_known_args()
 args = argsv[0]
-if sys.argv[0].endswith(".py"):
-    args.monitor = 'X'
-    args.answerdefault = 'Y'
+# if sys.argv[0].endswith(".py"):
+#     args.monitor = 'X'
+#     args.answerdefault = 'Y'
 results = None
 resultStocks = None
 plainResults = None
@@ -359,9 +359,9 @@ def runApplication():
         pass
     argsv = argParser.parse_known_args()
     args = argsv[0]
-    if sys.argv[0].endswith(".py"):
-        args.monitor = 'X'
-        args.answerdefault = 'Y'
+    # if sys.argv[0].endswith(".py"):
+    #     args.monitor = 'X'
+    #     args.answerdefault = 'Y'
     args.pipedmenus = savedPipedArgs
     if args.options is not None:
         args.options = args.options.replace("::",":")
