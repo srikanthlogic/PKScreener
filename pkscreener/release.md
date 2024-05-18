@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.45.20240517.382] release
+* F&O options re-enabled.
 * Added option to "Pin" a scan category or stocks from a scan results. Use this after you've found results after running a scan. You can track either a category (or a previously launched piped scan) or a set of stocks.
 * Enabled Piped scanners from the menu. To try out, select "P" from the main menu, then select your index and scanner options as you would. Keep adding scanners to piped scan list, just always select "P > Piped Scanners" on the main menu list to keep adding. Alternatively you can select from a predfined set of piped scanners or use the predefined piped scanners into your custom defined scanners.
 * High Momentum scanner added. Try X > 12 > 31.

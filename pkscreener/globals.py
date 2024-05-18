@@ -1335,6 +1335,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 + colorText.WARN
                 + "[+] Starting download.. Press Ctrl+C to stop!"
             )
+            if not configManager.isIntradayConfig():
+                fetcher.saveAllNSEIndices()
         if menuOption.upper() in ["B", "G"]:
             OutputControls().printOutput(
                     colorText.BOLD
