@@ -102,5 +102,3 @@ def getGlobalMarketBarometerValuation():
         pass
     return gmbPath
 
-# getGlobalMarketBarometerValuation()
-# getBaseImage(255,255)
