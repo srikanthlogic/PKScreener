@@ -188,18 +188,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            cibw_archs: "x86_64"
-            python: 311
-          - os: ubuntu-latest
-            cibw_archs: "aarch64"
-            python: 311
+          # - os: ubuntu-latest
+          #   cibw_archs: "x86_64"
+          #   python: 311
+          # - os: ubuntu-latest
+          #   cibw_archs: "aarch64"
+          #   python: 311
           - os: windows-latest
-            cibw_archs: "auto"
+            cibw_archs: "native ARM64"
             python: 311
-          - os: macos-latest
-            cibw_archs: "x86_64 universal2 arm64"
-            python: 311
+          # - os: macos-latest
+          #   cibw_archs: "x86_64 universal2 arm64"
+          #   python: 311
 
     steps:
       - name: Set up QEMU
