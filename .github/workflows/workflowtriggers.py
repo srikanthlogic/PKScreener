@@ -802,7 +802,7 @@ def shouldRunBacktests(backtestName="",df=None):
     shouldRun = True
     if df is not None:
         gen_date_row = df[df["Insights"] == backtestName]
-        if gen_date_row is not None:
+        if gen_date_row is not None and not gen_date_row.empty:
             try:
                 shouldRun = not (str(gen_date_row["Generated Date"].iloc[0]) == today.replace("-","/"))
             except Exception as e: # Ptobably the given backtest has never been run yet
