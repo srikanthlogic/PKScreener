@@ -219,7 +219,7 @@ jobs:
       - name: Build wheels for PyPy
         uses: pypa/cibuildwheel@v2.18.0
         env:
-          CIBW_BUILD: "pp311-*"
+          CIBW_BUILD: "cp311-*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
         if: matrix.cibw_archs != 'aarch64'
   
