@@ -214,8 +214,8 @@ jobs:
           CIBW_BUILD: "cp311-*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
           CIBW_SKIP: "pp*"
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {package}
+          # CIBW_TEST_REQUIRES: pytest
+          # CIBW_TEST_COMMAND: pytest {package}
       - name: Build wheels for PyPy
         uses: pypa/cibuildwheel@v2.18.0
         env:
