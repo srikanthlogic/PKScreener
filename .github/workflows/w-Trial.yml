@@ -190,12 +190,16 @@ jobs:
         include:
           - os: ubuntu-latest
             cibw_archs: "native"
+            python: 311
           - os: ubuntu-latest
             cibw_archs: "aarch64"
+            python: 311
           - os: windows-latest
             cibw_archs: "native ARM64"
+            python: 311
           - os: macos-latest
             cibw_archs: "native arm64"
+            python: 311
 
     steps:
       - name: Set up QEMU
