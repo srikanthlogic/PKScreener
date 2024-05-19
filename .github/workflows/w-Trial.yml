@@ -209,7 +209,7 @@ jobs:
           platforms: arm64
       - uses: actions/checkout@v3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.18.0
         env:
           CIBW_BUILD: "cp311-*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
@@ -217,7 +217,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {package}
       - name: Build wheels for PyPy
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.18.0
         env:
           CIBW_BUILD: "pp311-*"
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
