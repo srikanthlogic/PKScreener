@@ -21,7 +21,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-"""
+""" 
 import argparse
 import datetime
 import os
@@ -194,142 +194,158 @@ def aset_output(name, value):
         with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
             print(f"{name}={value}", file=fh)
 try:
-    today = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
-    marketStatus, _ ,tradeDate = nse.capitalMarketStatus()
-    aset_output("MARKET_STATUS", marketStatus)
-    aset_output("MARKET_TRADED_TODAY", "1" if (today == tradeDate) else "0")
+    if __name__ == '__main__':
+        marketStatusFromNSE = ""
+        willTradeOnDate = False
+        wasTradedToday = False
+        today = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
+        marketStatus, _ ,tradeDate = nse.capitalMarketStatus()
+        try:
+            from PKDevTools.classes.NSEMarketStatus import NSEMarketStatus
+            import multiprocessing
+            NSEMarketStatus(multiprocessing.Manager().dict(),None).startMarketMonitor()
+            sleep(10)
+            marketStatusFromNSE = NSEMarketStatus({},None).status
+            willTradeOnDate = PKDateUtilities.willNextTradeOnDate()
+            wasTradedToday = PKDateUtilities.wasTradedOn()
+        except Exception as e:
+            print(e)
+            pass
+        aset_output("MARKET_STATUS", marketStatus)
+        aset_output("MARKET_TRADED_TODAY", "1" if (today in [tradeDate] or willTradeOnDate or wasTradedToday) else "0")
 except:
     marketStatus ,tradeDate = None,None
     pass
 
-noActionableArguments = not args.report and \
-                        not args.scans and \
-                        not args.backtests and \
-                        not args.cleanuphistoricalscans and \
-                        not args.updateholidays
-if args.skiplistlevel0 is None:
-    args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G", "C", "M", "D", "I", "L"])
-if args.skiplistlevel1 is None:
-    args.skiplistlevel1 = ",".join(["W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14,15"])
-if args.skiplistlevel2 is None:
-    args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,42,M,Z"])
-if args.skiplistlevel3 is None:
-    args.skiplistlevel3 = ",".join(["0,1,2,3,4,5,6,7"])
-if args.skiplistlevel4 is None:
-    args.skiplistlevel4 = ",".join(["0"])
+if __name__ == '__main__':
+    noActionableArguments = not args.report and \
+                            not args.scans and \
+                            not args.backtests and \
+                            not args.cleanuphistoricalscans and \
+                            not args.updateholidays
+    if args.skiplistlevel0 is None:
+        args.skiplistlevel0 = ",".join(["S", "T", "E", "U", "Z", "B", "H", "Y", "G", "C", "M", "D", "I", "L"])
+    if args.skiplistlevel1 is None:
+        args.skiplistlevel1 = ",".join(["W,N,E,M,Z,0,1,2,3,4,5,6,7,8,9,10,11,13,14,15"])
+    if args.skiplistlevel2 is None:
+        args.skiplistlevel2 = ",".join(["0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,42,M,Z"])
+    if args.skiplistlevel3 is None:
+        args.skiplistlevel3 = ",".join(["0,1,2,3,4,5,6,7"])
+    if args.skiplistlevel4 is None:
+        args.skiplistlevel4 = ",".join(["0"])
 
-if noActionableArguments:
-    # By default, just generate the report
-    args.report = True
-    args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G,C,M,D,I,L,P" 
-    args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,14,15"
-    args.skiplistlevel2 = "0,21,22,29,42,M,Z"
-    args.skiplistlevel3 = "0"
-    args.skiplistlevel4 = "0"
+    if noActionableArguments:
+        # By default, just generate the report
+        args.report = True
+        args.skiplistlevel0 = "S,T,E,U,Z,H,Y,X,G,C,M,D,I,L,P" 
+        args.skiplistlevel1 = "W,N,E,M,Z,0,2,3,4,6,7,9,10,13,14,15"
+        args.skiplistlevel2 = "0,21,22,29,42,M,Z"
+        args.skiplistlevel3 = "0"
+        args.skiplistlevel4 = "0"
 
-# Find the top level menus, skipping those in the provided list
-cmds0 = m0.renderForMenu(
-    selectedMenu=None,
-    skip=args.skiplistlevel0.split(","),
-    asList=True,
-    renderStyle=MenuRenderStyle.STANDALONE,
-)
-counter = 1
-# Iterate through the top level menus
-for mnu0 in cmds0:
-    p0 = mnu0.menuKey.upper()
-    selectedMenu = m0.find(p0)
-    # Find the first level menus, skipping those in the provided list
-    cmds1 = m1.renderForMenu(
-        selectedMenu=selectedMenu,
-        skip=args.skiplistlevel1.split(","),
+    # Find the top level menus, skipping those in the provided list
+    cmds0 = m0.renderForMenu(
+        selectedMenu=None,
+        skip=args.skiplistlevel0.split(","),
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
-    for mnu1 in cmds1:
-        p1 = mnu1.menuKey.upper()
-        selectedMenu = m1.find(p1)
-        # Find the 2nd level menus, skipping those in the provided list
-        cmds2 = m2.renderForMenu(
+    counter = 1
+    # Iterate through the top level menus
+    for mnu0 in cmds0:
+        p0 = mnu0.menuKey.upper()
+        selectedMenu = m0.find(p0)
+        # Find the first level menus, skipping those in the provided list
+        cmds1 = m1.renderForMenu(
             selectedMenu=selectedMenu,
-            skip=args.skiplistlevel2.split(","),
+            skip=args.skiplistlevel1.split(","),
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
-        try:
-            for mnu2 in cmds2:
-                p2 = mnu2.menuKey.upper()
-                if p2 == "0":
-                    continue
-                if p2 in ["6", "7", "21"]:
-                    selectedMenu = m2.find(p2)
-                    # Find the 3rd level menus, skipping those in the provided list
-                    cmds3 = m3.renderForMenu(
-                        selectedMenu=selectedMenu,
-                        asList=True,
-                        renderStyle=MenuRenderStyle.STANDALONE,
-                        skip=args.skiplistlevel3.split(","),
-                    )
-                    try:
-                        for mnu3 in cmds3:
-                            p3 = mnu3.menuKey.upper()
-                            if p3 == "0":
-                                continue
-                            if p3 in [ "7", "6"] and p2 not in ["21"]:
-                                selectedMenu = m3.find(p3)
-                                # Find the 2nd level menus, skipping those in the provided list
-                                cmds4 = m4.renderForMenu(
-                                    selectedMenu=selectedMenu,
-                                    skip=args.skiplistlevel4.split(","),
-                                    asList=True,
-                                    renderStyle=MenuRenderStyle.STANDALONE,
-                                )
-                                try:
-                                    for mnu4 in cmds4:
-                                        p4 = mnu4.menuKey.upper()
-                                        if p4 == "0":
-                                            continue
-                                        p_all = f"{p0}_{p1}_{p2}_{p3}_{p4}"
-                                        if p_all.endswith("_"):
-                                            p_all = p_all[:-1]
-                                        objectDictionary[counter] = {
-                                            "td2": [
-                                                mnu1.menuText.strip(),
-                                                mnu2.menuText.strip(),
-                                                mnu3.menuText.strip(),
-                                                mnu4.menuText.strip(),
-                                            ],
-                                            "td3": p_all,
-                                        }
-                                        counter += 1
-                                except:
-                                    continue
-                            else:
-                                p_all = f"{p0}_{p1}_{p2}_{p3}"
-                                if p_all.endswith("_"):
-                                    p_all = p_all[:-1]
-                                objectDictionary[counter] = {
-                                    "td2": [
-                                        mnu1.menuText.strip(),
-                                        mnu2.menuText.strip(),
-                                        mnu3.menuText.strip(),
-                                    ],
-                                    "td3": p_all,
-                                }
-                                counter += 1
-                    except:
+        for mnu1 in cmds1:
+            p1 = mnu1.menuKey.upper()
+            selectedMenu = m1.find(p1)
+            # Find the 2nd level menus, skipping those in the provided list
+            cmds2 = m2.renderForMenu(
+                selectedMenu=selectedMenu,
+                skip=args.skiplistlevel2.split(","),
+                asList=True,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            try:
+                for mnu2 in cmds2:
+                    p2 = mnu2.menuKey.upper()
+                    if p2 == "0":
                         continue
-                else:
-                    p_all = f"{p0}_{p1}_{p2}"
-                    if p_all.endswith("_"):
-                        p_all = p_all[:-1]
-                    objectDictionary[counter] = {
-                        "td2": [mnu1.menuText.strip(), mnu2.menuText.strip()],
-                        "td3": p_all,
-                    }
-                    counter += 1
-        except:
-            continue
+                    if p2 in ["6", "7", "21"]:
+                        selectedMenu = m2.find(p2)
+                        # Find the 3rd level menus, skipping those in the provided list
+                        cmds3 = m3.renderForMenu(
+                            selectedMenu=selectedMenu,
+                            asList=True,
+                            renderStyle=MenuRenderStyle.STANDALONE,
+                            skip=args.skiplistlevel3.split(","),
+                        )
+                        try:
+                            for mnu3 in cmds3:
+                                p3 = mnu3.menuKey.upper()
+                                if p3 == "0":
+                                    continue
+                                if p3 in [ "7", "6"] and p2 not in ["21"]:
+                                    selectedMenu = m3.find(p3)
+                                    # Find the 2nd level menus, skipping those in the provided list
+                                    cmds4 = m4.renderForMenu(
+                                        selectedMenu=selectedMenu,
+                                        skip=args.skiplistlevel4.split(","),
+                                        asList=True,
+                                        renderStyle=MenuRenderStyle.STANDALONE,
+                                    )
+                                    try:
+                                        for mnu4 in cmds4:
+                                            p4 = mnu4.menuKey.upper()
+                                            if p4 == "0":
+                                                continue
+                                            p_all = f"{p0}_{p1}_{p2}_{p3}_{p4}"
+                                            if p_all.endswith("_"):
+                                                p_all = p_all[:-1]
+                                            objectDictionary[counter] = {
+                                                "td2": [
+                                                    mnu1.menuText.strip(),
+                                                    mnu2.menuText.strip(),
+                                                    mnu3.menuText.strip(),
+                                                    mnu4.menuText.strip(),
+                                                ],
+                                                "td3": p_all,
+                                            }
+                                            counter += 1
+                                    except:
+                                        continue
+                                else:
+                                    p_all = f"{p0}_{p1}_{p2}_{p3}"
+                                    if p_all.endswith("_"):
+                                        p_all = p_all[:-1]
+                                    objectDictionary[counter] = {
+                                        "td2": [
+                                            mnu1.menuText.strip(),
+                                            mnu2.menuText.strip(),
+                                            mnu3.menuText.strip(),
+                                        ],
+                                        "td3": p_all,
+                                    }
+                                    counter += 1
+                        except:
+                            continue
+                    else:
+                        p_all = f"{p0}_{p1}_{p2}"
+                        if p_all.endswith("_"):
+                            p_all = p_all[:-1]
+                        objectDictionary[counter] = {
+                            "td2": [mnu1.menuText.strip(), mnu2.menuText.strip()],
+                            "td3": p_all,
+                        }
+                        counter += 1
+            except:
+                continue
 
 
 def generateBacktestReportMainPage():
@@ -473,7 +489,7 @@ def run_workflow(workflow_name, postdata, option=""):
     if resp.status_code == 204:
         print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Workflow {option} {workflow_name} Triggered!")
     else:
-        print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: Something went wrong while triggering {workflow_name}")
+        print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: [{resp.status_code}] Something went wrong while triggering {workflow_name}")
     return resp
 
 def cleanuphistoricalscans(scanDaysInPast=270):
@@ -820,7 +836,7 @@ def updateHolidays():
     Committer.commitTempOutcomes(holidays_file,"Update-Holidays","main")
 
 def shouldRunWorkflow():
-    return marketStatus == "Open" or today == tradeDate or (not PKDateUtilities.isTodayHoliday()[0] and PKDateUtilities.isTradingWeekday()) or args.force
+    return (marketStatus == "Open" or marketStatusFromNSE == "Open") or (today in [tradeDate] or willTradeOnDate or wasTradedToday) or (not PKDateUtilities.isTodayHoliday()[0] and PKDateUtilities.isTradingWeekday()) or args.force
 
 def triggerMiscellaneousTasks():
     today_date = PKDateUtilities.currentDateTime()
@@ -835,31 +851,32 @@ def triggerMiscellaneousTasks():
             if resp.status_code == 204:
                 sleep(5)
 
-if args.report:
-    generateBacktestReportMainPage()
-if args.backtests:
-    if shouldRunWorkflow():
-        triggerBacktestWorkflowActions(args.local)
-if args.misc:
-    # Perform miscellaneous adhoc tasks that may be rule dependent
-    triggerMiscellaneousTasks()
-if args.scans:
-    if shouldRunWorkflow():
-        daysInPast = 0
+if __name__ == '__main__':
+    if args.report:
+        generateBacktestReportMainPage()
+    if args.backtests:
+        if shouldRunWorkflow():
+            triggerBacktestWorkflowActions(args.local)
+    if args.misc:
+        # Perform miscellaneous adhoc tasks that may be rule dependent
+        triggerMiscellaneousTasks()
+    if args.scans:
+        if shouldRunWorkflow():
+            daysInPast = 0
+            if args.scanDaysInPast is not None:
+                daysInPast = int(args.scanDaysInPast)
+            if args.triggerRemotely:
+                triggerHistoricalScanWorkflowActions(scanDaysInPast=daysInPast)
+            else:
+                triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
+    if args.cleanuphistoricalscans:
+        daysInPast = 270
         if args.scanDaysInPast is not None:
             daysInPast = int(args.scanDaysInPast)
-        if args.triggerRemotely:
-            triggerHistoricalScanWorkflowActions(scanDaysInPast=daysInPast)
-        else:
-            triggerScanWorkflowActions(args.local, scanDaysInPast=daysInPast)
-if args.cleanuphistoricalscans:
-    daysInPast = 270
-    if args.scanDaysInPast is not None:
-        daysInPast = int(args.scanDaysInPast)
-    cleanuphistoricalscans(daysInPast)
-if args.updateholidays:
-    updateHolidays()
+        cleanuphistoricalscans(daysInPast)
+    if args.updateholidays:
+        updateHolidays()
 
-triggerBacktestWorkflowActions()    
-print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
-sys.exit(0)
+    triggerBacktestWorkflowActions()    
+    print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
+    sys.exit(0)

@@ -75,6 +75,7 @@ from PKDevTools.classes.OutputControls import OutputControls
 from PKDevTools.classes.Utils import random_user_agent
 
 from pkscreener.classes.ArtTexts import getArtText
+from PKDevTools.classes.NSEMarketStatus import NSEMarketStatus
 
 configManager = ConfigManager.tools()
 configManager.getConfig(ConfigManager.parser)
@@ -89,9 +90,20 @@ STD_ENCODING=sys.stdout.encoding if sys.stdout is not None else 'utf-8'
 def marketStatus():
     # task = PKTask("Nifty 50 Market Status",MarketStatus().getMarketStatus)
     lngStatus = MarketStatus().marketStatus
+    nseStatus = ""
+    next_bell = ""
+    try:
+        nseStatus = NSEMarketStatus({},None).status
+        next_bell = NSEMarketStatus({},None).getNextBell()
+    except:
+        pass
     # scheduleTasks(tasksList=[task])
     if lngStatus == "":
         lngStatus = MarketStatus().getMarketStatus(exchangeSymbol="^IXIC" if configManager.defaultIndex == 15 else "^NSEI")
+    if "Close" in lngStatus and nseStatus == "Open":
+        lngStatus = lngStatus.replace("Closed","Open")
+    if len(next_bell) > 0 and next_bell not in lngStatus:
+        lngStatus = f"{lngStatus} | Next Bell: {colorText.WARN}{next_bell.replace('T',' ').split('+')[0]}{colorText.END}"
     return (lngStatus +"\n") if lngStatus is not None else "\n"
 
 art = colorText.GREEN + f"{getArtText()}\nv{VERSION}" + colorText.END + f" | {marketStatus()}"
@@ -862,7 +874,7 @@ class tools:
         initialLoadCount = len(stockDict)
         leftOutStocks = None
         recentDownloadFromOriginAttempted = False
-        isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
+        isTrading = PKDateUtilities.isTradingTime() and (PKDateUtilities.wasTradedOn() or not PKDateUtilities.isTodayHoliday()[0])
         # stockCodes is not None mandates that we start our work based on the downloaded data from yesterday
         if (stockCodes is not None and len(stockCodes) > 0) and (isTrading or downloadOnly):
             recentDownloadFromOriginAttempted = True

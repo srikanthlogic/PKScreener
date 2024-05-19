@@ -2,7 +2,8 @@
 
 ## What's New?
 1. [v0.45.20240519.385] release
-* F&O options re-enabled.
+* Fixed market next-bell date infucsion to handle special trading sessions. Also implemented a backup for NSE index levels and market status. This will enforce that latest data is fetched if for some reason one of the data sources gives a wrong market status of being closed when in reality the market may be open.
+* F and O options re-enabled.
 * Added option to "Pin" a scan category or stocks from a scan results. Use this after you've found results after running a scan. You can track either a category (or a previously launched piped scan) or a set of stocks.
 * Enabled Piped scanners from the menu. To try out, select "P" from the main menu, then select your index and scanner options as you would. Keep adding scanners to piped scan list, just always select "P > Piped Scanners" on the main menu list to keep adding. Alternatively you can select from a predfined set of piped scanners or use the predefined piped scanners into your custom defined scanners.
 * High Momentum scanner added. Try X > 12 > 31.

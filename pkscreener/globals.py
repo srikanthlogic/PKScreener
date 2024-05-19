@@ -139,6 +139,10 @@ consumers = None
 logging_queue = None
 mp_manager = None
 
+def startMarketMonitor(mp_dict,keyboardevent):
+    from PKDevTools.classes.NSEMarketStatus import NSEMarketStatus
+    NSEMarketStatus(mp_dict,keyboardevent).startMarketMonitor()
+
 def finishScreening(
     downloadOnly,
     testing,
@@ -746,8 +750,13 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     screenResultsCounter = multiprocessing.Value("i", 0)
     if mp_manager is None:
         mp_manager = multiprocessing.Manager()
+        
     if keyboardInterruptEvent is None and not keyboardInterruptEventFired:
         keyboardInterruptEvent = mp_manager.Event()
+        mkt_monitor_dict = mp_manager.dict()
+        # Let's start monitoring the market monitor
+        startMarketMonitor(mkt_monitor_dict,keyboardInterruptEvent)
+        
     keyboardInterruptEventFired = False
     if stockDictPrimary is None:
         stockDictPrimary = mp_manager.dict()

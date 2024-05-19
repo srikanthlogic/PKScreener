@@ -357,7 +357,7 @@ def warnAboutDependencies():
                 + colorText.END
             )
             input("Press any key to try anyway...")
-
+    
 def runApplication():
     from pkscreener.globals import main, sendQuickScanResult,sendMessageToTelegramChannel, sendGlobalMarketBarometer, updateMenuChoiceHierarchy, isInterrupted, refreshStockData, closeWorkersAndExit
     # From a previous call to main with args, it may have been mutated.
@@ -371,6 +371,7 @@ def runApplication():
     args = argsv[0]
     if args.systemlaunched:
         args.systemlaunched = args.options
+    
     # if sys.argv[0].endswith(".py"):
     #     args.monitor = 'X'
     #     args.answerdefault = 'Y'

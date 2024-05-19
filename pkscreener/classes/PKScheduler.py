@@ -26,6 +26,7 @@ import warnings
 import os
 import sys
 import time
+# from PKDevTools.classes.OutputControls import OutputControls
 warnings.simplefilter("ignore", UserWarning,append=True)
 os.environ["PYTHONWARNINGS"]="ignore::UserWarning"
 
@@ -115,6 +116,7 @@ class PKScheduler():
                             total=len(futures),
                             visible=n_finished < len(futures)
                         )
+                        # OutputControls().printOutput(f"{n_finished} of {len(futures)}")
                         # We've reached a state where the caller may not want to wait any further
                         if n_finished*100/len(futures) >= minAcceptableCompletionPercentage:
                             break
