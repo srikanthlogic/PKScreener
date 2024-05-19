@@ -241,7 +241,7 @@ jobs:
           python-version: "3.11" # update once build dependencies are available
 
       - name: Build source distribution
-        run: bash build_tools/github/build_source.sh
+        run: bash .github/dependencies/build_tools/github/build_source.sh
         # env:
         #   SKLEARN_BUILD_PARALLEL: 3
 
