@@ -734,7 +734,7 @@ def triggerBacktestWorkflowActions(launchLocal=False):
             existing_df= df
     deploymentCounter = 0
     backtestKeys = objectDictionary.keys()
-    backtestKeys = sorted(list(backtestKeys),reverse=True)
+    # backtestKeys = sorted(list(backtestKeys),reverse=True)
     for key in backtestKeys:
         scanOptions = objectDictionary[key]["td3"]
         options = f'{scanOptions.replace("_",":").replace("B:","")}:D:D:D'.replace("::",":")
