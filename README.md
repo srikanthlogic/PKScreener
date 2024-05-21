@@ -96,7 +96,7 @@ Followin scanners are already implemented. Others are `In Progress`
 ```
 ## Running Piped Scanners
 
-![Piped Scanners](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/docs/HelpVideos/PipedScanners/How-to-run-piped-scanners.mp4)
+https://raw.githubusercontent.com/pkjmesra/PKScreener/main/docs/HelpVideos/PipedScanners/How-to-run-piped-scanners.mp4
 
 ## How to use on your own local Windows/Linux/Macbook laptop?
 
