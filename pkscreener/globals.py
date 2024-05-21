@@ -1501,14 +1501,21 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                             detailLabel = None,
                             )
                 elif "|" not in userPassedArgs.options:
-                    printNotifySaveScreenedResults(
-                        screenResults,
-                        saveResults,
-                        selectedChoice,
-                        menuChoiceHierarchy,
-                        testing,
-                        user=user,
-                    )
+                    try:
+                        printNotifySaveScreenedResults(
+                            screenResults,
+                            saveResults,
+                            selectedChoice,
+                            menuChoiceHierarchy,
+                            testing,
+                            user=user,
+                        )
+                    except Exception as e:
+                        default_logger().debug(e, exc_info=True)
+                        if userPassedArgs.log:
+                            import traceback
+                            traceback.print_exc()
+                        pass
         if menuOption in ["X","C"] and userPassedArgs.monitor is None:
             finishScreening(
                 downloadOnly,
@@ -2032,7 +2039,7 @@ def printNotifySaveScreenedResults(
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
-        + f"[+] You chose: {reportTitle}{menuChoiceHierarchy}"
+        + f"[+] You chose: {reportTitle}{menuChoiceHierarchy}[{len(screenResults) if screenResults is not None and not screenResults.empty else 0}]"
         + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
         + colorText.END
         , enableMultipleLineOutput=True

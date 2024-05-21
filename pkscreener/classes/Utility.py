@@ -482,7 +482,7 @@ class tools:
         stdFont_backtestSummary_text_width,stdFont_backtestSummary_text_height= stdfont.getsize_multiline(unstyled_backtestsummary) if len(unstyled_backtestsummary) > 0 else (0,0)
         stdFont_backtestDetail_text_width, stdFont_backtestDetail_text_height = stdfont.getsize_multiline(unstyled_backtestDetail) if len(unstyled_backtestDetail) > 0 else (0,0)
         artfont_scanResultText_width, _ = artfont.getsize_multiline(table) if len(table) > 0 else (0,0)
-        artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if len(backtestSummary) > 0 else (0,0)
+        artfont_backtestSummary_text_width, _ = artfont.getsize_multiline(backtestSummary) if (backtestSummary is not None and len(backtestSummary)) > 0 else (0,0)
         stdfont_addendumtext_height = 0
         stdfont_addendumtext_width = 0
         if addendum is not None and len(addendum) > 0:
