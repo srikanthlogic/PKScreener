@@ -1011,7 +1011,7 @@ class tools:
         OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
-                + "[+] Downloading cache from server for faster processing, Please Wait.."
+                + f"[+] Downloading {'Intraday' if configManager.isIntradayConfig() else 'Daily'} cache from server for faster processing, Please Wait.."
                 + colorText.END
             )
         cache_url = (
