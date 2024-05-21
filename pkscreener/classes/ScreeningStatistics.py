@@ -1717,6 +1717,12 @@ class ScreeningStatistics:
                 except ValueError: # pragma: no cover
                     # We did not find the stock? It's okay. Move on to the next one.
                     pass
+                except (TimeoutError, ConnectionError) as e:
+                    self.default_logger.debug(e, exc_info=True)
+                    pass
+                except Exception as e:
+                    self.default_logger.debug(e, exc_info=True)
+                    pass
                 if security is not None:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                         fv = security.fairValue()
@@ -1836,6 +1842,12 @@ class ScreeningStatistics:
                 security = Stock(stock,exchange=exchangeName)
         except ValueError:
             # We did not find the stock? It's okay. Move on to the next one.
+            pass
+        except (TimeoutError, ConnectionError) as e:
+            self.default_logger.debug(e, exc_info=True)
+            pass
+        except Exception as e:
+            self.default_logger.debug(e, exc_info=True)
             pass
         if security is not None:
             try:
