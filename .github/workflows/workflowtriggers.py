@@ -877,6 +877,5 @@ if __name__ == '__main__':
     if args.updateholidays:
         updateHolidays()
 
-    triggerBacktestWorkflowActions()    
     print(f"{datetime.datetime.now(pytz.timezone('Asia/Kolkata'))}: All done!")
     sys.exit(0)
