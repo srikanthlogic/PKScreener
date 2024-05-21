@@ -1,7 +1,7 @@
 [![MADE-IN-INDIA](https://img.shields.io/badge/MADE%20WITH%20%E2%9D%A4%20IN-INDIA-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/India) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pkjmesra/PKScreener?style=for-the-badge)](#) [![GitHub all releases](https://img.shields.io/github/downloads/pkjmesra/PKScreener/total?color=Green&label=Downloads&style=for-the-badge)](#) [![MADE_WITH](https://img.shields.io/badge/BUILT%20USING-PYTHON-yellow?style=for-the-badge&logo=python&logoColor=yellow)](https://www.python.org/)
 
 ## What's New?
-1. [v0.45.20240521.390] release
+1. [v0.45.20240521.391] release
 * Fixed piped scanner issue for Windows wherein windows ddid not recognise | within single quote but only in double quote
 * Fixed market next-bell date infucsion to handle special trading sessions. Also implemented a backup for NSE index levels and market status. This will enforce that latest data is fetched if for some reason one of the data sources gives a wrong market status of being closed when in reality the market may be open.
 * F and O options re-enabled.
