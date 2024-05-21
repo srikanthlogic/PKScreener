@@ -816,7 +816,8 @@ class tools:
                 colorText.BOLD + colorText.GREEN + "=> Already Cached." + colorText.END
             )
             if downloadOnly:
-                    OutputControls().printOutput(colorText.BOLD + colorText.GREEN + f"=> {cache_file}" + colorText.END)
+                OutputControls().printOutput(colorText.BOLD + colorText.GREEN + f"=> {cache_file}" + colorText.END)
+        return cache_file
 
     def downloadLatestData(stockDict,configManager,stockCodes=[],exchangeSuffix=".NS",downloadOnly=False):
         numStocksPerIteration = (int(len(stockCodes)/int(len(stockCodes)/10)) if len(stockCodes) >= 10 else len(stockCodes)) + 1
@@ -1044,7 +1045,7 @@ class tools:
             MB = KB * 1024
             chunksize = MB if serverBytes >= MB else (KB if serverBytes >= KB else 1)
             filesize = int( serverBytes / chunksize)
-            if filesize > 0 and chunksize == MB: # Saved data can't be in KBs. Something definitely went wrong.
+            if filesize > 40 and chunksize == MB: # Saved data can't be in KBs. Something definitely went wrong. It should be upward of 40MB
                 bar, spinner = tools.getProgressbarStyle()
                 try:
                     f = open(
@@ -1120,7 +1121,7 @@ class tools:
                     OutputControls().printOutput("[!] Download Error - " + str(e))
             else:
                 default_logger().debug(
-                        f"Stock data cache file:{cache_file} on server has length ->{filesize}{chunksize}"
+                        f"Stock data cache file:{cache_file} on server has length ->{filesize} {'Mb' if chunksize >= MB else ('Kb' if chunksize >= KB else 'bytes')}"
                     )
             if not retrial and not stockDataLoaded:
                     # Don't try for more than once.

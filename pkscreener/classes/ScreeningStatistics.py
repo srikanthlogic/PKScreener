@@ -3014,6 +3014,8 @@ class ScreeningStatistics:
                 lowPointsOrg = lowPoints
                 lowPoints.sort(reverse=True)
                 lowPointsSorted = lowPoints
+                if data.empty or len(lowPoints) < 1:
+                    return False
                 ltp = data.head(1)["Close"].iloc[0]
                 if (
                     lowPointsOrg == lowPointsSorted

@@ -2636,7 +2636,21 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
         )
         Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday)
         if downloadOnly:
-            Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday, downloadOnly=downloadOnly)
+            cache_file = Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday, downloadOnly=downloadOnly)
+            cacheFileSize = os.stat(cache_file).st_size if os.path.exists(cache_file) else 0
+            if cacheFileSize < 1024*1024*50:
+                try:
+                    from PKDevTools.classes import Archiver
+                    log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
+                    message=f"{cache_file} has size: {cacheFileSize}! Something is wrong!"
+                    if os.path.exists(log_file_path):
+                        sendMessageToTelegramChannel(caption=message,document_filePath=log_file_path, user="-1001785195297")
+                    else:
+                        sendMessageToTelegramChannel(message=message,user="-1001785195297")
+                except:
+                    pass
+                # Let's try again with logging
+                os.system(f"{sys.argv[0]} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
     else:
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 
