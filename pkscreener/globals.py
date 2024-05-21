@@ -1792,7 +1792,7 @@ def resetConfigToDefault():
     isIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     if configManager.isIntradayConfig() or isIntraday:
         configManager.toggleConfig(candleDuration="1d", clearCache=False)
-    if userPassedArgs.monitor is None:
+    if userPassedArgs is not None and userPassedArgs.monitor is None:
         if "PKDevTools_Default_Log_Level" in os.environ.keys():
             if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.options is not None and "|" not in userPassedArgs.options):
                 del os.environ['PKDevTools_Default_Log_Level']
