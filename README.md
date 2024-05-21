@@ -94,6 +94,10 @@ Followin scanners are already implemented. Others are `In Progress`
     23 > Breaking out now               	24 > Higher Highs,Lows & Close      
     25 > Lower Highs,Lows (Watch for Reversal)            	
 ```
+## Running Piped Scanners
+
+![Piped Scanners](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/docs/HelpVideos/PipedScanners/How-to-run-piped-scanners.mp4)
+
 ## How to use on your own local Windows/Linux/Macbook laptop?
 
 # Using docker, running within docker container
