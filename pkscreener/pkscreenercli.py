@@ -131,6 +131,12 @@ argParser.add_argument(
     required=False,
 )
 argParser.add_argument(
+    "--botavailable",
+    action="store_true",
+    help="Enforce whether bot is going to be available or not.",
+    required=False,
+)
+argParser.add_argument(
     "-c",
     "--croninterval",
     help="Pass interval in seconds to wait before the program is run again with same parameters",
@@ -673,7 +679,7 @@ def pkscreenercli():
     # Check and see if we're running only the telegram bot
     if args.bot:
         from pkscreener import pkscreenerbot
-        pkscreenerbot.runpkscreenerbot()
+        pkscreenerbot.runpkscreenerbot(availability=args.botavailable)
         return
     
     if args.intraday:

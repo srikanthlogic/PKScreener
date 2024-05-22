@@ -70,6 +70,7 @@ import pkscreener.classes.ConfigManager as ConfigManager
 
 monitor_proc = None
 configManager = ConfigManager.tools()
+bot_available=True
 
 try:
     from telegram import __version_info__
@@ -149,6 +150,7 @@ def initializeIntradayTimer():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResults=None, monitorIndex=0,chosenBotMenuOption="") -> int:
     """Send message on `/start`."""
+    global bot_available
     updateCarrier = None
     if update is None:
         return
@@ -162,33 +164,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     # Get user that sent /start and log his name
     user = updateCarrier.from_user
     logger.info("User %s started the conversation.", user.first_name)
+    if not bot_available:
+        updatedResults = "Apologies! The @nse_pkscreener_bot is NOT available for the time being! We are working with our host GitHub and other data source providers to sort out pending invoices and restore the services soon! Thanks for your patience and support! 🙏"
     # Build InlineKeyboard where each button has a displayed text
     # and a string as callback_data
     # The keyboard is a list of button rows, where each row is in turn
     # a list (hence `[[...]]`).
-    mns = m0.renderForMenu(asList=True)
-    if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()) or sys.argv[0].endswith(".py"):
-        mns.append(menu().create(f"MI_{monitorIndex}", "Int. Monitor", 2))
-    if user.username == OWNER_USER:
-        mns.append(menu().create(f"DV_0", ("Enbl" if not configManager.logsEnabled else "Dsbl"), 2))
+    if bot_available:
+        mns = m0.renderForMenu(asList=True)
+        if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()) or sys.argv[0].endswith(".py"):
+            mns.append(menu().create(f"MI_{monitorIndex}", "Int. Monitor", 2))
+        if user.username == OWNER_USER:
+            mns.append(menu().create(f"DV_0", ("Enbl" if not configManager.logsEnabled else "Dsbl"), 2))
 
-    inlineMenus = []
-    for mnu in mns:
-        if mnu.menuKey[0:2] in TOP_LEVEL_SCANNER_MENUS:
-            inlineMenus.append(
-                InlineKeyboardButton(
-                    mnu.menuText.split("(")[0],
-                    callback_data="C" + str(mnu.menuKey),
+        inlineMenus = []
+        for mnu in mns:
+            if mnu.menuKey[0:2] in TOP_LEVEL_SCANNER_MENUS:
+                inlineMenus.append(
+                    InlineKeyboardButton(
+                        mnu.menuText.split("(")[0],
+                        callback_data="C" + str(mnu.menuKey),
+                    )
                 )
-            )
-    keyboard = [inlineMenus]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    cmds = m0.renderForMenu(
-        selectedMenu=None,
-        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
-        asList=True,
-        renderStyle=MenuRenderStyle.STANDALONE,
-    )
+        keyboard = [inlineMenus]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        cmds = m0.renderForMenu(
+            selectedMenu=None,
+            skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+            asList=True,
+            renderStyle=MenuRenderStyle.STANDALONE,
+        )
+    else:
+        reply_markup = None
+
     if updatedResults is None:
         cmdText = ""
         for cmd in cmds:
@@ -311,6 +319,10 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G").replace("CMI", "MI")
     if data[0:2] not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
+    global bot_available
+    if not bot_available:
+        await start(update, context)
+        return START_ROUTES
     if data.startswith("MI"):
         monitorIndex = int(data.split("_")[1])
         result_outputs, filePath = launchIntradayMonitor()
@@ -382,6 +394,10 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     selection = preSelection.split("_")
     preSelection = f"{selection[0]}_{selection[1]}"
     if (selection[0].upper() not in TOP_LEVEL_SCANNER_MENUS):
+        await start(update, context)
+        return START_ROUTES
+    global bot_available
+    if not bot_available:
         await start(update, context)
         return START_ROUTES
     if selection[len(selection)-1].upper() == "H":
@@ -964,7 +980,10 @@ async def shareUpdateWithChannel(update, context, optionChoices=""):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if _shouldAvoidResponse(update):
         return
-
+    global bot_available
+    if not bot_available:
+        await start(update, context)
+        return START_ROUTES
     cmds = m0.renderForMenu(
         selectedMenu=None,
         skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
@@ -1118,10 +1137,11 @@ def addCommandsForMenuItems(application):
 #   )
 
 
-def runpkscreenerbot() -> None:
+def runpkscreenerbot(availability=True) -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    global chat_idADMIN, Channel_Id
+    global chat_idADMIN, Channel_Id, bot_available
+    bot_available = availability
     Channel_Id, TOKEN, chat_idADMIN, GITHUB_TOKEN = get_secrets()
     # TOKEN = '1234567'
     # Channel_Id = 1001785195297
@@ -1162,8 +1182,9 @@ def runpkscreenerbot() -> None:
     application.add_handler(conv_handler)
     # ...and the error handler
     application.add_error_handler(error_handler)
-    # Run the intraday monitor
-    initializeIntradayTimer()
+    if bot_available:
+        # Run the intraday monitor
+        initializeIntradayTimer()
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
