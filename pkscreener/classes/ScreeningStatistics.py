@@ -1146,25 +1146,32 @@ class ScreeningStatistics:
         highestHigh200 = round(data.head(201).tail(200).describe()["High"]["max"], 2)
         highestHigh30 = round(data.head(31).tail(30).describe()["High"]["max"], 2)
         highestHigh200From30 = round(data.tail(200).describe()["High"]["max"], 2)
+        highestHigh8From30 = round(data.tail(8).describe()["High"]["max"], 2)
         data = data.head(200)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
-        vol = pktalib.SMA(data["Volume"],timeperiod=200)
-        data["SMA200V"] = vol
+        vol200 = pktalib.SMA(data["Volume"],timeperiod=200)
+        data["SMA200V"] = vol200
+        vol50 = pktalib.SMA(data["Volume"],timeperiod=50)
+        data["SMA50V"] = vol50
         recent = data.tail(1)
         sma200v = recent["SMA200V"].iloc[0]
+        sma50v = recent["SMA50V"].iloc[0]
         if (
             np.isnan(recentClose)
             or np.isnan(highestHigh200)
             or np.isnan(highestHigh30)
             or np.isnan(highestHigh200From30)
+            or np.isnan(highestHigh8From30)
             or np.isnan(recentVolume)
             or np.isnan(sma200v)
+            or np.isnan(sma50v)
         ):
             return False
         if (
             (recentClose > highestHigh200)
-            and (highestHigh30 < highestHigh200From30)
-            and (recentVolume > sma200v)
+            and (((highestHigh30 < highestHigh200From30) and (recentVolume > sma200v)) or \
+                 ((highestHigh30 < highestHigh8From30) and (recentVolume > sma50v))
+                )
         ):
             saveDict["Breakout"] = saveDict["Breakout"] + "(Potential)"
             screenDict["Breakout"] = screenDict["Breakout"] + (
