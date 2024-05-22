@@ -56,7 +56,6 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.stageTwo = True
         self.useEMA = False
         self.showunknowntrends = True
-        self.botavailability = True
         self.enablePortfolioCalculations = False
         self.logsEnabled = False
         self.generalTimeout = 2
@@ -179,8 +178,6 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("filters", "minimumVolume", str(self.minVolume))
             parser.set("filters", "minPrice", str(self.minLTP))
             parser.set("filters", "volumeRatio", str(self.volumeRatio))
-
-            parser.set("bot", "botavailability",  "y" if self.botavailability else "n")
 
             try:
                 fp = open("pkscreener.ini", "w")
@@ -376,7 +373,6 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 parser.set("filters", "minPrice", str(self.minLTP))
                 parser.set("filters", "volumeRatio", str(self.volumeRatio))
 
-                parser.set("bot", "botavailability", str(self.botavailability))
             except Exception as e:
                 default_logger().debug(e,exc_info=True)
                 from time import sleep
