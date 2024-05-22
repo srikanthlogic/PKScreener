@@ -1146,7 +1146,7 @@ class ScreeningStatistics:
         highestHigh200 = round(data.head(201).tail(200).describe()["High"]["max"], 2)
         highestHigh30 = round(data.head(31).tail(30).describe()["High"]["max"], 2)
         highestHigh200From30 = round(data.tail(200).describe()["High"]["max"], 2)
-        highestHigh8From30 = round(data.tail(8).describe()["High"]["max"], 2)
+        highestHigh8From30 = round(data.head(39).tail(8).describe()["High"]["max"], 2)
         data = data.head(200)
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
         vol200 = pktalib.SMA(data["Volume"],timeperiod=200)
