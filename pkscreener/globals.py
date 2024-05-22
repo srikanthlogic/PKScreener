@@ -401,7 +401,7 @@ def handleSecondaryMenuChoices(
             m1.renderForMenu(selectedMenu=selectedMenu)
             periodOption = input(
                     colorText.BOLD + colorText.FAIL + "[+] Select option: "
-                ) or ('L' if configManager.period == '280d' else 'S')
+                ) or ('L' if configManager.period == '1y' else 'S')
             OutputControls().printOutput(colorText.END, end="")
             if periodOption is None or periodOption.upper() not in ["L","S"]:
                 return
@@ -2885,7 +2885,7 @@ def takeBacktestInputs(
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.GREEN
-        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) or any other custom periods (< 280)."
+        + f"[+] For {g10k if menuOption == 'G' else 'backtesting'}, you can choose from (1,2,3,4,5,10,15,22,30) or any other custom periods (< 1y)."
     )
     try:
         if backtestPeriod == 0:

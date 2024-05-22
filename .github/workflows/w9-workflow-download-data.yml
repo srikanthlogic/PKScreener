@@ -44,7 +44,7 @@ on:
         required: false
         default: 'Y'
       skipDownload:
-          description: 'Skip pkl download for 280d. Leave empty to NOT skip download. Y to skip download'
+          description: 'Skip pkl download for 1y. Leave empty to NOT skip download. Y to skip download'
           required: false
           default: ''
       cleanuphistoricalscans:

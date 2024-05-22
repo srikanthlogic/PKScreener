@@ -101,6 +101,7 @@ class StockScreener:
             # hostRef.default_logger.info(
             #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionaryPrimary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
             # )
+            data = None
             data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionaryPrimary, configManager, fetcher, period,None, testData,exchangeName)
             if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
                 # Daily data is already available in "data" above.
@@ -108,7 +109,7 @@ class StockScreener:
                 intraday_data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef, hostRef.objectDictionarySecondary, configManager, fetcher, "1d","1m", testData,exchangeName)
                 
             if data is not None:
-                if len(data) == 0 or len(data) < backtestDuration:
+                if len(data) == 0 or data.empty or len(data) < backtestDuration:
                     raise StockDataEmptyException(f"Data length:{len(data)}")
             else:
                 raise StockDataEmptyException(f"Data is None: {data}")
@@ -622,7 +623,7 @@ class StockScreener:
             # Capturing Ctr+C Here isn't a great idea
             pass
         except StockDataEmptyException as e: # pragma: no cover
-            if not data.isnull().values.all(axis=0)[0]:
+            if data is None or (data is not None and not data.isnull().values.all(axis=0)[0]):
                 hostRef.default_logger.debug(f"StockDataEmptyException:{stock}: {e}", exc_info=True)
             pass
         except ScreeningStatistics.EligibilityConditionNotMet as e:
@@ -845,7 +846,8 @@ class StockScreener:
                         totalSymbols,
                         start=start,
                         end=start,
-                        exchangeSuffix=".NS" if exchangeName == "INDIA" else ""
+                        exchangeSuffix=".NS" if exchangeName == "INDIA" else "",
+                        printCounter=printCounter
                     )
                 if hostData is not None and data is not None:
                     # During the market trading hours, we don't want to go for MFI/FV value fetching

@@ -107,19 +107,24 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 # If we send start and end dates for intraday, it comes back with empty dataframe
                 start = None
                 end = None
-        with SuppressOutput(suppress_stdout=True, suppress_stderr=True):
-            data = yf.download(
-                tickers=stockCode,
-                period=period,
-                interval=duration,
-                proxy=proxyServer,
-                progress=False,
-                rounding = True,
-                group_by='ticker',
-                timeout=self.configManager.generalTimeout/4,
-                start=start,
-                end=end
-            )
+        data = None
+        with SuppressOutput(suppress_stdout=(not printCounter), suppress_stderr=(not printCounter)):
+            try:
+                data = yf.download(
+                    tickers=stockCode,
+                    period=period,
+                    interval=duration,
+                    proxy=proxyServer,
+                    progress=False,
+                    rounding = True,
+                    group_by='ticker',
+                    timeout=self.configManager.generalTimeout/4,
+                    start=start,
+                    end=end
+                )
+            except KeyError as e:
+                default_logger().debug(e,exc_info=True)
+                pass
         if printCounter:
             sys.stdout.write("\r\033[K")
             try:

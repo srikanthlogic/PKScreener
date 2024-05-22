@@ -1,32 +1,8 @@
 [![MADE-IN-INDIA](https://img.shields.io/badge/MADE%20WITH%20%E2%9D%A4%20IN-INDIA-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/India) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/pkjmesra/PKScreener?style=for-the-badge)](#) [![GitHub all releases](https://img.shields.io/github/downloads/pkjmesra/PKScreener/total?color=Green&label=Downloads&style=for-the-badge)](#) [![MADE_WITH](https://img.shields.io/badge/BUILT%20USING-PYTHON-yellow?style=for-the-badge&logo=python&logoColor=yellow)](https://www.python.org/)
 
 ## What's New?
-1. [v0.45.20240521.394] release
-* Fixed piped scanner issue for Windows wherein windows ddid not recognise | within single quote but only in double quote
-* Fixed market next-bell date infucsion to handle special trading sessions. Also implemented a backup for NSE index levels and market status. This will enforce that latest data is fetched if for some reason one of the data sources gives a wrong market status of being closed when in reality the market may be open.
-* F and O options re-enabled.
-* Added option to "Pin" a scan category or stocks from a scan results. Use this after you've found results after running a scan. You can track either a category (or a previously launched piped scan) or a set of stocks.
-* Enabled Piped scanners from the menu. To try out, select "P" from the main menu, then select your index and scanner options as you would. Keep adding scanners to piped scan list, just always select "P > Piped Scanners" on the main menu list to keep adding. Alternatively you can select from a predfined set of piped scanners or use the predefined piped scanners into your custom defined scanners.
-* High Momentum scanner added. Try X > 12 > 31.
-* Now, change config periods using menus within the app (1d, 280d, 1m, 5m, 30m, 1H, 1d, 1w, 1M)
-* ATR Trailing Stops scanner for Swing Paper Trading analysis added. Try out X > 12 > 30 > (1 for Buy, 2 for Sell). You can change the sensitivity and atr periods in the config file.
-* Bid/Ask build up scanner added. Try X > 12 > 29. Best to use this as a piped scanner to avoid getting blocked or rate-limited from NSE. For example, use -o "X:12:9:2.5:>|X:0:29" instead of X:12:29. This piped result can also be enabled in the telegram bot now during trade hours under Intraday Monitor.
-* Added ability to filter your results. For now you can filter using the defined keys in the filters section of user config file. For example, to only show those stocks that have changed by at least 4% and have volume more than 9 million, you can change the config to:
-
-  minimumchangepercentage = 4
-  minimumvolume = 9000000
-
-* New scanner: 'ATR cross' added. Try X > 12 > 27 . It's now sorted by descending ATR instead of volume.
-* New scanner: 'Bullish Higher Opens' added. Try X > 12 > 28
-* Performance improvements to have the scans finish within 40 seconds for most cases on Mac/Ubuntu and within 60 seconds on Windows.
-* Monitoring dashboard added (with option --monitor "X") or just use the menu 'Monitor Intraday'. See --help option to see all command options. Configure how many and what scanners you want in the config file.
-* Intraday monitoring now available as part of telegram bot @nse_pkscreener_bot
-* MacOS failing builds fixed.
-* Menus had disappeared on Windows. That's fixed now. You should see all menus.
-* Export to Excel is working back again! It was broken inadvertently for a while. Thanks for reporting!
-* Monitoring, download data as pkl (both daily and intraday), and enabling logging from within the console app via menus is now added.
-* Piping the results from previous scans to the next one is added for all standard screener options (for example X:12:9:2.5:>|X:12:23 will first scan all volume gaimers and then only scan for ATR cross from within those volume gainers). Use > and | to separate scans and pipe results. Piping for monitoring dashboard is enabled as well but using ~ instead of >.
-* Multiple other bug fixes.
+1. [v0.45.20240522.398] release
+* Integrations with the newly released 3rd party data source.
 * NOTE: To fit all result columns on your screen, switch to smaller font size in your console.
 
 ## Older Releases
@@ -35,9 +11,9 @@
 ## Downloads
 | Operating System                                                                                         | Executable File                                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) | **[pkscreenercli.exe](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240521.394/pkscreenercli.exe)**                                                                                                         |
-| ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)       | **[pkscreenercli.bin](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240521.394/pkscreenercli.bin)**                                                                                                         |
-| ![Mac OS](https://img.shields.io/badge/mac%20os-D3D3D3?style=for-the-badge&logo=apple&logoColor=000000)  | **[pkscreenercli.run](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240521.394/pkscreenercli.run)** ([Read Installation Guide](https://github.com/pkjmesra/PKScreener/blob/main/INSTALLATION.md#for-macos)) |
+| ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) | **[pkscreenercli.exe](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240522.398/pkscreenercli.exe)**                                                                                                         |
+| ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)       | **[pkscreenercli.bin](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240522.398/pkscreenercli.bin)**                                                                                                         |
+| ![Mac OS](https://img.shields.io/badge/mac%20os-D3D3D3?style=for-the-badge&logo=apple&logoColor=000000)  | **[pkscreenercli.run](https://github.com/pkjmesra/PKScreener/releases/download/0.45.20240522.398/pkscreenercli.run)** ([Read Installation Guide](https://github.com/pkjmesra/PKScreener/blob/main/INSTALLATION.md#for-macos)) |
 
 ## How to use?
 

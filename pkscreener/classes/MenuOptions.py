@@ -104,10 +104,10 @@ level1_T_MenuDict = {
 # Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
 # Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 level2_T_MenuDict_L = {
-    "1": "Daily (280d, 1d)",
-    "2": "Weekly (280d, 1wk)",
-    "3": "Monthly (280d, 1mo)",
-    "4": "Hourly (280d, 1h)",
+    "1": "Daily (1y, 1d)",
+    "2": "Weekly (1y, 1wk)",
+    "3": "Monthly (1y, 1mo)",
+    "4": "Hourly (1y, 1h)",
     "5": "Custom",
     "M": "Back to the Top/Main menu",
 }
@@ -708,7 +708,7 @@ class menus:
     def renderLevel1_T_Menus(
         self, skip=[], asList=False, renderStyle=None, parent=None
     ):
-        defaultKey = 'L' if configManager.period == '280d' else 'S'
+        defaultKey = 'L' if configManager.period == '1y' else 'S'
         menuText = self.fromDictionary(
             level1_T_MenuDict,
             renderExceptionKeys=["M"],

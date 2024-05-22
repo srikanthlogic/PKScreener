@@ -48,7 +48,7 @@ def test_setConfig_default(config_parser):
     tool.setConfig(config_parser, default=True, showFileCreatedText=False)
     tool.default_logger = default_logger()
     assert tool.default_logger is not None
-    assert config_parser.get('config', 'period') == '280d'
+    assert config_parser.get('config', 'period') == '1y'
     assert config_parser.get('config', 'daysToLookback') == '22'
     assert config_parser.get('config', 'duration') == '1d'
     assert config_parser.get('config', 'minPrice') == '20.0'
@@ -84,7 +84,7 @@ def test_getConfig(config_parser):
     except Exception as e:  # pragma: no cover
         pass
     config_parser.add_section("config")
-    config_parser.set('config', 'period', '280d')
+    config_parser.set('config', 'period', '1y')
     config_parser.set('config', 'daysToLookback', '22')
     config_parser.set('config', 'duration', '1d')
     config_parser.set('config', 'minPrice', '20.0')
@@ -104,7 +104,7 @@ def test_getConfig(config_parser):
     config_parser.set('config', 'minimumVolume', '10000')
     config_parser.set('config', 'backtestPeriodFactor', '1')
     tool.getConfig(config_parser)
-    assert tool.period == '280d'
+    assert tool.period == '1y'
     assert tool.daysToLookback == 22
     assert tool.duration == '1d'
     assert tool.minLTP == 20.0
@@ -130,7 +130,7 @@ def test_getConfig(config_parser):
 
 def test_toggleConfig_intraday(config_parser):
     tool = tools()
-    tool.period = '280d'
+    tool.period = '1y'
     tool.duration = '1d'
     tool.cacheEnabled = True
     tool.toggleConfig('1h', clearCache=True)
@@ -145,7 +145,7 @@ def test_toggleConfig_swing(config_parser):
     tool.duration = '1h'
     tool.cacheEnabled = True
     tool.toggleConfig('1d', clearCache=False)
-    assert tool.period == '280d'
+    assert tool.period == '1y'
     assert tool.duration == '1d'
     assert tool.daysToLookback == 22
     assert tool.cacheEnabled == True
@@ -157,7 +157,7 @@ def test_isIntradayConfig(config_parser):
     tool = tools()
     tool.period = '1d'
     assert tool.isIntradayConfig() == True
-    tool.period = '280d'
+    tool.period = '1y'
     assert tool.isIntradayConfig() == False
 
 def test_showConfigFile(config_parser):
