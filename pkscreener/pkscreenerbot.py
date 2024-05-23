@@ -993,18 +993,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     cmdText = ""
     for cmd in cmds:
         cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
-    mns = m0.renderForMenu(asList=True)
-    inlineMenus = []
-    for mnu in mns:
-        if mnu.menuKey[0:2] in TOP_LEVEL_SCANNER_MENUS:
-            inlineMenus.append(
-                InlineKeyboardButton(
-                    mnu.menuText.split("(")[0],
-                    callback_data="C" + str(mnu.menuKey),
-                )
-            )
-    keyboard = [inlineMenus]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = default_markup([])
     
     """Send a message when the command /help is issued."""
     if update is not None and update.message is not None:

@@ -413,15 +413,14 @@ def runApplication():
             for stock, df_group in df_grouped:
                 if stock == "PORTFOLIO":
                     if final_df is None:
-                        final_df = df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff","%Chng"]]
+                        final_df = df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff"]]
                     else:
-                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff","%Chng"]]], axis=0)
+                        final_df = pd.concat([final_df, df_group[["Pattern","LTP","SqrOffLTP","SqrOffDiff","EoDLTP","EoDDiff","DayHigh","DayHighDiff"]]], axis=0)
             final_df.rename(
                 columns={
                     "LTP": "Morning Portfolio",
                     "SqrOffLTP": "SqrOff Portfolio",
                     "EoDLTP": "EoD Portfolio",
-                    "%Chng": "EoD %Chng",
                     },
                     inplace=True,
                 )
