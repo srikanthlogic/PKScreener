@@ -251,7 +251,7 @@ jobs:
       - name: Create manylinux wheel from linux
         shell: bash
         if: ${{ matrix.platform_id == 'manylinux_x86_64' }}
-        run: 
+        run: |
           pip3 install auditwheel
           auditwheel repair repair -w dist/ --plat manylinux2014_x86_64 -v
           rm -rf dist/pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
