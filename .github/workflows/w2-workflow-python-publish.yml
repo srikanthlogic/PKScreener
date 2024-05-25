@@ -293,7 +293,7 @@ jobs:
           twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*.tar.gz
   
       - name: Publish source code 📦 to PyPI
-        if: ${{ matrix.platform_id == 'manylinux_x86_64' && matrix.python == '311' && startsWith(github.ref, 'refs/tags') }}
+        if: ${{ matrix.platform_id == 'manylinux_x86_64' && matrix.python == '311' && startsWith(inputs.branch-name, 'refs/tags') }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -357,22 +357,3 @@ jobs:
           prerelease: false
           make_latest: true
           file_glob: true
-
-  # Delete_Workflow_Run:
-  #   runs-on: ubuntu-20.04
-  #   needs: [deploy]
-  #   name: Delete workflow run
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         ref: main
-          
-  #     - name: Delete this workflow run
-  #       if: startsWith(runner.os, 'Linux')
-  #       shell: bash
-  #       run: |
-  #         for id in $(gh run list --limit 100 --jq ".[] | select (.status == \"success\" ) | .databaseId" --json databaseId,status); do gh run delete $id; done
-  #         # Cancel runs queued or in_progress. See https://cli.github.com/manual/gh_run_list
-  #         # for id in $(gh run list -w "13. Backtest for Generic" --limit 100 --jq ".[] | select (.status == \"queued\" ) | .databaseId" --json databaseId,status); do gh run cancel $id; done 
-  #       env:
-  #         GH_TOKEN : ${{secrets.GITHUB_TOKEN}}
