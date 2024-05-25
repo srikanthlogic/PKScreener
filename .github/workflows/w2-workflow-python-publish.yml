@@ -346,7 +346,7 @@ jobs:
         shell: bash
         id: whatsnewgetter
         run: |
-          pip3 install pkscreener
+          pip3 install .
           python3 .github/workflows/githubutilities.py -w
 
       - name: Send notification about new release
