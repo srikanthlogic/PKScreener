@@ -140,48 +140,21 @@ jobs:
           # Note: windows-2019 is needed for older Python versions:
           # https://github.com/PKScreener/PKScreener/issues/22530
           - os: windows-latest
-            python: 310
-            platform_id: win_amd64
-          - os: windows-latest
             python: 311
-            platform_id: win_amd64
-          - os: windows-latest
-            python: 312
             platform_id: win_amd64
 
           # NumPy on Python 3.10 only supports 64bit and is only available with manylinux2014
           - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_x86_64
-            manylinux_image: manylinux2014
-
-          - os: ubuntu-latest
             python: 311
-            platform_id: manylinux_x86_64
-            manylinux_image: manylinux2014
-          - os: ubuntu-latest
-            python: 312
             platform_id: manylinux_x86_64
             manylinux_image: manylinux2014
 
           - os: macos-12
-            python: 310
-            platform_id: macosx_x86_64
-          - os: macos-12
             python: 311
-            platform_id: macosx_x86_64
-          - os: macos-12
-            python: 312
             platform_id: macosx_x86_64
 
           - os: macos-14
-            python: 310
-            platform_id: macosx_arm64
-          - os: macos-14
             python: 311
-            platform_id: macosx_arm64
-          - os: macos-14
-            python: 312
             platform_id: macosx_arm64
 
     steps:
@@ -275,15 +248,13 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
         run: bash .github/dependencies/build_tools/wheels/build_wheels.sh
 
-      - name: Rename linux wheel to manylinux
+      - name: Create manylinux wheel from linux
         shell: bash
         if: ${{ matrix.platform_id == 'manylinux_x86_64' }}
-        continue-on-error: true
         run: 
           pip3 install auditwheel
-          cd dist
-          auditwheel repair pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
-          rm -rf pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
+          auditwheel repair repair dist/pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl --plat manylinux_x86_64 -w dist/
+          rm -rf dist/pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
 
       - name: Build and publish distribution 📦 to Test PyPI
         env:
