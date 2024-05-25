@@ -180,7 +180,7 @@ jobs:
       - name: Store artifacts
         uses: actions/upload-artifact@v3
         with:
-          path: wheelhouse/*.whl
+          path: dist/*.whl #wheelhouse/*.whl
 
   # build_wheels:
   #   name: Build wheels on ${{ matrix.os }}
