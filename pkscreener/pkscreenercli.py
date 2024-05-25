@@ -581,9 +581,11 @@ def pipeResults(prevOutput,args):
         if monitorOption.startswith("|"):
             monitorOption = monitorOption.replace("|","")
             monitorOptions = monitorOption.split(":")
-            if monitorOptions[1] != "0":
+            if "X" in monitorOptions[0].upper() and monitorOptions[1] != "0":
                 monitorOptions[1] = "0"
                 monitorOption = ":".join(monitorOptions)
+            if "B" in monitorOptions[0].upper() and monitorOptions[1] != "30":
+                monitorOption = ":".join(monitorOptions).upper().replace(f"{monitorOptions[0].upper()}:{monitorOptions[1]}",f"{monitorOptions[0].upper()}:30:{monitorOptions[1]}")
             # We need to pipe the output from previous run into the next one
             if prevOutput is not None and not prevOutput.empty:
                 try:

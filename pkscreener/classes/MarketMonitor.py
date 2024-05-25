@@ -181,12 +181,15 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             highlightedColumns=highlightCols,
             maxcolwidths=Utility.tools.getMaxColumnWidths(self.monitor_df)
         )
-        self.lines = len(tabulated_results.splitlines()) + 1 # 1 for the progress bar at the bottom and 1 for the chosenMenu option
+        numRecords = len(tabulated_results.splitlines())
+        self.lines = numRecords + 1 # 1 for the progress bar at the bottom and 1 for the chosenMenu option
         OutputControls().printOutput(tabulated_results, enableMultipleLineOutput=True)
         
         if not self.isPinnedSingleMonitorMode:
             if telegram:
                 self.updateIfRunningInTelegramBotMode(screenOptions, chosenMenu, dbTimestamp, telegram, telegram_df)
+            elif screenOptions.split(":")[2] == "5" and numRecords > 1: # RSI conditions met? Sound alert!
+                Utility.tools.alertSound(beeps=5)
         else:
             sleep(30)
 

@@ -135,7 +135,7 @@ def initializeIntradayTimer():
     try:
         if (not PKDateUtilities.isTodayHoliday()[0]):
             now = PKDateUtilities.currentDateTime()
-            marketStartTime = PKDateUtilities.currentDateTime(simulate=True,hour=9,minute=15)
+            marketStartTime = PKDateUtilities.currentDateTime(simulate=True,hour=9,minute=14)
             morning745am = PKDateUtilities.currentDateTime(simulate=True,hour=7,minute=45)
             if now < marketStartTime and now >= morning745am: # Telegram bot might keep running beyond an hour. So let's start watching around 7:45AM
                 difference = (marketStartTime - now).total_seconds() + 1
@@ -175,7 +175,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         if (PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]) or ("PKDevTools_Default_Log_Level" in os.environ.keys()) or sys.argv[0].endswith(".py"):
             mns.append(menu().create(f"MI_{monitorIndex}", "Int. Monitor", 2))
         if user.username == OWNER_USER:
-            mns.append(menu().create(f"DV_0", ("Enbl" if not configManager.logsEnabled else "Dsbl"), 2))
+            mns.append(menu().create(f"DV_0", ("✅" if not configManager.logsEnabled else "🚫"), 2))
+            mns.append(menu().create(f"DV_1", "🔄", 2))
 
         inlineMenus = []
         for mnu in mns:
@@ -291,7 +292,7 @@ async def XDevModeHandler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if data.startswith("DV"):
         # Dev Mode
         devModeIndex = int(data.split("_")[1])
-        if devModeIndex == 0:
+        if devModeIndex == 0: # Enable/Disable intraday monitor along with logging
             if "PKDevTools_Default_Log_Level" in os.environ.keys():
                 del os.environ['PKDevTools_Default_Log_Level']
                 configManager.maxNumResultRowsInMonitor = 2
@@ -311,6 +312,9 @@ async def XDevModeHandler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             
             launchIntradayMonitor()
             await start(update, context,chosenBotMenuOption=chosenBotMenuOption)
+        elif devModeIndex == 1: # Restart the bot service
+            resp = run_workflow(None, None,None, workflowType="R")
+            await start(update, context,chosenBotMenuOption=f"{resp.status_code}: {resp.text}")
     return START_ROUTES
 
 async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -998,8 +1002,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """Send a message when the command /help is issued."""
     if update is not None and update.message is not None:
         await update.message.reply_text(
-            f"You can begin by typing in /start and hit send!\n\nOR\n\nChoose an option:\n{cmdText}",
-            reply_markup=reply_markup
+            f"You can begin by typing in /start (Recommended) and hit send!\n\nOR\n\nChoose an option:\n{cmdText}\n\nWe recommend you start by clicking on this /start"
         )  #  \n\nThis bot restarts every hour starting at 5:30am IST until 10:30pm IST to keep it running on free servers. If it does not respond, please try again in a minutes to avoid the restart duration!
         query = update.message
         message = f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> began using the bot!"

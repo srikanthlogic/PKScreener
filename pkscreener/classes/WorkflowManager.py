@@ -73,7 +73,13 @@ def run_workflow(command, user, options, workflowType="B"):
                 + f'-a Y -e -p -u {user} -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
                 + '","ref":"main"}}'
             )
-
+    elif workflowType == "R":
+        workflow_name = "w3-workflow-bot.yml"
+        data = (
+                '{"ref":"'
+                + branch
+                + '","inputs":{"branch-name":"main"}}'
+            )
     _, _, _, ghp_token = get_secrets()
     url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_name}/dispatches"
 
