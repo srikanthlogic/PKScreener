@@ -112,7 +112,7 @@ setup(
             __PACKAGENAME__ + ".ini",
             "courbd.ttf",
             "LICENSE",
-            "LICENSE-Screenipy",
+            "LICENSE-Others",
         ]
     },
     # ...but exclude README.txt from all packages
