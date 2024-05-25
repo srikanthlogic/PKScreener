@@ -254,7 +254,7 @@ jobs:
         run: |
           pip3 install auditwheel
           ls -l dist/
-          auditwheel -v repair -w dist/ pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl --plat manylinux2014_x86_64
+          auditwheel -v repair dist/pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl --plat manylinux2014_x86_64
           rm -rf dist/pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
 
       - name: Build and publish distribution 📦 to Test PyPI
