@@ -227,7 +227,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           cd .github/dependencies/
-          pip3 install TA_Lib-0.4.28-cp${{ matrix.python }}-cp${{ matrix.python }}-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp${{ matrix.python }}-cp${{ matrix.python }}-win_amd64.whl
 
       - name: Install Python Dependencies
         run: |
@@ -280,7 +280,7 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
           repository_url: https://test.pypi.org/legacy/
-        shell: cmd
+        shell: bash
         run: |
           # del /s /q pkscreener/classes/__init__.py
           # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
@@ -292,7 +292,7 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           repository_url: https://upload.pypi.org/legacy/
-        shell: cmd
+        shell: bash
         run: |
           # del /s /q pkscreener/classes/__init__.py
           # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
