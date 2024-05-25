@@ -55,7 +55,7 @@ jobs:
         include:
           # Window 64 bit
           # Note: windows-2019 is needed for older Python versions:
-          # https://github.com/scikit-learn/scikit-learn/issues/22530
+          # https://github.com/PKScreener/PKScreener/issues/22530
           # - os: windows-latest
           #   python: 39
           #   platform_id: win_amd64
@@ -81,10 +81,10 @@ jobs:
           #   platform_id: manylinux_x86_64
           #   manylinux_image: manylinux2014
 
-          # - os: ubuntu-latest
-          #   python: 311
-          #   platform_id: manylinux_x86_64
-          #   manylinux_image: manylinux2014
+          - os: ubuntu-latest
+            python: 311
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
           # - os: ubuntu-latest
           #   python: 312
           #   platform_id: manylinux_x86_64
@@ -246,7 +246,7 @@ jobs:
     if: needs.check_build_trigger.outputs.build
 
     steps:
-      - name: Checkout scikit-learn
+      - name: Checkout PKScreener
         uses: actions/checkout@v4.1.6
 
       - name: Setup Python
@@ -279,7 +279,7 @@ jobs:
   #   if: github.event_name != 'pull_request'
 
   #   steps:
-  #     - name: Checkout scikit-learn
+  #     - name: Checkout PKScreener
   #       uses: actions/checkout@v3
 
   #     - name: Download artifacts
