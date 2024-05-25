@@ -221,13 +221,13 @@ jobs:
           # Non-macos arm64 envrionments already have conda installed
           echo "CONDA_HOME=/usr/local/miniconda" >> $GITHUB_ENV
 
-      - name: Install TA-Lib
-        shell: bash
-        if: ${{ matrix.platform_id == 'win_amd64' }}
-        run: |
-          python3 -m pip install --upgrade pip
-          cd .github/dependencies/
-          pip3 install TA_Lib-0.4.29-cp${{ matrix.python }}-cp${{ matrix.python }}-win_amd64.whl
+      # - name: Install TA-Lib
+      #   shell: bash
+      #   if: ${{ matrix.platform_id == 'win_amd64' }}
+      #   run: |
+      #     python3 -m pip install --upgrade pip
+      #     cd .github/dependencies/
+      #     pip3 install TA_Lib-0.4.29-cp${{ matrix.python }}-cp${{ matrix.python }}-win_amd64.whl
 
       - name: Install Python Dependencies
         run: |
@@ -274,6 +274,16 @@ jobs:
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BUILD_VERBOSITY: 1
         run: bash .github/dependencies/build_tools/wheels/build_wheels.sh
+
+      - name: Rename linux wheel to manylinux
+        shell: bash
+        if: ${{ matrix.platform_id == 'manylinux_x86_64' }}
+        continue-on-error: true
+        run: 
+          pip3 install auditwheel
+          cd dist
+          auditwheel repair pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
+          rm -rf pkscreener-${{ steps.vars.outputs.THIS_VERSION }}-cp${{ matrix.python }}-cp${{ matrix.python }}-linux_x86_64.whl
 
       - name: Build and publish distribution 📦 to Test PyPI
         env:
