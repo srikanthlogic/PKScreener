@@ -197,9 +197,9 @@ jobs:
           - os: windows-latest
             cibw_archs: "native ARM64"
             python: 311
-          # - os: macos-latest
-          #   cibw_archs: "x86_64 universal2 arm64"
-          #   python: 311
+          - os: macos-latest
+            cibw_archs: "x86_64 universal2 arm64"
+            python: 311
 
     steps:
       - name: Set up QEMU
