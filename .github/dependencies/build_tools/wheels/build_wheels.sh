@@ -66,4 +66,5 @@ fi
 # python -m pip install cibuildwheel
 # python -m cibuildwheel --output-dir wheelhouse
 
-python setup.py clean build bdist_wheel
+pip3 install setuptools wheel twine
+python setup.py clean build sdist bdist_wheel
