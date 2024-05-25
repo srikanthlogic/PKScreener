@@ -82,7 +82,30 @@ on:
         type: string
         default: '3.11'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+        
 jobs:
+  # Check whether to build the wheels and the source tarball
+  check_build_trigger:
+    name: Check build trigger
+    runs-on: ubuntu-latest
+    if: github.repository == 'pkjmesra/PKScreener'
+    outputs:
+      build: ${{ steps.check_build_trigger.outputs.build }}
+
+    steps:
+      - name: Checkout PKScreener
+        uses: actions/checkout@v3
+        with:
+          ref: main 
+            # ${{ github.event.pull_request.head.sha }}
+
+      - id: check_build_trigger
+        name: Check build trigger
+        run: bash .github/dependencies/build_tools/github/check_build_trigger.sh
+  
   check_should_run:
       runs-on: windows-latest
       name: Check latest commit
@@ -102,157 +125,233 @@ jobs:
           shell: bash
           run: test -z $(git rev-list  --after="7 days"  ${{ github.sha }} --max-count=1) && echo "::set-output name=should_run::false"
 
-  deploy:
+  build_wheels:
+    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    runs-on: ${{ matrix.os }}
+    # needs: check_build_trigger
+    # if: needs.check_build_trigger.outputs.build
 
-    runs-on: windows-latest
-    needs: check_should_run
+    strategy:
+      # Ensure that a wheel builder finishes even if another fails
+      fail-fast: false
+      matrix:
+        include:
+          # Window 64 bit
+          # Note: windows-2019 is needed for older Python versions:
+          # https://github.com/PKScreener/PKScreener/issues/22530
+          - os: windows-latest
+            python: 310
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 311
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 312
+            platform_id: win_amd64
+
+          # NumPy on Python 3.10 only supports 64bit and is only available with manylinux2014
+          - os: ubuntu-latest
+            python: 310
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
+
+          - os: ubuntu-latest
+            python: 311
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
+          - os: ubuntu-latest
+            python: 312
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
+
+          - os: macos-12
+            python: 310
+            platform_id: macosx_x86_64
+          - os: macos-12
+            python: 311
+            platform_id: macosx_x86_64
+          - os: macos-12
+            python: 312
+            platform_id: macosx_x86_64
+
+          - os: macos-14
+            python: 310
+            platform_id: macosx_arm64
+          - os: macos-14
+            python: 311
+            platform_id: macosx_arm64
+          - os: macos-14
+            python: 312
+            platform_id: macosx_arm64
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.branch-name }}
+      - name: Checkout PKScreener
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ inputs.targetPythonVersion || 3.11 }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11" # update once build dependencies are available
 
-    - name: Restore Dependencies from Cache
-      uses: actions/cache@v4
-      with:
-        path: ~\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Install conda for macos arm64
+        if: ${{ matrix.platform_id == 'macosx_arm64' }}
+        run: |
+          set -ex
+          # macos arm64 runners do not have conda installed. Thus we much install conda manually
+          EXPECTED_SHA="dd832d8a65a861b5592b2cf1d55f26031f7c1491b30321754443931e7b1e6832"
+          MINIFORGE_URL="https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh"
+          curl -L --retry 10 $MINIFORGE_URL -o miniforge.sh
 
-    - name: Install TA-Lib
-      shell: bash
-      run: |
-        python3 -m pip install --upgrade pip
-        cd .github/dependencies/
-        if [[ "${{ inputs.targetPythonVersion }}" == "" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
-        elif [[ "${{ inputs.targetPythonVersion }}" == "3.9" ]] ;then
-          pip3 install TA_Lib-0.4.19-cp39-cp39-win_amd64.whl
-        elif [[ "${{ inputs.targetPythonVersion }}" == "3.11" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
-        elif [[ "${{ inputs.targetPythonVersion }}" == "3.12" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp312-cp312-win_amd64.whl
-        fi
+          # Check SHA
+          file_sha=$(shasum -a 256 miniforge.sh | awk '{print $1}')
+          if [ "$EXPECTED_SHA" != "$file_sha" ]; then
+              echo "SHA values did not match!"
+              exit 1
+          fi
 
-    - name: Install Python Dependencies
-      run: |
-        pip3 install -r requirements.txt
-        pip3 install -r requirements-dev.txt
+          # Install miniforge
+          MINIFORGE_PATH=$HOME/miniforge
+          bash ./miniforge.sh -b -p $MINIFORGE_PATH
+          echo "$MINIFORGE_PATH/bin" >> $GITHUB_PATH
+          echo "CONDA_HOME=$MINIFORGE_PATH" >> $GITHUB_ENV
+
+      - name: Set conda environment for non-macos arm64 environments
+        if: ${{ matrix.platform_id != 'macosx_arm64' }}
+        run: |
+          # Non-macos arm64 envrionments already have conda installed
+          echo "CONDA_HOME=/usr/local/miniconda" >> $GITHUB_ENV
+
+      - name: Install TA-Lib
+        shell: bash
+        if: ${{ matrix.platform_id == 'win_amd64' }}
+        run: |
+          python3 -m pip install --upgrade pip
+          cd .github/dependencies/
+          pip3 install TA_Lib-0.4.28-cp${{ matrix.python }}-cp${{ matrix.python }}-win_amd64.whl
+
+      - name: Install Python Dependencies
+        run: |
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
     
-    - name: Declare env variables
-      id: vars
-      shell: bash
-      run: |
-        GITHUB_REF=${GITHUB_REF#refs/tags/}
-        echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        CURRENT_VERSION=`grep -o "'.*'" pkscreener/classes/__init__.py | sed "s/'//g"`
-        VERSION_ARR=(${CURRENT_VERSION//./ })
-        MAJOR_MINOR=${VERSION_ARR[0]}.${VERSION_ARR[1]}
-        TODAY=`date +%Y%m%d`
-        THIS_VERSION=${MAJOR_MINOR}.${TODAY}.${{github.run_number}}
-        echo ${THIS_VERSION}
-        if [ "${{ inputs.version }}" == "x.y.z" ]; then
-          echo "default version x.y.z cannot be used"
-        else
-          THIS_VERSION="${{ inputs.version }}"
-        fi
-        rm -rf pkscreener/classes/__init__.py
-        echo VERSION=\'`echo ${THIS_VERSION}`\' >> pkscreener/classes/__init__.py
-        echo "##[set-output name=THIS_VERSION;]$(echo ${THIS_VERSION})"
-        echo "##[set-output name=CURRENT_VERSION;]$(echo ${CURRENT_VERSION})"
-       
-    - name: Install setuptools and build
-      shell: cmd
-      run: |
-        pip3 install setuptools wheel twine
-        rmdir /s /q build
-        rmdir /s /q dist
-        python3 setup.py clean build sdist bdist_wheel
-
-    - name: Build and publish distribution 📦 to Test PyPI
-      if: ${{ needs.check_should_run.outputs.should_run != 'false' }}
-      env:
-        TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
-        repository_url: https://test.pypi.org/legacy/
-      shell: cmd
-      run: |
-        # del /s /q pkscreener/classes/__init__.py
-        # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
-        twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
-
-    - name: Publish distribution 📦 to PyPI
-      if: startsWith(github.ref, 'refs/tags') || ${{ needs.check_should_run.outputs.should_run != 'false' }}
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        repository_url: https://upload.pypi.org/legacy/
-      shell: cmd
-      run: |
-        # del /s /q pkscreener/classes/__init__.py
-        # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
-        twine upload --verbose dist/*
-
-    - name: Configure .env.dev file for Prod
-      shell: bash
-      if: ${{ inputs.sendNotification != 'no' }}
-      env:
-        CHAT_ID_PROD : ${{secrets.CHAT_ID_PROD}}
-        TOKEN_DEV : ${{secrets.TOKEN_DEV}}
-        CHAT_IDADMIN_DEV : ${{secrets.CHAT_IDADMIN_DEV}}
-      run: |
-        python3 -c "import os; file = open('.env.dev', 'w'); file.write('CHAT_ID='+os.environ['CHAT_ID_PROD']+'\n'); file.write('TOKEN='+os.environ['TOKEN_DEV']+'\n'); file.write('chat_idADMIN='+os.environ['CHAT_IDADMIN_DEV']+'\n'); file.close()"
+      - name: Declare env variables
+        id: vars
+        shell: bash
+        run: |
+          GITHUB_REF=${GITHUB_REF#refs/tags/}
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+          CURRENT_VERSION=`grep -o "'.*'" pkscreener/classes/__init__.py | sed "s/'//g"`
+          VERSION_ARR=(${CURRENT_VERSION//./ })
+          MAJOR_MINOR=${VERSION_ARR[0]}.${VERSION_ARR[1]}
+          TODAY=`date +%Y%m%d`
+          THIS_VERSION=${MAJOR_MINOR}.${TODAY}.${{github.run_number}}
+          echo ${THIS_VERSION}
+          if [ "${{ inputs.version }}" == "x.y.z" ]; then
+            echo "default version x.y.z cannot be used"
+          else
+            THIS_VERSION="${{ inputs.version }}"
+          fi
+          rm -rf pkscreener/classes/__init__.py
+          echo VERSION=\'`echo ${THIS_VERSION}`\' >> pkscreener/classes/__init__.py
+          echo "##[set-output name=THIS_VERSION;]$(echo ${THIS_VERSION})"
+          echo "##[set-output name=CURRENT_VERSION;]$(echo ${CURRENT_VERSION})"
       
-    - name: Configure .env.dev file for Dev
-      shell: bash
-      if: ${{ inputs.sendNotification == 'no' }}
-      env:
-        CHAT_ID_DEV : ${{secrets.CHAT_ID_DEV}}
-        TOKEN_DEV : ${{secrets.TOKEN_DEV}}
-        CHAT_IDADMIN_DEV : ${{secrets.CHAT_IDADMIN_DEV}}
-      run: |
-        python3 -c "import os; file = open('.env.dev', 'w'); file.write('CHAT_ID='+os.environ['CHAT_ID_DEV']+'\n'); file.write('TOKEN='+os.environ['TOKEN_DEV']+'\n'); file.write('chat_idADMIN='+os.environ['CHAT_IDADMIN_DEV']+'\n'); file.close()"
+      - name: Install setuptools
+        shell: bash
+        run: |
+          pip3 install setuptools wheel twine
+
+      - name: Build and test wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_ARCHS: all
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          # Needed on Windows CI to compile with Visual Studio compiler
+          # otherwise Meson detects a MINGW64 platform and use MINGW64
+          # toolchain
+          CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
+          CIBW_BUILD_VERBOSITY: 1
+        run: bash .github/dependencies/build_tools/wheels/build_wheels.sh
+
+      - name: Build and publish distribution 📦 to Test PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
+          repository_url: https://test.pypi.org/legacy/
+        shell: cmd
+        run: |
+          # del /s /q pkscreener/classes/__init__.py
+          # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
+          twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
+
+      - name: Publish distribution 📦 to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          repository_url: https://upload.pypi.org/legacy/
+        shell: cmd
+        run: |
+          # del /s /q pkscreener/classes/__init__.py
+          # echo VERSION='${{ steps.vars.outputs.THIS_VERSION }}' >> pkscreener/classes/__init__.py
+          twine upload --verbose dist/*
+
+      - name: Configure .env.dev file for Prod
+        shell: bash
+        if: ${{ inputs.sendNotification != 'no' }}
+        env:
+          CHAT_ID_PROD : ${{secrets.CHAT_ID_PROD}}
+          TOKEN_DEV : ${{secrets.TOKEN_DEV}}
+          CHAT_IDADMIN_DEV : ${{secrets.CHAT_IDADMIN_DEV}}
+        run: |
+          python3 -c "import os; file = open('.env.dev', 'w'); file.write('CHAT_ID='+os.environ['CHAT_ID_PROD']+'\n'); file.write('TOKEN='+os.environ['TOKEN_DEV']+'\n'); file.write('chat_idADMIN='+os.environ['CHAT_IDADMIN_DEV']+'\n'); file.close()"
         
-    - name: Environment setup to get whats new
-      shell: bash
-      id: whatsnewgetter
-      run: |
-        pip3 install pkscreener
-        python3 .github/workflows/githubutilities.py -w
+      - name: Configure .env.dev file for Dev
+        shell: bash
+        if: ${{ inputs.sendNotification == 'no' }}
+        env:
+          CHAT_ID_DEV : ${{secrets.CHAT_ID_DEV}}
+          TOKEN_DEV : ${{secrets.TOKEN_DEV}}
+          CHAT_IDADMIN_DEV : ${{secrets.CHAT_IDADMIN_DEV}}
+        run: |
+          python3 -c "import os; file = open('.env.dev', 'w'); file.write('CHAT_ID='+os.environ['CHAT_ID_DEV']+'\n'); file.write('TOKEN='+os.environ['TOKEN_DEV']+'\n'); file.write('chat_idADMIN='+os.environ['CHAT_IDADMIN_DEV']+'\n'); file.close()"
+        
+      - name: Environment setup to get whats new
+        shell: bash
+        id: whatsnewgetter
+        run: |
+          pip3 install pkscreener
+          python3 .github/workflows/githubutilities.py -w
 
-    - name: Send notification about new release
-      shell: bash
-      env:
-        RELEASE_VERSION : ${{ steps.vars.outputs.THIS_VERSION }}
-        WHATS_NEW: ${{ steps.whatsnewgetter.outputs.WHATS_NEW_IN_THIS_RELEASE }}
-      run: |
-        pip3 install .
-        python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message('Dear Channel!\nA new version of PKScreener (v' + os.environ['RELEASE_VERSION'] + ') just got released. Check it out at \n\nhttps://github.com/pkjmesra/PKScreener/releases\n or https://pypi.org/project/pkscreener/ \n\n'+os.environ['WHATS_NEW']+'\n');"
+      - name: Send notification about new release
+        shell: bash
+        env:
+          RELEASE_VERSION : ${{ steps.vars.outputs.THIS_VERSION }}
+          WHATS_NEW: ${{ steps.whatsnewgetter.outputs.WHATS_NEW_IN_THIS_RELEASE }}
+        run: |
+          pip3 install .
+          python3 -c "import os; from PKDevTools.classes.Telegram import send_message; send_message('Dear Channel!\nA new version of PKScreener (v' + os.environ['RELEASE_VERSION'] + ') just got released. Check it out at \n\nhttps://github.com/pkjmesra/PKScreener/releases\n or https://pypi.org/project/pkscreener/ \n\n'+os.environ['WHATS_NEW']+'\n');"
 
-    - uses: actions/upload-artifact@v3
-      with:
-        name: wheels
-        path: dist/*.whl
-        if-no-files-found: ignore
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist/*.whl
+          if-no-files-found: ignore
 
-    - name: Upload Binaries to Release
-      if: startsWith(inputs.branch-name, 'refs/tags')
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: dist/*.whl
-        tag: ${{ steps.vars.outputs.THIS_VERSION }}
-        release_name: pkscreener - v${{ steps.vars.outputs.THIS_VERSION }}
-        overwrite: true
-        prerelease: false
-        make_latest: true
-        file_glob: true
+      - name: Upload Binaries to Release
+        if: startsWith(inputs.branch-name, 'refs/tags')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*.whl
+          tag: ${{ steps.vars.outputs.THIS_VERSION }}
+          release_name: pkscreener - v${{ steps.vars.outputs.THIS_VERSION }}
+          overwrite: true
+          prerelease: false
+          make_latest: true
+          file_glob: true
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04
