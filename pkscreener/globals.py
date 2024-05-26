@@ -1210,6 +1210,20 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 df["Stock"].astype(str).str.contains("BSE:") == False
             ]
             listStockCodes.extend(list(df["Stock"]))
+    if executeOption == 29 and not PKDateUtilities.isTradingTime():
+        message = "\n[👉🏻] Bid/Ask build up report can only be generated during trading hours."
+        OutputControls().printOutput(
+            colorText.BOLD
+            + colorText.FAIL
+            + message
+            + colorText.END
+        )
+        if defaultAnswer is None:
+            input("Press <Enter> to continue...")
+        if userPassedArgs is not None and userPassedArgs.user is not None:
+            sendMessageToTelegramChannel(message=message, user=userPassedArgs.user)
+        return None, None
+    
     if executeOption == 30:
         selectedMenu = m2.find(str(executeOption))
         if len(options) >= 4:

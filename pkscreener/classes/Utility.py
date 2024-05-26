@@ -158,20 +158,28 @@ class tools:
     # Print about developers and repository
     def showDevInfo(defaultAnswer=None):
         OutputControls().printOutput("\n" + Changelog.changelog())
-        devInfo = "\n[+] Developer: PK (PKScreener)"
-        versionInfo = "[+] Version: %s" % VERSION
-        homePage = "[+] Home Page: https://github.com/pkjmesra/PKScreener\n[+] Telegram Bot:@nse_pkscreener_bot\n[+] Channel:https://t.me/PKScreener\n[+] Discussions:https://t.me/PKScreeners"
+        devInfo = "\n[👨🏻‍💻] Developer: PK (PKScreener) 🇮🇳"
+        versionInfo = "[🚦] Version: %s" % VERSION
+        homePage = "[🏡] Home Page: https://github.com/pkjmesra/PKScreener\n[🤖] Telegram Bot:@nse_pkscreener_bot\n[🚨] Channel:https://t.me/PKScreener\n[💬] Discussions:https://t.me/PKScreeners"
         issuesInfo = (
-            "[+] Read/Post Issues here: https://github.com/pkjmesra/PKScreener/issues"
+            "[🚩] Read/Post Issues here: https://github.com/pkjmesra/PKScreener/issues"
         )
-        communityInfo = "[+] Join Community Discussions: https://github.com/pkjmesra/PKScreener/discussions"
-        latestInfo = "[+] Download latest software from https://github.com/pkjmesra/PKScreener/releases/latest"
+        communityInfo = "[📢] Join Community Discussions: https://github.com/pkjmesra/PKScreener/discussions"
+        latestInfo = "[⏰] Download latest software from https://github.com/pkjmesra/PKScreener/releases/latest"
+        donationInfo = "[💰] PKScreener is and will always remain free for everyone. Hosting servers and running services costs money.\n[💸] Please donate whatever you can: 8007162973@APL using UPI(India) or https://github.com/sponsors/pkjmesra 🙏🏻"
+        totalDownloads = "200k+"
+        respPepyTech = fetcher.fetchURL(url="https://static.pepy.tech/badge/pkscreener",headers={'user-agent': f'{random_user_agent()}'},timeout=2)
+        if respPepyTech is not None and respPepyTech.status_code == 200:
+            totalDownloads = respPepyTech.text.split("</text>")[-2].split(">")[-1]
+        downloadsInfo = f"[🔥] Total Downloads: {totalDownloads}"
         OutputControls().printOutput(colorText.BOLD + colorText.WARN + devInfo + colorText.END)
         OutputControls().printOutput(colorText.BOLD + colorText.WARN + versionInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.GREEN + downloadsInfo + colorText.END)
         OutputControls().printOutput(colorText.BOLD + homePage + colorText.END)
         OutputControls().printOutput(colorText.BOLD + colorText.FAIL + issuesInfo + colorText.END)
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + communityInfo + colorText.END)
         OutputControls().printOutput(colorText.BOLD + colorText.BLUE + latestInfo + colorText.END)
+        OutputControls().printOutput(colorText.BOLD + colorText.FAIL + donationInfo + colorText.END)
         if defaultAnswer is None:
             input(
                 colorText.BOLD
@@ -179,7 +187,7 @@ class tools:
                 + "[+] Press <Enter> to continue!"
                 + colorText.END
             )
-        return f"\n{Changelog.changelog()}\n\n{devInfo}\n{versionInfo}\n\n{homePage}\n{issuesInfo}\n{communityInfo}\n{latestInfo}"
+        return f"\n{Changelog.changelog()}\n\n{devInfo}\n{versionInfo}\n\n{downloadsInfo}\n{homePage}\n{issuesInfo}\n{communityInfo}\n{latestInfo}\n{donationInfo}"
 
     # Save last screened result to pickle file
     def setLastScreenedResults(df, df_save=None, choices=None):
