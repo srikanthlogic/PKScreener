@@ -50,7 +50,7 @@ with open("requirements.txt", "r") as fh:
 
 if "Windows" in platform.system():
     install_requires = [
-        ".github/dependencies/TA_Lib-0.4.28-cp311-cp311-win_amd64.whl"
+        ".github/dependencies/TA_Lib-0.4.29-cp311-cp311-win_amd64.whl"
     ].extend(install_requires)
 elif "Linux" in platform.system():
     subprocess.Popen(["chmod", "+x", ".github/dependencies/build_tools/github/talib.sh"])

@@ -111,13 +111,13 @@ jobs:
         python3 -m pip install --upgrade pip
         cd .github/dependencies/
         if [[ "${{ inputs.targetPythonVersion }}" == "" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp311-cp311-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.9" ]] ;then
           pip3 install TA_Lib-0.4.19-cp39-cp39-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.11" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp311-cp311-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.12" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp312-cp312-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp312-cp312-win_amd64.whl
         fi
 
     - name: Install TA-Lib for Linux
@@ -299,13 +299,13 @@ jobs:
       run: |
         cd .github/dependencies/
         if [[ "${{ inputs.targetPythonVersion }}" == "" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp311-cp311-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.9" ]] ;then
           pip3 install TA_Lib-0.4.19-cp39-cp39-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.11" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp311-cp311-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp311-cp311-win_amd64.whl
         elif [[ "${{ inputs.targetPythonVersion }}" == "3.12" ]] ;then
-          pip3 install TA_Lib-0.4.28-cp312-cp312-win_amd64.whl
+          pip3 install TA_Lib-0.4.29-cp312-cp312-win_amd64.whl
         fi
         cd ..
         cd ..
