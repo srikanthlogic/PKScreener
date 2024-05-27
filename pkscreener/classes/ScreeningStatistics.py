@@ -2087,16 +2087,20 @@ class ScreeningStatistics:
                 sma = pktalib.EMA(data["Close"], timeperiod=50)
                 lma = pktalib.EMA(data["Close"], timeperiod=200)
                 ssma = pktalib.EMA(data["Close"], timeperiod=9)
+                ssma20 = pktalib.EMA(data["Close"], timeperiod=20)
                 data.insert(len(data.columns), "SMA", sma)
                 data.insert(len(data.columns), "LMA", lma)
                 data.insert(len(data.columns), "SSMA", ssma)
+                data.insert(len(data.columns), "SSMA20", ssma20)
             else:
                 sma = pktalib.SMA(data["Close"], timeperiod=50)
                 lma = pktalib.SMA(data["Close"], timeperiod=200)
                 ssma = pktalib.SMA(data["Close"], timeperiod=9)
+                ssma20 = pktalib.SMA(data["Close"], timeperiod=20)
                 data.insert(len(data.columns), "SMA", sma)
                 data.insert(len(data.columns), "LMA", lma)
                 data.insert(len(data.columns), "SSMA", ssma)
+                data.insert(len(data.columns), "SSMA20", ssma20)
             vol = pktalib.SMA(data["Volume"], timeperiod=20)
             rsi = pktalib.RSI(data["Close"], timeperiod=14)
             data.insert(len(data.columns), "VolMA", vol)
@@ -2212,13 +2216,26 @@ class ScreeningStatistics:
             return False
         is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
         is50DMADownTrend = (recent["SMA"].iloc[0] < recent["SMA"].iloc[1])
-        isGoldenCrossOver = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
+        is20DMACrossover50DMA = (recent["SSMA20"].iloc[0] >= recent["SMA"].iloc[0]) and \
+                            (recent["SSMA20"].iloc[1] <= recent["SMA"].iloc[1])
+        is50DMACrossover200DMA = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
                             (recent["SMA"].iloc[1] <= recent["LMA"].iloc[1])
-        isDeadCrossOver = (recent["SMA"].iloc[0] <= recent["LMA"].iloc[0]) and \
+        isGoldenCrossOver = is20DMACrossover50DMA or is50DMACrossover200DMA
+        is50DMACrossover200DMADown = (recent["SMA"].iloc[0] <= recent["LMA"].iloc[0]) and \
                             (recent["SMA"].iloc[1] >= recent["LMA"].iloc[1])
+        is20DMACrossover50DMADown = (recent["SSMA20"].iloc[0] <= recent["SMA"].iloc[0]) and \
+                            (recent["SSMA20"].iloc[1] >= recent["SMA"].iloc[1])
+        isDeadCrossOver = is20DMACrossover50DMADown or is50DMACrossover200DMADown
+        deadxOverText = f'DeadCrossover{"(20)" if is20DMACrossover50DMADown else ("(50)" if is50DMACrossover200DMADown else "")}'
+        goldenxOverText = f'GoldenCrossover{"(20)" if is20DMACrossover50DMA else ("(50)" if is50DMACrossover200DMA else "")}'
         is50DMA = (recent["SMA"].iloc[0] <= recent["Close"].iloc[0])
         is200DMA = (recent["LMA"].iloc[0] <= recent["Close"].iloc[0])
-        difference = round((recent["SMA"].iloc[0] - recent["LMA"].iloc[0])
+        key1 = "SMA"
+        key2 = "LMA"
+        if is20DMACrossover50DMA or is20DMACrossover50DMADown:
+            key1 = "SSMA20"
+            key2 = "SMA"
+        difference = round((recent[key1].iloc[0] - recent[key2].iloc[0])
                 / recent["Close"].iloc[0]
                 * 100,
                 2,
@@ -2227,11 +2244,11 @@ class ScreeningStatistics:
         screenDict["ConfDMADifference"] = difference
         saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
         # difference = abs(difference)
-        confText = f"{'GoldenCrossover' if isGoldenCrossOver else ('DeadCrossover' if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
-        if abs(recent["SMA"].iloc[0] - recent["LMA"].iloc[0]) <= (
-            recent["SMA"].iloc[0] * percentage
+        confText = f"{goldenxOverText if isGoldenCrossOver else (deadxOverText if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
+        if abs(recent[key1].iloc[0] - recent[key2].iloc[0]) <= (
+            recent[key1].iloc[0] * percentage
         ):
-            if recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]:
+            if recent[key1].iloc[0] >= recent[key2].iloc[0]:
                 screenDict["MA-Signal"] = (
                     saved[0] 
                     + colorText.BOLD
