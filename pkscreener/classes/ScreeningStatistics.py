@@ -1228,7 +1228,7 @@ class ScreeningStatistics:
         if df is None or len(df) == 0:
             return False
         data = df.copy()
-        maRange = [9, 10, 20, 50, 200] if maLength is None else [maLength]
+        maRange = [9, 10, 20, 50, 200] if maLength in [9,10,20,50,100] else [9,10,20,50,100,maRange]
         results = []
         hasReversals = False
         data = data[::-1]
@@ -2694,38 +2694,46 @@ class ScreeningStatistics:
 
     #@measure_time
     # Validate Moving averages and look for buy/sell signals
-    def validateMovingAverages(self, df, screenDict, saveDict, maRange=2.5):
+    def validateMovingAverages(self, df, screenDict, saveDict, maRange=2.5,maLength=0):
         data = df.copy()
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
-        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
-        if (
-            recent["SMA"].iloc[0] > recent["LMA"].iloc[0]
-            and recent["Close"].iloc[0] > recent["SMA"].iloc[0]
-        ):
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "Bullish"
-        elif recent["SMA"].iloc[0] < recent["LMA"].iloc[0]:
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.FAIL + "Bearish" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "Bearish"
-        elif recent["SMA"].iloc[0] == 0:
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "Unknown"
-        else:
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.WARN + "Neutral" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "Neutral"
-
+        maSignals = []
+        if str(maLength) in ["0","2","3"]:
+            saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
+            if (
+                recent["SMA"].iloc[0] > recent["LMA"].iloc[0]
+                and recent["Close"].iloc[0] > recent["SMA"].iloc[0]
+            ):
+                screenDict["MA-Signal"] = (
+                    saved[0] + colorText.BOLD + colorText.GREEN + "Bullish" + colorText.END
+                )
+                saveDict["MA-Signal"] = saved[1] + "Bullish"
+                maSignals.append("3")
+            elif recent["SMA"].iloc[0] < recent["LMA"].iloc[0]:
+                screenDict["MA-Signal"] = (
+                    saved[0] + colorText.BOLD + colorText.FAIL + "Bearish" + colorText.END
+                )
+                saveDict["MA-Signal"] = saved[1] + "Bearish"
+                maSignals.append("2")
+            elif recent["SMA"].iloc[0] == 0:
+                screenDict["MA-Signal"] = (
+                    saved[0] + colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+                )
+                saveDict["MA-Signal"] = saved[1] + "Unknown"
+            else:
+                screenDict["MA-Signal"] = (
+                    saved[0] + colorText.BOLD + colorText.WARN + "Neutral" + colorText.END
+                )
+                saveDict["MA-Signal"] = saved[1] + "Neutral"
+        reversedData = data[::-1]  # Reverse the dataframe
+        ema_20 = pktalib.EMA(reversedData["Close"],20).tail(1).iloc[0]
+        vwap = pktalib.VWAP(reversedData["High"],reversedData["Low"],reversedData["Close"],reversedData["Volume"]).tail(1).iloc[0]
         smaDev = data["SMA"].iloc[0] * maRange / 100
         lmaDev = data["LMA"].iloc[0] * maRange / 100
+        emaDev = ema_20 * maRange / 100
+        vwapDev = vwap * maRange / 100
         open, high, low, close, sma, lma = (
             data["Open"].iloc[0],
             data["High"].iloc[0],
@@ -2734,68 +2742,56 @@ class ScreeningStatistics:
             data["SMA"].iloc[0],
             data["LMA"].iloc[0],
         )
+        mas = [sma,lma,ema_20,vwap] if maLength==0 else [sma,lma,ema_20]
+        maDevs = [smaDev, lmaDev, emaDev, vwapDev] if maLength==0 else [smaDev, lmaDev, emaDev]
+        maTexts = ["50MA","200MA","20EMA","VWAP"] if maLength==0 else ["50MA","200MA","20EMA"]
         maReversal = 0
-        # Taking Support 50
-        if close > sma and low <= (sma + smaDev):
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.GREEN + "50MA-Support" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "50MA-Support"
-            maReversal = 1
-        # Validating Resistance 50
-        elif close < sma and high >= (sma - smaDev):
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.FAIL + "50MA-Resist" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "50MA-Resist"
-            maReversal = -1
-        # Taking Support 200
-        elif close > lma and low <= (lma + lmaDev):
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.GREEN + "200MA-Support" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "200MA-Support"
-            maReversal = 1
-        # Validating Resistance 200
-        elif close < lma and high >= (lma - lmaDev):
-            screenDict["MA-Signal"] = (
-                saved[0] + colorText.BOLD + colorText.FAIL + "200MA-Resist" + colorText.END
-            )
-            saveDict["MA-Signal"] = saved[1] + "200MA-Resist"
-            maReversal = -1
-        # For a Bullish Candle
-        if self.getCandleType(data):
-            # Crossing up 50
-            if open < sma and close > sma:
-                screenDict["MA-Signal"] = (
-                    saved[0] + colorText.BOLD + colorText.GREEN + "BullCross-50MA" + colorText.END
-                )
-                saveDict["MA-Signal"] = saved[1] + "BullCross-50MA"
-                maReversal = 1
-            # Crossing up 200
-            elif open < lma and close > lma:
-                screenDict["MA-Signal"] = (
-                    saved[0] + colorText.BOLD + colorText.GREEN + "BullCross-200MA" + colorText.END
-                )
-                saveDict["MA-Signal"] = saved[1] + "BullCross-200MA"
-                maReversal = 1
-        # For a Bearish Candle
-        elif not self.getCandleType(data):
-            # Crossing down 50
-            if open > sma and close < sma:
-                screenDict["MA-Signal"] = (
-                    saved[0] + colorText.BOLD + colorText.FAIL + "BearCross-50MA" + colorText.END
-                )
-                saveDict["MA-Signal"] = saved[1] + "BearCross-50MA"
-                maReversal = -1
-            # Crossing up 200
-            elif open > lma and close < lma:
-                screenDict["MA-Signal"] = (
-                    saved[0] + colorText.BOLD + colorText.FAIL + "BearCross-200MA" + colorText.END
-                )
-                saveDict["MA-Signal"] = saved[1] + "BearCross-200MA"
-                maReversal = -1
-        return maReversal
+        index = 0
+        bullishCandle = self.getCandleType(data)
+        if str(maLength) not in ["2","3"]:
+            for ma in mas:
+                saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
+                # Taking Support
+                if close > ma and low <= (ma + maDevs[index]) and str(maLength) in ["0","1"]:
+                    screenDict["MA-Signal"] = (
+                        saved[0] + colorText.BOLD + colorText.GREEN + f"{maTexts[index]}-Support" + colorText.END
+                    )
+                    saveDict["MA-Signal"] = saved[1] + f"{maTexts[index]}-Support"
+                    maReversal = 1
+                    maSignals.append("1")
+                # Validating Resistance
+                elif close < ma and high >= (ma - maDevs[index]) and str(maLength) in ["0","6"]:
+                    screenDict["MA-Signal"] = (
+                        saved[0] + colorText.BOLD + colorText.FAIL + f"{maTexts[index]}-Resist" + colorText.END
+                    )
+                    saveDict["MA-Signal"] = saved[1] + f"{maTexts[index]}-Resist"
+                    maReversal = -1
+                    maSignals.append("6")
+                # For a Bullish Candle
+                if bullishCandle:
+                    # Crossing up
+                    if open < ma and close > ma and str(maLength) in ["0","5"]:
+                        screenDict["MA-Signal"] = (
+                            saved[0] + colorText.BOLD + colorText.GREEN + f"BullCross-{maTexts[index]}" + colorText.END
+                        )
+                        saveDict["MA-Signal"] = saved[1] + f"BullCross-{maTexts[index]}"
+                        maReversal = 1
+                        maSignals.append("5")
+                # For a Bearish Candle
+                elif not bullishCandle:
+                    # Crossing down
+                    if open > sma and close < sma and str(maLength) in ["0","4"]:
+                        screenDict["MA-Signal"] = (
+                            saved[0] + colorText.BOLD + colorText.FAIL + f"BearCross-{maTexts[index]}" + colorText.END
+                        )
+                        saveDict["MA-Signal"] = saved[1] + f"BearCross-{maTexts[index]}"
+                        maReversal = -1
+                        maSignals.append("4")
+                index += 1
+        returnValue = maReversal
+        if maLength != 0:
+            returnValue = str(maLength) in maSignals
+        return returnValue
 
     # Find NRx range for Reversal
     def validateNarrowRange(self, df, screenDict, saveDict, nr=4):
@@ -2978,8 +2974,62 @@ class ScreeningStatistics:
                         saveDict["MA-Signal"] = saved[1] + "Bullish"
                         return True
         return False
-
-    # Validate VPC
+    
+    # Validate VCP as per Mark Minervini
+    # https://chartink.com/screener/volatility-compression
+    def validateVCPMarkMinervini(self, df:pd.DataFrame, screenDict, saveDict):
+        if df is None or len(df) == 0:
+            return False
+        data = df.copy()
+        ohlc_dict = {
+            'Open':'first',
+            'High':'max',
+            'Low':'min',
+            'Close':'last',
+            'Volume':'sum'
+        }
+        # final_df = df.resample('W-FRI', closed='left').agg(ohlc_dict).shift('1d')
+        weeklyData = data.resample('W').agg(ohlc_dict)
+        reversedData = data[::-1]  # Reverse the dataframe
+        recent_close = data["Close"].head(1).iloc[0]
+        w_ema_13 = pktalib.EMA(weeklyData["Close"],timeperiod=13).tail(1).iloc[0]
+        w_ema_26 = pktalib.EMA(weeklyData["Close"],timeperiod=26).tail(1).iloc[0]
+        w_sma_50 = pktalib.SMA(weeklyData["Close"],timeperiod=50).tail(1).iloc[0]
+        w_sma_40 = pktalib.SMA(weeklyData["Close"],timeperiod=40).tail(1).iloc[0]
+        w_sma_40_5w_ago = pktalib.SMA(weeklyData.head(len(weeklyData)-5)["Close"],timeperiod=40).tail(1).iloc[0]
+        w_min_50 = min(1.3*weeklyData.tail(50)["Low"])
+        w_max_50 = max(0.75*weeklyData.tail(50)["High"])
+        w_ema_26_20w_ago = pktalib.EMA(weeklyData.head(len(weeklyData)-20)["Close"],timeperiod=26).tail(1).iloc[0]
+        recent_ema_13_20d_ago = pktalib.EMA(reversedData.head(len(reversedData)-20)["Close"],timeperiod=13).tail(1).iloc[0]
+        w_sma_40_5w_ago = pktalib.SMA(weeklyData.head(len(weeklyData)-5)["Close"],timeperiod=40).tail(1).iloc[0]
+        w_sma_40_10w_ago = pktalib.SMA(weeklyData.head(len(weeklyData)-10)["Close"],timeperiod=40).tail(1).iloc[0]
+        recent_sma_50 = pktalib.SMA(reversedData["Close"],timeperiod=50).tail(1).iloc[0]
+        w_wma_8 = pktalib.WMA(weeklyData["Close"],timeperiod=8).tail(1).iloc[0]
+        w_sma_8 = pktalib.SMA(weeklyData["Close"],timeperiod=8).tail(1).iloc[0]
+        
+        isVCP = w_ema_13 > w_ema_26 and \
+                w_ema_26 > w_sma_50 and \
+                w_sma_40 > w_sma_40_5w_ago and \
+                recent_close >= w_min_50 and \
+                recent_close >= w_max_50 and \
+                recent_ema_13_20d_ago > w_ema_26_20w_ago and \
+                w_sma_40_5w_ago > w_sma_40_10w_ago and \
+                recent_close > recent_sma_50 and \
+                (w_wma_8 - w_sma_8)*6/29 < 0.5 and \
+                recent_close > 10
+        if isVCP:
+            saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")
+            screenDict["Pattern"] = (
+                saved[0] 
+                + colorText.BOLD
+                + colorText.GREEN
+                + f"VCP(Minervini)"
+                + colorText.END
+            )
+            saveDict["Pattern"] = saved[1] + f"VCP(Minervini)"
+        return isVCP
+    
+    # Validate VCP
     def validateVCP(
         self, df, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3
     ):
@@ -2990,28 +3040,8 @@ class ScreeningStatistics:
             percentageFromTop /= 100
             data.reset_index(inplace=True)
             data.rename(columns={"index": "Date"}, inplace=True)
-            data["tops"] = (
-                data["High"]
-                .iloc[
-                    list(
-                        pktalib.argrelextrema(
-                            np.array(data["High"]), np.greater_equal, order=window
-                        )[0]
-                    )
-                ]
-                .head(4)
-            )
-            data["bots"] = (
-                data["Low"]
-                .iloc[
-                    list(
-                        pktalib.argrelextrema(
-                            np.array(data["Low"]), np.less_equal, order=window
-                        )[0]
-                    )
-                ]
-                .head(4)
-            )
+            data["tops"] = (data["High"].iloc[list(pktalib.argrelextrema(np.array(data["High"]), np.greater_equal, order=window)[0])].head(4))
+            data["bots"] = (data["Low"].iloc[list(pktalib.argrelextrema(np.array(data["Low"]), np.less_equal, order=window)[0])].head(4))
             data = data.fillna(0)
             data = data.replace([np.inf, -np.inf], 0)
             tops = data[data.tops > 0]

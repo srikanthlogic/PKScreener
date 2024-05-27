@@ -95,6 +95,15 @@ class pktalib:
             return talib.EMA(close, timeperiod)
 
     @classmethod
+    def VWAP(self, high, low, close, volume):
+        try:
+            import pandas_ta as talib
+            return talib.vwap(high, low, close, volume)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return None
+        
+    @classmethod
     def KeltnersChannel(self, high, low, close, timeperiod=20):
         try:
             low_kel = None
@@ -117,6 +126,14 @@ class pktalib:
             # default_logger().debug(e, exc_info=True)
             return talib.SMA(close, timeperiod)
 
+    @classmethod
+    def WMA(self, close, timeperiod):
+        try:
+            return talib.wma(close, timeperiod)
+        except Exception:  # pragma: no cover
+            # default_logger().debug(e, exc_info=True)
+            return talib.WMA(close, timeperiod)
+        
     @classmethod
     def ATR(self, high, low, close, timeperiod=14):
         try:

@@ -246,6 +246,7 @@ class StockScreener:
                 isMaSupport = False
                 isLorentzian = False
                 isVCP = False
+                isMinerviniVCP = False
                 isVSA = False
                 isNR = False
                 hasPsarRSIReversal = False
@@ -263,6 +264,7 @@ class StockScreener:
                 isCandlePattern = False
                 isLowestVolume = False
                 hasBbandsSqz = False
+                hasMASignalFilter = False
 
                 isValidityCheckMet = self.performValidityCheckForExecuteOptions(executeOption,screener,fullData,screeningDictionary,saveDictionary,processedData,configManager,maLength)
                 if not isValidityCheckMet:
@@ -399,7 +401,18 @@ class StockScreener:
                         processedData, screeningDictionary, saveDictionary)
                         if not isCandlePattern:
                             return returnLegibleData(f"isCandlePattern:{isCandlePattern}")
-                        
+                    elif respChartPattern == 8:
+                        isMinerviniVCP = screener.validateVCPMarkMinervini(
+                            fullData, screeningDictionary, saveDictionary
+                        )
+                        if not isMinerviniVCP:
+                            return returnLegibleData(f"isMinerviniVCP:{isMinerviniVCP}")
+                    elif respChartPattern == 9:
+                        hasMASignalFilter = screener.validateMovingAverages(
+                            fullData, screeningDictionary, saveDictionary,maRange=1.25,maLength=maLength
+                        )
+                        if not hasMASignalFilter:
+                            return returnLegibleData(f"hasMASignalFilter:{hasMASignalFilter}")
                 elif executeOption == 10:
                     isPriceRisingByAtLeast2Percent = (
                         screener.validatePriceRisingByAtLeast2Percent(
@@ -460,7 +473,7 @@ class StockScreener:
                     if not isValidCci:
                         return returnLegibleData(f"isValidCci:{isValidCci}")
 
-                if not (isConfluence or isShortTermBullish or isMaSupport):
+                if not (isConfluence or isShortTermBullish or hasMASignalFilter):
                     isMaReversal = screener.validateMovingAverages(
                         processedData, screeningDictionary, saveDictionary, maRange=1.25
                     )
@@ -486,7 +499,7 @@ class StockScreener:
                     if isInsideBar ==0:
                         return returnLegibleData(f"isInsideBar:{isInsideBar}")
 
-                if not (isLorentzian or (isInsideBar !=0) or isBuyingTrendline or isIpoBase or isNR or isVCP or isVSA):
+                if not (isLorentzian or (isInsideBar !=0) or isBuyingTrendline or isIpoBase or isNR or isVCP or isVSA or isMinerviniVCP):
                     isMomentum = screener.validateMomentum(
                         processedData, screeningDictionary, saveDictionary
                     )
@@ -541,9 +554,11 @@ class StockScreener:
                                                                   or (isConfluence)
                                                                   or (isIpoBase and newlyListedOnly and not respChartPattern < 3)
                                                                   or (isVCP)
-                                                                  or (isBuyingTrendline))
+                                                                  or (isBuyingTrendline)
                                                                   or (respChartPattern == 6 and hasBbandsSqz)
                                                                   or (respChartPattern == 7 and isCandlePattern))
+                                                                  or (respChartPattern == 8 and isMinerviniVCP)
+                                                                  or (respChartPattern == 9 and hasMASignalFilter))
                         or (executeOption == 8 and isValidCci)
                         or (executeOption == 9 and hasMinVolumeRatio)
                         or (executeOption == 10 and isPriceRisingByAtLeast2Percent)

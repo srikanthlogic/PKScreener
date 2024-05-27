@@ -79,6 +79,7 @@ from pkscreener.classes.MenuOptions import (
     level4_X_Lorenzian_MenuDict,
     level4_X_ChartPattern_Confluence_MenuDict,
     level4_X_ChartPattern_BBands_SQZ_MenuDict,
+    level4_X_ChartPattern_MASignalMenuDict,
     menus,
     MAX_SUPPORTED_MENU_OPTION,
     MAX_MENU_OPTION,
@@ -1057,17 +1058,17 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     ) = Utility.tools.promptChartPatterns(selectedMenu)
                 if maLength == 0:
                     maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
-            elif respChartPattern in [0, 4, 5, 6, 7]:
+            elif respChartPattern in [0, 4, 5, 6, 7, 8, 9]:
                 insideBarToLookback = 0
-                if respChartPattern == 6:
+                if respChartPattern == 6 or respChartPattern == 9:
                     if len(options) >= 5:
                         if str(options[4]).isnumeric():
                             maLength = int(options[4])
                         elif str(options[4]).upper() == "D":
-                            maLength = 1 # Bollinger Bands Squeeze-Buy
+                            maLength = 1 if respChartPattern == 6 else 6 # Bollinger Bands Squeeze-Buy or MA-Support
                     elif defaultAnswer == "Y" and user is not None:
                         # bot mode
-                        maLength = 4 # Bollinger Bands Squeeze- Any/All
+                        maLength = 4 if respChartPattern == 6 else 6 # Bollinger Bands Squeeze- Any/All or MA-Support
                     else:
                         maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu,respChartPattern)
             else:
@@ -1079,16 +1080,17 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             respChartPattern, insideBarToLookback = Utility.tools.promptChartPatterns(
                 selectedMenu
             )
-            if maLength == 0 and respChartPattern in [1, 2, 3, 6]:
+            if maLength == 0 and respChartPattern in [1, 2, 3, 6, 9]:
                 maLength = Utility.tools.promptChartPatternSubMenu(selectedMenu, respChartPattern)
         if (
             respChartPattern is None
             or insideBarToLookback is None
             or respChartPattern == 0
-            or (maLength == 0 and respChartPattern in [1, 2, 3, 6])
+            or (maLength == 0 and respChartPattern in [1, 2, 3, 6, 9])
         ):
             return None, None
         else:
+            userPassedArgs.maxdisplayresults = 2000 if respChartPattern in [3,4,5,8,9] else userPassedArgs.maxdisplayresults
             selectedChoice["3"] = str(respChartPattern)
             selectedChoice["4"] = str(insideBarToLookback) if (respChartPattern in [1, 2, 3] and (userPassedArgs is not None and userPassedArgs.pipedmenus is not None)) else str(maLength)
             selectedChoice["5"] = str(maLength) if (respChartPattern in [1, 2, 3] and (userPassedArgs is not None and userPassedArgs.pipedmenus is not None)) else ""
@@ -2004,6 +2006,11 @@ def updateMenuChoiceHierarchy():
                 menuChoiceHierarchy = (
                 menuChoiceHierarchy
                 + f'>{level4_X_ChartPattern_BBands_SQZ_MenuDict[selectedChoice["4"]].strip()}'
+            )
+            elif len(selectedChoice) >= 5 and selectedChoice["3"] == "9":
+                menuChoiceHierarchy = (
+                menuChoiceHierarchy
+                + f'>{level4_X_ChartPattern_MASignalMenuDict[selectedChoice["4"]].strip()}'
             )
         elif selectedChoice["2"] == "21":
             menuChoiceHierarchy = (

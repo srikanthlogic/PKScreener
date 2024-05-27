@@ -1483,7 +1483,7 @@ class tools:
                     ) or "2"
                 )
                 return (resp, percent / 100.0)
-            if resp >= 0 and resp <= 7:
+            if resp >= 0 and resp <= 9:
                 return resp, 0
             raise ValueError
         except ValueError as e:  # pragma: no cover
@@ -1613,7 +1613,7 @@ class tools:
     
     def getMaxColumnWidths(df):
         columnWidths = [None]
-        addnlColumnWidths = [40 if (x in ["Trend(22Prds)"] or "-Pd" in x) else (20 if (x in ["Pattern"]) else None) for x in df.columns]
+        addnlColumnWidths = [40 if (x in ["Trend(22Prds)"] or "-Pd" in x) else (20 if (x in ["Pattern"]) else ((25 if (x in ["MA-Signal"]) else None))) for x in df.columns]
         columnWidths.extend(addnlColumnWidths)
         columnWidths = columnWidths[:-1]
         return columnWidths

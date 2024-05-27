@@ -2,6 +2,8 @@
 
 ## What's New?
 1. [v0.45.20240527.417] release
+* Included VCP (as per definition by Mark Minervini). Try X > 12 > 7 > 8
+* Added more VCP based pre-defined piped scanners. Try P > 1 > 12 or 13 or 14
 * Integrations with the newly released 3rd party data source.
 * NOTE: To fit all result columns on your screen, switch to smaller font size in your console.
 

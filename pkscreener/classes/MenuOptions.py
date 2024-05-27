@@ -61,7 +61,7 @@ level1_P_MenuDict = {
     "3": "Run Piped Scans Saved So Far",
     "M": "Back to the Top/Main menu",
 }
-PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10","11"]
+PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14"]
 PREDEFINED_SCAN_MENU_TEXTS = [
     "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross     ",
     "Volume Scanners | High Momentum | ATR Cross",
@@ -74,6 +74,9 @@ PREDEFINED_SCAN_MENU_TEXTS = [
     "TTM Sqeeze Buy | Intraday RSI b/w 0 to 54                          ",
     "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross | Intraday RSI b/w 0 to 54",
     "Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54             ",
+    "VCP (Mark Minervini) | Chart Patterns | MA Support",
+    "VCP | Chart Patterns | MA Support                                  ",
+    "Already Breaking out | VCP (Mark Minervini) | Chart Patterns | MA Support",
 ]
 level2_P_MenuDict = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
@@ -91,6 +94,9 @@ PREDEFINED_SCAN_MENU_VALUES =[
     "--systemlaunched -a y -e -o 'X:12:7:6:1:>|X:0:5:0:54:i 1m'",
     "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:>|X:0:23:>|X:0:27:>|X:0:5:0:54:i 1m'",
     "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:27:>|X:0:5:0:54:i 1m'",
+    "--systemlaunched -a y -e -o 'X:12:7:8:>|X:12:7:9:1:1:'",
+    "--systemlaunched -a y -e -o 'X:12:7:4:>|X:12:7:9:1:1:'",
+    "--systemlaunched -a y -e -o 'X:12:2:>|X:12:7:8:>|X:12:7:9:1:1:'"
 ]
 PIPED_SCANNERS = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
@@ -206,9 +212,21 @@ level3_X_ChartPattern_MenuDict = {
     "2": "Bearish Inside Bar (Flag) Pattern(Sell)",
     "3": "The Confluence (50 & 200 MA/EMA)",
     "4": "VCP (Volatility Contraction Pattern)",
-    "5": "Buying at Trendline (Ideal for Swing/Mid/Long term)",
+    "5": "Buying at Trendline Support (Ideal for Swing/Mid/Long term)",
     "6": "Bollinger Bands (TTM) Squeeze",
     "7": "Candle-stick Patterns",
+    "8": "VCP (Mark Minervini)",
+    "9": "Moving Average Signals",
+    "0": "Cancel",
+}
+
+level4_X_ChartPattern_MASignalMenuDict = {
+    "1": "MA-Support",
+    "2": "Bearish Signals",
+    "3": "Bullish Signals",
+    "4": "BearCross MA",
+    "5": "BullCross MA",
+    "6": "MA-Resist",
     "0": "Cancel",
 }
 
@@ -577,6 +595,13 @@ class menus:
                     )
                 if selectedMenu.parent.menuKey == "7" and selectedMenu.menuKey == "6":
                     return self.renderLevel4_X_ChartPattern_BBands_SQZ_Menus(
+                        skip=skip,
+                        asList=asList,
+                        renderStyle=renderStyle,
+                        parent=selectedMenu,
+                    )
+                if selectedMenu.parent.menuKey == "7" and selectedMenu.menuKey == "9":
+                    return self.renderLevel4_X_ChartPattern_MASignal_Menus(
                         skip=skip,
                         asList=asList,
                         renderStyle=renderStyle,
@@ -1155,7 +1180,40 @@ class menus:
                 )
             return menuText
 
+    def renderLevel4_X_ChartPattern_MASignal_Menus(
+        self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None
+    ):
+        menuText = self.fromDictionary(
+            level4_X_ChartPattern_MASignalMenuDict,
+            renderExceptionKeys=["0"],
+            renderStyle=renderStyle
+            if renderStyle is not None
+            else MenuRenderStyle.STANDALONE,
+            skip=skip,
+            parent=parent,
+        ).render(asList=asList, coloredValues=["1"])
+        if asList:
+            return menuText
+        else:
+            if OutputControls().enableMultipleLineOutput:
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + colorText.WARN
+                    + "[+] Select an option: "
+                    + colorText.END
+                )
+                OutputControls().printOutput(
+                    colorText.BOLD
+                    + menuText
+                    + """
 
+    Enter your choice > (default is """
+                    + colorText.WARN
+                    + (self.find("1") or menu().create('?','?')).keyTextLabel().strip() + ")"
+                    + colorText.END
+                )
+            return menuText
+        
     def renderLevel4_X_ChartPattern_Confluence_Menus(
         self, skip=[], asList=False, renderStyle=MenuRenderStyle.STANDALONE, parent=None
     ):
