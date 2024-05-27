@@ -2214,8 +2214,10 @@ class ScreeningStatistics:
         recent = data.head(2)
         if len(recent) < 2:
             return False
-        is50DMAUpTrend = (recent["SMA"].iloc[0] > recent["SMA"].iloc[1])
-        is50DMADownTrend = (recent["SMA"].iloc[0] < recent["SMA"].iloc[1])
+        key1 = "SMA"
+        key2 = "LMA"
+        key3 = "50DMA"
+        key4 = "200DMA"
         is20DMACrossover50DMA = (recent["SSMA20"].iloc[0] >= recent["SMA"].iloc[0]) and \
                             (recent["SSMA20"].iloc[1] <= recent["SMA"].iloc[1])
         is50DMACrossover200DMA = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
@@ -2228,13 +2230,15 @@ class ScreeningStatistics:
         isDeadCrossOver = is20DMACrossover50DMADown or is50DMACrossover200DMADown
         deadxOverText = f'DeadCrossover{"(20)" if is20DMACrossover50DMADown else ("(50)" if is50DMACrossover200DMADown else "")}'
         goldenxOverText = f'GoldenCrossover{"(20)" if is20DMACrossover50DMA else ("(50)" if is50DMACrossover200DMA else "")}'
-        is50DMA = (recent["SMA"].iloc[0] <= recent["Close"].iloc[0])
-        is200DMA = (recent["LMA"].iloc[0] <= recent["Close"].iloc[0])
-        key1 = "SMA"
-        key2 = "LMA"
         if is20DMACrossover50DMA or is20DMACrossover50DMADown:
             key1 = "SSMA20"
             key2 = "SMA"
+            key3 = "20DMA"
+            key4 = "50DMA"
+        is50DMAUpTrend = (recent[key1].iloc[0] > recent[key2].iloc[1])
+        is50DMADownTrend = (recent[key1].iloc[0] < recent[key1].iloc[1])
+        is50DMA = (recent[key1].iloc[0] <= recent["Close"].iloc[0])
+        is200DMA = (recent[key2].iloc[0] <= recent["Close"].iloc[0])
         difference = round((recent[key1].iloc[0] - recent[key2].iloc[0])
                 / recent["Close"].iloc[0]
                 * 100,
@@ -2244,7 +2248,7 @@ class ScreeningStatistics:
         screenDict["ConfDMADifference"] = difference
         saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
         # difference = abs(difference)
-        confText = f"{goldenxOverText if isGoldenCrossOver else (deadxOverText if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else ('50DMA' if is50DMA else ('200DMA' if is200DMA else 'Unknown')))))}"
+        confText = f"{goldenxOverText if isGoldenCrossOver else (deadxOverText if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else (key3 if is50DMA else (key4 if is200DMA else 'Unknown')))))}"
         if abs(recent[key1].iloc[0] - recent[key2].iloc[0]) <= (
             recent[key1].iloc[0] * percentage
         ):
@@ -2267,8 +2271,8 @@ class ScreeningStatistics:
                 )
                 saveDict["MA-Signal"] = saved[1] + f"{confText} ({difference}%)"
             return confFilter == 3 or \
-                (confFilter == 1 and (is50DMAUpTrend or (isGoldenCrossOver or 'Up' in confText))) or \
-                (confFilter == 2 and (is50DMADownTrend or isDeadCrossOver or 'Down' in confText))
+                (confFilter == 1 and not isDeadCrossOver and (is50DMAUpTrend or (isGoldenCrossOver or 'Up' in confText))) or \
+                (confFilter == 2 and not isGoldenCrossOver and (is50DMADownTrend or isDeadCrossOver or 'Down' in confText))
         # Maybe the difference is not within the range, but we'd still like to keep the stock in
         # the list if it's a golden crossover or dead crossover
         if isGoldenCrossOver or isDeadCrossOver:
