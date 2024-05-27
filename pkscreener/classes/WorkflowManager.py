@@ -78,7 +78,7 @@ def run_workflow(command, user, options, workflowType="B"):
         data = (
                 '{"ref":"'
                 + branch
-                + '","inputs":{"branch-name":"main"}}'
+                + '","inputs":{"branch-name":"main","cliOptions":""}}'
             )
     _, _, _, ghp_token = get_secrets()
     url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_name}/dispatches"
