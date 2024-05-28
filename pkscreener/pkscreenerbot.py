@@ -381,6 +381,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
     if query.message.text == menuText:
         menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
+    menuText = f"{menuText}\nClick /start if you want to restart the session."
     await query.edit_message_text(text=menuText, reply_markup=reply_markup)
     return START_ROUTES
 
@@ -579,6 +580,7 @@ def default_markup(inlineMenus):
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup, replaceWhiteSpaces=True):
     try:
         menuText.replace("     ", "").replace("    ", "").replace("\t", "").replace(colorText.FAIL,"").replace(colorText.END,"") if replaceWhiteSpaces else menuText
+        menuText = f"{menuText}\nClick /start if you want to restart the session."
         if update.callback_query.message.text == menuText:
             menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
         await update.callback_query.edit_message_text(
@@ -606,6 +608,7 @@ async def launchScreener(options, user, context, optionChoices, update):
             if update is not None and update.message is not None:
                 await update.message.reply_text(responseText)
             else:
+                responseText = f"{responseText}\nClick /start if you want to restart the session."
                 await update.callback_query.edit_message_text(
                     text=responseText,
                     reply_markup=default_markup([]),
@@ -660,8 +663,10 @@ async def BBacktests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    responseText = "Backtesting NOT implemented yet in this Bot!\n\n\nYou can use backtesting by downloading the software from https://github.com/pkjmesra/PKScreener/"
+    responseText = f"{responseText}\nClick /start if you want to restart the session."
     await query.edit_message_text(
-        text="Backtesting NOT implemented yet in this Bot!\n\n\nYou can use backtesting by downloading the software from https://github.com/pkjmesra/PKScreener/",
+        text=responseText,
         reply_markup=reply_markup,
     )
     return START_ROUTES
@@ -673,8 +678,10 @@ async def end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     query = update.callback_query
     await query.answer()
+    responseText = "See https://github.com/pkjmesra/PKScreener/ for more details or join https://t.me/PKScreener. \n\n\nSee you next time!"
+    responseText = f"{responseText}\nClick /start if you want to restart the session."
     await query.edit_message_text(
-        text="See https://github.com/pkjmesra/PKScreener/ for more details or join https://t.me/PKScreener. \n\n\nSee you next time!"
+        text=responseText
     )
     return ConversationHandler.END
 
