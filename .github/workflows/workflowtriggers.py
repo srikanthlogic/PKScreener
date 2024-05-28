@@ -277,7 +277,7 @@ if __name__ == '__main__':
                     p2 = mnu2.menuKey.upper()
                     if p2 == "0":
                         continue
-                    if p2 in ["6", "7", "21"]:
+                    if p2 in ["6", "7", "21","22","30"]:
                         selectedMenu = m2.find(p2)
                         # Find the 3rd level menus, skipping those in the provided list
                         cmds3 = m3.renderForMenu(
@@ -291,7 +291,7 @@ if __name__ == '__main__':
                                 p3 = mnu3.menuKey.upper()
                                 if p3 == "0":
                                     continue
-                                if p3 in [ "7", "6"] and p2 not in ["21"]:
+                                if (p3 in [ "7","10"] and p2 in ["6"]) or (p3 in [ "3","6","9"] and p2 in ["7"]):
                                     selectedMenu = m3.find(p3)
                                     # Find the 2nd level menus, skipping those in the provided list
                                     cmds4 = m4.renderForMenu(
@@ -346,7 +346,11 @@ if __name__ == '__main__':
                         counter += 1
             except:
                 continue
-
+    # Let's list down what all are we going to go through for menus
+    print("Scan Options in Collection:\n")
+    for key in objectDictionary.keys():
+        scanOptions = f'{objectDictionary[key]["td3"]}_D_D_D'
+        print(scanOptions)
 
 def generateBacktestReportMainPage():
     generated_date = f"Auto-generated as of {PKDateUtilities.currentDateTime().strftime('%d-%m-%y %H:%M:%S IST')}"
