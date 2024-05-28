@@ -628,7 +628,7 @@ class menus:
             skip=skip,
             parent=parent,
             substitutes = substitutes
-        ).render(asList=asList,coloredValues=["M"])
+        ).render(asList=asList,coloredValues=["M"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -661,7 +661,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["X"])
+        ).render(asList=asList,coloredValues=["X"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -742,7 +742,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=[defaultKey])
+        ).render(asList=asList,coloredValues=[defaultKey] if not asList else [])
         if asList:
             return menuText
         else:
@@ -777,7 +777,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -812,7 +812,7 @@ class menus:
             else MenuRenderStyle.TWO_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["1"])
+        ).render(asList=asList,coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -847,7 +847,7 @@ class menus:
             else MenuRenderStyle.THREE_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["15",str(configManager.defaultIndex)])
+        ).render(asList=asList, coloredValues=["15",str(configManager.defaultIndex)] if not asList else [])
         if asList:
             return menuText
         else:
@@ -882,7 +882,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -917,7 +917,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -952,7 +952,7 @@ class menus:
             else MenuRenderStyle.TWO_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["9"])
+        ).render(asList=asList, coloredValues=["9"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -986,7 +986,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["3"])
+        ).render(asList=asList,coloredValues=["3"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1020,7 +1020,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["3"])
+        ).render(asList=asList,coloredValues=["3"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1054,7 +1054,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1088,7 +1088,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["1"])
+        ).render(asList=asList,coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1122,7 +1122,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1157,7 +1157,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1191,7 +1191,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["1"])
+        ).render(asList=asList, coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:
@@ -1225,7 +1225,7 @@ class menus:
             else MenuRenderStyle.STANDALONE,
             skip=skip,
             parent=parent,
-        ).render(asList=asList,coloredValues=["1"])
+        ).render(asList=asList,coloredValues=["1"] if not asList else [])
         if asList:
             return menuText
         else:

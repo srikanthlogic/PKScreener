@@ -359,6 +359,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
         .replace("     ", "")
         .replace("    ", "")
+        .replace("  ", "")
         .replace("\t", "")
         .replace(colorText.FAIL,"").replace(colorText.END,"")
     )
