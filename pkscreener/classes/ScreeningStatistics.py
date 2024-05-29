@@ -294,6 +294,8 @@ class ScreeningStatistics:
                 data.loc[i, "nLoss"],
             )
         data = self.computeBuySellSignals(data,ema_period=ema_period)
+        if data is None:
+            return False
         recent = data.tail(1)
         buy = recent["Buy"].iloc[0]
         sell = recent["Sell"].iloc[0]
@@ -301,13 +303,56 @@ class ScreeningStatistics:
         screenDict["B/S"] = ((colorText.GREEN + "Buy") if buy else ((colorText.FAIL+ "Sell") if sell else (colorText.WARN + "NA"))) + colorText.END
         return buy if buySellAll==1 else (sell if buySellAll == 2 else (True if buySellAll == 3 else False))
 
+    def downloadSaveTemplateJsons(self, outputFolderPath=None):
+        from PKDevTools.classes.Fetcher import fetcher
+        import os
+        if outputFolderPath is None:
+            dirName = 'templates'
+            outputFolder = os.path.join(os.getcwd(),dirName)
+        else:
+            outputFolder = outputFolderPath
+        outputFolder = f"{outputFolder}{os.sep}" if not outputFolder.endswith(f"{os.sep}") else outputFolder
+        if not os.path.isdir(outputFolder):
+            os.makedirs(outputFolder, exist_ok=True)
+        json1 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/dark.json"
+        json2 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/light.json"
+        json3 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/seaborn.json"
+        fileURLs = [json1,json2,json3]
+        f = fetcher()
+        for url in fileURLs:
+            try:
+                path = os.path.join(outputFolder,url.split("/")[-1])
+                if not os.path.exists(path):
+                    resp = f.fetchURL(url=url,trial=3,timeout=5)
+                    if resp is not None and resp.status_code == 200:
+                        with open(path, "w") as f:
+                            f.write(resp.text)
+            except:
+                continue
+
     #Calculating signals
-    def computeBuySellSignals(self,df,ema_period=200):
+    def computeBuySellSignals(self,df,ema_period=200,retry=True):
         try:
             from vectorbt.indicators import MA as vbt
             ema = vbt.run(df["Close"], 1, short_name='EMA', ewm=True)
             df["Above"] = ema.ma_crossed_above(df["ATRTrailingStop"])
             df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
+        except (OSError,FileNotFoundError) as e:
+            # OSError:RALLIS: [Errno 2] No such file or directory: '/tmp/_MEIzoTV6A/vectorbt/templates/light.json'
+            if "No such file or directory" in str(e):
+                try:
+                    import os
+                    outputFolder = None
+                    try:
+                        outputFolder = os.sep.join(e.filename.split(os.sep)[:-1])
+                    except:
+                        outputFolder = os.sep.join(str(e).split("\n")[0].split(": ")[1].replace("'","").split(os.sep)[:-1])
+                except:
+                    pass
+                self.downloadSaveTemplateJsons(outputFolder)
+                if retry:
+                    return self.computeBuySellSignals(df,ema_period=ema_period,retry=False)
+                return None
         except ImportError:
             ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
             df["Above"] = ema > df["ATRTrailingStop"]

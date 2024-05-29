@@ -782,8 +782,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     selectedMenu = initExecution(menuOption=menuOption)
     menuOption = selectedMenu.menuKey
     if menuOption in ["M", "D", "I", "L"]:
-        launcher = f'"{sys.argv[0]}"'
-        launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+        launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+        launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
         if menuOption in ["M"]:
             OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
             sleep(2)
@@ -829,8 +829,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     chosenOptions = scannerOption.split("-o ")[1]
                     userPassedArgs.options = chosenOptions.replace("'","")
                     return addOrRunPipedMenus()
-                launcher = f'"{sys.argv[0]}"'
-                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+                launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                 scannerOptionQuoted = scannerOption.replace("'",'"')
                 requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
                 OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOptionQuoted}{requestingUser}{colorText.END}")
@@ -1604,8 +1604,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     monitorOption = "X:0:0"
                     prevOutput_results = ",".join(prevOutput_results)
                     monitorOption = f"{monitorOption}:{prevOutput_results}"
-                launcher = f'"{sys.argv[0]}"'
-                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+                launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                 monitorOption = f'"{monitorOption}"'
                 scannerOptionQuoted = monitorOption.replace("'",'"')
                 OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with pinned scan option. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m {scannerOptionQuoted}{colorText.END}")
@@ -1736,8 +1736,8 @@ def addOrRunPipedMenus():
     if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.answerdefault is None):
         shouldAddMoreIntoPipe = input(colorText.FAIL + "[+] Select [Y/N] (Default:N): " + colorText.END) or 'n'
     if shouldAddMoreIntoPipe.lower() != 'y':
-        launcher = f'"{sys.argv[0]}"'
-        launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+        launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+        launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
         monitorOption = f'"{userPassedArgs.pipedmenus}"'
         scannerOptionQuoted = monitorOption.replace("'",'"').replace(":>",":D:D:D:>").replace("::",":")
         requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
@@ -2696,8 +2696,8 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
                 except:
                     pass
                 # Let's try again with logging
-                launcher = f'"{sys.argv[0]}"'
-                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+                launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                 os.system(f"{launcher} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
     else:
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)

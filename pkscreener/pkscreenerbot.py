@@ -1087,7 +1087,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def sendRequestSubmitted(optionChoices, update, context):
-    menuText = f"Thank you for choosing {optionChoices}. You will receive the notification/results in about 5 minutes! \n\nConsider donating to help keep this project going:\nUPI: 8007162973@APL \nor\nhttps://github.com/sponsors/pkjmesra?frequency=one-time&sponsor=pkjmesra"
+    menuText = f"Thank you for choosing {optionChoices}. You will receive the notification/results in about 1-2 minutes! \n\nConsider donating to help keep this project going:\nUPI: 8007162973@APL \nor\nhttps://github.com/sponsors/pkjmesra?frequency=one-time&sponsor=pkjmesra"
     await update.message.reply_text(menuText)
     await help_command(update=update, context=context)
     await shareUpdateWithChannel(
