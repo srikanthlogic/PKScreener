@@ -113,10 +113,11 @@ m0 = menus()
 m1 = menus()
 m2 = menus()
 m3 = menus()
+m4 = menus()
 int_timer = None
 
-TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI","DV"]
-TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "P", "T", "D", "I", "E", "U", "L", "Z"]
+TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI","DV", "P"]
+TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "T", "D", "I", "E", "U", "L", "Z", "P"]
 INDEX_SKIP_MENUS = ["W","E","M","Z","0","2","3","4","6","7","9","10","13"]
 SCANNER_SKIP_MENUS_1_TO_6 = ["0","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","42","M","Z"]
 SCANNER_SKIP_MENUS_7_TO_12 = ["0","1","2","3","4","5","6","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","42","M","Z"]
@@ -125,10 +126,12 @@ SCANNER_SKIP_MENUS_19_TO_25 = ["0","1","2","3","4","5","6","7","8","9","10","11"
 SCANNER_SKIP_MENUS_26_TO_31 = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","32","42","M","Z"]
 SCANNER_MENUS_WITH_NO_SUBMENUS = ["1","2","3","10","11","12","13","14","15","16","17","18","19","20","21","23","24","25","26","27","28","29","30","31","32"]
 SCANNER_MENUS_WITH_SUBMENU_SUPPORT = ["6", "7", "21"]
+SCANNER_SUBMENUS_CHILDLEVEL_SUPPORT = {"6":[ "7","10"], "7":[ "3","6","9"]}
 
 INDEX_COMMANDS_SKIP_MENUS_SCANNER = ["W", "E", "M", "Z"]
 INDEX_COMMANDS_SKIP_MENUS_BACKTEST = ["W", "E", "M", "Z", "N", "0", "15"]
-UNSUPPORTED_COMMAND_MENUS =["22","42","M","Z"]
+PIPED_SCAN_SKIP_COMMAND_MENUS =["2", "3", "M", "0"]
+UNSUPPORTED_COMMAND_MENUS =["22","42","M","Z","0"]
 SUPPORTED_COMMAND_MENUS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32"]
 
 def initializeIntradayTimer():
@@ -191,7 +194,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         reply_markup = InlineKeyboardMarkup(keyboard)
         cmds = m0.renderForMenu(
             selectedMenu=None,
-            skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+            skip=TOP_LEVEL_SCANNER_SKIP_MENUS[:len(TOP_LEVEL_SCANNER_SKIP_MENUS)-1],
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
@@ -203,6 +206,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
         for cmd in cmds:
             cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
         menuText = f"Welcome {user.first_name}, {(user.username)}! Please choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
+        try:
+            if updateCarrier is not None and updateCarrier.data is not None and updateCarrier.data == "CP":
+                menuText = f"Piped Scanners are available using /P . Click on this /P to begin using piped scanners. To use other scanners, choose a menu option by selecting a button from below.\n\nYou can also explore a wide variety of all other scanners by typing in \n{cmdText}\n\n OR just use the buttons below to choose."
+        except:
+            pass
+        menuText = f"{menuText}\n\nClick /start if you want to restart the session."
     else:
         chosenBotMenuOption = f"{chosenBotMenuOption}\nInt. Monitor. MonitorIndex:{monitorIndex}\n{updatedResults}"
         menuText = updatedResults
@@ -320,6 +329,9 @@ async def XDevModeHandler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show new choice of buttons"""
     query = update.callback_query
+    if query is None:
+        await start(update, context)
+        return START_ROUTES
     data = query.data.upper().replace("CX", "X").replace("CB", "B").replace("CG", "G").replace("CMI", "MI")
     if data[0:2] not in TOP_LEVEL_SCANNER_MENUS:
         return start(update, context)
@@ -382,7 +394,7 @@ async def XScanners(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_markup = InlineKeyboardMarkup(keyboard)
     if query.message.text == menuText:
         menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
-    menuText = f"{menuText}\nClick /start if you want to restart the session."
+    menuText = f"{menuText}\n\nClick /start if you want to restart the session."
     await query.edit_message_text(text=menuText, reply_markup=reply_markup)
     return START_ROUTES
 
@@ -557,6 +569,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             )
     except Exception:# pragma: no cover
         await start(update, context)
+    menuText =  menuText.replace("\n     ","\n").replace("\n    ","\n").replace(colorText.FAIL,"").replace(colorText.END,"")
     if not str(optionChoices.upper()).startswith("B"):
         await sendUpdatedMenu(
             menuText=menuText, update=update, context=context, reply_markup=reply_markup
@@ -581,7 +594,7 @@ def default_markup(inlineMenus):
 async def sendUpdatedMenu(menuText, update: Update, context, reply_markup, replaceWhiteSpaces=True):
     try:
         menuText.replace("     ", "").replace("    ", "").replace("\t", "").replace(colorText.FAIL,"").replace(colorText.END,"") if replaceWhiteSpaces else menuText
-        menuText = f"{menuText}\nClick /start if you want to restart the session."
+        menuText = f"{menuText}\n\nClick /start if you want to restart the session." if "/start" not in menuText else menuText
         if update.callback_query.message.text == menuText:
             menuText = f"{PKDateUtilities.currentDateTime()}:\n{menuText}"
         await update.callback_query.edit_message_text(
@@ -609,7 +622,7 @@ async def launchScreener(options, user, context, optionChoices, update):
             if update is not None and update.message is not None:
                 await update.message.reply_text(responseText)
             else:
-                responseText = f"{responseText}\nClick /start if you want to restart the session."
+                responseText = f"{responseText}\n\nClick /start if you want to restart the session."
                 await update.callback_query.edit_message_text(
                     text=responseText,
                     reply_markup=default_markup([]),
@@ -618,7 +631,7 @@ async def launchScreener(options, user, context, optionChoices, update):
                 update=update, context=context, optionChoices=optionChoices
             )
             # run_workflow(optionChoices, str(user.id), str(options.upper()))
-        elif str(optionChoices.upper()).startswith("X"):
+        elif str(optionChoices.upper()).startswith("X") or str(optionChoices.upper()).startswith("P"):
             optionChoices = optionChoices.replace(" ", "").replace(">", "_")
             while optionChoices.endswith("_"):
                 optionChoices = optionChoices[:-1]
@@ -665,7 +678,7 @@ async def BBacktests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     responseText = "Backtesting NOT implemented yet in this Bot!\n\n\nYou can use backtesting by downloading the software from https://github.com/pkjmesra/PKScreener/"
-    responseText = f"{responseText}\nClick /start if you want to restart the session."
+    responseText = f"{responseText}\n\nClick /start if you want to restart the session."
     await query.edit_message_text(
         text=responseText,
         reply_markup=reply_markup,
@@ -680,7 +693,7 @@ async def end(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
     responseText = "See https://github.com/pkjmesra/PKScreener/ for more details or join https://t.me/PKScreener. \n\n\nSee you next time!"
-    responseText = f"{responseText}\nClick /start if you want to restart the session."
+    responseText = f"{responseText}\n\nClick /start if you want to restart the session."
     await query.edit_message_text(
         text=responseText
     )
@@ -788,14 +801,15 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await shareUpdateWithChannel(update=update, context=context)
         m0.renderForMenu(
             selectedMenu=None,
-            skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+            skip=TOP_LEVEL_SCANNER_SKIP_MENUS[:len(TOP_LEVEL_SCANNER_SKIP_MENUS)-1],
+            asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
         selectedMenu = m0.find(cmd.upper())
         cmdText = ""
         cmds = m1.renderForMenu(
             selectedMenu=selectedMenu,
-            skip=(INDEX_COMMANDS_SKIP_MENUS_SCANNER  if cmd in ["x"] else INDEX_COMMANDS_SKIP_MENUS_BACKTEST),
+            skip=(INDEX_COMMANDS_SKIP_MENUS_SCANNER  if cmd in ["x"] else (INDEX_COMMANDS_SKIP_MENUS_BACKTEST if cmd in ["b"] else PIPED_SCAN_SKIP_COMMAND_MENUS)),
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
         )
@@ -808,6 +822,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if cmd in ["x"]:
             cmdText = f"{cmdText}\n\nFor option 0 <Screen stocks by the stock name>, please type in the command in the following format\n/X_0 SBIN\n or \n/X_0_0 SBIN\nand hit send where SBIN is the NSE stock code.For multiple stocks, you can type in \n/X_0 SBIN,ICICIBANK,OtherStocks\nYou can put in any number of stocks separated by space or comma(,)."
         """Send a message when the command /help is issued."""
+        cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
         await update.message.reply_text(f"Choose an option:\n{cmdText}")
         return START_ROUTES
 
@@ -840,9 +855,54 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             if cmd in ["x"]:
                 cmdText = "For option 0 <Screen stocks by the stock name>, please type in the command in the following format\n/X_0 SBIN or /X_0_0 SBIN and hit send where SBIN is the NSE stock code.For multiple stocks, you can type in /X_0 SBIN,ICICIBANK,OtherStocks . You can put in any number of stocks separated by space or comma(,)."
             """Send a message when the command /help is issued."""
+            cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
             await update.message.reply_text(f"Choose an option:\n{cmdText}")
             return START_ROUTES
 
+    if "p_" in cmd:
+        await shareUpdateWithChannel(update=update, context=context)
+        selection = cmd.split("_")
+        if len(selection) == 2:
+            m0.renderForMenu(
+                selectedMenu=None,
+                skip=TOP_LEVEL_SCANNER_SKIP_MENUS[:len(TOP_LEVEL_SCANNER_SKIP_MENUS)-1],
+                asList=True,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            selectedMenu = m0.find(selection[0].upper())
+            m1.renderForMenu(
+                selectedMenu=selectedMenu,
+                skip=PIPED_SCAN_SKIP_COMMAND_MENUS,
+                asList=True,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            selectedMenu = m1.find(selection[1].upper())
+            cmds = m2.renderForMenu(
+                selectedMenu=selectedMenu,
+                skip=UNSUPPORTED_COMMAND_MENUS,
+                asList=True,
+                renderStyle=MenuRenderStyle.STANDALONE,
+            )
+            cmdText = ""
+            for cmd in cmds:
+                cmdText = (
+                    f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
+                )
+            cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
+            await update.message.reply_text(f"Choose an option:\n{cmdText}")
+            return START_ROUTES
+        elif len(selection) == 3:
+            options = ":".join(selection)
+            await launchScreener(
+                options=options,
+                user=update.message.from_user,
+                context=context,
+                optionChoices=cmd.upper(),
+                update=update,
+            )
+            await sendRequestSubmitted(cmd.upper(), update=update, context=context)
+            return START_ROUTES
+        
     if "x_" in cmd or "b_" in cmd or "g_" in cmd:
         await shareUpdateWithChannel(update=update, context=context)
         selection = cmd.split("_")
@@ -850,6 +910,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             m0.renderForMenu(
                 selectedMenu=None,
                 skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+                asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
@@ -880,6 +941,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ):  # a specific stock by name
                 cmdText = "For option 0 <Screen stocks by the stock name>, please type in the command in the following format\n/X_0 SBIN or /X_0_0 SBIN and hit send where SBIN is the NSE stock code.For multiple stocks, you can type in /X_0 SBIN,ICICIBANK,OtherStocks. You can put in any number of stocks separated by space or comma(,)."
                 """Send a message when the command /help is issued."""
+                cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
                 await update.message.reply_text(f"Choose an option:\n{cmdText}")
                 return START_ROUTES
             cmds = m2.renderForMenu(
@@ -893,12 +955,14 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 cmdText = (
                     f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
                 )
+            cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
             await update.message.reply_text(f"Choose an option:\n{cmdText}")
             return START_ROUTES
         elif len(selection) == 3:
             m0.renderForMenu(
                 selectedMenu=None,
                 skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+                asList=True,
                 renderStyle=MenuRenderStyle.STANDALONE,
             )
             selectedMenu = m0.find(selection[0].upper())
@@ -930,6 +994,7 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 cmdText = ""
                 for cmd in cmds:
                     cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
+                cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
                 await update.message.reply_text(f"Choose an option:\n{cmdText}")
                 return START_ROUTES
             else:
@@ -944,6 +1009,54 @@ async def command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 elif selection[2] in SUPPORTED_COMMAND_MENUS:
                     selection.extend(["", ""])
         if len(selection) >= 4:
+            if len(selection) == 4:
+                if selection[2] in SCANNER_SUBMENUS_CHILDLEVEL_SUPPORT.keys() and selection[3] in SCANNER_SUBMENUS_CHILDLEVEL_SUPPORT[selection[2]]:
+                    m0.renderForMenu(
+                        selectedMenu=None,
+                        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+                        asList=True,
+                        renderStyle=MenuRenderStyle.STANDALONE,
+                    )
+                    selectedMenu = m0.find(selection[0].upper())
+                    m1.renderForMenu(
+                        selectedMenu=selectedMenu,
+                        skip=(
+                            INDEX_COMMANDS_SKIP_MENUS_SCANNER
+                            if "x_" in cmd
+                            else INDEX_COMMANDS_SKIP_MENUS_BACKTEST
+                        ),
+                        asList=True,
+                        renderStyle=MenuRenderStyle.STANDALONE,
+                    )
+                    selectedMenu = m1.find(selection[1].upper())
+                    m2.renderForMenu(
+                        selectedMenu=selectedMenu,
+                        skip=UNSUPPORTED_COMMAND_MENUS,
+                        asList=True,
+                        renderStyle=MenuRenderStyle.STANDALONE,
+                    )
+                    if selection[2] in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:
+                        selectedMenu = m2.find(selection[2].upper())
+                        m3.renderForMenu(
+                            selectedMenu=selectedMenu,
+                            skip=["0"],
+                            asList=True,
+                            renderStyle=MenuRenderStyle.STANDALONE,
+                        )
+                        selectedMenu = m3.find(selection[3].upper())
+                        cmds = m4.renderForMenu(
+                            selectedMenu=selectedMenu,
+                            asList=True,
+                            renderStyle=MenuRenderStyle.STANDALONE,
+                            skip=["0"],
+                        )
+                        cmdText = ""
+                        for cmd in cmds:
+                            cmdText = f"{cmdText}\n\n{cmd.commandTextKey()} for {cmd.commandTextLabel()}"
+                        cmdText = f"{cmdText}\n\nClick /start if you want to restart the session."
+                        await update.message.reply_text(f"Choose an option:\n{cmdText}")
+                        return START_ROUTES
+
             options = ":".join(selection)
             await launchScreener(
                 options=options,
@@ -999,7 +1112,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return START_ROUTES
     cmds = m0.renderForMenu(
         selectedMenu=None,
-        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+        skip=TOP_LEVEL_SCANNER_SKIP_MENUS[:len(TOP_LEVEL_SCANNER_SKIP_MENUS)-1],
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -1055,7 +1168,7 @@ def _shouldAvoidResponse(update):
 def addCommandsForMenuItems(application):
     cmds0 = m0.renderForMenu(
         selectedMenu=None,
-        skip=TOP_LEVEL_SCANNER_SKIP_MENUS,
+        skip=TOP_LEVEL_SCANNER_SKIP_MENUS[:len(TOP_LEVEL_SCANNER_SKIP_MENUS)-1],
         asList=True,
         renderStyle=MenuRenderStyle.STANDALONE,
     )
@@ -1066,7 +1179,7 @@ def addCommandsForMenuItems(application):
         cmds1 = m1.renderForMenu(
             selectedMenu=selectedMenu,
             skip=(
-                INDEX_COMMANDS_SKIP_MENUS_SCANNER if p0 == "X" else INDEX_COMMANDS_SKIP_MENUS_BACKTEST
+                INDEX_COMMANDS_SKIP_MENUS_SCANNER if p0 == "X" else (INDEX_COMMANDS_SKIP_MENUS_BACKTEST if p0 == "B" else PIPED_SCAN_SKIP_COMMAND_MENUS)
             ),
             asList=True,
             renderStyle=MenuRenderStyle.STANDALONE,
@@ -1092,7 +1205,7 @@ def addCommandsForMenuItems(application):
                 application.add_handler(
                     CommandHandler(f"{p0}_{p1}_{p2}", command_handler)
                 )
-                if p2 in SCANNER_MENUS_WITH_SUBMENU_SUPPORT:
+                if (p2 in SCANNER_MENUS_WITH_SUBMENU_SUPPORT and p0 in ["X", "B"]):
                     selectedMenu = m2.find(p2)
                     cmds3 = m3.renderForMenu(
                         selectedMenu=selectedMenu,
@@ -1105,6 +1218,19 @@ def addCommandsForMenuItems(application):
                         application.add_handler(
                             CommandHandler(f"{p0}_{p1}_{p2}_{p3}", command_handler)
                         )
+                        if p2 in SCANNER_SUBMENUS_CHILDLEVEL_SUPPORT.keys() and p3 in SCANNER_SUBMENUS_CHILDLEVEL_SUPPORT[p2]:
+                            selectedMenu = m3.find(p3)
+                            cmds4 = m4.renderForMenu(
+                                selectedMenu=selectedMenu,
+                                asList=True,
+                                renderStyle=MenuRenderStyle.STANDALONE,
+                                skip=["0"],
+                            )
+                            for mnu4 in cmds4:
+                                p4 = mnu4.menuKey.upper()
+                                application.add_handler(
+                                    CommandHandler(f"{p0}_{p1}_{p2}_{p3}_{p4}", command_handler)
+                                )
 
 # def send_stuff(context: CallbackContext):
 #   job = context.job
@@ -1178,6 +1304,7 @@ def runpkscreenerbot(availability=True) -> None:
                 # CallbackQueryHandler(XScanners, pattern="^" + str("CG") + "$"),
                 CallbackQueryHandler(Level2, pattern="^" + str("CX_")),
                 CallbackQueryHandler(Level2, pattern="^" + str("CB_")),
+                CallbackQueryHandler(Level2, pattern="^" + str("CP_")),
                 # CallbackQueryHandler(Level2, pattern="^" + str("CG_")),
                 CallbackQueryHandler(end, pattern="^" + str("CZ") + "$"),
                 CallbackQueryHandler(start, pattern="^"),

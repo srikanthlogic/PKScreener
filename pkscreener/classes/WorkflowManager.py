@@ -50,7 +50,7 @@ def run_workflow(command, user, options, workflowType="B"):
             + f"{command}"
             + '"}}'
         )
-    elif workflowType == "X" or workflowType == "G":
+    elif workflowType == "X" or workflowType == "G" or workflowType == "P":
         workflow_name = "w8-workflow-alert-scan_generic.yml"
         if user is None or len(user) == 0:
             user = ""

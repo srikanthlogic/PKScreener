@@ -626,7 +626,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
     global menuChoiceHierarchy, userPassedArgs
     try:
         isTrading = PKDateUtilities.isTradingTime() and not PKDateUtilities.isTodayHoliday()[0]
-        if "RUNNER" not in os.environ.keys() and (isTrading or userPassedArgs.monitor or ("RSIi" in saveResults.columns)):
+        if "RUNNER" not in os.environ.keys() and (isTrading or userPassedArgs.monitor or ("RSIi" in saveResults.columns)) and configManager.calculatersiintraday:
             screenResults['RSI'] = screenResults['RSI'].astype(str) + "/" + screenResults['RSIi'].astype(str)
             saveResults['RSI'] = saveResults['RSI'].astype(str) + "/" + saveResults['RSIi'].astype(str)
             screenResults.rename(columns={"RSI": "RSI/i"},inplace=True)
@@ -782,8 +782,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     selectedMenu = initExecution(menuOption=menuOption)
     menuOption = selectedMenu.menuKey
     if menuOption in ["M", "D", "I", "L"]:
-        launcher = sys.argv[0]
-        launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+        launcher = f'"{sys.argv[0]}"'
+        launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
         if menuOption in ["M"]:
             OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener in monitoring mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m 'X'{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit monitoring mode.{colorText.END}")
             sleep(2)
@@ -802,10 +802,16 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             os.system(f"{launcher} -a Y -l")
         sys.exit(0)
     if menuOption in ["P"]:
+        predefinedOption = None
+        selPredefinedOption = None
+        if len(options) >= 3:
+            predefinedOption = str(options[1])
+            selPredefinedOption = str(options[2])
         updateMenuChoiceHierarchy()
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu)
-        predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+        if predefinedOption is None:
+            predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
         OutputControls().printOutput(colorText.END, end="")
         if predefinedOption not in ["1","2","3"]:
             return None, None
@@ -813,7 +819,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             updateMenuChoiceHierarchy()
             selectedMenu = m1.find(predefinedOption)
             m2.renderForMenu(selectedMenu=selectedMenu)
-            selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+            if selPredefinedOption is None:
+                selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
             OutputControls().printOutput(colorText.END, end="")
             if selPredefinedOption in PREDEFINED_SCAN_MENU_KEYS:
                 scannerOption = PIPED_SCANNERS[selPredefinedOption]
@@ -822,12 +829,13 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     chosenOptions = scannerOption.split("-o ")[1]
                     userPassedArgs.options = chosenOptions.replace("'","")
                     return addOrRunPipedMenus()
-                launcher = sys.argv[0]
-                launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+                launcher = f'"{sys.argv[0]}"'
+                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
                 scannerOptionQuoted = scannerOption.replace("'",'"')
-                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOptionQuoted}{colorText.END}")
+                requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
+                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOptionQuoted}{requestingUser}{colorText.END}")
                 sleep(2)
-                os.system(f"{launcher} {scannerOptionQuoted}")
+                os.system(f"{launcher} {scannerOptionQuoted}{requestingUser}")
                 OutputControls().printOutput(
                         colorText.GREEN
                         + f"[+] Finished running all piped scanners!"
@@ -1578,7 +1586,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 OutputControls().printOutput(f"{colorText.GREEN} => Done in {round(time.time()-begin,2)}s{colorText.END}")
     except:
         pass
-    if "RUNNER" not in os.environ.keys() and (userPassedArgs is None or (userPassedArgs is not None and (userPassedArgs.answerdefault is None or userPassedArgs.systemlaunched))):
+    if "RUNNER" not in os.environ.keys() and not testing and (userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.user is None and (userPassedArgs.answerdefault is None or userPassedArgs.systemlaunched))):
         prevOutput_results = saveResults.index if (saveResults is not None and not saveResults.empty) else []
         hasFoundStocks = len(prevOutput_results) > 0 and (("|" not in userPassedArgs.options) if (userPassedArgs is not None and userPassedArgs.options is not None) else True)
         if hasFoundStocks:
@@ -1596,8 +1604,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                     monitorOption = "X:0:0"
                     prevOutput_results = ",".join(prevOutput_results)
                     monitorOption = f"{monitorOption}:{prevOutput_results}"
-                launcher = sys.argv[0]
-                launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+                launcher = f'"{sys.argv[0]}"'
+                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
                 monitorOption = f'"{monitorOption}"'
                 scannerOptionQuoted = monitorOption.replace("'",'"')
                 OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with pinned scan option. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -m {scannerOptionQuoted}{colorText.END}")
@@ -1724,15 +1732,18 @@ def addOrRunPipedMenus():
             + f"[+] {len(userPassedArgs.pipedmenus.split('|'))} Scanners piped so far: {colorText.END}{colorText.WARN+userPassedArgs.pipedmenus+colorText.END}\n{colorText.GREEN}[+] Do you want to add any more scanners into the pipe?"
             + colorText.END
         )
-    shouldAddMoreIntoPipe = input(colorText.FAIL + "[+] Select [Y/N] (Default:N): " + colorText.END) or 'n'
+    shouldAddMoreIntoPipe = 'n'
+    if userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.answerdefault is None):
+        shouldAddMoreIntoPipe = input(colorText.FAIL + "[+] Select [Y/N] (Default:N): " + colorText.END) or 'n'
     if shouldAddMoreIntoPipe.lower() != 'y':
-        launcher = sys.argv[0]
-        launcher = f"python3.11 {launcher}" if launcher.endswith(".py") else launcher
+        launcher = f'"{sys.argv[0]}"'
+        launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
         monitorOption = f'"{userPassedArgs.pipedmenus}"'
         scannerOptionQuoted = monitorOption.replace("'",'"').replace(":>",":D:D:D:>").replace("::",":")
-        OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o {scannerOptionQuoted}{colorText.END}")
+        requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
+        OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o {scannerOptionQuoted}{requestingUser}{colorText.END}")
         sleep(2)
-        os.system(f"{launcher} --systemlaunched -a Y -e -o {scannerOptionQuoted}")
+        os.system(f"{launcher} --systemlaunched -a Y -e -o {scannerOptionQuoted}{requestingUser}")
         userPassedArgs.pipedmenus = None
         OutputControls().printOutput(
                 colorText.GREEN
@@ -2231,7 +2242,8 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
     if selectedChoice["0"] == "G" or \
         (userPassedArgs.backtestdaysago is not None and 
          int(userPassedArgs.backtestdaysago) > 0 and 
-         "RUNNER" not in os.environ.keys()):
+         "RUNNER" not in os.environ.keys() and
+         configManager.enablePortfolioCalculations):
         if saveResults is not None and len(saveResults) > 0:
             df = PortfolioXRay.performXRay(saveResults, userPassedArgs,None, None)
             targetDateG10k = saveResults["Date"].iloc[0]
@@ -2684,7 +2696,9 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
                 except:
                     pass
                 # Let's try again with logging
-                os.system(f"{sys.argv[0]} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
+                launcher = f'"{sys.argv[0]}"'
+                launcher = f"python3.11 {launcher}" if launcher.endswith(".py\"") else launcher
+                os.system(f"{launcher} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
     else:
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 

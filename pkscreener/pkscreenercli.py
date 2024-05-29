@@ -105,178 +105,179 @@ def disableSysOut(input=True, disable=True):
         sys.stdout = originalStdOut
         sys.__stdout__ = original__stdout
 
-# Argument Parsing for test purpose
-argParser = argparse.ArgumentParser()
-argParser.add_argument(
-    "-a",
-    "--answerdefault",
-    help="Pass default answer to questions/choices in the application. Example Y, N",
-    required=False,
-)
-argParser.add_argument(
-    "--backtestdaysago",
-    help="Run scanner for -b days ago from today.",
-    required=False,
-)
-argParser.add_argument(
-    "--barometer",
-    action="store_true",
-    help="Send global market barometer to telegram channel or a user",
-    required=False,
-)
-argParser.add_argument(
-    "--bot",
-    action="store_true",
-    help="Run only in telegram bot mode",
-    required=False,
-)
-argParser.add_argument(
-    "--botavailable",
-    action="store_true",
-    help="Enforce whether bot is going to be available or not.",
-    required=False,
-)
-argParser.add_argument(
-    "-c",
-    "--croninterval",
-    help="Pass interval in seconds to wait before the program is run again with same parameters",
-    required=False,
-)
-argParser.add_argument(
-    "-d",
-    "--download",
-    action="store_true",
-    help="Only download Stock data in .pkl file (No analysis will be run)",
-    required=False,
-)
-argParser.add_argument(
-    "-e",
-    "--exit",
-    action="store_true",
-    help="Exit right after executing just once",
-    required=False,
-)
-argParser.add_argument(
-    "--forceBacktestsForZeroResultDays",
-    help="Force run the backtests even for those days when we already have zero results saved in the repo",
-    action=argparse.BooleanOptionalAction,
-)
-argParser.add_argument(
-    "-i",
-    "--intraday",
-    help="Use Intraday configurations and use the candlestick duration that is passed. Acceptable values 1m, 5m, 10m, 15m, 1h etc.",
-    required=False,
-)
-argParser.add_argument(
-    "-m",
-    "--monitor",
-    help="Monitor for intraday scanners and their results.",
-    nargs='?',
-    const='X',
-    type=str,
-    required=False,
-)
-argParser.add_argument(
-    "--maxdisplayresults",
-    help="Maximum number of results to display.",
-    required=False,
-)
-argParser.add_argument(
-    "--maxprice",
-    help="Maximum Price for the stock to be considered.",
-    required=False,
-)
-argParser.add_argument(
-    "--minprice",
-    help="Minimum Price for the stock to be considered.",
-    required=False,
-)
-argParser.add_argument(
-    "-o",
-    "--options",
-    help="Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>:etc. format. For example: ./pkscreenercli.py -a Y -o X:12:10 -e will run the screener with answer Y as default choice to questions and scan with menu choices: Scanners > Nifty (All Stocks) > Closing at least 2%% up since last 3 day",
-    required=False,
-)
-argParser.add_argument(
-    "-p",
-    "--prodbuild",
-    action="store_true",
-    help="Run in production-build mode",
-    required=False,
-)
-argParser.add_argument(
-    "--runintradayanalysis",
-    action="store_true",
-    help="Run analysis for morning vs EoD LTP values",
-    required=False,
-)
-argParser.add_argument(
-    "--simulate",
-    type=json.loads, # '{"isTrading":true,"currentDateTime":"2024-04-29 09:35:38"}'
-    help="Simulate various conditions",
-    required=False,
-)
-argParser.add_argument(
-    "--singlethread",
-    action="store_true",
-    help="Run analysis for debugging purposes in a single process, single threaded environment",
-    required=False,
-)
-argParser.add_argument(
-    "--systemlaunched",
-    action="store_true",
-    help="Indicator to show that this is a system launched screener, using os.system",
-    required=False,
-)
-argParser.add_argument(
-    "-t",
-    "--testbuild",
-    action="store_true",
-    help="Run in test-build mode",
-    required=False,
-)
-argParser.add_argument(
-    "--telegram",
-    action="store_true",
-    help="Run with an assumption that this instance is launched via telegram bot",
-    required=False,
-)
-argParser.add_argument(
-    "-u",
-    "--user",
-    help="Telegram user ID to whom the results must be sent.",
-    required=False,
-)
-argParser.add_argument(
-    "-l",
-    "--log",
-    action="store_true",
-    help="Run with full logging enabled",
-    required=False,
-)
-argParser.add_argument("-v", action="store_true")  # Dummy Arg for pytest -v
-argParser.add_argument(
-    "--pipedtitle",
-    help="Piped Titles",
-    required=False,
-)
-argParser.add_argument(
-    "--pipedmenus",
-    help="Piped Menus",
-    required=False,
-)
-argsv = argParser.parse_known_args()
-args = argsv[0]
-# if sys.argv[0].endswith(".py"):
-#     args.monitor = 'X'
-#     args.answerdefault = 'Y'
-results = None
-resultStocks = None
-plainResults = None
-start_time = None
-dbTimestamp = None
-elapsed_time = None
-configManager = ConfigManager.tools()
+if __name__ == "__main__":
+    # Argument Parsing for test purpose
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument(
+        "-a",
+        "--answerdefault",
+        help="Pass default answer to questions/choices in the application. Example Y, N",
+        required=False,
+    )
+    argParser.add_argument(
+        "--backtestdaysago",
+        help="Run scanner for -b days ago from today.",
+        required=False,
+    )
+    argParser.add_argument(
+        "--barometer",
+        action="store_true",
+        help="Send global market barometer to telegram channel or a user",
+        required=False,
+    )
+    argParser.add_argument(
+        "--bot",
+        action="store_true",
+        help="Run only in telegram bot mode",
+        required=False,
+    )
+    argParser.add_argument(
+        "--botavailable",
+        action="store_true",
+        help="Enforce whether bot is going to be available or not.",
+        required=False,
+    )
+    argParser.add_argument(
+        "-c",
+        "--croninterval",
+        help="Pass interval in seconds to wait before the program is run again with same parameters",
+        required=False,
+    )
+    argParser.add_argument(
+        "-d",
+        "--download",
+        action="store_true",
+        help="Only download Stock data in .pkl file (No analysis will be run)",
+        required=False,
+    )
+    argParser.add_argument(
+        "-e",
+        "--exit",
+        action="store_true",
+        help="Exit right after executing just once",
+        required=False,
+    )
+    argParser.add_argument(
+        "--forceBacktestsForZeroResultDays",
+        help="Force run the backtests even for those days when we already have zero results saved in the repo",
+        action=argparse.BooleanOptionalAction,
+    )
+    argParser.add_argument(
+        "-i",
+        "--intraday",
+        help="Use Intraday configurations and use the candlestick duration that is passed. Acceptable values 1m, 5m, 10m, 15m, 1h etc.",
+        required=False,
+    )
+    argParser.add_argument(
+        "-m",
+        "--monitor",
+        help="Monitor for intraday scanners and their results.",
+        nargs='?',
+        const='X',
+        type=str,
+        required=False,
+    )
+    argParser.add_argument(
+        "--maxdisplayresults",
+        help="Maximum number of results to display.",
+        required=False,
+    )
+    argParser.add_argument(
+        "--maxprice",
+        help="Maximum Price for the stock to be considered.",
+        required=False,
+    )
+    argParser.add_argument(
+        "--minprice",
+        help="Minimum Price for the stock to be considered.",
+        required=False,
+    )
+    argParser.add_argument(
+        "-o",
+        "--options",
+        help="Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>:etc. format. For example: ./pkscreenercli.py -a Y -o X:12:10 -e will run the screener with answer Y as default choice to questions and scan with menu choices: Scanners > Nifty (All Stocks) > Closing at least 2%% up since last 3 day",
+        required=False,
+    )
+    argParser.add_argument(
+        "-p",
+        "--prodbuild",
+        action="store_true",
+        help="Run in production-build mode",
+        required=False,
+    )
+    argParser.add_argument(
+        "--runintradayanalysis",
+        action="store_true",
+        help="Run analysis for morning vs EoD LTP values",
+        required=False,
+    )
+    argParser.add_argument(
+        "--simulate",
+        type=json.loads, # '{"isTrading":true,"currentDateTime":"2024-04-29 09:35:38"}'
+        help="Simulate various conditions",
+        required=False,
+    )
+    argParser.add_argument(
+        "--singlethread",
+        action="store_true",
+        help="Run analysis for debugging purposes in a single process, single threaded environment",
+        required=False,
+    )
+    argParser.add_argument(
+        "--systemlaunched",
+        action="store_true",
+        help="Indicator to show that this is a system launched screener, using os.system",
+        required=False,
+    )
+    argParser.add_argument(
+        "-t",
+        "--testbuild",
+        action="store_true",
+        help="Run in test-build mode",
+        required=False,
+    )
+    argParser.add_argument(
+        "--telegram",
+        action="store_true",
+        help="Run with an assumption that this instance is launched via telegram bot",
+        required=False,
+    )
+    argParser.add_argument(
+        "-u",
+        "--user",
+        help="Telegram user ID to whom the results must be sent.",
+        required=False,
+    )
+    argParser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        help="Run with full logging enabled",
+        required=False,
+    )
+    argParser.add_argument("-v", action="store_true")  # Dummy Arg for pytest -v
+    argParser.add_argument(
+        "--pipedtitle",
+        help="Piped Titles",
+        required=False,
+    )
+    argParser.add_argument(
+        "--pipedmenus",
+        help="Piped Menus",
+        required=False,
+    )
+    argsv = argParser.parse_known_args()
+    args = argsv[0]
+    # if sys.argv[0].endswith(".py"):
+    #     args.monitor = 'X'
+    #     args.answerdefault = 'Y'
+    results = None
+    resultStocks = None
+    plainResults = None
+    start_time = None
+    dbTimestamp = None
+    elapsed_time = None
+    configManager = ConfigManager.tools()
 
 def exitGracefully():
     from PKDevTools.classes import Archiver

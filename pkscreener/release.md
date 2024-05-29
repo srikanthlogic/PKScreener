@@ -2,7 +2,9 @@
 
 ## What's New?
 1. [v0.45.20240528.420] release
-* Included VCP (as per definition by Mark Minervini). Try X > 12 > 7 > 8
+* Included predefined Piped scanners in the bot offering.
+* Modified ATR trailing stop scanner to get better results. Try X > 12 > 30.
+* Lots of improvements for VCP (as per definition by Mark Minervini). Try X > 12 > 7 > 8. Use the config to change the volume ratio and/or volume contraction ratio. By default it is kept as 0.4 (40% of the largest most recent candle and/or SMA of volume)
 * Added more VCP based pre-defined piped scanners. Try P > 1 > 12 or 13 or 14
 * Integrations with the newly released 3rd party data source.
 * NOTE: To fit all result columns on your screen, switch to smaller font size in your console.

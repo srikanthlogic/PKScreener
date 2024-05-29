@@ -303,13 +303,19 @@ class ScreeningStatistics:
 
     #Calculating signals
     def computeBuySellSignals(self,df,ema_period=200):
-        ema = pktalib.EMA(df["Close"], ema_period) #short_name='EMA', ewm=True)
-        
-        df["Above"] = ema > df["ATRTrailingStop"]
-        df["Below"] = ema < df["ATRTrailingStop"]
+        try:
+            from vectorbt.indicators import MA as vbt
+            ema = vbt.run(df["Close"], 1, short_name='EMA', ewm=True)
+            df["Above"] = ema.ma_crossed_above(df["ATRTrailingStop"])
+            df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
+        except ImportError:
+            ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
+            df["Above"] = ema > df["ATRTrailingStop"]
+            df["Below"] = ema < df["ATRTrailingStop"]        
         
         df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
         df["Sell"] = (df["Close"] < df["ATRTrailingStop"]) & (df["Below"]==True)
+
         return df
 
     def findBuySellSignalsFromATRTrailing(self,df, key_value=1, atr_period=10, ema_period=200,buySellAll=1,saveDict=None,screenDict=None):
@@ -3027,7 +3033,21 @@ class ScreeningStatistics:
         recent_sma_50 = pktalib.SMA(reversedData["Close"],timeperiod=50).tail(1).iloc[0]
         w_wma_8 = pktalib.WMA(weeklyData["Close"],timeperiod=8).tail(1).iloc[0]
         w_sma_8 = pktalib.SMA(weeklyData["Close"],timeperiod=8).tail(1).iloc[0]
-        
+        numPreviousCandles = 20
+        pullbackData = data.head(numPreviousCandles)
+        pullbackData.loc[:,'PullBack'] = pullbackData["Close"].lt(pullbackData["Open"]) #.shift(periods=1)) #& data["Low"].lt(data["Low"].shift(periods=1))
+        shrinkedVolData = pullbackData[pullbackData["PullBack"] == True].head(numPreviousCandles)
+        recentLargestVolume = max(pullbackData[pullbackData["PullBack"] == False].head(3)["Volume"])
+        # pullbackData.loc[:,'PBVolRatio'] = pullbackData["Volume"]/recentLargestVolume
+        volInPreviousPullbacksShrinked = False
+        if not shrinkedVolData.empty:
+            index = 0
+            while index < len(shrinkedVolData):
+                volInPreviousPullbacksShrinked = shrinkedVolData["Volume"].iloc[index] < self.configManager.vcpVolumeContractionRatio * recentLargestVolume
+                if not volInPreviousPullbacksShrinked:
+                    break
+                index += 1
+        recentVolumeHasAboveAvgVol = recentLargestVolume >= self.configManager.volumeRatio * data["VolMA"].iloc[0]
         isVCP = w_ema_13 > w_ema_26 and \
                 w_ema_26 > w_sma_50 and \
                 w_sma_40 > w_sma_40_5w_ago and \
@@ -3037,6 +3057,8 @@ class ScreeningStatistics:
                 w_sma_40_5w_ago > w_sma_40_10w_ago and \
                 recent_close > recent_sma_50 and \
                 (w_wma_8 - w_sma_8)*6/29 < 0.5 and \
+                volInPreviousPullbacksShrinked and \
+                recentVolumeHasAboveAvgVol and \
                 recent_close > 10
         if isVCP:
             saved = self.findCurrentSavedValue(screenDict, saveDict, "Pattern")

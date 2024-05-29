@@ -76,6 +76,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         # For example, for weekly backtest calculations, set this to 5 (5 days = 1 week)
         # For fortnightly, set this to 10 and so on (10 trading sessions = 2 weeks)
         self.backtestPeriodFactor = 1
+        self.vcpVolumeContractionRatio = 0.4
         self.maxDashboardWidgetsPerRow = 7
         self.maxNumResultRowsInMonitor = 3
         self.calculatersiintraday = False
@@ -171,6 +172,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "showunknowntrends", "y" if self.showunknowntrends else "n")
             parser.set("config", "shuffle", "y" if self.shuffleEnabled else "n")
             parser.set("config", "useEMA", "y" if self.useEMA else "n")
+            parser.set("config", "vcpVolumeContractionRatio", str(self.vcpVolumeContractionRatio))
 
             parser.set("filters", "consolidationPercentage", str(self.consolidationPercentage))
             parser.set("filters", "maxPrice", str(self.maxLTP))
@@ -322,6 +324,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.atrTrailingStopEMAPeriod = input(
                     f"[+] ATR Trailing Stop EMA Period. (number)(Optimal = 1 to 200, Current: {colorText.FAIL}{self.atrTrailingStopEMAPeriod}{colorText.END}): "
                 ) or self.atrTrailingStopEMAPeriod
+                self.vcpVolumeContractionRatio = input(
+                    f"[+] Ratio of volume of recent largest to pullback candles for VCP. (number)(Optimal = 0.4, Current: {colorText.FAIL}{self.vcpVolumeContractionRatio}{colorText.END}): "
+                ) or self.vcpVolumeContractionRatio
             except Exception as e:
                 default_logger().debug(e,exc_info=True)
                 from time import sleep
@@ -365,6 +370,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 parser.set("config", "showunknowntrends", str(self.showunknowntrendsPrompt))
                 parser.set("config", "shuffle", str(self.shuffle))
                 parser.set("config", "useEMA", str(self.useEmaPrompt))
+                parser.set("config", "vcpVolumeContractionRatio", str(self.vcpVolumeContractionRatio))
 
                 parser.set("filters", "consolidationPercentage", str(self.consolidationPercentage))
                 parser.set("filters", "maxPrice", str(self.maxLTP))
@@ -491,6 +497,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.defaultMonitorOptions = str(parser.get("config", "defaultMonitorOptions"))
                 self.maxDashboardWidgetsPerRow = int(parser.get("config", "maxDashboardWidgetsPerRow"))
                 self.maxNumResultRowsInMonitor = int(parser.get("config", "maxNumResultRowsInMonitor"))
+                self.vcpVolumeContractionRatio = float(parser.get("config", "vcpVolumeContractionRatio"))
             except configparser.NoOptionError as e:# pragma: no cover
                 self.default_logger.debug(e, exc_info=True)
                 # input(colorText.BOLD + colorText.FAIL +

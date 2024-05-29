@@ -29,6 +29,7 @@ urllib3
 xlsxwriter
 yfinance #==0.1.87
 windows-curses; "windows" in sys.platform
+vectorbt
 # https://github.com/pkjmesra/PKScreener/blob/main/.github/dependencies/TA_Lib-0.4.28-cp311-cp311-win_amd64.whl; "windows" in sys.platform
 
 # torch
