@@ -1260,6 +1260,8 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             atrEma = input(colorText.WARN + f"Enter the ATR EMA period (Optimal:200, Current={configManager.atrTrailingStopEMAPeriod}):") or configManager.atrTrailingStopEMAPeriod
             configManager.atrTrailingStopEMAPeriod = atrEma
             configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
+        # Ensure we have the template JSONs from vectorBt
+        screener.computeBuySellSignals(None)
 
     if executeOption == 42:
         Utility.tools.getLastScreenedResults(defaultAnswer)

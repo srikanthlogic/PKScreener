@@ -316,7 +316,7 @@ class ScreeningStatistics:
         json2 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/light.json"
         json3 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/seaborn.json"
         fileURLs = [json1,json2,json3]
-        f = fetcher()
+        fileFetcher = fetcher()
         from PKDevTools.classes.Utils import random_user_agent
         for url in fileURLs:
             try:
@@ -324,7 +324,7 @@ class ScreeningStatistics:
                 if not os.path.exists(path):
                     if self.shouldLog:
                         self.default_logger.debug(f"Fetching {url} to keep at {path}")
-                    resp = f.fetchURL(url=url,trial=3,timeout=5,headers={'user-agent': f'{random_user_agent()}'})
+                    resp = fileFetcher.fetchURL(url=url,trial=3,timeout=5,headers={'user-agent': f'{random_user_agent()}'})
                     if resp is not None and resp.status_code == 200:
                         with open(path, "w") as f:
                             f.write(resp.text)
@@ -339,10 +339,20 @@ class ScreeningStatistics:
     #Calculating signals
     def computeBuySellSignals(self,df,ema_period=200,retry=True):
         try:
-            from vectorbt.indicators import MA as vbt
-            ema = vbt.run(df["Close"], 1, short_name='EMA', ewm=True)
-            df["Above"] = ema.ma_crossed_above(df["ATRTrailingStop"])
-            df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
+            if Imports["vectorbt"]:
+                from vectorbt.indicators import MA as vbt
+                if df is not None:
+                    ema = vbt.run(df["Close"], 1, short_name='EMA', ewm=True)
+                    df["Above"] = ema.ma_crossed_above(df["ATRTrailingStop"])
+                    df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
+            else:
+                OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
+                if self.shouldLog:
+                    self.default_logger.debug(e, exc_info=True)
+                if df is not None:
+                    ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
+                    df["Above"] = ema > df["ATRTrailingStop"]
+                    df["Below"] = ema < df["ATRTrailingStop"]
         except (OSError,FileNotFoundError) as e:
             if self.shouldLog:
                 self.default_logger.debug(e, exc_info=True)
@@ -370,12 +380,14 @@ class ScreeningStatistics:
             OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
             if self.shouldLog:
                 self.default_logger.debug(e, exc_info=True)
-            ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
-            df["Above"] = ema > df["ATRTrailingStop"]
-            df["Below"] = ema < df["ATRTrailingStop"]        
+            if df is not None:
+                ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
+                df["Above"] = ema > df["ATRTrailingStop"]
+                df["Below"] = ema < df["ATRTrailingStop"]
         
-        df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
-        df["Sell"] = (df["Close"] < df["ATRTrailingStop"]) & (df["Below"]==True)
+        if df is not None:
+            df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
+            df["Sell"] = (df["Close"] < df["ATRTrailingStop"]) & (df["Below"]==True)
 
         return df
 
