@@ -136,7 +136,7 @@ level1_X_MenuDict = {
     "W": "Screen stocks from my own Watchlist",
     "N": "Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)",
     "E": "Live Index Scan : 5 EMA for Intraday",
-    "0": "Screen stocks by the stock names (NSE Stock Code)",
+    "0": "Screen stocks/index by the stock/index names (NSE Stock Code or index, e.g. ^NSEI, ^NSEBANK, ^BSESN)",
     "1": "Nifty 50          ",
     "2": "Nifty Next 50     ",
     "3": "Nifty 100         ",
@@ -428,6 +428,8 @@ class menus:
             m = menu()
             menuText = rawDictionary[key]
             if "{0}" in menuText and len(substitutes) > 0:
+                if substitutes[substituteIndex] == 0:
+                    continue
                 menuText = menuText.format(f"{colorText.WARN}{substitutes[substituteIndex]}{colorText.END}")
                 substituteIndex += 1
             m.create(
@@ -849,7 +851,7 @@ class menus:
             else MenuRenderStyle.THREE_PER_ROW,
             skip=skip,
             parent=parent,
-        ).render(asList=asList, coloredValues=["15",str(configManager.defaultIndex)] if not asList else [])
+        ).render(asList=asList, coloredValues=["0", "15",str(configManager.defaultIndex)] if not asList else [])
         if asList:
             return menuText
         else:

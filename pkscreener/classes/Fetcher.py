@@ -93,10 +93,10 @@ class screenerStockDataFetcher(nseStockDataFetcher):
     ):
         if isinstance(stockCode,list):
             if len(exchangeSuffix) > 0:
-                stockCode = [(f"{x}{exchangeSuffix}" if not x.endswith(exchangeSuffix) else x) for x in stockCode]
+                stockCode = [(f"{x}{exchangeSuffix}" if (not x.endswith(exchangeSuffix) and not stockCode.startswith("^")) else x) for x in stockCode]
         elif isinstance(stockCode,str):
             if len(exchangeSuffix) > 0:
-                stockCode = f"{stockCode}{exchangeSuffix}" if not stockCode.endswith(exchangeSuffix) else stockCode
+                stockCode = f"{stockCode}{exchangeSuffix}" if (not stockCode.endswith(exchangeSuffix) and not stockCode.startswith("^")) else stockCode
         if (period == '1d' or duration[-1] == "m"):
             # Since this is intraday data, we'd just need to start from the last trading session
             if start is None:

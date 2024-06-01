@@ -70,6 +70,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.morninganalysiscandleduration = '1m'
         self.logger = None
         self.showPastStrategyData = False
+        self.showPinnedMenuEvenForNoResult = True
         self.atrTrailingStopSensitivity = 1
         self.atrTrailingStopPeriod = 10
         self.atrTrailingStopEMAPeriod = 200
@@ -171,6 +172,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "onlyStageTwoStocks", "y" if self.stageTwo else "n")
             parser.set("config", "period", self.period)
             parser.set("config", "showPastStrategyData", "y" if self.showPastStrategyData else "n")
+            parser.set("config", "showPinnedMenuEvenForNoResult", "y" if self.showPinnedMenuEvenForNoResult else "n")
             parser.set("config", "showunknowntrends", "y" if self.showunknowntrends else "n")
             parser.set("config", "shuffle", "y" if self.shuffleEnabled else "n")
             parser.set("config", "useEMA", "y" if self.useEMA else "n")
@@ -279,6 +281,11 @@ class tools(SingletonMixin, metaclass=SingletonType):
                         f"[+] Enable showing past strategy data? [Y/N, Current: {colorText.FAIL}{'y' if self.showPastStrategyData else 'n'}{colorText.END}]: "
                     ) or ('y' if self.showPastStrategyData else 'n')
                 ).lower()
+                self.showPinnedMenuEvenForNoResult = str(
+                    input(
+                        f"[+] Enable showing pinned menu even when there is no result? [Y/N, Current: {colorText.FAIL}{'y' if self.showPinnedMenuEvenForNoResult else 'n'}{colorText.END}]: "
+                    ) or ('y' if self.showPinnedMenuEvenForNoResult else 'n')
+                ).lower()
                 self.calculatersiintraday = str(
                     input(
                         f"[+] Calculate intraday RSI during trading hours? [Y/N, Current: {colorText.FAIL}{'y' if self.calculatersiintraday else 'n'}{colorText.END}]: "
@@ -373,6 +380,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                     endPeriod = "d" if endPeriod not in ["d","o","y","x"] else ""
                 parser.set("config", "period", str(self.period + endPeriod))
                 parser.set("config", "showPastStrategyData", str(self.showPastStrategyData))
+                parser.set("config", "showPinnedMenuEvenForNoResult", str(self.showPinnedMenuEvenForNoResult))
                 parser.set("config", "showunknowntrends", str(self.showunknowntrendsPrompt))
                 parser.set("config", "shuffle", str(self.shuffle))
                 parser.set("config", "useEMA", str(self.useEmaPrompt))
@@ -477,6 +485,11 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.showPastStrategyData = (
                     False
                     if "y" not in str(parser.get("config", "showPastStrategyData")).lower()
+                    else True
+                )
+                self.showPinnedMenuEvenForNoResult = (
+                    False
+                    if "y" not in str(parser.get("config", "showPinnedMenuEvenForNoResult")).lower()
                     else True
                 )
                 self.calculatersiintraday = (
