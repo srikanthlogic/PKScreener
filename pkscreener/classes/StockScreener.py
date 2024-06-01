@@ -98,9 +98,8 @@ class StockScreener:
                 hostRef.processingCounter.value += 1
 
             volumeRatio, period = self.determineBasicConfigs(stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog)
-            # hostRef.default_logger.info(
-            #     f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionaryPrimary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}"
-            # )
+            if userArgsLog:
+                hostRef.default_logger.info(f"For stock:{stock}, stock exists in objectDictionary:{hostRef.objectDictionaryPrimary.get(stock)}, cacheEnabled:{configManager.cacheEnabled}, isTradingTime:{self.isTradingTime}, downloadOnly:{downloadOnly}")
             data = None
             data = self.getRelevantDataForStock(totalSymbols, shouldCache, stock, downloadOnly, printCounter, backtestDuration, hostRef,hostRef.objectDictionaryPrimary, configManager, fetcher, period,None, testData,exchangeName)
             if not configManager.isIntradayConfig() and configManager.calculatersiintraday:
@@ -921,7 +920,7 @@ class StockScreener:
 
     def determineBasicConfigs(self, stock, newlyListedOnly, volumeRatio, logLevel, hostRef, configManager, screener, userArgsLog):
         if userArgsLog:
-            self.setupLoggers(hostRef, screener, logLevel, stock)
+            self.setupLoggers(hostRef, screener, logLevel, stock, userArgsLog=True)
         period = configManager.period
         if volumeRatio <= 0:
             volumeRatio = configManager.volumeRatio
@@ -967,22 +966,14 @@ class StockScreener:
                 pass
             sys.stdout.write("\r\033[K")
     
-    def setupLoggers(self, hostRef, screener, logLevel, stock):
+    def setupLoggers(self, hostRef, screener, logLevel, stock, userArgsLog=False):
         # Set the loglevels for both the caller and screener
         # Also add handlers that are specific to this sub-process which
         # will continue with the screening. Each sub-process would have
         # its own logger but going into the same file/console > to that
         # of the parent logger.
-        # if hostRef.default_logger.level > 0:
-        #     return
-        # else:
-        # hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
-        # hostRef.default_logger.level = logLevel
         screener.default_logger = hostRef.default_logger
-        # log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")
-        # hostRef.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
-        # screener.default_logger.addHandlers(log_file_path=log_file_path, levelname=logLevel)
-        # hostRef.default_logger.info(f"Beginning the stock screening for stock:{stock}")
+        screener.shouldLog = userArgsLog
 
     def initResultDictionaries(self):
         periods = self.configManager.periodsRange

@@ -62,6 +62,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
         self.defaultIndex = 12
         self.longTimeout = 4
         self.maxNetworkRetryCount = 10
+        self.maxdisplayresults = 100
         self.backtestPeriod = 120
         self.maxBacktestWindow = 30
         self.minVolume = 10000
@@ -162,6 +163,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
             parser.set("config", "longTimeout", str(self.longTimeout))
             parser.set("config", "maxBacktestWindow", str(self.maxBacktestWindow))
             parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
+            parser.set("config", "maxdisplayresults", str(self.maxdisplayresults))
             parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
             parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
             parser.set("config", "morninganalysiscandlenumber", str(self.morninganalysiscandlenumber))
@@ -288,6 +290,9 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.longTimeout = input(
                     f"[+] Long network timeout for heavier downloads(in seconds)(Optimal = 4 for good networks, Current: {colorText.FAIL}{self.longTimeout}{colorText.END}): "
                 ) or self.longTimeout
+                self.maxdisplayresults = input(
+                    f"[+] Maximum number of display results(number)(Optimal = 100, Current: {colorText.FAIL}{self.maxdisplayresults}{colorText.END}): "
+                ) or self.maxdisplayresults
                 self.maxNetworkRetryCount = input(
                     f"[+] Maximum number of retries in case of network timeout(in seconds)(Optimal = 10 for slow networks, Current: {colorText.FAIL}{self.maxNetworkRetryCount}{colorText.END}): "
                 ) or self.maxNetworkRetryCount
@@ -354,6 +359,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 parser.set("config", "longTimeout", str(self.longTimeout))
                 parser.set("config", "maxBacktestWindow", str(self.maxBacktestWindow))
                 parser.set("config", "maxDashboardWidgetsPerRow", str(self.maxDashboardWidgetsPerRow))
+                parser.set("config", "maxdisplayresults", str(self.maxdisplayresults))
                 parser.set("config", "maxNetworkRetryCount", str(self.maxNetworkRetryCount))
                 parser.set("config", "maxNumResultRowsInMonitor", str(self.maxNumResultRowsInMonitor))
                 if self.morninganalysiscandleduration:
@@ -484,9 +490,8 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 self.generalTimeout = float(parser.get("config", "generalTimeout"))
                 self.defaultIndex = int(parser.get("config", "defaultIndex"))
                 self.longTimeout = float(parser.get("config", "longTimeout"))
-                self.maxNetworkRetryCount = int(
-                    parser.get("config", "maxNetworkRetryCount")
-                )
+                self.maxdisplayresults = int(parser.get("config", "maxdisplayresults"))
+                self.maxNetworkRetryCount = int(parser.get("config", "maxNetworkRetryCount"))
                 self.backtestPeriod = int(parser.get("config", "backtestPeriod"))
                 self.maxBacktestWindow = int(parser.get("config", "maxBacktestWindow"))
                 self.morninganalysiscandlenumber = int(parser.get("config", "morninganalysiscandlenumber"))

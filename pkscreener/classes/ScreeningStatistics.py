@@ -84,9 +84,10 @@ class StockDataNotAdequate(Exception):
 
 # This Class contains methods for stock analysis and screening validation
 class ScreeningStatistics:
-    def __init__(self, configManager, default_logger) -> None:
+    def __init__(self, configManager, default_logger,shouldLog=False) -> None:
         self.configManager = configManager
         self.default_logger = default_logger
+        self.shouldLog = shouldLog
 
     # Find stocks that have broken through 52 week high.
     def find52WeekHighBreakout(self, df):
@@ -98,22 +99,11 @@ class ScreeningStatistics:
         data = data.replace([np.inf, -np.inf], 0)
         one_week = 5
         recent = data.head(1)["High"].iloc[0]
-        # last1Week = data.head(one_week)
-        # last2Week = data.head(2 * one_week)
-        # previousWeek = last2Week.tail(one_week)
         full52Week = data.head(50 * one_week)
-        # last1WeekHigh = last1Week["High"].max()
-        # previousWeekHigh = previousWeek["High"].max()
         full52WeekHigh = full52Week["High"].max()
-        return (
-            (recent >= full52WeekHigh)
-            # or (last1WeekHigh >= max(full52WeekHigh, last1WeekHigh))
-            # or (
-            #     last1WeekHigh
-            #     >= previousWeekHigh
-            #     >= max(full52WeekHigh, previousWeekHigh)
-            # )
-        )
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
+        return recent >= full52WeekHigh
 
     #@measure_time
     # Find stocks' 52 week high/low.
@@ -151,6 +141,8 @@ class ScreeningStatistics:
         screenDict[
             "52Wk L"
         ] = f"{lowColor}{str('{:.2f}'.format(full52WeekLow))}{colorText.END}"
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
 
     # Find stocks that have broken through 52 week low.
     def find52WeekLowBreakout(self, df):
@@ -169,14 +161,11 @@ class ScreeningStatistics:
         # last1WeekLow = last1Week["Low"].min()
         # previousWeekLow = previousWeek["Low"].min()
         full52WeekLow = full52Week["Low"].min()
-        return (
-            (recent <= full52WeekLow)
-            # or (last1WeekLow <= min(full52WeekLow, last1WeekLow))
-            # or (last1WeekLow <= previousWeekLow <= min(full52WeekLow, previousWeekLow))
-        )
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
+        return recent <= full52WeekLow
 
-        # Find stocks that have broken through 52 week low.
-
+    # Find stocks that have broken through 10 days low.
     def find10DaysLowBreakout(self, df):
         if df is None or len(df) == 0:
             return False
@@ -190,12 +179,13 @@ class ScreeningStatistics:
         previousWeek = last2Week.tail(one_week)
         last1WeekLow = last1Week["Low"].min()
         previousWeekLow = previousWeek["Low"].min()
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
         return (recent <= min(previousWeekLow, last1WeekLow)) and (
             last1WeekLow <= previousWeekLow
         )
 
-        # Find stocks that have broken through 52 week low.
-
+    # Find stocks that have broken through Aroon bullish crossover.
     def findAroonBullishCrossover(self, df):
         if df is None or len(df) == 0:
             return False
@@ -208,6 +198,8 @@ class ScreeningStatistics:
         recent = aroondf.tail(1)
         up = recent[f"AROONU_{period}"].iloc[0]
         down = recent[f"AROOND_{period}"].iloc[0]
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
         return up > down
     
     def non_zero_range(self, high: pd.Series, low: pd.Series) -> pd.Series:
@@ -234,6 +226,8 @@ class ScreeningStatistics:
         mfi = mfis.tail(1).iloc[0]
         cci = ccis.tail(1).iloc[0]
         hasDeelMomentum = percentChange >= 1 and rsi>= 68 and mfi >= 68 and cci >= 110
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
         return hasDeelMomentum
     
     # Find ATR cross stocks
@@ -254,6 +248,8 @@ class ScreeningStatistics:
         atrCrossCondition = atrCross and bullishRSI and (smav7 < recent["Volume"].iloc[0])
         saveDict["ATR"] = round(atr.tail(1).iloc[0],1)
         screenDict["ATR"] = saveDict["ATR"] #(colorText.GREEN if atrCrossCondition else colorText.FAIL) + str(atr.tail(1).iloc[0]) + colorText.END
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
         return atrCrossCondition
 
     # Function to compute ATRTrailingStop
@@ -301,6 +297,8 @@ class ScreeningStatistics:
         sell = recent["Sell"].iloc[0]
         saveDict["B/S"] = "Buy" if buy else ("Sell" if sell else "NA")
         screenDict["B/S"] = ((colorText.GREEN + "Buy") if buy else ((colorText.FAIL+ "Sell") if sell else (colorText.WARN + "NA"))) + colorText.END
+        if self.shouldLog:
+            self.default_logger.debug(data.head(10))
         return buy if buySellAll==1 else (sell if buySellAll == 2 else (True if buySellAll == 3 else False))
 
     def downloadSaveTemplateJsons(self, outputFolderPath=None):
@@ -319,15 +317,23 @@ class ScreeningStatistics:
         json3 = "https://raw.githubusercontent.com/polakowo/vectorbt/master/vectorbt/templates/seaborn.json"
         fileURLs = [json1,json2,json3]
         f = fetcher()
+        from PKDevTools.classes.Utils import random_user_agent
         for url in fileURLs:
             try:
                 path = os.path.join(outputFolder,url.split("/")[-1])
                 if not os.path.exists(path):
-                    resp = f.fetchURL(url=url,trial=3,timeout=5)
+                    if self.shouldLog:
+                        self.default_logger.debug(f"Fetching {url} to keep at {path}")
+                    resp = f.fetchURL(url=url,trial=3,timeout=5,headers={'user-agent': f'{random_user_agent()}'})
                     if resp is not None and resp.status_code == 200:
                         with open(path, "w") as f:
                             f.write(resp.text)
-            except:
+                else:
+                    if self.shouldLog:
+                        self.default_logger.debug(f"Already exists: {path}")
+            except Exception as e:
+                if self.shouldLog:
+                    self.default_logger.debug(e, exc_info=True)
                 continue
 
     #Calculating signals
@@ -338,6 +344,9 @@ class ScreeningStatistics:
             df["Above"] = ema.ma_crossed_above(df["ATRTrailingStop"])
             df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
         except (OSError,FileNotFoundError) as e:
+            if self.shouldLog:
+                self.default_logger.debug(e, exc_info=True)
+            OutputControls().printOutput(f"{colorText.FAIL}Some dependencies are missing. Try and run this option again.{colorText.END}")
             # OSError:RALLIS: [Errno 2] No such file or directory: '/tmp/_MEIzoTV6A/vectorbt/templates/light.json'
             if "No such file or directory" in str(e):
                 try:
@@ -345,15 +354,22 @@ class ScreeningStatistics:
                     outputFolder = None
                     try:
                         outputFolder = os.sep.join(e.filename.split(os.sep)[:-1])
-                    except:
+                    except Exception as e:
+                        if self.shouldLog:
+                            self.default_logger.debug(e, exc_info=True)
                         outputFolder = os.sep.join(str(e).split("\n")[0].split(": ")[1].replace("'","").split(os.sep)[:-1])
-                except:
+                except Exception as e:
+                    if self.shouldLog:
+                        self.default_logger.debug(e, exc_info=True)
                     pass
                 self.downloadSaveTemplateJsons(outputFolder)
                 if retry:
                     return self.computeBuySellSignals(df,ema_period=ema_period,retry=False)
                 return None
-        except ImportError:
+        except ImportError as e:
+            OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
+            if self.shouldLog:
+                self.default_logger.debug(e, exc_info=True)
             ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
             df["Above"] = ema > df["ATRTrailingStop"]
             df["Below"] = ema < df["ATRTrailingStop"]        

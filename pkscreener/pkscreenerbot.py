@@ -54,7 +54,7 @@ import traceback
 from datetime import datetime
 from time import sleep
 from telegram import __version__ as TG_VER
-from telegram.constants import ParseMode
+from telegram.constants import PARSEMODE_HTML
 
 start_time = datetime.now()
 MINUTES_2_IN_SECONDS = 120
@@ -228,7 +228,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, updatedResul
     await context.bot.send_message(
         chat_id=int(f"-{Channel_Id}"),
         text=f"Name: {user.first_name}, Username:@{user.username} with ID: {str(user.id)} started using the bot!\n{chosenBotMenuOption}",
-        parse_mode=ParseMode.HTML,
+        parse_mode=PARSEMODE_HTML,
     )
     # Tell ConversationHandler that we're in state `FIRST` now
     return START_ROUTES
@@ -565,7 +565,7 @@ async def Level2(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             await context.bot.send_message(
                 chat_id=int(f"-{Channel_Id}"),
                 text=f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> submitted scan request <b>{optionChoices}</b> to the bot!",
-                parse_mode=ParseMode.HTML,
+                parse_mode=PARSEMODE_HTML,
             )
     except Exception:# pragma: no cover
         await start(update, context)
@@ -760,7 +760,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         # Finally, send the message
         if "telegram.error.Conflict" not in message:
             await context.bot.send_message(
-                chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=ParseMode.HTML
+                chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=PARSEMODE_HTML
             )
     except Exception:# pragma: no cover
         try:
@@ -768,7 +768,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
                 await context.bot.send_message(
                     chat_id=int(f"-{Channel_Id}"),
                     text=tb_string,
-                    parse_mode=ParseMode.HTML,
+                    parse_mode=PARSEMODE_HTML,
                 )
         except Exception:# pragma: no cover
             print(tb_string)
@@ -1099,7 +1099,7 @@ async def shareUpdateWithChannel(update, context, optionChoices=""):
     query = update.message or update.callback_query
     message = f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> began using ({optionChoices}) the bot!"
     await context.bot.send_message(
-        chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=ParseMode.HTML
+        chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=PARSEMODE_HTML
     )
 
 
@@ -1129,7 +1129,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         query = update.message
         message = f"Name: <b>{query.from_user.first_name}</b>, Username:@{query.from_user.username} with ID: <b>@{str(query.from_user.id)}</b> began using the bot!"
         await context.bot.send_message(
-            chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=ParseMode.HTML
+            chat_id=int(f"-{Channel_Id}"), text=message, parse_mode=PARSEMODE_HTML
         )
 
 

@@ -987,7 +987,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
     executeOption = int(executeOption)
     volumeRatio = configManager.volumeRatio
     if executeOption == 3:
-        userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
+        userPassedArgs.maxdisplayresults = max(configManager.maxdisplayresults,2000) # force evaluate all stocks before getting the top results
     if executeOption == 4:
         daysForLowestVolume = handleScannerExecuteOption4(executeOption, options)
     if executeOption == 5:
@@ -1098,7 +1098,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         ):
             return None, None
         else:
-            userPassedArgs.maxdisplayresults = 2000 if respChartPattern in [3,4,5,8,9] else userPassedArgs.maxdisplayresults
+            userPassedArgs.maxdisplayresults = max(configManager.maxdisplayresults,2000) if respChartPattern in [3,4,5,8,9] else min(configManager.maxdisplayresults,userPassedArgs.maxdisplayresults)
             selectedChoice["3"] = str(respChartPattern)
             selectedChoice["4"] = str(insideBarToLookback) if (respChartPattern in [1, 2, 3] and (userPassedArgs is not None and userPassedArgs.pipedmenus is not None)) else str(maLength)
             selectedChoice["5"] = str(maLength) if (respChartPattern in [1, 2, 3] and (userPassedArgs is not None and userPassedArgs.pipedmenus is not None)) else ""
@@ -1181,7 +1181,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             else:
                 listStockCodes = ",".join(list(screenResults.index))
         else:
-            userPassedArgs.maxdisplayresults = 2000 # force evaluate all stocks before getting the top results
+            userPassedArgs.maxdisplayresults = max(configManager.maxdisplayresults,2000) # force evaluate all stocks before getting the top results
             reversalOption = popOption
     if executeOption == 22:
         selectedMenu = m2.find(str(executeOption))
@@ -2052,7 +2052,7 @@ def printNotifySaveScreenedResults(
     global userPassedArgs, elapsed_time
     if userPassedArgs.monitor is not None:
         return
-    MAX_ALLOWED = (100 if userPassedArgs.maxdisplayresults is None else min(int(userPassedArgs.maxdisplayresults),100)) if not testing else 1
+    MAX_ALLOWED = (configManager.maxdisplayresults if userPassedArgs.maxdisplayresults is None else (int(userPassedArgs.maxdisplayresults) if not testing else 1))
     tabulated_backtest_summary = ""
     tabulated_backtest_detail = ""
     recordDate = PKDateUtilities.tradingDate().strftime('%Y-%m-%d') if (userPassedArgs.backtestdaysago is None) else (PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago)))
@@ -2466,6 +2466,42 @@ def removeUnknowns(screenResults, saveResults):
 #     df1.loc[mask_green_vwap, 'VWAP'] = green
 #     return df1
 
+def processResultsCallback(resultItem, processedCount,result_df, *otherArgs):
+    global userPassedArgs
+    (menuOption, backtestPeriod, result, lstscreen, lstsave, progressbar, testing,max_allowed) = otherArgs
+    numStocks = processedCount
+    result = resultItem
+    backtest_df = processResults(menuOption, backtestPeriod, result, lstscreen, lstsave, result_df)
+    progressbar()
+    progressbar.text(
+        colorText.BOLD
+        + colorText.GREEN
+        + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
+        + colorText.END
+    )
+    if result is not None:
+        if not userPassedArgs.monitor and len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
+            scr_df = pd.DataFrame(lstscreen)
+            existingColumns = ["Stock","%Chng","LTP","Volume"]
+            newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
+            existingColumns.extend(newColumns)
+            scr_df = scr_df[existingColumns]
+            scr_df.sort_values(by=["Volume","BidQty"], ascending=False, inplace=True)
+            tabulated_results = colorText.miniTabulator().tb.tabulate(
+                    scr_df,
+                    headers="keys",
+                    showindex=False,
+                    tablefmt=colorText.No_Pad_GridFormat,
+                    maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
+                )
+            tableLength = 2*len(lstscreen)+5
+            OutputControls().printOutput('\n'+tabulated_results)
+            # Move the cursor up, back to the top because we want the progress bar to keep showing at the top
+            sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
+    if keyboardInterruptEventFired:
+        return False, backtest_df
+    return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
+
 def runScanners(
     menuOption,
     items,
@@ -2513,43 +2549,7 @@ def runScanners(
             result = None
             backtest_df = None
             start_time = time.time()
-
-            def processResultsCallback(resultItem, processedCount,result_df, *otherArgs):
-                global userPassedArgs
-                (menuOption, backtestPeriod, result, lstscreen, lstsave) = otherArgs
-                numStocks = processedCount
-                result = resultItem
-                backtest_df = processResults(menuOption, backtestPeriod, result, lstscreen, lstsave, result_df)
-                progressbar()
-                progressbar.text(
-                    colorText.BOLD
-                    + colorText.GREEN
-                    + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
-                    + colorText.END
-                )
-                if result is not None:
-                    if not userPassedArgs.monitor and len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
-                        scr_df = pd.DataFrame(lstscreen)
-                        existingColumns = ["Stock","%Chng","LTP","Volume"]
-                        newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
-                        existingColumns.extend(newColumns)
-                        scr_df = scr_df[existingColumns]
-                        scr_df.sort_values(by=["Volume","BidQty"], ascending=False, inplace=True)
-                        tabulated_results = colorText.miniTabulator().tb.tabulate(
-                                scr_df,
-                                headers="keys",
-                                showindex=False,
-                                tablefmt=colorText.No_Pad_GridFormat,
-                                maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
-                            )
-                        tableLength = 2*len(lstscreen)+5
-                        OutputControls().printOutput('\n'+tabulated_results)
-                        # Move the cursor up, back to the top because we want the progress bar to keep showing at the top
-                        sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
-                if keyboardInterruptEventFired:
-                    return False, backtest_df
-                return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
-            otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave)
+            otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave, progressbar, testing,max_allowed)
             backtest_df, result =PKScanRunner.runScan(userPassedArgs,testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df,*otherArgs,resultsReceivedCb=processResultsCallback)
 
         OutputControls().printOutput(f"\x1b[{3 if OutputControls().enableMultipleLineOutput else 1}A")
@@ -2624,7 +2624,7 @@ def getReviewDate(userPassedArgs=None):
     return reviewDate
 
 def getMaxAllowedResultsCount(iterations, testing):
-    return iterations * (100 if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
+    return iterations * (configManager.maxdisplayresults if userPassedArgs.maxdisplayresults is None else int(userPassedArgs.maxdisplayresults)) if not testing else 1
 
 def getIterationsAndStockCounts(numStocks, iterations):
     if numStocks <= 2500:
