@@ -101,8 +101,8 @@ class ScreeningStatistics:
         recent = data.head(1)["High"].iloc[0]
         full52Week = data.head(50 * one_week)
         full52WeekHigh = full52Week["High"].max()
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return recent >= full52WeekHigh
 
     #@measure_time
@@ -141,8 +141,8 @@ class ScreeningStatistics:
         screenDict[
             "52Wk L"
         ] = f"{lowColor}{str('{:.2f}'.format(full52WeekLow))}{colorText.END}"
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
 
     # Find stocks that have broken through 52 week low.
     def find52WeekLowBreakout(self, df):
@@ -161,8 +161,8 @@ class ScreeningStatistics:
         # last1WeekLow = last1Week["Low"].min()
         # previousWeekLow = previousWeek["Low"].min()
         full52WeekLow = full52Week["Low"].min()
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return recent <= full52WeekLow
 
     # Find stocks that have broken through 10 days low.
@@ -179,8 +179,8 @@ class ScreeningStatistics:
         previousWeek = last2Week.tail(one_week)
         last1WeekLow = last1Week["Low"].min()
         previousWeekLow = previousWeek["Low"].min()
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return (recent <= min(previousWeekLow, last1WeekLow)) and (
             last1WeekLow <= previousWeekLow
         )
@@ -198,8 +198,8 @@ class ScreeningStatistics:
         recent = aroondf.tail(1)
         up = recent[f"AROONU_{period}"].iloc[0]
         down = recent[f"AROOND_{period}"].iloc[0]
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return up > down
     
     def non_zero_range(self, high: pd.Series, low: pd.Series) -> pd.Series:
@@ -226,8 +226,8 @@ class ScreeningStatistics:
         mfi = mfis.tail(1).iloc[0]
         cci = ccis.tail(1).iloc[0]
         hasDeelMomentum = percentChange >= 1 and rsi>= 68 and mfi >= 68 and cci >= 110
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return hasDeelMomentum
     
     # Find ATR cross stocks
@@ -248,8 +248,8 @@ class ScreeningStatistics:
         atrCrossCondition = atrCross and bullishRSI and (smav7 < recent["Volume"].iloc[0])
         saveDict["ATR"] = round(atr.tail(1).iloc[0],1)
         screenDict["ATR"] = saveDict["ATR"] #(colorText.GREEN if atrCrossCondition else colorText.FAIL) + str(atr.tail(1).iloc[0]) + colorText.END
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return atrCrossCondition
 
     # Function to compute ATRTrailingStop
@@ -297,8 +297,8 @@ class ScreeningStatistics:
         sell = recent["Sell"].iloc[0]
         saveDict["B/S"] = "Buy" if buy else ("Sell" if sell else "NA")
         screenDict["B/S"] = ((colorText.GREEN + "Buy") if buy else ((colorText.FAIL+ "Sell") if sell else (colorText.WARN + "NA"))) + colorText.END
-        if self.shouldLog:
-            self.default_logger.debug(data.head(10))
+        # if self.shouldLog:
+        #     self.default_logger.debug(data.head(10))
         return buy if buySellAll==1 else (sell if buySellAll == 2 else (True if buySellAll == 3 else False))
 
     def downloadSaveTemplateJsons(self, outputFolderPath=None):
