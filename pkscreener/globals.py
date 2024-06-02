@@ -1261,6 +1261,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             configManager.atrTrailingStopEMAPeriod = atrEma
             configManager.setConfig(ConfigManager.parser,default=True,showFileCreatedText=False)
         # Ensure we have the template JSONs from vectorBt
+        screener.shouldLog = userPassedArgs.log
         screener.computeBuySellSignals(None)
 
     if executeOption == 42:

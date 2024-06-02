@@ -544,7 +544,7 @@ class tools:
         for df in dfs_to_print:
             counter += 1
             colPixelRunValue = startColValue
-            if df is None or len(df) == 0:
+            if df is None or len(df) == 0 or df.empty:
                 continue
             # selected menu options and As of DateTime
             draw.text(
@@ -695,8 +695,8 @@ class tools:
             width=2
             * int(
                 len(table.split("\n")[0])
-                if len(table) > 0
-                else len(backtestSummary.split("\n")[0])
+                if (table is not None and len(table) > 0)
+                else (len(backtestSummary.split("\n")[0]) if backtestSummary is not None else 500)
             )
         )
         word_list = wrapper.wrap(text=legendText)

@@ -358,24 +358,24 @@ class ScreeningStatistics:
                 self.default_logger.debug(e, exc_info=True)
             OutputControls().printOutput(f"{colorText.FAIL}Some dependencies are missing. Try and run this option again.{colorText.END}")
             # OSError:RALLIS: [Errno 2] No such file or directory: '/tmp/_MEIzoTV6A/vectorbt/templates/light.json'
-            if "No such file or directory" in str(e):
+            # if "No such file or directory" in str(e):
+            try:
+                import os
+                outputFolder = None
                 try:
-                    import os
-                    outputFolder = None
-                    try:
-                        outputFolder = os.sep.join(e.filename.split(os.sep)[:-1])
-                    except Exception as e:
-                        if self.shouldLog:
-                            self.default_logger.debug(e, exc_info=True)
-                        outputFolder = os.sep.join(str(e).split("\n")[0].split(": ")[1].replace("'","").split(os.sep)[:-1])
+                    outputFolder = os.sep.join(e.filename.split(os.sep)[:-1])
                 except Exception as e:
                     if self.shouldLog:
                         self.default_logger.debug(e, exc_info=True)
-                    pass
-                self.downloadSaveTemplateJsons(outputFolder)
-                if retry:
-                    return self.computeBuySellSignals(df,ema_period=ema_period,retry=False)
-                return None
+                    outputFolder = os.sep.join(str(e).split("\n")[0].split(": ")[1].replace("'","").split(os.sep)[:-1])
+            except Exception as e:
+                if self.shouldLog:
+                    self.default_logger.debug(e, exc_info=True)
+                pass
+            self.downloadSaveTemplateJsons(outputFolder)
+            if retry:
+                return self.computeBuySellSignals(df,ema_period=ema_period,retry=False)
+            return None
         except ImportError as e:
             OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
             if self.shouldLog:
