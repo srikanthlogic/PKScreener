@@ -1157,7 +1157,7 @@ class tools:
         return stockDict,stockDataLoaded
 
     # Save screened results to excel
-    def promptSaveResults(sheetName,df, defaultAnswer=None):
+    def promptSaveResults(sheetName,df, defaultAnswer=None,pastDate=None):
         """
         Tries to save the dataframe output into an excel file.
 
@@ -1182,8 +1182,10 @@ class tools:
             default_logger().debug(e, exc_info=True)
             response = "Y"
         if response is not None and response.upper() != "N":
+            pastDateString = f"{pastDate}_to_" if pastDate is not None else ""
             filename = (
                 "PKScreener-result_"
+                + pastDateString
                 + PKDateUtilities.currentDateTime().strftime("%d-%m-%y_%H.%M.%S")
                 + ".xlsx"
             )

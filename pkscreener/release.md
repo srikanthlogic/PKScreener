@@ -2,6 +2,8 @@
 
 ## What's New?
 1. [v0.45.20240602.429] release
+* Added a Quick Backtest Mode (Try T > B followed by the n-th day/candle) for which you'd like to get the maximum potential profitability analysis.
+* Added new pre-defined VCP + ATR trailing stop scanner (P > 16)
 * Modified ATR trailing stop scanner to get better results. Try X > 12 > 30.
 * Telegram bot reverted back to the older non-LGPL licensed version
 * Moved a number of columns to always-hidden-columns in the pkscreener.ini config file. You can edit it to show the hidden columns on your console.

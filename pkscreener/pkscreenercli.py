@@ -455,6 +455,7 @@ def runApplication():
             if args.monitor:
                 configManager.getConfig(ConfigManager.parser)
                 args.answerdefault = args.answerdefault or 'Y'
+                MarketMonitor().hiddenColumns = configManager.alwaysHiddenDisplayColumns
                 if MarketMonitor().monitorIndex == 0:
                     dbTimestamp = PKDateUtilities.currentDateTime().strftime("%H:%M:%S")
                     elapsed_time = 0

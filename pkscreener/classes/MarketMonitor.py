@@ -43,6 +43,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             self.monitorIndex = 0
             self.monitorPositions = {}
             self.monitorResultStocks = {}
+            self.hiddenColumns = ""
             # self.monitorNames = {}
             # We are going to present the dataframes in a 3x3 matrix with limited set of columns
             rowIndex = 0
@@ -181,9 +182,23 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             highlightedColumns=highlightCols,
             maxcolwidths=Utility.tools.getMaxColumnWidths(self.monitor_df)
         )
+        console_results = ""
+        if self.isPinnedSingleMonitorMode:
+            copyScreenResults = self.monitor_df.copy()
+            hiddenColumns = self.hiddenColumns.split(",")
+            for col in copyScreenResults.columns:
+                if col in hiddenColumns:
+                    copyScreenResults.drop(col, axis=1, inplace=True, errors="ignore")
+            try:
+                console_results = colorText.miniTabulator().tabulate(
+                        copyScreenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
+                        maxcolwidths=Utility.tools.getMaxColumnWidths(copyScreenResults)
+                    )
+            except:
+                console_results = tabulated_results
         numRecords = len(tabulated_results.splitlines())
         self.lines = numRecords + 1 # 1 for the progress bar at the bottom and 1 for the chosenMenu option
-        OutputControls().printOutput(tabulated_results, enableMultipleLineOutput=True)
+        OutputControls().printOutput(tabulated_results if not self.isPinnedSingleMonitorMode else console_results, enableMultipleLineOutput=True)
         
         if not self.isPinnedSingleMonitorMode:
             if telegram:

@@ -404,7 +404,7 @@ def handleSecondaryMenuChoices(
                     colorText.BOLD + colorText.FAIL + "[+] Select option: "
                 ) or ('L' if configManager.period == '1y' else 'S')
             OutputControls().printOutput(colorText.END, end="")
-            if periodOption is None or periodOption.upper() not in ["L","S"]:
+            if periodOption is None or periodOption.upper() not in ["L","S","B"]:
                 return
             Utility.tools.clearScreen(forceTop=True)
             if periodOption.upper() in ["L","S"]:
@@ -426,6 +426,19 @@ def handleSecondaryMenuChoices(
                 elif durationOption.upper() in ["5"]:
                     configManager.setConfig(ConfigManager.parser, default=False, showFileCreatedText=True)
                 return
+            elif periodOption.upper() in ["B"]:
+                backtestDaysAgo = input(
+                    colorText.BOLD + colorText.FAIL + "[+] Enter no. of days/candles in the past as starting candle for which you'd like to run the scans (e.g. 10 for 10 candles ago or 0 for today):"
+                ) or ('22' if configManager.period == '1y' else '15')
+                OutputControls().printOutput(colorText.END, end="")
+                launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
+                enableLog = f" -l" if userPassedArgs.log else ""
+                launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
+                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener in quick backtest mode. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} --backtestdaysago {int(backtestDaysAgo)}{requestingUser}{enableLog}{colorText.END}\n{colorText.WARN}Press Ctrl + C to exit quick backtest mode.{colorText.END}")
+                sleep(2)
+                os.system(f"{launcher} --systemlaunched -a Y -e --backtestdaysago {int(backtestDaysAgo)}{requestingUser}{enableLog}")
+                sys.exit(0)
         elif userPassedArgs is not None and userPassedArgs.options is not None:
             options = userPassedArgs.options.split(":")
             selectedMenu = m0.find(options[0])
@@ -471,6 +484,8 @@ def initExecution(menuOption=None):
     )
     m0.renderForMenu(selectedMenu=None)
     try:
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = f"[+] [ Running in Quick Backtest Mode for {colorText.WARN}{PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)}{colorText.END} ]\n" if needsCalc else ""
         if menuOption is None:
             if "PKDevTools_Default_Log_Level" in os.environ.keys():
                 from PKDevTools.classes import Archiver
@@ -478,7 +493,7 @@ def initExecution(menuOption=None):
                 OutputControls().printOutput(colorText.FAIL + "\n    [+] Logs will be written to:"+colorText.END)
                 OutputControls().printOutput(colorText.GREEN + f"    [+] {log_file_path}"+colorText.END)
                 OutputControls().printOutput(colorText.FAIL + "    [+] If you need to share,run through the menus that are causing problems. At the end, open this folder, zip the log file to share at https://github.com/pkjmesra/PKScreener/issues .\n" + colorText.END)
-            menuOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ")
+            menuOption = input(colorText.BOLD + colorText.FAIL + f"{pastDate}[+] Select option: ")
             OutputControls().printOutput(colorText.END, end="")
         if menuOption == "" or menuOption is None:
             menuOption = "X"
@@ -530,9 +545,11 @@ def initPostLevel0Execution(
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu=selectedMenu, skip=skip)
     try:
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = f"[+] [ Running in Quick Backtest Mode for {colorText.WARN}{PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)}{colorText.END} ]\n" if needsCalc else ""
         if indexOption is None:
             indexOption = input(
-                colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                colorText.BOLD + colorText.FAIL + f"{pastDate}[+] Select option: "
             )
             OutputControls().printOutput(colorText.END, end="")
         if indexOption == "" or indexOption is None:
@@ -588,10 +605,12 @@ def initPostLevel1Execution(indexOption, executeOption=None, skip=[], retrial=Fa
             selectedMenu = m1.find(indexOption)
             m2.renderForMenu(selectedMenu=selectedMenu, skip=skip)
     try:
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = f"[+] [ Running in Quick Backtest Mode for {colorText.WARN}{PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)}{colorText.END} ]\n" if needsCalc else ""
         if indexOption is not None and indexOption != "W":
             if executeOption is None:
                 executeOption = input(
-                    colorText.BOLD + colorText.FAIL + "[+] Select option: "
+                    colorText.BOLD + colorText.FAIL + f"{pastDate}[+] Select option: "
                 ) or "9"
                 OutputControls().printOutput(colorText.END, end="")
             if executeOption == "":
@@ -810,8 +829,10 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         updateMenuChoiceHierarchy()
         selectedMenu = m0.find(menuOption)
         m1.renderForMenu(selectedMenu)
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = f"[+] [ Running in Quick Backtest Mode for {colorText.WARN}{PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)}{colorText.END} ]\n" if needsCalc else ""
         if predefinedOption is None:
-            predefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+            predefinedOption = input(colorText.BOLD + colorText.FAIL + f"{pastDate}[+] Select option: ") or "1"
         OutputControls().printOutput(colorText.END, end="")
         if predefinedOption not in ["1","2","3"]:
             return None, None
@@ -820,7 +841,7 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
             selectedMenu = m1.find(predefinedOption)
             m2.renderForMenu(selectedMenu=selectedMenu)
             if selPredefinedOption is None:
-                selPredefinedOption = input(colorText.BOLD + colorText.FAIL + "[+] Select option: ") or "1"
+                selPredefinedOption = input(colorText.BOLD + colorText.FAIL + f"{pastDate}[+] Select option: ") or "1"
             OutputControls().printOutput(colorText.END, end="")
             if selPredefinedOption in PREDEFINED_SCAN_MENU_KEYS:
                 scannerOption = PIPED_SCANNERS[selPredefinedOption]
@@ -833,9 +854,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                 launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                 scannerOptionQuoted = scannerOption.replace("'",'"')
                 requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
-                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOptionQuoted}{requestingUser}{colorText.END}")
+                enableLog = f" -l" if userPassedArgs.log else ""
+                backtestParam = f" --backtestdaysago {userPassedArgs.backtestdaysago}" if userPassedArgs.backtestdaysago else ""
+                OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} {scannerOptionQuoted}{requestingUser}{enableLog}{backtestParam}{colorText.END}")
                 sleep(2)
-                os.system(f"{launcher} {scannerOptionQuoted}{requestingUser}")
+                os.system(f"{launcher} {scannerOptionQuoted}{requestingUser}{enableLog}{backtestParam}")
                 OutputControls().printOutput(
                         colorText.GREEN
                         + f"[+] Finished running all piped scanners!"
@@ -1591,8 +1614,9 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
         pass
     if "RUNNER" not in os.environ.keys() and not testing and (userPassedArgs is None or (userPassedArgs is not None and userPassedArgs.user is None and (userPassedArgs.answerdefault is None or userPassedArgs.systemlaunched))):
         prevOutput_results = saveResults.index if (saveResults is not None and not saveResults.empty) else []
-        hasFoundStocks = len(prevOutput_results) > 0 and (("|" not in userPassedArgs.options) if (userPassedArgs is not None and userPassedArgs.options is not None) else True)
-        if hasFoundStocks or configManager.showPinnedMenuEvenForNoResult:
+        isNotPiped = (("|" not in userPassedArgs.options) if (userPassedArgs is not None and userPassedArgs.options is not None) else True)
+        hasFoundStocks = len(prevOutput_results) > 0 and isNotPiped
+        if hasFoundStocks or (configManager.showPinnedMenuEvenForNoResult and isNotPiped):
             monitorOption = userPassedArgs.systemlaunched if (userPassedArgs is not None and isinstance(userPassedArgs.systemlaunched,str) and userPassedArgs.systemlaunched is not None) else (userPassedArgs.options if (userPassedArgs is not None and userPassedArgs.options is not None) else "")
             if len(monitorOption) == 0:
                 for choice in selectedChoice.keys():
@@ -1744,9 +1768,11 @@ def addOrRunPipedMenus():
         monitorOption = f'"{userPassedArgs.pipedmenus}"'
         scannerOptionQuoted = monitorOption.replace("'",'"').replace(":>",":D:D:D:>").replace("::",":")
         requestingUser = f" -u {userPassedArgs.user}" if userPassedArgs.user is not None else ""
-        OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o {scannerOptionQuoted}{requestingUser}{colorText.END}")
+        enableLog = f" -l" if userPassedArgs.log else ""
+        backtestParam = f" --backtestdaysago {userPassedArgs.backtestdaysago}" if userPassedArgs.backtestdaysago else ""
+        OutputControls().printOutput(f"{colorText.GREEN}Launching PKScreener with piped scanners. If it does not launch, please try with the following:{colorText.END}\n{colorText.FAIL}{launcher} -a Y -e -o {scannerOptionQuoted}{requestingUser}{enableLog}{backtestParam}{colorText.END}")
         sleep(2)
-        os.system(f"{launcher} --systemlaunched -a Y -e -o {scannerOptionQuoted}{requestingUser}")
+        os.system(f"{launcher} --systemlaunched -a Y -e -o {scannerOptionQuoted}{requestingUser}{enableLog}{backtestParam}")
         userPassedArgs.pipedmenus = None
         OutputControls().printOutput(
                 colorText.GREEN
@@ -2031,19 +2057,21 @@ def updateMenuChoiceHierarchy():
                 menuChoiceHierarchy
                 + f'>{level3_X_PopularStocks_MenuDict[selectedChoice["3"]].strip()}'
             )
-        intraday = "(Intraday)" if (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig() else ""
+        intraday = "(Intraday)" if ("Intraday" not in menuChoiceHierarchy and (userPassedArgs is not None and userPassedArgs.intraday) or configManager.isIntradayConfig()) else ""
         menuChoiceHierarchy = f"{menuChoiceHierarchy}{intraday}"
         global nValueForMenu
         menuChoiceHierarchy = menuChoiceHierarchy.replace("N-",f"{nValueForMenu}-")
     except:
         pass
     Utility.tools.clearScreen(forceTop=True)
+    needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+    pastDate = f"[ {PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)} ]" if needsCalc else ""
     OutputControls().printOutput(
         colorText.BOLD
         + colorText.FAIL
         + "[+] You chose: "
         + menuChoiceHierarchy
-        + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}]" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
+        + (f" (Piped Scan Mode) [{userPassedArgs.pipedmenus}] {pastDate}" if (userPassedArgs is not None and userPassedArgs.pipedmenus is not None) else "")
         + colorText.END
     )
     default_logger().info(menuChoiceHierarchy)
@@ -2246,10 +2274,12 @@ def printNotifySaveScreenedResults(
                 tabulateBacktestResults(saveResults)
         else:
             tabulateBacktestResults(saveResults)
+            needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+            pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)
             OutputControls().printOutput(
                 colorText.BOLD
                 + colorText.GREEN
-                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec. Showing only stocks that met the filter criteria in the filters section of user configuration{(' with portfolio returns:' + summaryReturns) if (len(summaryReturns) > 0) else ''}"
+                + f"[+] Found {len(screenResults) if screenResults is not None else 0} Stocks in {str('{:.2f}'.format(elapsed_time))} sec for {pastDate}. Showing only stocks that met the filter criteria in the filters section of user configuration{(' with portfolio returns:' + summaryReturns) if (len(summaryReturns) > 0) else ''}"
                 + colorText.END
             )
     elif user is not None:
@@ -2733,9 +2763,10 @@ def saveNotifyResultsFile(
     caption = f'<b>{menuChoiceHierarchy.split(">")[-1]}</b>'
     if screenResults is not None and len(screenResults) >= 1:
         choices = PKScanRunner.getFormattedChoices(userPassedArgs,selectedChoice)
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0) if needsCalc else None
         filename = Utility.tools.promptSaveResults(choices,
-            saveResults, defaultAnswer=defaultAnswer
-        )
+            saveResults, defaultAnswer=defaultAnswer,pastDate=pastDate)
         # if filename is not None:
         #     sendMessageToTelegramChannel(
         #         document_filePath=filename, caption=caption, user=user
@@ -2752,10 +2783,12 @@ def saveNotifyResultsFile(
         # except Exception as e:  # pragma: no cover
         #     default_logger().debug(e, exc_info=True)
     if userPassedArgs.monitor is None:
+        needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
+        pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.GREEN
-            + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec.! Press Enter to Continue.."
+            + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec. for {pastDate}! Press Enter to Continue.."
             + colorText.END
             , enableMultipleLineOutput=True
         )

@@ -2715,6 +2715,20 @@ class ScreeningStatistics:
                     changePercent = round(((prevLtp-ltpTdy) if requestedPeriod ==0 else (ltpTdy - prevLtp))*100/ltpTdy, 2)
                     saveDict[f"{prd}-Pd"] = f"{changePercent}%" if not pd.isna(changePercent) else '-'
                     screenDict[f"{prd}-Pd"] = ((colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END) if not pd.isna(changePercent) else '-'
+                    if (prd == requestedPeriod):
+                        maxLTPPotential = max(data["High"].head(prd))
+                        screenDict[f"MaxLTP"] = (
+                            (colorText.GREEN if (maxLTPPotential >= prevLtp) else (colorText.FAIL))
+                            + str("{:.2f}".format(maxLTPPotential))
+                            + colorText.END
+                        )
+                        screenDict[f"Pot.Grw"] = (
+                            (colorText.GREEN if (maxLTPPotential >= prevLtp) else (colorText.FAIL))
+                            + str("{:.2f}%".format((maxLTPPotential - prevLtp)*100/prevLtp))
+                            + colorText.END
+                        )
+                        saveDict[f"MaxLTP"] = round(maxLTPPotential, 2)
+                        saveDict[f"Pot.Grw"] = f"{round((maxLTPPotential - prevLtp)*100/prevLtp, 2)}%"
                 screenDict["Date"] = calc_date
                 saveDict["Date"] = calc_date
             else:
