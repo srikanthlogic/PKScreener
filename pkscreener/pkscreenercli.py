@@ -568,6 +568,8 @@ def checkIntradayComponent(args, monitorOption):
 
 
 def pipeResults(prevOutput,args):
+    if args is None or args.options is None:
+        return False
     nextOnes = args.options.split(">")
     hasFoundStocks = False
     if len(nextOnes) > 1:

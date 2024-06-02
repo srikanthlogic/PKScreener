@@ -2169,17 +2169,22 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=Utility.tools.getMaxColumnWidths(saveResultsTrimmed)
                     ).encode("utf-8").decode(STD_ENCODING)
-                    caption_df = saveResultsTrimmed[['LTP','%Chng','Volume']].head(5)
-                    caption_df.loc[:, "LTP"] = caption_df.loc[:, "LTP"].apply(
-                        lambda x: str(int(round(float(x),0)))
-                    )
-                    caption_df.loc[:, "%Chng"] = caption_df.loc[:, "%Chng"].apply(
-                        lambda x: f'{int(round(float(x.replace("%","")),0))}%'
-                    )
-                    caption_df.loc[:, "Volume"] = caption_df.loc[:, "Volume"].apply(
-                        lambda x: f'{int(round(float(x.replace("x","")),0))}x' if (len(x.replace("x","").strip()) > 0 and not pd.isna(float(x.replace("x","")))) else ''
-                    )
-                    caption_df.rename(columns={"%Chng": "Ch%","Volume":"Vol"}, inplace=True)
+                    try:
+                        caption_df = saveResultsTrimmed[['LTP','%Chng','Volume']].head(5)
+                        caption_df.loc[:, "LTP"] = caption_df.loc[:, "LTP"].apply(
+                            lambda x: str(int(round(float(x),0)))
+                        )
+                        caption_df.loc[:, "%Chng"] = caption_df.loc[:, "%Chng"].apply(
+                            lambda x: f'{int(round(float(x.replace("%","")),0))}%'
+                        )
+                        caption_df.loc[:, "Volume"] = caption_df.loc[:, "Volume"].apply(
+                            lambda x: f'{int(round(float(x.replace("x","")),0))}x' if (len(x.replace("x","").strip()) > 0 and not pd.isna(float(x.replace("x","")))) else ''
+                        )
+                        caption_df.rename(columns={"%Chng": "Ch%","Volume":"Vol"}, inplace=True)
+                    except:
+                        cols = [list(saveResultsTrimmed.columns)[0]]
+                        cols.extend(list(saveResultsTrimmed.columns[5:]))
+                        caption_df = saveResultsTrimmed[cols].head(2)
                     for col in caption_df.columns:
                         caption_df[col] = caption_df[col].astype(str)
                     caption_results = colorText.miniTabulator().tabulate(
@@ -2188,7 +2193,7 @@ def printNotifySaveScreenedResults(
                         tablefmt=colorText.No_Pad_GridFormat,
                         maxcolwidths=[None,None,4,3]
                     ).encode("utf-8").decode(STD_ENCODING).replace("-K-----S-----C-----R","-K-----S----C---R").replace("%  ","% ").replace("=K=====S=====C=====R","=K=====S====C===R").replace("Vol  |","Vol|").replace("x  ","x")
-                    caption_results = caption_results.replace("-E-----N-----E-----R","-E-----N----E---R").replace("=E=====N=====E=====R","=E=====N====E===R")
+                    caption_results = Utility.tools.removeAllColorStyles(caption_results.replace("-E-----N-----E-----R","-E-----N----E---R").replace("=E=====N=====E=====R","=E=====N====E===R"))
                     caption = f"{caption}.Open attached image for more. Samples:<pre>{caption_results}</pre>{elapsed_text}{pipedTitle}" #<i>Author is <u><b>NOT</b> a SEBI registered financial advisor</u> and MUST NOT be deemed as one.</i>"
                 if not testing: # and not userPassedArgs.runintradayanalysis:
                     sendQuickScanResult(
@@ -2797,7 +2802,7 @@ def sendMessageToTelegramChannel(
         try:
             if caption is not None:
                 caption = f"{caption.replace('&','n')}"
-            send_photo(photo_filePath, caption, userID=user)
+            send_photo(photo_filePath, (caption if len(caption) <=1024 else ""), userID=user)
             # Breather for the telegram API to be able to send the heavy photo
             sleep(2)
         except Exception as e:  # pragma: no cover
@@ -2806,7 +2811,7 @@ def sendMessageToTelegramChannel(
         try:
             if caption is not None:
                 caption = f"{caption.replace('&','n')}"
-            send_document(document_filePath, caption, userID=user)
+            send_document(document_filePath, (caption if len(caption) <=1024 else ""), userID=user)
             # Breather for the telegram API to be able to send the document
             sleep(2)
         except Exception as e:  # pragma: no cover
