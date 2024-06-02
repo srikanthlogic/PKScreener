@@ -229,8 +229,9 @@ class StockScreener:
 
             if processedData.empty:
                 raise StockDataEmptyException("Empty processedData")
-            
-            with SuppressOutput(suppress_stderr=(logLevel==logging.NOTSET), suppress_stdout=(not (printCounter or testbuild))):
+            suppressError = (logLevel==logging.NOTSET)
+            suppressOut = (not (printCounter or testbuild))
+            with SuppressOutput(suppress_stderr=False, suppress_stdout=False):
                 self.updateStock(stock, screeningDictionary, saveDictionary, executeOption, exchangeName)
                 
                 self.performBasicLTPChecks(executeOption, screeningDictionary, saveDictionary, fullData, configManager, screener, exchangeName)
