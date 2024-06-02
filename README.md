@@ -21,7 +21,7 @@
 | RSI screening | MACD scanners | IPO Stocks | Momentum Gainers | Watchlist screening |
 | :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
 
-| Stock Performance | 52Wk H/L Breakouts | 10 days low breakouts | Aroon Crossover | Next Day Bullish Stocks|
+| Stock Performance | 52Wk-H/L Breakouts | 10 days low breakouts | Aroon Crossover | Next Day Bullish Stocks|
 | :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
 
 | Today's Breakouts | Breaking out now | Popular stocks by Mutual Funds / FIIs | Higher Highs | Lower Lows|

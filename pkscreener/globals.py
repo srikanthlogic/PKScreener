@@ -2088,12 +2088,25 @@ def printNotifySaveScreenedResults(
     summaryReturns = removedUnusedColumns(screenResults, saveResults, ["Date","Breakout","Resistance"],userArgs=userPassedArgs)
 
     tabulated_results = ""
+    console_results = ""
     if screenResults is not None and len(screenResults) > 0:
         tabulated_results = colorText.miniTabulator().tabulate(
             screenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
             maxcolwidths=Utility.tools.getMaxColumnWidths(screenResults)
         ).encode("utf-8").decode(STD_ENCODING)
-    OutputControls().printOutput(f"{tabulated_results}\n", enableMultipleLineOutput=True)
+        copyScreenResults = screenResults.copy()
+        hiddenColumns = configManager.alwaysHiddenDisplayColumns.split(",")
+        for col in screenResults.columns:
+            if col in hiddenColumns:
+                copyScreenResults.drop(col, axis=1, inplace=True, errors="ignore")
+        try:
+            console_results = colorText.miniTabulator().tabulate(
+                                    copyScreenResults, headers="keys", tablefmt=colorText.No_Pad_GridFormat,
+                                    maxcolwidths=Utility.tools.getMaxColumnWidths(copyScreenResults)
+                                ).encode("utf-8").decode(STD_ENCODING)
+        except:
+            console_results = tabulated_results
+    OutputControls().printOutput(f"{console_results}\n", enableMultipleLineOutput=True)
     _, reportNameInsights = getBacktestReportFilename(
         sortKey="Date", optionalName="Insights"
     )
@@ -2200,22 +2213,23 @@ def printNotifySaveScreenedResults(
                         )
                         try:
                             # import traceback
-                            Utility.tools.tableToImage(
-                                "",
-                                "",
-                                pngName + backtestExtension,
-                                menuChoiceHierarchy,
-                                backtestSummary=tabulated_backtest_summary,
-                                backtestDetail=tabulated_backtest_detail,
-                            )
-                            caption = f"Backtest data for stocks listed in <b>{title}</b> scan results. See more past backtest data at https://pkjmesra.github.io/PKScreener/BacktestReports.html"
-                            sendMessageToTelegramChannel(
-                                message=None,
-                                document_filePath=pngName + backtestExtension,
-                                caption=caption,
-                                user=user,
-                            )
-                            os.remove(pngName + backtestExtension)
+                            if tabulated_backtest_summary is not None:
+                                Utility.tools.tableToImage(
+                                    "",
+                                    "",
+                                    pngName + backtestExtension,
+                                    menuChoiceHierarchy,
+                                    backtestSummary=tabulated_backtest_summary,
+                                    backtestDetail=tabulated_backtest_detail,
+                                )
+                                caption = f"Backtest data for stocks listed in <b>{title}</b> scan results. See more past backtest data at https://pkjmesra.github.io/PKScreener/BacktestReports.html"
+                                sendMessageToTelegramChannel(
+                                    message=None,
+                                    document_filePath=pngName + backtestExtension,
+                                    caption=caption,
+                                    user=user,
+                                )
+                                os.remove(pngName + backtestExtension)
                         except Exception as e:  # pragma: no cover
                             default_logger().debug(e, exc_info=True)
                             pass
@@ -2285,7 +2299,7 @@ def prepareGrowthOf10kResults(saveResults, selectedChoice, menuChoiceHierarchy, 
 def removedUnusedColumns(screenResults, saveResults, dropAdditionalColumns=[], userArgs=None):
     periods = configManager.periodsRange
     if userArgs is not None and userArgs.backtestdaysago is not None and int(userArgs.backtestdaysago) < 22:
-        dropAdditionalColumns.append("22-Pd %")
+        dropAdditionalColumns.append("22-Pd")
     summaryReturns = "" #("w.r.t. " + saveResults["Date"].iloc[0]) if "Date" in saveResults.columns else ""
     for period in periods:
         if saveResults is not None:

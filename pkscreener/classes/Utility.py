@@ -544,7 +544,10 @@ class tools:
         for df in dfs_to_print:
             counter += 1
             colPixelRunValue = startColValue
-            if df is None or len(df) == 0 or df.empty:
+            try:
+                if df is None or len(df) == 0:
+                    continue
+            except:
                 continue
             # selected menu options and As of DateTime
             draw.text(

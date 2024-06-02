@@ -121,8 +121,8 @@ class ScreeningStatistics:
         full52WeekHigh = full52Week["High"].max()
         full52WeekLow = full52Week["Low"].min()
 
-        saveDict["52Wk H"] = "{:.2f}".format(full52WeekHigh)
-        saveDict["52Wk L"] = "{:.2f}".format(full52WeekLow)
+        saveDict["52Wk-H"] = "{:.2f}".format(full52WeekHigh)
+        saveDict["52Wk-L"] = "{:.2f}".format(full52WeekLow)
         if recentHigh >= full52WeekHigh:
             highColor = colorText.GREEN
         elif recentHigh >= 0.9 * full52WeekHigh:
@@ -136,10 +136,10 @@ class ScreeningStatistics:
         else:
             lowColor = colorText.GREEN
         screenDict[
-            "52Wk H"
+            "52Wk-H"
         ] = f"{highColor}{str('{:.2f}'.format(full52WeekHigh))}{colorText.END}"
         screenDict[
-            "52Wk L"
+            "52Wk-L"
         ] = f"{lowColor}{str('{:.2f}'.format(full52WeekLow))}{colorText.END}"
         # if self.shouldLog:
         #     self.default_logger.debug(data.head(10))
@@ -384,7 +384,10 @@ class ScreeningStatistics:
                 ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
                 df["Above"] = ema > df["ATRTrailingStop"]
                 df["Below"] = ema < df["ATRTrailingStop"]
-        
+        except Exception as e:
+            if self.shouldLog:
+                self.default_logger.debug(e, exc_info=True)
+                
         if df is not None:
             df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
             df["Sell"] = (df["Close"] < df["ATRTrailingStop"]) & (df["Below"]==True)
@@ -2710,8 +2713,8 @@ class ScreeningStatistics:
                 saveDict[f"Growth{prd}"] = round(ltpTdy - prevLtp, 2)
                 if prd == 22 or (prd == requestedPeriod):
                     changePercent = round(((prevLtp-ltpTdy) if requestedPeriod ==0 else (ltpTdy - prevLtp))*100/ltpTdy, 2)
-                    saveDict[f"{prd}-Pd %"] = f"{changePercent}%" if not pd.isna(changePercent) else '-'
-                    screenDict[f"{prd}-Pd %"] = ((colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END) if not pd.isna(changePercent) else '-'
+                    saveDict[f"{prd}-Pd"] = f"{changePercent}%" if not pd.isna(changePercent) else '-'
+                    screenDict[f"{prd}-Pd"] = ((colorText.GREEN if changePercent >=0 else colorText.FAIL) + f"{changePercent}%" + colorText.END) if not pd.isna(changePercent) else '-'
                 screenDict["Date"] = calc_date
                 saveDict["Date"] = calc_date
             else:

@@ -136,7 +136,7 @@ level1_X_MenuDict = {
     "W": "Screen stocks from my own Watchlist",
     "N": "Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)",
     "E": "Live Index Scan : 5 EMA for Intraday",
-    "0": "Screen stocks/index by the stock/index names (NSE Stock Code or index, e.g. ^NSEI, ^NSEBANK, ^BSESN)",
+    "0": "Screen stocks/index by the stock/index names (NSE Stock Code, e.g. SBIN,BANKINDIA or Yahoo Finance index symbol, e.g. ^NSEI, ^NSEBANK, ^BSESN)",
     "1": "Nifty 50          ",
     "2": "Nifty Next 50     ",
     "3": "Nifty 100         ",

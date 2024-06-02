@@ -199,10 +199,10 @@ def test_find52WeekHighLow_positive_case(tools_instance):
     saveDict = {}
     screenDict = {}
     tools_instance.find52WeekHighLow(df, saveDict, screenDict)
-    assert saveDict["52Wk H"] == "100.00"
-    assert saveDict["52Wk L"] == "5.00"
-    assert screenDict["52Wk H"] == f"{colorText.GREEN}100.00{colorText.END}"
-    assert screenDict["52Wk L"] == f"{colorText.FAIL}5.00{colorText.END}"
+    assert saveDict["52Wk-H"] == "100.00"
+    assert saveDict["52Wk-L"] == "5.00"
+    assert screenDict["52Wk-H"] == f"{colorText.GREEN}100.00{colorText.END}"
+    assert screenDict["52Wk-L"] == f"{colorText.FAIL}5.00{colorText.END}"
 
     df = pd.DataFrame({
         "High": [90, 60, 70, 80, 90, 100],  # Assuming recent high is 90
@@ -211,10 +211,10 @@ def test_find52WeekHighLow_positive_case(tools_instance):
     saveDict = {}
     screenDict = {}
     tools_instance.find52WeekHighLow(df, saveDict, screenDict)
-    assert saveDict["52Wk H"] == "100.00"
-    assert saveDict["52Wk L"] == "100.00"
-    assert screenDict["52Wk H"] == f"{colorText.WARN}100.00{colorText.END}"
-    assert screenDict["52Wk L"] == f"{colorText.WARN}100.00{colorText.END}"
+    assert saveDict["52Wk-H"] == "100.00"
+    assert saveDict["52Wk-L"] == "100.00"
+    assert screenDict["52Wk-H"] == f"{colorText.WARN}100.00{colorText.END}"
+    assert screenDict["52Wk-L"] == f"{colorText.WARN}100.00{colorText.END}"
 
     df = pd.DataFrame({
         "High": [50, 60, 70, 80, 90, 100],  # Assuming recent high is 50
@@ -223,10 +223,10 @@ def test_find52WeekHighLow_positive_case(tools_instance):
     saveDict = {}
     screenDict = {}
     tools_instance.find52WeekHighLow(df, saveDict, screenDict)
-    assert saveDict["52Wk H"] == "100.00"
-    assert saveDict["52Wk L"] == "0.00"
-    assert screenDict["52Wk H"] == f"{colorText.FAIL}100.00{colorText.END}"
-    assert screenDict["52Wk L"] == f"{colorText.GREEN}0.00{colorText.END}"
+    assert saveDict["52Wk-H"] == "100.00"
+    assert saveDict["52Wk-L"] == "0.00"
+    assert screenDict["52Wk-H"] == f"{colorText.FAIL}100.00{colorText.END}"
+    assert screenDict["52Wk-L"] == f"{colorText.GREEN}0.00{colorText.END}"
 
 def test_find52WeekHighLow_negative_case(tools_instance):
     df = pd.DataFrame({
@@ -238,10 +238,10 @@ def test_find52WeekHighLow_negative_case(tools_instance):
 
     tools_instance.find52WeekHighLow(df, saveDict, screenDict)
 
-    assert saveDict["52Wk H"] == "90.00"
-    assert saveDict["52Wk L"] == "5.00"
-    assert screenDict["52Wk H"] == f"{colorText.FAIL}90.00{colorText.END}"
-    assert screenDict["52Wk L"] == f"{colorText.GREEN}5.00{colorText.END}"
+    assert saveDict["52Wk-H"] == "90.00"
+    assert saveDict["52Wk-L"] == "5.00"
+    assert screenDict["52Wk-H"] == f"{colorText.FAIL}90.00{colorText.END}"
+    assert screenDict["52Wk-L"] == f"{colorText.GREEN}5.00{colorText.END}"
     assert tools_instance.find52WeekHighLow(None,saveDict, screenDict) is False
     assert tools_instance.find52WeekHighLow(pd.DataFrame(),saveDict, screenDict) is False
 

@@ -45,6 +45,7 @@ default_timeout = 2
 class tools(SingletonMixin, metaclass=SingletonType):
     def __init__(self):
         super(tools, self).__init__()
+        self.alwaysHiddenDisplayColumns = ",52Wk-L,RSI,22-Pd,Consol.,Pattern,CCI,Trend(22Prds)"
         self.consolidationPercentage = 10
         self.volumeRatio = 2.5
         self.minLTP = 20.0
@@ -147,6 +148,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 pass
             parser.add_section("config")
             parser.add_section("filters")
+            parser.set("config", "alwaysHiddenDisplayColumns", str(self.alwaysHiddenDisplayColumns))
             parser.set("config", "atrtrailingstopemaperiod", str(self.atrTrailingStopEMAPeriod))
             parser.set("config", "atrtrailingstopperiod", str(self.atrTrailingStopPeriod))
             parser.set("config", "atrtrailingstopsensitivity", str(self.atrTrailingStopSensitivity))
@@ -346,6 +348,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
                 sleep(3)
                 pass
             try:
+                parser.set("config", "alwaysHiddenDisplayColumns", str(self.alwaysHiddenDisplayColumns))
                 parser.set("config", "atrtrailingstopemaperiod", str(self.atrTrailingStopEMAPeriod))
                 parser.set("config", "atrtrailingstopperiod", str(self.atrTrailingStopPeriod))
                 parser.set("config", "atrtrailingstopsensitivity", str(self.atrTrailingStopSensitivity))
@@ -437,6 +440,7 @@ class tools(SingletonMixin, metaclass=SingletonType):
     def getConfig(self, parser):
         if len(parser.read("pkscreener.ini")):
             try:
+                self.alwaysHiddenDisplayColumns = parser.get("config", "alwaysHiddenDisplayColumns")
                 self.duration = parser.get("config", "duration")
                 self.period = parser.get("config", "period")
                 self.minLTP = float(parser.get("filters", "minprice"))

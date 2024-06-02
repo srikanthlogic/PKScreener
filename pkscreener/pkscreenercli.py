@@ -70,6 +70,7 @@ original__stdout=None
 cron_runs=0
 
 def decorator(func):
+    # @infer_global(new_func)
     def new_func(*args, **kwargs):
         if printenabled:
             try:
@@ -266,6 +267,8 @@ if __name__ == "__main__":
         help="Piped Menus",
         required=False,
     )
+    # args = " -a Y -e -p -u 6186237493 -o X:12:30::D:D:D:D:D".split(" ")
+    # argsv = argParser.parse_known_args(args=args)
     argsv = argParser.parse_known_args()
     args = argsv[0]
     # if sys.argv[0].endswith(".py"):
@@ -374,6 +377,8 @@ def runApplication():
         savedPipedArgs = args.pipedmenus if args is not None and args.pipedmenus is not None else None
     except:
         pass
+    # args = " -a Y -e -p -u 6186237493 -o X:12:30::D:D:D:D:D".split(" ")
+    # argsv = argParser.parse_known_args(args=args)
     argsv = argParser.parse_known_args()
     args = argsv[0]
     if args.systemlaunched:
@@ -655,7 +660,23 @@ def pkscreenercli():
             Utility.tools.clearScreen(userArgs=args, clearAlways=True)
         warnAboutDependencies()
         if args.prodbuild:
-            disableSysOut()
+            if args.options and len(args.options.split(":")) > 0:
+                indexOption = 0
+                doNotDisableGlobalPrint = False
+                while indexOption <= 15: # Max integer menu index in level1_X_MenuDict in MenuOptions.py
+                    # Menu option 30 is for ATR trailing stops which uses vectorbt
+                    # which in turn uses numba which requires print function to be inferred globally
+                    # If we try to override print with new_func, it expects this new_func
+                    # to be globally available. So to avoid these changes, let's just skip
+                    # prodmode for menu option 30
+                    doNotDisableGlobalPrint = f":{indexOption}:30:" in args.options
+                    if doNotDisableGlobalPrint:
+                        break
+                    indexOption += 1
+                if not doNotDisableGlobalPrint:
+                    disableSysOut()
+            else:
+                disableSysOut()
 
         if not configManager.checkConfigFile():
             configManager.setConfig(
@@ -723,7 +744,13 @@ def pkscreenercli():
             sys.exit(0)
         else:
             runApplicationForScreening()
-    except:
+    except Exception as e:
+        if "RUNNER" not in os.environ.keys() and ('PKDevTools_Default_Log_Level' in os.environ.keys() and os.environ["PKDevTools_Default_Log_Level"] != str(log.logging.NOTSET)):
+                OutputControls().printOutput(
+                    "[+] RuntimeError with 'multiprocessing'.\n[+] Please contact the Developer, if this does not work!"
+                )
+                OutputControls().printOutput(e)
+                traceback.print_exc()
         pass
 
 def runLoopOnScheduleOrStdApplication(hasCronInterval):

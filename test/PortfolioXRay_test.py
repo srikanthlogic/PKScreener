@@ -397,8 +397,8 @@ def test_cleanupData(savedResults):
         "Volume": ["100x", "200x", "300x"],
         "Consol.": ["Range: 10%", "Range: 20%", "Range: 30%"],
         "Breakout(22Prds)": ["BO: 1.0 R: 2.0 (Potential)", "BO: 3.0 R: 4.0 (Potential)", "BO: 5.0 R: 6.0 (Potential)"],
-        "52Wk H": ["100.0", "200.0", "300.0"],
-        "52Wk L": ["50.0", "100.0", "150.0"],
+        "52Wk-H": ["100.0", "200.0", "300.0"],
+        "52Wk-L": ["50.0", "100.0", "150.0"],
         "CCI": ["80.0", "90.0", "100.0"]
     })
 
@@ -412,8 +412,8 @@ def test_cleanupData(savedResults):
     assert "Consol." in result.columns
     assert "Breakout" in result.columns
     assert "Resistance" in result.columns
-    assert "52Wk H" in result.columns
-    assert "52Wk L" in result.columns
+    assert "52Wk-H" in result.columns
+    assert "52Wk-L" in result.columns
     assert "CCI" in result.columns
     assert result["LTP"].tolist() == [10.0, 20.0, 30.0]
     assert result["RSI"].tolist() == [50.0, 60.0, 70.0]
@@ -421,8 +421,8 @@ def test_cleanupData(savedResults):
     assert result["Consol."].tolist() == [10.0, 20.0, 30.0]
     assert result["Breakout"].tolist() == [1.0, 3.0, 5.0]
     assert result["Resistance"].tolist() == [2.0, 4.0, 6.0]
-    assert result["52Wk H"].tolist() == [100.0, 200.0, 300.0]
-    assert result["52Wk L"].tolist() == [50.0, 100.0, 150.0]
+    assert result["52Wk-H"].tolist() == [100.0, 200.0, 300.0]
+    assert result["52Wk-L"].tolist() == [50.0, 100.0, 150.0]
     assert result["CCI"].tolist() == [80.0, 90.0, 100.0]
 
 def test_getbacktestPeriod_no_args():
@@ -839,44 +839,44 @@ def test_filterLTPMoreOREqualResistance(df):
     assert filterLTPMoreOREqualResistance(None) is None
 
 def test_filterLTPMoreOREqual52WkH(df):
-    df = pd.DataFrame({"LTP": [1000,2000,3052,4100,5400],"52Wk H":[990,2000,3050,4100,5500]})
+    df = pd.DataFrame({"LTP": [1000,2000,3052,4100,5400],"52Wk-H":[990,2000,3050,4100,5500]})
     result = filterLTPMoreOREqual52WkH(df)
-    expected_result = pd.DataFrame({"LTP": [1000,2000,3052,4100],"52Wk H":[990,2000,3050,4100]})
+    expected_result = pd.DataFrame({"LTP": [1000,2000,3052,4100],"52Wk-H":[990,2000,3050,4100]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPMoreOREqual52WkH(None) is None
 
 def test_filterLTPWithin90Percent52WkH(df):
-    df = pd.DataFrame({"LTP": [1000,2000,3052,4100,4951],"52Wk H":[990,2000,3050,4100,5500]})
+    df = pd.DataFrame({"LTP": [1000,2000,3052,4100,4951],"52Wk-H":[990,2000,3050,4100,5500]})
     result = filterLTPWithin90Percent52WkH(df)
-    expected_result = pd.DataFrame({"LTP": [4951],"52Wk H":[5500]})
+    expected_result = pd.DataFrame({"LTP": [4951],"52Wk-H":[5500]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPWithin90Percent52WkH(None) is None
 
 def test_filterLTPLess90Percent52WkH(df):
-    df = pd.DataFrame({"LTP": [1000,2000,3052,3500,5400],"52Wk H":[990,2000,3050,4000,5500]})
+    df = pd.DataFrame({"LTP": [1000,2000,3052,3500,5400],"52Wk-H":[990,2000,3050,4000,5500]})
     result = filterLTPLess90Percent52WkH(df)
-    expected_result = pd.DataFrame({"LTP": [3500],"52Wk H":[4000]})
+    expected_result = pd.DataFrame({"LTP": [3500],"52Wk-H":[4000]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPLess90Percent52WkH(None) is None
 
 def test_filterLTPWithin90Percent52WkL(df):
-    df = pd.DataFrame({"LTP": [110.2,220.4,310.4,410.0,452.1],"52Wk L":[100.1,200.2,300.3,400.0,500.4]})
+    df = pd.DataFrame({"LTP": [110.2,220.4,310.4,410.0,452.1],"52Wk-L":[100.1,200.2,300.3,400.0,500.4]})
     result = filterLTPWithin90Percent52WkL(df)
-    expected_result = pd.DataFrame({"LTP": [110.2,220.4],"52Wk L":[100.1,200.2]})
+    expected_result = pd.DataFrame({"LTP": [110.2,220.4],"52Wk-L":[100.1,200.2]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPWithin90Percent52WkL(None) is None
 
 def test_filterLTPLess52WkL(df):
-    df = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0,500.4],"52Wk L":[110.2,220.4,310.4,410.0,452.1]})
+    df = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0,500.4],"52Wk-L":[110.2,220.4,310.4,410.0,452.1]})
     result = filterLTPLess52WkL(df)
-    expected_result = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0],"52Wk L":[110.2,220.4,310.4,410.0]})
+    expected_result = pd.DataFrame({"LTP": [100.1,200.2,300.3,400.0],"52Wk-L":[110.2,220.4,310.4,410.0]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPLess52WkL(None) is None
 
 def test_filterLTPMore52WkL(df):
-    df = pd.DataFrame({"52Wk L": [100.1,200.2,300.3,400.0,500.4],"LTP":[110.2,220.4,310.4,410.0,452.1]})
+    df = pd.DataFrame({"52Wk-L": [100.1,200.2,300.3,400.0,500.4],"LTP":[110.2,220.4,310.4,410.0,452.1]})
     result = filterLTPMore52WkL(df)
-    expected_result = pd.DataFrame({"52Wk L": [300.3,400.0],"LTP":[310.4,410.0]})
+    expected_result = pd.DataFrame({"52Wk-L": [300.3,400.0],"LTP":[310.4,410.0]})
     pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_result.reset_index(drop=True))
     assert filterLTPMore52WkL(None) is None
 

@@ -107,19 +107,19 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             self.monitor_df = screen_monitor_df
         else:
             screen_monitor_df.reset_index(inplace=True)
-            screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk H","RSI/i" if "RSI/i" in screen_monitor_df.columns else "RSI","Volume"]].head(self.maxNumRowsInEachResult-1)
+            screen_monitor_df = screen_monitor_df[["Stock", "LTP", "%Chng","52Wk-H","RSI/i" if "RSI/i" in screen_monitor_df.columns else "RSI","Volume"]].head(self.maxNumRowsInEachResult-1)
             # Import Utility here since Utility has dependency on PKScheduler which in turn has dependency on 
             # multiprocessing, which behaves erratically if imported at the top.
             screen_monitor_df.loc[:, "%Chng"] = screen_monitor_df.loc[:, "%Chng"].apply(
                         lambda x: Utility.tools.roundOff(str(x).split("% (")[0] + colorText.END,0)
                     )
-            screen_monitor_df.loc[:, "52Wk H"] = screen_monitor_df.loc[:, "52Wk H"].apply(
+            screen_monitor_df.loc[:, "52Wk-H"] = screen_monitor_df.loc[:, "52Wk-H"].apply(
                 lambda x: Utility.tools.roundOff(x,0)
             )
             screen_monitor_df.loc[:, "Volume"] = screen_monitor_df.loc[:, "Volume"].apply(
                 lambda x: Utility.tools.roundOff(x,0)
             )
-            screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk H":"52WkH", "RSI":"RSI/i"}, inplace=True)
+            screen_monitor_df.rename(columns={"%Chng": "Ch%","Volume":"Vol","52Wk-H":"52WkH", "RSI":"RSI/i"}, inplace=True)
             telegram_df = self.updateDataFrameForTelegramMode(telegram, screen_monitor_df)
         
         

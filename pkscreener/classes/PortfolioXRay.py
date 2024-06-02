@@ -398,8 +398,8 @@ def statScanCalculationForPatterns(*args, **kwargs):
     return scanResults
 
 def ensureColumnsExist(saveResults):
-    columns = ['Stock', 'Date', 'Volume', 'Trend', 'MA-Signal', 'LTP', '52Wk H',
-               '52Wk L', '1-Pd', '2-Pd', '3-Pd', '4-Pd', '5-Pd', '10-Pd', '15-Pd',
+    columns = ['Stock', 'Date', 'Volume', 'Trend', 'MA-Signal', 'LTP', '52Wk-H',
+               '52Wk-L', '1-Pd', '2-Pd', '3-Pd', '4-Pd', '5-Pd', '10-Pd', '15-Pd',
                '22-Pd', '30-Pd', 'Consol.', 'Breakout', 'RSI', 'Pattern', 'CCI',
                'LTP1', 'Growth1', 'LTP2', 'Growth2', 'LTP3', 'Growth3', 'LTP4',
                'Growth4', 'LTP5', 'Growth5', 'LTP10', 'Growth10', 'LTP15', 'Growth15',
@@ -452,8 +452,8 @@ def cleanupData(savedResults):
         )
     saveResults["Breakout"] = saveResults["Breakout"].astype(float).fillna(0.0)
     saveResults["Resistance"] = saveResults["Resistance"].astype(float).fillna(0.0)
-    saveResults["52Wk H"] = saveResults["52Wk H"].astype(float).fillna(0.0)
-    saveResults["52Wk L"] = saveResults["52Wk L"].astype(float).fillna(0.0)
+    saveResults["52Wk-H"] = saveResults["52Wk-H"].astype(float).fillna(0.0)
+    saveResults["52Wk-L"] = saveResults["52Wk-L"].astype(float).fillna(0.0)
     saveResults["CCI"] = saveResults["CCI"].astype(float).fillna(0.0)
     return saveResults
 
@@ -1075,13 +1075,13 @@ def filterLTPMoreOREqualResistance(df):
 def filterLTPMoreOREqual52WkH(df):
     if df is None:
         return None
-    return df[df["LTP"] >= df["52Wk H"]].fillna(0.0)
+    return df[df["LTP"] >= df["52Wk-H"]].fillna(0.0)
 
 
 def filterLTPWithin90Percent52WkH(df):
     if df is None:
         return None
-    return df[(df["LTP"] >= 0.9 * df["52Wk H"]) & (df["LTP"] < df["52Wk H"])].fillna(
+    return df[(df["LTP"] >= 0.9 * df["52Wk-H"]) & (df["LTP"] < df["52Wk-H"])].fillna(
         0.0
     )
 
@@ -1089,13 +1089,13 @@ def filterLTPWithin90Percent52WkH(df):
 def filterLTPLess90Percent52WkH(df):
     if df is None:
         return None
-    return df[df["LTP"] < 0.9 * df["52Wk H"]].fillna(0.0)
+    return df[df["LTP"] < 0.9 * df["52Wk-H"]].fillna(0.0)
 
 
 def filterLTPMore52WkL(df):
     if df is None:
         return None
-    return df[((df["LTP"] > df["52Wk L"]) & (df["LTP"] < 1.1 * df["52Wk L"]))].fillna(
+    return df[((df["LTP"] > df["52Wk-L"]) & (df["LTP"] < 1.1 * df["52Wk-L"]))].fillna(
         0.0
     )
 
@@ -1103,7 +1103,7 @@ def filterLTPMore52WkL(df):
 def filterLTPWithin90Percent52WkL(df):
     if df is None:
         return None
-    return df[(df["LTP"] >= (1.1 * df["52Wk L"])) & (df["LTP"] > df["52Wk L"])].fillna(
+    return df[(df["LTP"] >= (1.1 * df["52Wk-L"])) & (df["LTP"] > df["52Wk-L"])].fillna(
         0.0
     )
 
@@ -1111,7 +1111,7 @@ def filterLTPWithin90Percent52WkL(df):
 def filterLTPLess52WkL(df):
     if df is None:
         return None
-    return df[df["LTP"] <= df["52Wk L"]].fillna(0.0)
+    return df[df["LTP"] <= df["52Wk-L"]].fillna(0.0)
 
 
 def filterCCIBelowMinus100(df):
@@ -1171,7 +1171,7 @@ def strategyDictionary():
     ---
     `[CCI]<=-100`, `[CCI]-100<C<0`, `[CCI]0<=C<=100`, `[CCI]100<C<=200` and `[CCI]>200`
 
-    52Wk H/L
+    52Wk-H/L
     --------
     `[52Wk]LTP>=H`, `[52Wk]LTP>=.9*H`, `[52Wk]LTP<.9*H`, `[52Wk]LTP>L`, `[52Wk]LTP>=1.1*L` and `[52Wk]LTP<=L`
 
@@ -1214,7 +1214,7 @@ def strategyDictionary():
     strategies["[CCI]0<=C<=100"] = filterCCI0To100
     strategies["[CCI]100<C<=200"] = filterCCI100To200
     strategies["[CCI]>200"] = filterCCIAbove200
-    # 52Wk H/L
+    # 52Wk-H/L
     strategies["[52Wk]LTP>=H"] = filterLTPMoreOREqual52WkH
     strategies["[52Wk]LTP>=.9*H"] = filterLTPWithin90Percent52WkH
     strategies["[52Wk]LTP<.9*H"] = filterLTPLess90Percent52WkH
