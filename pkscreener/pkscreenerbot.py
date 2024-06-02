@@ -125,6 +125,7 @@ m2 = menus()
 m3 = menus()
 m4 = menus()
 int_timer = None
+_updater = None
 
 TOP_LEVEL_SCANNER_MENUS = ["X", "B", "MI","DV", "P"]
 TOP_LEVEL_SCANNER_SKIP_MENUS = ["M", "S", "G", "C", "T", "D", "I", "E", "U", "L", "Z", "P"]
@@ -735,7 +736,9 @@ def error_handler(update: object, context: CallbackContext) -> None:
     ):  # A newer 2nd instance was registered. We should politely shutdown.
         if (
             timeSinceStarted.total_seconds() >= MINUTES_2_IN_SECONDS
-        ):  # shutdown only if we have been running for over 5 minutes
+        ):  # shutdown only if we have been running for over 2 minutes.
+            # This also prevents this newer instance to get shutdown.
+            # Instead the older instance will shutdown
             print(
                 f"Stopping due to conflict after running for {timeSinceStarted.total_seconds()/60} minutes."
             )
@@ -745,12 +748,18 @@ def error_handler(update: object, context: CallbackContext) -> None:
                     int_timer.cancel()
             except:
                 pass
+                #https://github.com/python-telegram-bot/python-telegram-bot/issues/209
+                # if _updater is not None:
+                #     _updater.stop() # Calling stop from within a handler will cause deadlock
             try:
-                context.application.stop()
-                sys.exit(0)
+                # context.dispatcher.stop()
+                thread.interrupt_main() # causes ctrl + c
+                # sys.exit(0)
             except RuntimeError:
-                context.application.shutdown()
-            sys.exit(0)
+                pass
+            except SystemExit:
+                thread.interrupt_main()
+            # sys.exit(0)
         else:
             print("Other instance running!")
             # context.application.run_polling(allowed_updates=Update.ALL_TYPES)
@@ -1291,13 +1300,14 @@ def addCommandsForMenuItems(application):
 def runpkscreenerbot(availability=True) -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    global chat_idADMIN, Channel_Id, bot_available
+    global chat_idADMIN, Channel_Id, bot_available, _updater
     bot_available = availability
     Channel_Id, TOKEN, chat_idADMIN, GITHUB_TOKEN = get_secrets()
     # TOKEN = '1234567'
     # Channel_Id = 1001785195297
     # application = Application.builder().token(TOKEN).build()
     application = Updater(TOKEN)
+    _updater = application
     # Get the dispatcher to register handlers
     dispatcher = application.dispatcher
     # Setup conversation handler with the states FIRST and SECOND
