@@ -2468,42 +2468,6 @@ def removeUnknowns(screenResults, saveResults):
 #     df1.loc[mask_green_vwap, 'VWAP'] = green
 #     return df1
 
-def processResultsCallback(resultItem, processedCount,result_df, *otherArgs):
-    global userPassedArgs
-    (menuOption, backtestPeriod, result, lstscreen, lstsave, progressbar, testing,max_allowed) = otherArgs
-    numStocks = processedCount
-    result = resultItem
-    backtest_df = processResults(menuOption, backtestPeriod, result, lstscreen, lstsave, result_df)
-    progressbar()
-    progressbar.text(
-        colorText.BOLD
-        + colorText.GREEN
-        + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
-        + colorText.END
-    )
-    if result is not None:
-        if not userPassedArgs.monitor and len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
-            scr_df = pd.DataFrame(lstscreen)
-            existingColumns = ["Stock","%Chng","LTP","Volume"]
-            newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
-            existingColumns.extend(newColumns)
-            scr_df = scr_df[existingColumns]
-            scr_df.sort_values(by=["Volume","BidQty"], ascending=False, inplace=True)
-            tabulated_results = colorText.miniTabulator().tb.tabulate(
-                    scr_df,
-                    headers="keys",
-                    showindex=False,
-                    tablefmt=colorText.No_Pad_GridFormat,
-                    maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
-                )
-            tableLength = 2*len(lstscreen)+5
-            OutputControls().printOutput('\n'+tabulated_results)
-            # Move the cursor up, back to the top because we want the progress bar to keep showing at the top
-            sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
-    if keyboardInterruptEventFired:
-        return False, backtest_df
-    return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
-
 def runScanners(
     menuOption,
     items,
@@ -2551,7 +2515,42 @@ def runScanners(
             result = None
             backtest_df = None
             start_time = time.time()
-            otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave, progressbar, testing,max_allowed)
+            def processResultsCallback(resultItem, processedCount,result_df, *otherArgs):
+                global userPassedArgs
+                (menuOption, backtestPeriod, result, lstscreen, lstsave) = otherArgs
+                numStocks = processedCount
+                result = resultItem
+                backtest_df = processResults(menuOption, backtestPeriod, result, lstscreen, lstsave, result_df)
+                progressbar()
+                progressbar.text(
+                    colorText.BOLD
+                    + colorText.GREEN
+                    + f"{'Remaining' if userPassedArgs.download else ('Found' if menuOption in ['X'] else 'Analysed')} {len(lstscreen) if not userPassedArgs.download else processedCount} {'Stocks' if menuOption in ['X'] else 'Records'}"
+                    + colorText.END
+                )
+                if result is not None:
+                    if not userPassedArgs.monitor and len(lstscreen) > 0 and userPassedArgs is not None and userPassedArgs.options.split(":")[2] in ["29"]:
+                        scr_df = pd.DataFrame(lstscreen)
+                        existingColumns = ["Stock","%Chng","LTP","Volume"]
+                        newColumns = ["BidQty","AskQty","LwrCP","UprCP","VWAP","DayVola","Del(%)"]
+                        existingColumns.extend(newColumns)
+                        scr_df = scr_df[existingColumns]
+                        scr_df.sort_values(by=["Volume","BidQty"], ascending=False, inplace=True)
+                        tabulated_results = colorText.miniTabulator().tb.tabulate(
+                                scr_df,
+                                headers="keys",
+                                showindex=False,
+                                tablefmt=colorText.No_Pad_GridFormat,
+                                maxcolwidths=Utility.tools.getMaxColumnWidths(scr_df)
+                            )
+                        tableLength = 2*len(lstscreen)+5
+                        OutputControls().printOutput('\n'+tabulated_results)
+                        # Move the cursor up, back to the top because we want the progress bar to keep showing at the top
+                        sys.stdout.write(f"\x1b[{tableLength}A")  # cursor up one line
+                if keyboardInterruptEventFired:
+                    return False, backtest_df
+                return not ((testing and len(lstscreen) >= 1) or len(lstscreen) >= max_allowed), backtest_df
+            otherArgs = (menuOption, backtestPeriod, result, lstscreen, lstsave)
             backtest_df, result =PKScanRunner.runScan(userPassedArgs,testing,numStocks,iterations,items,numStocksPerIteration,tasks_queue,results_queue,originalNumberOfStocks,backtest_df,*otherArgs,resultsReceivedCb=processResultsCallback)
 
         OutputControls().printOutput(f"\x1b[{3 if OutputControls().enableMultipleLineOutput else 1}A")

@@ -138,22 +138,20 @@ rm updater.sh
     def get_latest_release_info():
         resp = OTAUpdater.fetcher.fetchURL(
             "https://api.github.com/repos/pkjmesra/PKScreener/releases/latest"
-        )
+        )  
+
         if "Windows" in platform.system():
-            OTAUpdater.checkForUpdate.url = resp.json()["assets"][1][
-                "browser_download_url"
-            ]
-            size = int(resp.json()["assets"][1]["size"] / (1024 * 1024))
+            exe_name = "pkscreenercli.exe"
         elif "Darwin" in platform.system():
-            OTAUpdater.checkForUpdate.url = resp.json()["assets"][2][
-                "browser_download_url"
-            ]
-            size = int(resp.json()["assets"][2]["size"] / (1024 * 1024))
+            exe_name = "pkscreenercli.run"
         else:
-            OTAUpdater.checkForUpdate.url = resp.json()["assets"][0][
-                "browser_download_url"
-            ]
-            size = int(resp.json()["assets"][0]["size"] / (1024 * 1024))
+            exe_name = "pkscreenercli.bin"
+        for asset in resp.json()["assets"]:
+            url = asset["browser_download_url"]
+            if url.endswith(exe_name):
+                OTAUpdater.checkForUpdate.url = url
+                size = int(asset["size"] / (1024 * 1024))
+                break
         return resp, size
 
     # Check for update and download if available

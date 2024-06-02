@@ -16,6 +16,7 @@ PKNSETools
 Pyarrow
 pyppeteer
 pytz
+python-telegram-bot>=13.4,<20.0
 requests_cache
 rich
 scikit-learn
