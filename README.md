@@ -1,4 +1,4 @@
-![Title](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/screenshots/title.png)
+![Title](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/screenshots/logos/Logo2.png)
 
 # PKScreener
 
@@ -7,28 +7,24 @@
 
 ## What is PKScreener?
 | Telegram Alerts | Nifty AI Prediction | Scheduling Cron Jobs | On-Demand Telegram Bot | Backtesting / Growth of 10k|
-| :-------------: | :-----------------: | :------------------: | :--------------------: | ----------- |
-
+| :-------------: | :-----------------: | :------------------: | :--------------------: | :-----------: |
 | Nifty screening | Volume scanners | Breakout detection | Consolidating stocks | Reversal Signals |
-| :-------------: | :-------------: | :----------------: | :------------------: | ---------------- |
-
-| Chart Patterns | CCI scanners | 2% scanners | Short-term bulls | NR4 / NR7 | Weekly Releases |
-| :------------: | :----------: | :---------: | :--------------: | :-------: | --------------- |
-
+| Chart Patterns | CCI scanners | 2% scanners | Short-term bulls | NR4 / NR7 | Daily Releases |
 | Fair Value | Mutual funds, FII data | TTM Squeeze | Golden Crossover | Death Crossover|
-| :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
-
 | RSI screening | MACD scanners | IPO Stocks | Momentum Gainers | Watchlist screening |
-| :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
-
 | Stock Performance | 52Wk-H/L Breakouts | 10 days low breakouts | Aroon Crossover | Next Day Bullish Stocks|
-| :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
-
 | Today's Breakouts | Breaking out now | Popular stocks by Mutual Funds / FIIs | Higher Highs | Lower Lows|
-| :-----------: | :-----------: | :--------: | :--------------: | ------------------- |
-
 | F&O Stocks screening | Live 5-EMA Index Scan | Logging | Telegram Channel | Early Breakouts |
-| :------------------: | :-------------------: | :-----: | :--------------: | --------------- |
+| ATR Cross | ATR Trailing Stops | Intraday Bid/Ask Build-up | Quick Backtest | Morning vs Day-close profit analysis |
+| Multiple period/duration support | Daily OHLCV | Intraday OHLCV | Auomated Software Updates| NASDAQ Index Support |
+| Nifty 50 | Nifty Next 50 | Nifty 100 | Nifty 200| Nifty 500 |
+| Nifty Smallcap 50 | Nifty Smallcap 250 | Nifty Midcap 50 | Nifty Midcap 100| Nifty Midcap 150 |
+| Nifty All 2000 | Nifty Newly Listed (IPOs in last 2 Year) | Nifty F&O Stocks | View Stock Performance| High Momentum(RSI,MFI,CCI) |
+| Intraday Monitor | Scanner pinning | Stock list Pinning | VCP (Volatility Contraction Pattern)| VCP  (Mark Minervini) |
+| Moving Average Signals | Candle-stick Patterns | Trendline Support Stocks | Bullish/Bearish Inside Bar | Volume Spread Analysis |
+| Narrow Range (NRx) Reversal | Lorentzian Classifier | PSAR and RSI reversal | Rising RSI | RSI MA Reversal |
+| Upcoming CA stocks | High Dividend Stocks | Fair Value Buy Opportunities | Shareholding by number of Mutual Funds/FIIs | Bullish for next day |
+
 ### A Python-based stock screener for NSE, India.
 
 **pkscreener** is an advanced stock screener to find potential breakout stocks from NSE and tell it's possible breakout values. It also helps to find the stocks which are consolidating and may breakout, or the particular chart patterns that you're looking specifically to make your decisions.
@@ -58,46 +54,90 @@ You can now run the `pkscreenerbot` on your local machine or if it's running on 
 ## Scanners
 
 Screening options to choose from:
-* Artificial Intelligence v2 for Nifty 50 Prediction
-* Live Index Scan : 5 EMA for Intraday
-* Screen stocks by the stock names (NSE Stock Code)
-* Nifty 50
-* Nifty Next 50
-* Nifty 100
-* Nifty 200
-* Nifty 500
-* Nifty Smallcap 50
-* Nifty Smallcap 100
-* Nifty Smallcap 250
-* Nifty Midcap 50
-* Nifty Midcap 100
-* Nifty Midcap 150
-* Nifty (All Stocks)
-* Newly Listed (IPOs in last 2 Year)
-* F&O Stocks Only
-* NASDAQ
 
-Followin scanners are already implemented. Others are `In Progress`
 ```
-0 > Full Screening (Shows Technical Parameters without any criterion)
-     1 > Probable Breakouts              	2 > Today's Breakouts
-     3 > Consolidating stocks            	4 > Lowest Volume in last 'N'-days (Early Breakout Detection)
+     X > Scanners
+     M > Monitor Intraday
+     S > Strategies
+     B > Backtests
+     G > Growth of 10k
+     C > Analyse morning vs close outcomes
+
+     P > Piped Scanners
+
+     T > Toggle between long-term (Default) [Current (1y, 1d)] and Intraday user configuration
+
+
+     D > Download Daily OHLC Data for the Past Year
+     I > Download Intraday OHLC Data for the Last Trading Day
+
+     E > Edit user configuration
+     Y > View your user configuration
+
+     U > Check for software update
+
+     L > Collect Logs for Debugging
+     H > Help / About Developer
+```
+
+Multiple Indices to choose from:
+
+```
+     W > Screen stocks from my own Watchlist
+     N > Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)
+     E > Live Index Scan : 5 EMA for Intraday
+
+     0 > Screen stocks/index by the stock/index names (NSE Stock Code, e.g. SBIN,BANKINDIA or Yahoo Finance index symbol, e.g. ^NSEI, ^NSEBANK, ^BSESN)
+     1 > Nifty 50          	2 > Nifty Next 50     	3 > Nifty 100         
+     4 > Nifty 200         	5 > Nifty 500         	6 > Nifty Smallcap 50 
+     7 > Nifty Smallcap 100	8 > Nifty Smallcap 250	9 > Nifty Midcap 50   
+    10 > Nifty Midcap 100	11 > Nifty Midcap 150 	12 > Nifty (All Stocks)
+    13 > Newly Listed (IPOs in last 2 Year)           	14 > F&O Stocks Only
+
+     15 > NASDAQ
+
+```
+
+Followin scanners are already implemented. 
+```
+     0 > Full Screening (Shows Technical Parameters without any criterion)
+     1 > Probable Breakouts/Breakdowns   	2 > Today's Breakouts/Breakdowns
+     3 > Consolidating stocks            	4 > Lowest Volume in last N-days (Early Breakout Detection)
      5 > RSI screening                   	6 > Reversal Signals
      7 > Stocks making Chart Patterns    	8 > CCI outside of the given range
      9 > Volume gainers                  	10 > Closing at least 2% up since last 3 days
-    11 > Short term bullish stocks(Intraday)	12 > 15 Minute Price & Volume breakout(Intraday)
-    13 > Bullish RSI & MACD(Intraday)       	14 > NR4 Daily Today
-    15 > 52 week low breakout(today/1 wk)	16 > 10 days low breakout
-    17 > 52 week high breakout(today/1 wk)	18 > Bullish Aroon(14) Crossover
-    19 > MACD Histogram x below 0       	20 > Bullish for next day
-    21 > Most Popular Stocks            	22 > View Stock Performance         
-    23 > Breaking out now               	24 > Higher Highs,Lows & Close      
-    25 > Lower Highs,Lows (Watch for Reversal)            	
+    11 > Short term bullish (Ichimoku)  	12 > N-Minute Price & Volume breakout(Intraday)
+    13 > Bullish RSI & MACD             	14 > NR4 Daily Today
+    15 > 52 week low breakout(today)(Sell)	16 > 10 days low breakout(Sell)
+    17 > 52 week high breakout(today)     	18 > Bullish Aroon(14) Crossover
+    19 > MACD Histogram x below 0 (Sell) 	20 > Bullish for next day
+    21 > MF/FIIs Popular Stocks         	22 > View Stock Performance         
+    23 > Breaking out now               	24 > Higher Highs,Lows & Close (SuperTrend)
+    25 > Lower Highs,Lows (Watch for Rev.)	26 > Stocks with stock-split/bonus/dividends
+    27 > ATR Cross                      	28 > Bullish Higher Opens           
+    29 > Intraday Bid/Ask Build-up      	30 > ATR Trailing Stops(Swing Paper Trading)
+    31 > High Momentum(RSI,MFI,CCI)     
+           	
 ```
 ## Running Piped Scanners
 
 https://github.com/pkjmesra/PKScreener/assets/1358101/9e579371-1035-400a-9f65-139d8407f6c7
 
+Multiple pre-defined piped scanners
+
+```
+     1 > Volume Scanners | High Momentum | Breaking Out Now | ATR Cross     	2 > Volume Scanners | High Momentum | ATR Cross
+     3 > Volume Scanners | High Momentum                                    	4 > Volume Scanners | ATR Cross
+     5 > Volume Scanners | High Bid/Ask Build Up                            	6 > Volume Scanners | ATR Cross | ATR Trailing Stops
+     7 > Volume Scanners | ATR Trailing Stops                               	8 > High Momentum | ATR Cross
+     9 > High Momentum | ATR Trailing Stop                                  	10 > ATR Cross | ATR Trailing Stop
+    11 > TTM Sqeeze Buy | Intraday RSI b/w 0 to 54                          	12 > Volume Scanners | High Momentum | Breaking Out Now | ATR Cross | Intraday RSI b/w 0 to 54
+    13 > Volume Scanners | ATR Cross | Intraday RSI b/w 0 to 54             	14 > VCP (Mark Minervini) | Chart Patterns | MA Support
+    15 > VCP | Chart Patterns | MA Support                                  	16 > Already Breaking out | VCP (Minervini) | Chart Patterns | MA Support
+    17 > ATR Trailing Stops | VCP (Minervini)                               	18 > VCP | ATR Trailing Stops
+    19 > Nifty 50,Nifty Bank | VCP | ATR Trailing Stops                     
+
+```
 
 ## How to use on your own local Windows/Linux/Macbook laptop?
 
@@ -108,7 +148,7 @@ https://github.com/pkjmesra/PKScreener/assets/1358101/9e579371-1035-400a-9f65-13
 The option `-i` will open the `pkscreener` in interactive mode within docker. `-t` will allocate a pseudo terminal for you so you can begin to use `pkscreener`
 
 # Installing the latest version from PyPi.
-* Go ahead and install using `pip install pkscreener`
+* Go ahead and install using `pip install pkscreener`. The releases page also has the latest wheels for multiple platforms.
 * This should install all of the major dependencies, except maybe, TA-Lib.
 * This app can still run without TA-Lib, but if you need to install TA-Lib for technical indicators (which otherwise is used from `pandas_ta` in the absence of TA-Lib), you can do this: Head to `.github/dependencies/` under this repo. Download the respective TA-Lib file/whl file and install either from the .whl file or from source. Check out any of the workflow files for steps to install TA-Lib.
 
