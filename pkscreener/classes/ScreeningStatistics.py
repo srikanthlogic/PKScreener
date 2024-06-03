@@ -2098,9 +2098,11 @@ class ScreeningStatistics:
             elif data_list[cnt] in last_signal:
                 try:
                     condition = last_signal[data_list[cnt]][0]["SL"][0]
-                except KeyError as e: # pragma: no cover
-                    self.default_logger.debug(e, exc_info=True)
-                    condition = last_signal[data_list[cnt]]["SL"][0]
+                except (KeyError,IndexError) as e: # pragma: no cover
+                    try:
+                        condition = last_signal[data_list[cnt]]["SL"][0]
+                    except (KeyError,IndexError) as e: # pragma: no cover
+                        condition = None
                 # if last_signal[data_list[cnt]] is not final:          # Debug - Shows all conditions
                 if len(final["SL"]) > 0 and condition != final["SL"].iloc[0]:
                     # Do something with results
