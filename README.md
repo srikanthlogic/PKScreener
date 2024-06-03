@@ -1,4 +1,4 @@
-![Title](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/screenshots/logos/Logo2.png)
+![Title](https://raw.githubusercontent.com/pkjmesra/PKScreener/main/screenshots/logos/Logo8.png)
 
 # PKScreener
 
