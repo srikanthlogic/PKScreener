@@ -22,19 +22,47 @@
 #     SOFTWARE.
 
 # """
-FROM pkjmesra/ta-lib-debian_gnu_linux:latest as base-image
+# docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --tag pkjmesra/pkscreener:latest .
+FROM python:3.11.6-slim-bookworm as base
 ENV PYTHONUNBUFFERED 1
 
-RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && \
-  unzip main.zip
+RUN apt-get install -y apt-transport-https
+RUN apt-get -y update
+
+RUN apt-get install -y gcc curl make git build-essential wget unzip tar pkg-config libhdf5-serial-dev
+
+ENV LANG C.UTF-8
+
+RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && unzip main.zip
 WORKDIR /PKScreener-main
-RUN pip3 install -r "requirements.txt"
+
+RUN pip install --upgrade pip
+
+RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/ta-lib-0.4.0-src.tar.gz && \
+  tar -xzf ta-lib-0.4.0-src.tar.gz && \
+  cd ta-lib/ && \
+  wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' -O config.guess && \
+  wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' -O config.sub && \
+  ./configure --prefix=/usr && \
+  make && \
+  make install && \
+  pip3 install setuptools cmake numpy
+
+RUN rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
+RUN pip3 install ta-lib
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 RUN pip3 install .
 RUN pip3 install --no-deps advanced-ta
 RUN pip3 install pkscreener
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
   cp courbd.ttf /usr/local/share/fonts/courbd.ttf
 RUN export TERM=xterm
+
+# Clean up APT when done.
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 ENTRYPOINT ["pkscreener"]
 # Run with 
 # docker run -it pkjmesra/pkscreener:latest

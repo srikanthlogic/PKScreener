@@ -51,40 +51,50 @@ jobs:
 
   build:
 
-    runs-on: macos-latest
+    runs-on: ubuntu-latest #macos-latest
 
     steps:
     - uses: actions/checkout@v3
       with:
         ref: ${{ inputs.branch-name }}
 
-    - name: Setup docker (missing on MacOS)
-      if: runner.os == 'macos'
-      run: |
-        brew install docker
-        colima start
+    # - name: Setup docker (missing on MacOS)
+    #   if: runner.os == 'macos'
+    #   run: |
+    #     brew install docker
+    #     colima start
         
-        # For testcontainers to find the Colima socket
-        # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
-        sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
+    #     # For testcontainers to find the Colima socket
+    #     # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+    #     sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
 
     - name: Login to Docker Hub
       uses: docker/login-action@v1
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: install buildx
+      id: buildx
+      uses: crazy-max/ghaction-docker-buildx@v3.3.1
+      with:
+        buildx-version: latest
 
     - name: Publish latest image to Docker Hub
       if: startsWith(github.ref, 'refs/heads/main')
       run: |
-        docker build . -f Dockerfile -t pkjmesra/pkscreener:dev-latest --no-cache
-        docker push pkjmesra/pkscreener:dev-latest
+        docker create --use
+        docker buildx build --push \
+          --tag pkjmesra/pkscreener:dev-latest \
+          --platform linux/amd64,linux/arm/v7,linux/arm64 .
         
     - name: Publish release version image to Docker Hub
       if: startsWith(${{ inputs.branch-name }}, 'refs/tags')
       run: |
-        docker build . -f Dockerfile -t pkjmesra/pkscreener:latest --no-cache
-        docker push pkjmesra/pkscreener:latest
+        docker create --use
+        docker buildx build --push \
+          --tag pkjmesra/pkscreener:latest \
+          --platform linux/amd64,linux/arm/v7,linux/arm64 .
 
   # Delete_Workflow_Run:
   #   runs-on: ubuntu-20.04

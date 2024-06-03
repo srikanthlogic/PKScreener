@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.45.20240603.432] release
+* Docker builds for multi-arch fixed. Now you have docker build targeted at amd64, arm/v7 as well as arm64 architectures. Download docker desktop now and run with "docker run -it pkjmesra/pkscreener:latest" Enjoy!
 * Added a Quick Backtest Mode (Try T > B followed by the n-th day/candle) for which you'd like to get the maximum potential profitability analysis.
 * Added new pre-defined VCP + ATR trailing stop scanner (P > 16)
 * Modified ATR trailing stop scanner to get better results. Try X > 12 > 30.
