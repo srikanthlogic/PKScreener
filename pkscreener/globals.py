@@ -2774,7 +2774,7 @@ def saveNotifyResultsFile(
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.WARN
-            + "[+] Notes:1.Trend calculation is based on 'daysToLookBack'. See configuration. 2.Reduce the console font size to fit all columns on screen."
+            + "[+] Notes:1.Trend calculation is based on 'daysToLookBack'. See configuration.\n[+] 2.Reduce the console font size to fit all columns on screen.\n[+] Many columns may have been hidden. Please check pkscreener.ini config."
             + colorText.END
         )
         # try:

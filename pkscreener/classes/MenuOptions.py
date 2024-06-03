@@ -61,13 +61,15 @@ level1_P_MenuDict = {
     "3": "Run Piped Scans Saved So Far",
     "M": "Back to the Top/Main menu",
 }
-PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"]
+PREDEFINED_SCAN_MENU_KEYS = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19"]
 PREDEFINED_SCAN_MENU_TEXTS = [
     "Volume Scanners | High Momentum | Breaking Out Now | ATR Cross     ",
     "Volume Scanners | High Momentum | ATR Cross",
     "Volume Scanners | High Momentum                                    ",
     "Volume Scanners | ATR Cross",
     "Volume Scanners | High Bid/Ask Build Up                            ",
+    "Volume Scanners | ATR Cross | ATR Trailing Stops",
+    "Volume Scanners | ATR Trailing Stops                               ",
     "High Momentum | ATR Cross",
     "High Momentum | ATR Trailing Stop                                  ",
     "ATR Cross | ATR Trailing Stop",
@@ -79,6 +81,7 @@ PREDEFINED_SCAN_MENU_TEXTS = [
     "Already Breaking out | VCP (Minervini) | Chart Patterns | MA Support",
     "ATR Trailing Stops | VCP (Minervini)                               ",
     "VCP | ATR Trailing Stops",
+    "Nifty 50,Nifty Bank | VCP | ATR Trailing Stops                     ",
 ]
 level2_P_MenuDict = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
@@ -90,6 +93,8 @@ PREDEFINED_SCAN_MENU_VALUES =[
     "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:31:'",
     "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:27:'",
     "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:29:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:0:27:>|X:12:30:1:'",
+    "--systemlaunched -a y -e -o 'X:12:9:2.5:>|X:12:30:1:'",
     "--systemlaunched -a y -e -o 'X:12:31:>|X:0:27:'",
     "--systemlaunched -a y -e -o 'X:12:31:>|X:0:30:1:'",
     "--systemlaunched -a y -e -o 'X:12:27:>|X:0:30:1:'",
@@ -101,6 +106,7 @@ PREDEFINED_SCAN_MENU_VALUES =[
     "--systemlaunched -a y -e -o 'X:12:2:>|X:12:7:8:>|X:12:7:9:1:1:'",
     "--systemlaunched -a y -e -o 'X:12:30:1:>|X:12:7:8:'",
     "--systemlaunched -a y -e -o 'X:12:7:4:>|X:12:30:1:'",
+    "--systemlaunched -a y -e -o 'X:0:0:^NSEI,^NSEBANK:>|X:12:7:4:>|X:12:30:1:'",
 ]
 PIPED_SCANNERS = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
