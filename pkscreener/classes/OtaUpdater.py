@@ -186,11 +186,11 @@ rm updater.sh
                     if float(now_components[3]) < float(version_components[3]):
                         prod_update = True
             inContainer = os.environ.get("PKSCREENER_DOCKER", "").lower() in ("yes", "y", "on", "true", "1")
+            if inContainer:
+                # We're running in docker container
+                size = 90
             if prod_update:
                 if skipDownload:
-                    if inContainer:
-                        # We're running in docker container
-                        size = 86
                     OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.GREEN
