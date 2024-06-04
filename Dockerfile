@@ -58,7 +58,7 @@ RUN pip3 install .
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
   cp courbd.ttf /usr/local/share/fonts/courbd.ttf
 RUN export TERM=xterm
-ENV PKSCREENER_DOCKER = TRUE
+ENV PKSCREENER_DOCKER=1
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

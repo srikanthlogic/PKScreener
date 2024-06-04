@@ -185,9 +185,10 @@ rm updater.sh
                 elif float(now_components[2]) == float(version_components[2]):
                     if float(now_components[3]) < float(version_components[3]):
                         prod_update = True
+            inContainer = os.environ.get("PKSCREENER_DOCKER", "").lower() in ("yes", "y", "on", "true", "1")
             if prod_update:
                 if skipDownload:
-                    if "PKSCREENER_DOCKER" in os.environ.keys():
+                    if inContainer:
                         # We're running in docker container
                         size = 86
                     OutputControls().printOutput(
@@ -219,7 +220,7 @@ rm updater.sh
                     action = "y"
                     pass
                 if action is not None and action.lower() == "y":
-                    if "PKSCREENER_DOCKER" in os.environ.keys():
+                    if inContainer:
                         zipball_url = resp.json()["zipball_url"]
                         os.system(f"wget {zipball_url}.zip && unzip {zipball_url}.zip && mv {zipball_url} /PKScreener-main")
                         launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
