@@ -48,21 +48,20 @@ RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/depe
   make install && \
   pip3 install setuptools cmake numpy
 
-RUN rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
+RUN rm -rf ta-lib ta-lib-0.4.0-src.tar.gz main.zip
 RUN pip3 install ta-lib
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip3 install .
 RUN pip3 install --no-deps advanced-ta
-RUN pip3 install pkscreener
+RUN pip3 install .
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
   cp courbd.ttf /usr/local/share/fonts/courbd.ttf
 RUN export TERM=xterm
+ENV PKSCREENER_DOCKER = TRUE
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-ENTRYPOINT ["pkscreener"]
+ENTRYPOINT ["python3","pkscreener/pkscreenercli.py"]
 # Run with 
 # docker run -it pkjmesra/pkscreener:latest

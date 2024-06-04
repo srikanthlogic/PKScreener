@@ -187,6 +187,9 @@ rm updater.sh
                         prod_update = True
             if prod_update:
                 if skipDownload:
+                    if "PKSCREENER_DOCKER" in os.environ.keys():
+                        # We're running in docker container
+                        size = 86
                     OutputControls().printOutput(
                         colorText.BOLD
                         + colorText.GREEN
@@ -216,22 +219,38 @@ rm updater.sh
                     action = "y"
                     pass
                 if action is not None and action.lower() == "y":
-                    try:
-                        if "Windows" in platform.system():
-                            OTAUpdater.updateForWindows(OTAUpdater.checkForUpdate.url)
-                        elif "Darwin" in platform.system():
-                            OTAUpdater.updateForMac(OTAUpdater.checkForUpdate.url)
-                        else:
-                            OTAUpdater.updateForLinux(OTAUpdater.checkForUpdate.url)
-                    except Exception as e:  # pragma: no cover
-                        default_logger().debug(e, exc_info=True)
+                    if "PKSCREENER_DOCKER" in os.environ.keys():
+                        zipball_url = resp.json()["zipball_url"]
+                        os.system(f"wget {zipball_url}.zip && unzip {zipball_url}.zip && mv {zipball_url} /PKScreener-main")
+                        launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                        launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                         OutputControls().printOutput(
-                            colorText.BOLD
-                            + colorText.WARN
-                            + "[+] Error occured while updating!"
-                            + colorText.END
-                        )
-                        raise (e)
+                                colorText.BOLD
+                                + colorText.WARN
+                                + "[+] Please press enter to relaunch!..."
+                                + colorText.END
+                            )
+                        from time import sleep
+                        sleep(3)
+                        os.system(f"{launcher}")
+                        return
+                    else:
+                        try:
+                            if "Windows" in platform.system():
+                                OTAUpdater.updateForWindows(OTAUpdater.checkForUpdate.url)
+                            elif "Darwin" in platform.system():
+                                OTAUpdater.updateForMac(OTAUpdater.checkForUpdate.url)
+                            else:
+                                OTAUpdater.updateForLinux(OTAUpdater.checkForUpdate.url)
+                        except Exception as e:  # pragma: no cover
+                            default_logger().debug(e, exc_info=True)
+                            OutputControls().printOutput(
+                                colorText.BOLD
+                                + colorText.WARN
+                                + "[+] Error occured while updating!"
+                                + colorText.END
+                            )
+                            raise (e)
             elif not prod_update and not skipDownload:
                 if tag.lower() == VERSION.lower():
                     OutputControls().printOutput(
