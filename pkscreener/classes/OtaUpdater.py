@@ -221,8 +221,10 @@ rm updater.sh
                     pass
                 if action is not None and action.lower() == "y":
                     if inContainer:
-                        zipball_url = resp.json()["zipball_url"]
-                        os.system(f"wget {zipball_url}.zip && unzip {zipball_url}.zip && mv {zipball_url} /PKScreener-main")
+                        tarball_url = resp.json()["tarball_url"]
+                        tarName = tarball_url.split('/')[-1]
+                        extension = ".tar.gz"
+                        os.system(f"wget {tarball_url}{extension} && tar -xzf {tarName}{extension} && rm -rf {tarName}{extension} && mv PKScreener-{tarName} /PKScreener-main")
                         launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
                         launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                         OutputControls().printOutput(
@@ -234,7 +236,7 @@ rm updater.sh
                         from time import sleep
                         sleep(3)
                         os.system(f"{launcher}")
-                        return
+                        sys.exit(0)
                     else:
                         try:
                             if "Windows" in platform.system():
