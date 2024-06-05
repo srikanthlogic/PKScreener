@@ -571,20 +571,21 @@ class tools(SingletonMixin, metaclass=SingletonType):
         try:
             if requests_cache.is_installed():
                 requests_cache.clear()
-                requests_cache.uninstall_cache()
-            cache_file = os.path.join(
-                    Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite")
-            if os.path.isfile(cache_file):
-                os.remove(cache_file)
-            self.deleteFileWithPattern("*_cache.sqlite")
-            requests_cache.install_cache(
-                cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
-                db_path=os.path.join(
-                    Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite"
-                ),
-            )
+                # requests_cache.delete(expired=True)
+                # requests_cache.uninstall_cache()
+            # cache_file = os.path.join(Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite")
+            # if os.path.isfile(cache_file):
+            #     os.remove(cache_file)
+            # self.deleteFileWithPattern("*_cache.sqlite")
+            # requests_cache.install_cache(
+            #     cache_name=f"{Archiver.get_user_outputs_dir().split(os.sep)[-1]}{os.sep}PKDevTools_cache",
+            #     db_path=os.path.join(
+            #         Archiver.get_user_outputs_dir(), "PKDevTools_cache.sqlite"
+            #     ),
+            # )
         except Exception as e:  # pragma: no cover
-            self.default_logger.debug(e, exc_info=True)
+            # self.default_logger.debug(e, exc_info=True)
+            pass
 
     def isIntradayConfig(self):
         return self.period == "1d"

@@ -738,6 +738,7 @@ def pkscreenercli():
                 + "[+] Download ONLY mode! Stocks will not be screened!"
                 + colorText.END
             )
+            configManager.restartRequestsCache()
             if args.intraday is None:
                 configManager.toggleConfig(candleDuration="1d", clearCache=False)
             runApplication()

@@ -2735,7 +2735,7 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
         if downloadOnly:
             cache_file = Utility.tools.saveStockData(stockDictPrimary, configManager, loadCount, intraday, downloadOnly=downloadOnly)
             cacheFileSize = os.stat(cache_file).st_size if os.path.exists(cache_file) else 0
-            if cacheFileSize < 1024*1024*50:
+            if cacheFileSize < 1024*1024*40:
                 try:
                     from PKDevTools.classes import Archiver
                     log_file_path = os.path.join(Archiver.get_user_outputs_dir(), "pkscreener-logs.txt")

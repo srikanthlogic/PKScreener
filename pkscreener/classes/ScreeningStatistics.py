@@ -322,18 +322,18 @@ class ScreeningStatistics:
             try:
                 path = os.path.join(outputFolder,url.split("/")[-1])
                 if not os.path.exists(path):
-                    if self.shouldLog:
-                        self.default_logger.debug(f"Fetching {url} to keep at {path}")
+                    # if self.shouldLog:
+                    #     self.default_logger.debug(f"Fetching {url} to keep at {path}")
                     resp = fileFetcher.fetchURL(url=url,trial=3,timeout=5,headers={'user-agent': f'{random_user_agent()}'})
                     if resp is not None and resp.status_code == 200:
                         with open(path, "w") as f:
                             f.write(resp.text)
-                else:
-                    if self.shouldLog:
-                        self.default_logger.debug(f"Already exists: {path}")
+                # else:
+                #     if self.shouldLog:
+                #         self.default_logger.debug(f"Already exists: {path}")
             except Exception as e:
-                if self.shouldLog:
-                    self.default_logger.debug(e, exc_info=True)
+                # if self.shouldLog:
+                #     self.default_logger.debug(e, exc_info=True)
                 continue
 
     #Calculating signals
@@ -347,15 +347,15 @@ class ScreeningStatistics:
                     df["Below"] = ema.ma_crossed_below(df["ATRTrailingStop"])
             else:
                 OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
-                if self.shouldLog:
-                    self.default_logger.debug(e, exc_info=True)
+                # if self.shouldLog:
+                #     self.default_logger.debug(e, exc_info=True)
                 if df is not None:
                     ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
                     df["Above"] = ema > df["ATRTrailingStop"]
                     df["Below"] = ema < df["ATRTrailingStop"]
         except (OSError,FileNotFoundError) as e:
-            if self.shouldLog:
-                self.default_logger.debug(e, exc_info=True)
+            # if self.shouldLog:
+            #     self.default_logger.debug(e, exc_info=True)
             OutputControls().printOutput(f"{colorText.FAIL}Some dependencies are missing. Try and run this option again.{colorText.END}")
             # OSError:RALLIS: [Errno 2] No such file or directory: '/tmp/_MEIzoTV6A/vectorbt/templates/light.json'
             # if "No such file or directory" in str(e):
@@ -365,12 +365,12 @@ class ScreeningStatistics:
                 try:
                     outputFolder = os.sep.join(e.filename.split(os.sep)[:-1])
                 except Exception as e:
-                    if self.shouldLog:
-                        self.default_logger.debug(e, exc_info=True)
+                    # if self.shouldLog:
+                    #     self.default_logger.debug(e, exc_info=True)
                     outputFolder = os.sep.join(str(e).split("\n")[0].split(": ")[1].replace("'","").split(os.sep)[:-1])
             except Exception as e:
-                if self.shouldLog:
-                    self.default_logger.debug(e, exc_info=True)
+                # if self.shouldLog:
+                #     self.default_logger.debug(e, exc_info=True)
                 pass
             self.downloadSaveTemplateJsons(outputFolder)
             if retry:
@@ -378,15 +378,16 @@ class ScreeningStatistics:
             return None
         except ImportError as e:
             OutputControls().printOutput(f"{colorText.FAIL}The main module needed for best Buy/Sell result calculation is missing. Falling back on an alternative, but it is not very reliable.{colorText.END}")
-            if self.shouldLog:
-                self.default_logger.debug(e, exc_info=True)
+            # if self.shouldLog:
+            #     self.default_logger.debug(e, exc_info=True)
             if df is not None:
                 ema = pktalib.EMA(df["Close"], ema_period) if ema_period > 1 else df["Close"]#short_name='EMA', ewm=True)        
                 df["Above"] = ema > df["ATRTrailingStop"]
                 df["Below"] = ema < df["ATRTrailingStop"]
         except Exception as e:
-            if self.shouldLog:
-                self.default_logger.debug(e, exc_info=True)
+            # if self.shouldLog:
+            #     self.default_logger.debug(e, exc_info=True)
+            pass
                 
         if df is not None:
             df["Buy"] = (df["Close"] > df["ATRTrailingStop"]) & (df["Above"]==True)
@@ -2803,8 +2804,8 @@ class ScreeningStatistics:
                     #     f'Stock:{saveDict["Stock"]}, is not a momentum-gainer because either today-open ({to}) < yesterday-close ({yc}) or yesterday-open({yo}) < day-before-close({dyc})'
                     # )
             except IndexError as e: # pragma: no cover
-                self.default_logger.debug(e, exc_info=True)
-                self.default_logger.debug(data)
+                # self.default_logger.debug(e, exc_info=True)
+                # self.default_logger.debug(data)
                 pass
             return False
         except Exception as e:  # pragma: no cover
@@ -3302,7 +3303,7 @@ class ScreeningStatistics:
                         saveDict["Pattern"] = saved[1] + "Demand Rise"
                         return True
             except IndexError as e: # pragma: no cover
-                self.default_logger.debug(e, exc_info=True)
+                # self.default_logger.debug(e, exc_info=True)
                 pass
             return False
         except Exception as e:  # pragma: no cover
