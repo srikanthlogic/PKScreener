@@ -35,6 +35,11 @@ on:
           required: true
           type: string
           default: 'main'
+        buildBase:
+          description: 'Build Docker base image before building the main app image'
+          required: false
+          type: string
+          default: 'N'
 
   workflow_call:
     inputs:
@@ -42,6 +47,11 @@ on:
         required: true
         type: string
         default: 'main'
+      buildBase:
+        description: 'Build Docker base image before building the main app image'
+        required: false
+        type: string
+        default: 'N'
   push:
     # branches: [ main ]
     tags:
@@ -79,6 +89,15 @@ jobs:
       uses: crazy-max/ghaction-docker-buildx@v3.3.1
       with:
         buildx-version: latest
+
+    - name: Publish latest base image to Docker Hub
+      if: startsWith(${{ inputs.buildBase }}, 'y')
+      run: |
+        docker buildx create --use
+        docker buildx build --push \
+          --tag pkjmesra/pkscreener:latest \
+          --platform linux/amd64,linux/arm64/v8 \
+          -f ./Dockerfile_base . --no-cache
 
     - name: Publish latest image to Docker Hub
       if: startsWith(github.ref, 'refs/heads/main')

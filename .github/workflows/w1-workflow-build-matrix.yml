@@ -45,6 +45,11 @@ on:
         required: false
         type: string
         default: 'N'
+      buildBase:
+        description: 'Build Docker base image before building the main app image'
+        required: false
+        type: string
+        default: 'N'
       targetPythonVersion:
         description: 'Target Python version: 3.9 , 3.10, 3.11 ?'
         required: false
@@ -94,6 +99,7 @@ jobs:
         tag: refs/tags/${{ steps.vars.outputs.THIS_VERSION }}
         sendNotification: ${{ inputs.sendNotification }}
         buildDocker: ${{ inputs.buildDocker }}
+        buildBase : ${{ inputs.buildBase }}
     strategy:
       matrix:
         include:
@@ -345,9 +351,10 @@ jobs:
   Call-Docker-workflow:
     uses: pkjmesra/PKScreener/.github/workflows/w15-docker-image.yml@main
     needs: [Build, README_Update]
-    if: ${{ needs.Build.outputs.buildDocker == 'Y' }}
+    if: ${{ needs.Build.outputs.buildDocker == 'Y' || needs.Build.outputs.buildBase == 'Y'}}
     with:
       branch-name: ${{ needs.Build.outputs.tag }}
+      buildBase: ${{ needs.Build.outputs.buildBase }}
     secrets: inherit
 
   # Delete_Workflow_Run:
