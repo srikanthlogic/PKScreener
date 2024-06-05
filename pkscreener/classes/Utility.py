@@ -313,6 +313,17 @@ class tools:
             return colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
         return colorText.BOLD + colorText.FAIL + (f"{ratio}x" if pd.notna(ratio) else "") + colorText.END
 
+    def getsize_multiline(font,srcText,x=0,y=0):
+        zeroSizeImage = Image.new('RGB',(0, 0), (0,0,0))
+        zeroDraw = ImageDraw.Draw(zeroSizeImage)
+        # zeroDraw = ImageDraw.Draw(zeroSizeImage)
+        left, top, bottom, right = zeroDraw.multiline_textbbox((x,y),srcText,font)
+        return right - left, bottom - top
+
+    def getsize(font,srcText,x=0,y=0):
+        left, top, bottom, right = font.getbbox(srcText)
+        return right - left, bottom - top
+    
     def addQuickWatermark(sourceImage:Image, xVertical=None, dataSrc="", dataSrcFontSize=10):
         width, height = sourceImage.size
         watermarkText = f"© {datetime.date.today().year} pkjmesra | PKScreener"
