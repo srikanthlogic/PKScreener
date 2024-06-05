@@ -39,7 +39,7 @@ RUN pip3 uninstall pkscreener -y
 RUN pip3 uninstall PKNSETools -y
 RUN pip3 uninstall PKDevTools -y
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install .
 RUN export TERM=xterm
 ENV PKSCREENER_DOCKER=1

@@ -38,7 +38,7 @@ ENV LANG C.UTF-8
 RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && unzip main.zip
 WORKDIR /PKScreener-main
 
-RUN pip install --upgrade pip
+RUN pip3 install --upgrade pip
 
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/ta-lib-0.4.0-src.tar.gz && \
   tar -xzf ta-lib-0.4.0-src.tar.gz && \
@@ -54,7 +54,7 @@ RUN rm -rf ta-lib ta-lib-0.4.0-src.tar.gz main.zip
 RUN pip3 install ta-lib
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install --no-deps advanced-ta
 RUN pip3 install .
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
