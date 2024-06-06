@@ -44,7 +44,7 @@ on:
         description: 'Build docker image?'
         required: false
         type: string
-        default: 'N'
+        default: 'Y'
       buildBase:
         description: 'Build Docker base image before building the main app image'
         required: false

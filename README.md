@@ -145,15 +145,23 @@ Multiple pre-defined piped scanners
 # Using docker, running within docker container
 * Download and install docker desktop: https://docs.docker.com/get-docker/
 * After installation, launch/run docker desktop and if it asks, login using your docker credentials.
-* Launch any command line (for example, cmd on windows or terminal on Mac) and type `docker pull pkjmesra/pkscreener:latest`. Then type `docker run -it pkjmesra/pkscreener:latest`.  
+* Launch any command line (for example, cmd on windows or terminal on Mac) and type 
+```
+docker pull pkjmesra/pkscreener:latest
+```
+Then type 
+```
+docker run -it pkjmesra/pkscreener:latest
+```
 The option `-i` will open the `pkscreener` in interactive mode within docker. `-t` will allocate a pseudo terminal for you so you can begin to use `pkscreener`
 
 # Special notes on vulnerabilities shown in the docker image/container
 Please keep in mind that only because the container/image shows a vulnerability, it does not mean that it exists in this particular image.
 1. If you see a critical vulnerability being shown for git, it's ONLY IF we use git with v2.13 or below AND we use git submodule. In case of PKScreener, both are false. We use git >= 2.45 and we DO NOT use git submodules. See https://nvd.nist.gov/vuln/detail/CVE-2024-32002
 2. If you see high severity vulnerability for pip, it's ONLY IF we use a private indexed repository. In our case, we only use PyPi - a public python library repository. See https://nvd.nist.gov/vuln/detail/CVE-2018-20225.
+3. If you see high severity vulnerability for usage of library Pillow, it's ONLY IF we try to generate an image containing text that can uncontrollably lengthy. In PKScreener, the image is NEVER generated locally on your laptop or docker container. It is generated only when running in telegram-bot for morning/afternoon analysis alerts. Additionally, there are checks to ensure we never go beyond the maximum size of the number of columns in the analysis tables. To conclude, the image generation module never gets activated on docker/locally on your laptop. See https://nvd.nist.gov/vuln/detail/CVE-2023-44271
 
-The story is similar for other low severity vulnerabilities that docker might show. If you're genuinely concerned, you can search with the respective CVE # in the NIST database to understand more or create an issue https://github.com/pkjmesra/PKScreener/issues 
+The story is similar for other low severity vulnerabilities that docker might show. If you're genuinely concerned, you can search with the respective CVE # in the NIST database to understand more or create an issue https://github.com/pkjmesra/PKScreener/issues . We keep reviewing all vulnerabilties regularly and fix those immediately if at all they are likely to impact us or our users.
 
 # Installing the latest version from PyPi.
 * Go ahead and install using `pip install pkscreener`. The releases page also has the latest wheels for multiple platforms.
