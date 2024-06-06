@@ -285,7 +285,13 @@ if __name__ == "__main__":
 def exitGracefully():
     from PKDevTools.classes import Archiver
     from pkscreener.globals import resetConfigToDefault
-    filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
+    filePath = None
+    try:
+        filePath = os.path.join(Archiver.get_user_outputs_dir(), "monitor_outputs")
+    except:
+        pass
+    if filePath is None:
+        return
     index = 0
     while index < configManager.maxDashboardWidgetsPerRow*configManager.maxNumResultRowsInMonitor:
         try:
