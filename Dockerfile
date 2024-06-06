@@ -23,8 +23,8 @@
 
 # """
 # docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --tag pkjmesra/pkscreener:latest .
-# docker buildx build --load --platform linux/arm64,linux/amd64 --tag pkjmesra/pkscreener:latest . --no-cache
-# docker buildx build --push --platform linux/arm64,linux/amd64 --tag pkjmesra/pkscreener:latest . --no-cache
+# docker buildx build --load --platform linux/arm64/v8,linux/amd64 --tag pkjmesra/pkscreener:latest . --no-cache
+# docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag pkjmesra/pkscreener:latest . --no-cache
 
 FROM pkjmesra/pkscreener:latest as base
 ENV PYTHONUNBUFFERED 1
