@@ -43,7 +43,10 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install .
 RUN export TERM=xterm
 ENV PKSCREENER_DOCKER=1
-
+RUN mv /PKScreener-main/pkscreener/pkscreenercli.py /pkscreenercli.py
+RUN rm -rf /PKScreener-main
+RUN mkdir -p /PKScreener-main/pkscreener/
+RUN mv /pkscreenercli.py /PKScreener-main/pkscreener/pkscreenercli.py
 ENTRYPOINT ["python3","pkscreener/pkscreenercli.py"]
 # Run with 
 # docker run -it pkjmesra/pkscreener:latest
