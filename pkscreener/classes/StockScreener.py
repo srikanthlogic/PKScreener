@@ -835,13 +835,14 @@ class StockScreener:
         data = None
         hostDataLength = 0 if hostData is None else (0 if "data" not in hostData.keys() else len(hostData["data"]))
         start = None
+        lastTradingDate = PKDateUtilities.tradingDate().strftime("%Y-%m-%d")
         if (period == '1d' or configManager.duration[-1] == "m"):
             if backtestDuration > 0: # We are backtesting
                 start = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration)
                 end = PKDateUtilities.nthPastTradingDateStringFromFutureDate(backtestDuration-1)
             else:
                 # Since this is intraday data, we'd just need to start from the last trading session
-                start = PKDateUtilities.tradingDate().strftime("%Y-%m-%d")
+                start = lastTradingDate
                 end = PKDateUtilities.currentDateTime().strftime("%Y-%m-%d")
         if (
                 not shouldCache
@@ -909,7 +910,7 @@ class StockScreener:
 
         if ((shouldCache and not self.isTradingTime and (hostData is None  or hostDataLength == 0)) or downloadOnly) \
             or (shouldCache and hostData is None):  # and backtestDuration == 0 # save only if we're NOT backtesting
-                if start is None and data is not None:
+                if start is None or start is lastTradingDate and data is not None:
                     objectDictionary[stock] = data.to_dict("split")
                 if downloadOnly:
                     with hostRef.processingResultsCounter.get_lock():
