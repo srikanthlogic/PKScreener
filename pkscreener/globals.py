@@ -139,6 +139,7 @@ results_queue = None
 consumers = None
 logging_queue = None
 mp_manager = None
+download_trials = 0
 
 def startMarketMonitor(mp_dict,keyboardevent):
     from PKDevTools.classes.NSEMarketStatus import NSEMarketStatus
@@ -2717,7 +2718,7 @@ def updateBacktestResults(
 
 
 def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, loadCount):
-    global userPassedArgs, keyboardInterruptEventFired
+    global userPassedArgs, keyboardInterruptEventFired, download_trials
     argsIntraday = userPassedArgs is not None and userPassedArgs.intraday is not None
     intradayConfig = configManager.isIntradayConfig()
     intraday = intradayConfig or argsIntraday
@@ -2747,9 +2748,11 @@ def saveDownloadedData(downloadOnly, testing, stockDictPrimary, configManager, l
                 except:
                     pass
                 # Let's try again with logging
-                launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
-                launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
-                os.system(f"{launcher} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
+                if download_trials < 1:
+                    download_trials += 1
+                    launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
+                    launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
+                    os.system(f"{launcher} -a Y -e -l -d {'-i 1m' if configManager.isIntradayConfig() else ''}")
     else:
         OutputControls().printOutput(colorText.BOLD + colorText.GREEN + "[+] Skipped Saving!" + colorText.END)
 

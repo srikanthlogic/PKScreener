@@ -31,6 +31,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import yfinance as yf
+from yfinance.exceptions import YFPricesMissingError, YFInvalidPeriodError
 from concurrent.futures import ThreadPoolExecutor
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.ColorText import colorText
@@ -122,9 +123,14 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                     start=start,
                     end=end
                 )
-            except KeyError as e:
+            except (KeyError,YFPricesMissingError) as e:
                 default_logger().debug(e,exc_info=True)
                 pass
+            except YFInvalidPeriodError as e:
+                default_logger().debug(e,exc_info=True)
+                # Maybe this stock is recently listed
+                if e.invalid_period != '1mo':
+                    return self.fetchStockData(stockCode=e.ticker,period='1mo',duration=duration,printCounter=printCounter, start=start,end=end)
         if printCounter:
             sys.stdout.write("\r\033[K")
             try:
