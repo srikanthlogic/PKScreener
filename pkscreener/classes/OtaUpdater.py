@@ -226,8 +226,8 @@ rm updater.sh
                         extension = ".tar.gz"
                         tarball_url = f"https://github.com/pkjmesra/PKScreener/archive/refs/tags/{tarName}{extension}"
                         from PKDevTools.classes.SuppressOutput import SuppressOutput
-                        with SuppressOutput(suppress_stderr=False, suppress_stdout=True):
-                            os.system(f"cd / && rm -rf /PKScreener-main && wget {tarball_url} && tar -xzf {tarName}{extension} && rm -rf {tarName}{extension} && mv PKScreener-{tarName} /PKScreener-main && cd /PKScreener-main && pip3 install . && mv /PKScreener-main/pkscreener/pkscreenercli.py /pkscreenercli.py && rm -rf /PKScreener-main && mkdir -p /PKScreener-main/pkscreener/ && mv /pkscreenercli.py /PKScreener-main/pkscreener/pkscreenercli.py")
+                        with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
+                            os.system(f"cd / && rm -rf /PKScreener-main && wget {tarball_url} >> output.txt && tar -xzf {tarName}{extension} && rm -rf {tarName}{extension} && mv PKScreener-{tarName} /PKScreener-main && cd /PKScreener-main && pip3 install .  >> output.txt && mv /PKScreener-main/pkscreener/pkscreenercli.py /pkscreenercli.py && rm -rf /PKScreener-main && mkdir -p /PKScreener-main/pkscreener/ && mv /pkscreenercli.py /PKScreener-main/pkscreener/pkscreenercli.py && cd /PKScreener-main")
                         launcher = f'"{sys.argv[0]}"' if " " in sys.argv[0] else sys.argv[0]
                         launcher = f"python3.11 {launcher}" if (launcher.endswith(".py\"") or launcher.endswith(".py")) else launcher
                         OutputControls().printOutput(
