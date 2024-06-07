@@ -33,6 +33,7 @@ import pytz
 import requests
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
+from PKDevTools.classes.MarketHours import MarketHours
 from PKNSETools.PKNSEStockDataFetcher import nseStockDataFetcher
 
 argParser = argparse.ArgumentParser()
@@ -560,14 +561,14 @@ def triggerScanWorkflowActions(launchLocal=False, scanDaysInPast=0):
             else:
                 break
     # Trigger intraday bid/ask build-up scanner only based on the volume source
-    if PKDateUtilities.currentDateTime() <= PKDateUtilities.currentDateTime(simulate=True,hour=15,minute=30):
+    if PKDateUtilities.currentDateTime() <= PKDateUtilities.currentDateTime(simulate=True,hour=MarketHours().closeHour,minute=MarketHours().closeMinute):
         triggerRemoteScanAlertWorkflow("'X:12:9:2.5:>|X:0:29:'", branch)
         triggerRemoteScanAlertWorkflow("'X:12:31:>|X:0:27:'", branch)
 
     # Trigger the intraday analysis only in the 2nd half after it gets trigerred anytime after 3 PM IST
-    if PKDateUtilities.currentDateTime() >= PKDateUtilities.currentDateTime(simulate=True,hour=15,minute=00):
-        while (PKDateUtilities.currentDateTime() < PKDateUtilities.currentDateTime(simulate=True,hour=16,minute=15)):
-            print("Waiting for 4:15 PM IST...")
+    if PKDateUtilities.currentDateTime() >= PKDateUtilities.currentDateTime(simulate=True,hour=MarketHours().closeHour,minute=MarketHours().closeMinute-30):
+        while (PKDateUtilities.currentDateTime() < PKDateUtilities.currentDateTime(simulate=True,hour=MarketHours().closeHour+1,minute=MarketHours().closeMinute-15)):
+            print(f"Waiting for {(MarketHours().closeHour+1):02}:{(MarketHours().closeMinute):02} PM IST...")
             sleep(300) # Wait for 4:15 PM IST because the download data will take time and we need the downloaded data
             # to be uploaded to actions-data-download folder on github before the intraday analysis can be run.
         triggerRemoteScanAlertWorkflow("C:12: --runintradayanalysis -u -1001785195297", branch)

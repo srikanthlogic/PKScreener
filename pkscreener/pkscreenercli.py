@@ -395,7 +395,7 @@ def runApplication():
     #     args.answerdefault = 'Y'
     args.pipedmenus = savedPipedArgs
     if args.options is not None:
-        args.options = args.options.replace("::",":")
+        args.options = args.options.replace("::",":").replace("\"","").replace("'","")
     if args.runintradayanalysis:
         from pkscreener.classes.MenuOptions import menus
         runOptions = menus.allMenus(topLevel="C", index=12)
@@ -459,6 +459,7 @@ def runApplication():
             monitorOption_org = ""
             # args.monitor = configManager.defaultMonitorOptions
             if args.monitor:
+                args.monitor = args.monitor.replace("::",":").replace("\"","").replace("'","")
                 configManager.getConfig(ConfigManager.parser)
                 args.answerdefault = args.answerdefault or 'Y'
                 MarketMonitor().hiddenColumns = configManager.alwaysHiddenDisplayColumns
@@ -471,7 +472,7 @@ def runApplication():
                         elapsed_time = round(time.time() - start_time,2)
                         start_time = time.time()
                 monitorOption_org = MarketMonitor().currentMonitorOption()
-                monitorOption = monitorOption_org
+                monitorOption = monitorOption_org.replace("::",":").replace("\"","").replace("'","")
                 monitorOption = checkIntradayComponent(args, monitorOption)
                 if monitorOption.startswith("|"):
                     monitorOption = monitorOption[1:]
@@ -501,8 +502,9 @@ def runApplication():
                         resultStocks = ",".join(resultStocks)
                         monitorOption = f"{monitorOption}:{resultStocks}"
                 args.options = monitorOption.replace("::",":")
-                # (previousCandleDuration != configManager.duration) or 
-                if (MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None):
+                fullMonitorMode = MarketMonitor().monitorIndex == 1 and args.options is not None and plainResults is not None
+                partMonitorMode = len(MarketMonitor().monitors) == 1 and args.options is not None and plainResults is not None
+                if (fullMonitorMode or partMonitorMode):
                     # Load the stock data afresh for each cycle
                     refreshStockData(args.options)
             try:
@@ -538,6 +540,8 @@ def runApplication():
                 sys.exit(0)
             except Exception as e:
                 default_logger().debug(e, exc_info=True)
+                if args.log:
+                    traceback.print_exc()
                 # Probably user cancelled an operation by choosing a cancel sub-menu somewhere
                 pass
             if plainResults is not None and not plainResults.empty:
@@ -644,7 +648,8 @@ def pkscreenercli():
                         maxNumResultsPerRow=configManager.maxDashboardWidgetsPerRow,
                         maxNumColsInEachResult=6,
                         maxNumRowsInEachResult=10,
-                        maxNumResultRowsInMonitor=configManager.maxNumResultRowsInMonitor)
+                        maxNumResultRowsInMonitor=configManager.maxNumResultRowsInMonitor,
+                        pinnedIntervalWaitSeconds=configManager.pinnedMonitorSleepIntervalSeconds)
 
         if args.log or configManager.logsEnabled:
             setupLogger(shouldLog=True, trace=args.testbuild)

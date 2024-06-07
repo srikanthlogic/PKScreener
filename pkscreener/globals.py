@@ -741,7 +741,9 @@ def refreshStockData(startupoptions=None):
     options, menuOption, indexOption, executeOption = getTopLevelMenuChoices(
         options, False, False, defaultAnswer='Y'
     )
-    listStockCodes = prepareStocksForScreening(testing=False, downloadOnly=False, listStockCodes=None,indexOption=indexOption)
+    if indexOption == 0:
+        listStockCodes = handleRequestForSpecificStocks(options,indexOption=indexOption)
+    listStockCodes = prepareStocksForScreening(testing=False, downloadOnly=False, listStockCodes=listStockCodes,indexOption=indexOption)
     stockDictPrimary,stockDictSecondary = loadDatabaseOrFetch(downloadOnly=False, listStockCodes=listStockCodes, menuOption=menuOption,indexOption=indexOption)
     PKScanRunner.refreshDatabase(consumers,stockDictPrimary,stockDictSecondary)
 

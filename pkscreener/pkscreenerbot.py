@@ -63,6 +63,7 @@ OWNER_USER = "Itsonlypk"
 from PKDevTools.classes.Telegram import get_secrets
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.ColorText import colorText
+from PKDevTools.classes.MarketHours import MarketHours
 from pkscreener.classes.MenuOptions import MenuRenderStyle, menu, menus
 from pkscreener.classes.WorkflowManager import run_workflow
 from pkscreener.globals import showSendConfigInfo, showSendHelpInfo
@@ -149,9 +150,9 @@ def initializeIntradayTimer():
     try:
         if (not PKDateUtilities.isTodayHoliday()[0]):
             now = PKDateUtilities.currentDateTime()
-            marketStartTime = PKDateUtilities.currentDateTime(simulate=True,hour=9,minute=14)
-            morning745am = PKDateUtilities.currentDateTime(simulate=True,hour=7,minute=45)
-            if now < marketStartTime and now >= morning745am: # Telegram bot might keep running beyond an hour. So let's start watching around 7:45AM
+            marketStartTime = PKDateUtilities.currentDateTime(simulate=True,hour=MarketHours().openHour,minute=MarketHours().openMinute-1)
+            marketOpenAnHourandHalfPrior = PKDateUtilities.currentDateTime(simulate=True,hour=MarketHours().openHour-2,minute=MarketHours().openMinute+30)
+            if now < marketStartTime and now >= marketOpenAnHourandHalfPrior: # Telegram bot might keep running beyond an hour. So let's start watching around 7:45AM
                 difference = (marketStartTime - now).total_seconds() + 1
                 global int_timer
                 int_timer = threading.Timer(difference, launchIntradayMonitor, args=[])
