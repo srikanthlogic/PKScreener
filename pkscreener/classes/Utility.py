@@ -55,7 +55,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from alive_progress import alive_bar
-from PKPIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
