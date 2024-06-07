@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.45.20240607.442] release
+* Moved the telegram image quality/size and compression parameters to pkscreener.ini to make it configurable and under control.
 * Defined configurable option for sleep interval between data fetches for pinned scanners. Check out pinnedmonitorsleepintervalseconds value in pkscreener.ini config file.
 * Defined configurable market-open and close hour:minute in pkscreener.ini config file so that if you would like pre-open-market-data as well, you can configure it and run it locally.
 * Fixed a bug for piped scanners wherein after being pinned, it was not updating the data regularly.

@@ -55,7 +55,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 from alive_progress import alive_bar
-from PIL import Image, ImageDraw, ImageFont
+from PKPIL import Image, ImageDraw, ImageFont
 from PKDevTools.classes import Archiver
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 from PKDevTools.classes.Committer import Committer
@@ -699,9 +699,9 @@ class tools:
             # Let's go to the next line
             rowPixelRunValue += artfont_line_height + 1
 
-        im = im.resize(im.size, Image.ANTIALIAS, reducing_gap=2)
+        im = im.resize((int(im.size[0]*configManager.telegramImageCompressionRatio),int(im.size[1]*configManager.telegramImageCompressionRatio)), Image.ANTIALIAS, reducing_gap=2)
         im = tools.addQuickWatermark(im,xVertical,dataSrc="Yahoo; Morningstar, Inc; National Stock Exchange of India Ltd;",dataSrcFontSize=ART_FONT_SIZE)
-        im.save(filename, format="png", bitmap_format="png", optimize=True, quality=20)
+        im.save(filename, format=configManager.telegramImageFormat, bitmap_format=configManager.telegramImageFormat, optimize=True, quality=int(configManager.telegramImageQualityPercentage))
         # if 'RUNNER' not in os.environ.keys() and 'PKDevTools_Default_Log_Level' in os.environ.keys():
         # im.show()
 

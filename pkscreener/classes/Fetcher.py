@@ -130,7 +130,13 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                 default_logger().debug(e,exc_info=True)
                 # Maybe this stock is recently listed
                 if e.invalid_period != '1mo':
-                    return self.fetchStockData(stockCode=e.ticker,period='1mo',duration=duration,printCounter=printCounter, start=start,end=end)
+                    default_logger().debug(f"Re-sending request for {e.ticker} for period: 1mo")
+                    data = self.fetchStockData(stockCode=e.ticker,period='1mo',duration=duration,printCounter=printCounter, start=start,end=end)
+                    if data is not None:
+                        default_logger().debug(f"Received data for {e.ticker} for period: 1mo")
+                    else:
+                        default_logger().debug(f"Failed to receive data for {e.ticker} for period: 1mo either!")
+                    return data
         if printCounter:
             sys.stdout.write("\r\033[K")
             try:
