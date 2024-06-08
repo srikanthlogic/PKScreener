@@ -103,7 +103,7 @@ jobs:
           --platform linux/amd64,linux/arm64/v8 . --no-cache
 
     - name: Publish latest image to Docker Hub
-      if: startsWith(github.ref, 'refs/heads/main')
+      # if: startsWith(github.ref, 'refs/heads/main')
       run: |
         docker buildx create --use
         docker buildx build --push \
@@ -111,7 +111,7 @@ jobs:
           --platform linux/amd64,linux/arm64/v8 . --no-cache
         
     - name: Publish release version image to Docker Hub
-      if: startsWith(${{ inputs.branch-name }}, 'refs/tags')
+      # if: startsWith(${{ inputs.branch-name }}, 'refs/tags')
       run: |
         docker buildx create --use
         docker buildx build --push \
