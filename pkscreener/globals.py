@@ -690,7 +690,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         columnsToBeDeleted = ["MFI","FVDiff","ConfDMADifference","bbands_ulr_ratio_max5", "RSIi"]
         if userPassedArgs is not None and userPassedArgs.options is not None and userPassedArgs.options.upper().startswith("C"):
             columnsToBeDeleted.append("FairValue")
-        if executeOption == 27: # ATR Cross
+        if executeOption == 27 and "ATR" in screenResults.columns: # ATR Cross
             columnsToBeDeleted.append("Consol.")
             screenResults['ATR'] = screenResults['ATR'].astype(str)
             screenResults['ATR'] = colorText.GREEN + screenResults['ATR'] + colorText.END
@@ -705,7 +705,7 @@ def labelDataForPrinting(screenResults, saveResults, configManager, volumeRatio,
         screenResults['Volume'] = screenResults['Volume'].astype(str)
         saveResults['Volume'] = saveResults['Volume'].astype(str)
         screenResults.loc[:, "Volume"] = screenResults.loc[:, "Volume"].apply(
-            lambda x: Utility.tools.formatRatio(float(x), volumeRatio) if len(str(x).strip()) > 0 else ''
+            lambda x: Utility.tools.formatRatio(float(Utility.tools.removeAllColorStyles(x)), volumeRatio) if len(str(x).strip()) > 0 else ''
         )
         saveResults.loc[:, "Volume"] = saveResults.loc[:, "Volume"].apply(
             lambda x: str(x) + "x"
@@ -1555,6 +1555,11 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                             )
                 elif "|" not in userPassedArgs.options:
                     try:
+                        input("Ready ?")
+                        if screenResults is not None and len(screenResults) > 0:
+                            screenResults, saveResults = labelDataForPrinting(
+                                screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
+                            )
                         printNotifySaveScreenedResults(
                             screenResults,
                             saveResults,
