@@ -303,6 +303,11 @@ class PKMarketOpenCloseAnalyser:
         save_df.drop(f"index", axis=1, inplace=True, errors="ignore")
         screen_df.drop(f"index", axis=1, inplace=True, errors="ignore")
         stocks = save_df["Stock"]
+        filterStocks = []
+        for stock in stocks:
+            if stock in filteredListOfStocks:
+                filterStocks.append(stock)
+        stocks = filterStocks
         eodLTPs = []
         dayHighLTPs = []
         morningTimestamps = []

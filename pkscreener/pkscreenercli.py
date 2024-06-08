@@ -609,7 +609,7 @@ def pipeResults(prevOutput,args):
         if monitorOption.startswith("|"):
             monitorOption = monitorOption.replace("|","")
             monitorOptions = monitorOption.split(":")
-            if "X" in monitorOptions[0].upper() and monitorOptions[1] != "0":
+            if monitorOptions[0].upper() in ["X","C"] and monitorOptions[1] != "0":
                 monitorOptions[1] = "0"
                 monitorOption = ":".join(monitorOptions)
             if "B" in monitorOptions[0].upper() and monitorOptions[1] != "30":
