@@ -333,6 +333,7 @@ jobs:
 
       - name: Send notification about new release
         shell: bash
+        if: ${{ matrix.platform_id == 'manylinux_x86_64' }}
         env:
           RELEASE_VERSION : ${{ steps.vars.outputs.THIS_VERSION }}
           WHATS_NEW: ${{ steps.whatsnewgetter.outputs.WHATS_NEW_IN_THIS_RELEASE }}
