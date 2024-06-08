@@ -31,6 +31,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 warnings.simplefilter("ignore", FutureWarning)
 import pandas as pd
 import yfinance as yf
+from yfinance import shared
 from yfinance.exceptions import YFPricesMissingError, YFInvalidPeriodError
 from concurrent.futures import ThreadPoolExecutor
 from PKDevTools.classes.PKDateUtilities import PKDateUtilities
@@ -83,10 +84,10 @@ class screenerStockDataFetcher(nseStockDataFetcher):
         stockCode,
         period,
         duration,
-        proxyServer,
-        screenResultsCounter,
-        screenCounter,
-        totalSymbols,
+        proxyServer=None,
+        screenResultsCounter=0,
+        screenCounter=0,
+        totalSymbols=0,
         printCounter=False,
         start=None, 
         end=None,
@@ -123,20 +124,18 @@ class screenerStockDataFetcher(nseStockDataFetcher):
                     start=start,
                     end=end
                 )
+                if (data is None or data.empty) and isinstance(stockCode,str):
+                    for ticker in shared._ERRORS:
+                        err = shared._ERRORS.get(ticker)
+                        # Maybe this stock is recently listed. Let's try and fetch for the last month
+                        if "YFInvalidPeriodError" in err and "Period \'1mo\' is invalid" not in err:
+                            data = self.fetchStockData(stockCode=ticker,period='1mo',duration=duration,printCounter=printCounter, start=start,end=end)
+                            return data
             except (KeyError,YFPricesMissingError) as e:
                 default_logger().debug(e,exc_info=True)
                 pass
-            except YFInvalidPeriodError as e:
-                default_logger().debug(e,exc_info=True)
-                # Maybe this stock is recently listed
-                if e.invalid_period != '1mo':
-                    default_logger().debug(f"Re-sending request for {e.ticker} for period: 1mo")
-                    data = self.fetchStockData(stockCode=e.ticker,period='1mo',duration=duration,printCounter=printCounter, start=start,end=end)
-                    if data is not None:
-                        default_logger().debug(f"Received data for {e.ticker} for period: 1mo")
-                    else:
-                        default_logger().debug(f"Failed to receive data for {e.ticker} for period: 1mo either!")
-                    return data
+            except (YFInvalidPeriodError,Exception) as e:
+                default_logger().debug(e,exc_info=True)                    
         if printCounter:
             sys.stdout.write("\r\033[K")
             try:
