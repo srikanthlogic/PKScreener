@@ -827,7 +827,7 @@ class tools:
                     if "RUNNER" not in os.environ.keys():
                         copyFilePath = os.path.join(Archiver.get_user_outputs_dir(), f"copy_{fileName}")
                         cacheFileSize = os.stat(cache_file).st_size if os.path.exists(cache_file) else 0
-                        if os.path.exists(cache_file) and cacheFileSize >= 1024*1024*50:
+                        if os.path.exists(cache_file) and cacheFileSize >= 1024*1024*40:
                             shutil.copy(cache_file,copyFilePath) # copy is the saved source of truth
             except pickle.PicklingError as e:  # pragma: no cover
                 default_logger().debug(e, exc_info=True)

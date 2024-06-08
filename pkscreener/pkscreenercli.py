@@ -388,6 +388,7 @@ def runApplication():
         savedPipedArgs = args.pipedmenus if args is not None and args.pipedmenus is not None else None
     except:
         pass
+    global results, resultStocks, plainResults, dbTimestamp, elapsed_time, start_time
     # args = " -a Y -e -p -u 6186237493 -o X:12:30::D:D:D:D:D".split(" ")
     # argsv = argParser.parse_known_args(args=args)
     argsv = argParser.parse_known_args()
@@ -406,8 +407,12 @@ def runApplication():
     if args.options is not None:
         args.options = args.options.replace("::",":").replace("\"","").replace("'","")
     if args.runintradayanalysis:
-        from pkscreener.classes.MenuOptions import menus
-        runOptions = menus.allMenus(topLevel="C", index=12)
+        from pkscreener.classes.MenuOptions import menus, PREDEFINED_PIPED_MENU_OPTIONS
+        maxdisplayresults = configManager.maxdisplayresults
+        configManager.maxdisplayresults = 2000
+        configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
+        runOptions =  menus.allMenus(topLevel="C", index=12)
+        runOptions.extend(PREDEFINED_PIPED_MENU_OPTIONS)
         optionalFinalOutcome_df = None
         import pkscreener.classes.Utility as Utility
         import pandas as pd
@@ -416,7 +421,20 @@ def runApplication():
         for runOption in runOptions:
             args.options = runOption
             try:
-                optionalFinalOutcome_df,_ = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+                results,plainResults = main(userArgs=args,optionalFinalOutcome_df=optionalFinalOutcome_df)
+                if args.pipedmenus is not None:
+                    while args.pipedmenus is not None:
+                        results, plainResults = main(userArgs=args)
+                if isInterrupted():
+                    closeWorkersAndExit()
+                    exitGracefully()
+                    sys.exit(0)
+                runPipedScans = True
+                while runPipedScans:
+                    runPipedScans = pipeResults(plainResults,args)
+                    if runPipedScans:
+                        results, plainResults = main(userArgs=args)
+                optionalFinalOutcome_df = results
                 if "EoDDiff" not in optionalFinalOutcome_df.columns:
                     # Somehow the file must have been corrupted. Let's re-download
                     configManager.deleteFileWithPattern(pattern="stock_data_*.pkl")
@@ -427,6 +445,8 @@ def runApplication():
                 OutputControls().printOutput(e)
                 if args.log:
                     traceback.print_exc()
+        configManager.maxdisplayresults = maxdisplayresults
+        configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
         if optionalFinalOutcome_df is not None:
             final_df = None
             optionalFinalOutcome_df.drop('FairValue', axis=1, inplace=True, errors="ignore")
@@ -464,7 +484,6 @@ def runApplication():
         if args.barometer:
             sendGlobalMarketBarometer(userArgs=args)
         else:
-            global results, resultStocks, plainResults, dbTimestamp, elapsed_time, start_time
             monitorOption_org = ""
             # args.monitor = configManager.defaultMonitorOptions
             if args.monitor:

@@ -108,6 +108,14 @@ PREDEFINED_SCAN_MENU_VALUES =[
     "--systemlaunched -a y -e -o 'X:12:7:4:>|X:12:30:1:'",
     "--systemlaunched -a y -e -o 'X:0:0:^NSEI,^NSEBANK:>|X:12:7:4:>|X:12:30:1:'",
 ]
+PREDEFINED_PIPED_MENU_OPTIONS = []
+for option in PREDEFINED_SCAN_MENU_VALUES:
+    argOptions = option.split("-o ")[-1]
+    analysisOptions = argOptions.split("|")
+    analysisOptions[-1] = analysisOptions[-1].replace("X:","C:")
+    argOptions = "|".join(analysisOptions)
+    PREDEFINED_PIPED_MENU_OPTIONS.append(argOptions.replace("'","").replace("\"",""))
+
 PIPED_SCANNERS = {}
 for key in PREDEFINED_SCAN_MENU_KEYS:
     PIPED_SCANNERS[key] = PREDEFINED_SCAN_MENU_VALUES[int(key)-1]
