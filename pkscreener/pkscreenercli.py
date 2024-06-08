@@ -244,6 +244,11 @@ if __name__ == "__main__":
         required=False,
     )
     argParser.add_argument(
+        "--triggertimestamp",
+        help="Optionally, send the timestamp value when this was triggered",
+        required=False,
+    )
+    argParser.add_argument(
         "-u",
         "--user",
         help="Telegram user ID to whom the results must be sent.",
@@ -387,6 +392,10 @@ def runApplication():
     # argsv = argParser.parse_known_args(args=args)
     argsv = argParser.parse_known_args()
     args = argsv[0]
+    if args.triggertimestamp is None:
+        args.triggertimestamp = int(PKDateUtilities.currentDateTimestamp())
+    else:
+        args.triggertimestamp = int(args.triggertimestamp)
     if args.systemlaunched:
         args.systemlaunched = args.options
     
@@ -641,6 +650,11 @@ def pkscreenercli():
         configManager.getConfig(ConfigManager.parser)
         import atexit
         atexit.register(exitGracefully)
+        # Set the trigger timestamp
+        if args.triggertimestamp is None:
+            args.triggertimestamp = int(PKDateUtilities.currentDateTimestamp())
+        else:
+            args.triggertimestamp = int(args.triggertimestamp)
         # configManager.restartRequestsCache()
         # args.monitor = configManager.defaultMonitorOptions
         if args.monitor is not None:
@@ -649,7 +663,8 @@ def pkscreenercli():
                         maxNumColsInEachResult=6,
                         maxNumRowsInEachResult=10,
                         maxNumResultRowsInMonitor=configManager.maxNumResultRowsInMonitor,
-                        pinnedIntervalWaitSeconds=configManager.pinnedMonitorSleepIntervalSeconds)
+                        pinnedIntervalWaitSeconds=configManager.pinnedMonitorSleepIntervalSeconds,
+                        alertOptions=configManager.soundAlertForMonitorOptions.split("~"))
 
         if args.log or configManager.logsEnabled:
             setupLogger(shouldLog=True, trace=args.testbuild)

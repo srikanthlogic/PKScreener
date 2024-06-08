@@ -339,6 +339,8 @@ class PKMarketOpenCloseAnalyser:
                                            nthCrossover=1,
                                            upDirection=True)
                 highTS, highRow = scrStats.findIntradayHighCrossover(df=df)
+                # buySell_df = scrStats.computeBuySellSignals(updatedCandleData[stock]["data"])
+                # OutputControls().printOutput(buySell_df)
                 dayHighLTP = dayHighLTP if pd.notna(dayHighLTP) else highRow["High"][-1]
                 sellTimestamps.append(ts.strftime("%H:%M"))
                 dayHighTimestamps.append(highTS.strftime("%H:%M"))

@@ -1690,7 +1690,7 @@ class ScreeningStatistics:
         return False
 
     # @measure_time
-    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None,exchangeName="INDIA",refreshMFAndFV=True):
+    def findUptrend(self, df, screenDict, saveDict, testing, stock,onlyMF=False,hostData=None,exchangeName="INDIA",refreshMFAndFV=True,downloadOnly=False):
         # shouldProceed = True
         isUptrend = False
         isDowntrend = False
@@ -1737,7 +1737,7 @@ class ScreeningStatistics:
         mfs = ""
         if refreshMFAndFV:
             try:
-                mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)),exchangeName=exchangeName)
+                mf_inst_ownershipChange = self.getMutualFundStatus(stock,onlyMF=onlyMF,hostData=hostData,force=(hostData is None or hostData.empty or not ("MF" in hostData.columns or "FII" in hostData.columns)) and downloadOnly,exchangeName=exchangeName)
                 if isinstance(mf_inst_ownershipChange, pd.Series):
                     mf_inst_ownershipChange = 0
                 roundOff = 2
@@ -1751,7 +1751,7 @@ class ScreeningStatistics:
                 pass
             try:
                 #Let's get the fair value, either saved or fresh from service
-                fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns),exchangeName=exchangeName)
+                fairValue = self.getFairValue(stock,hostData,force=(hostData is None or hostData.empty or "FairValue" not in hostData.columns) and downloadOnly,exchangeName=exchangeName)
                 if fairValue is not None and fairValue != 0:
                     ltp = saveDict["LTP"]
                     fairValueDiff = round(fairValue - ltp,0)

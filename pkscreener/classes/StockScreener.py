@@ -457,7 +457,8 @@ class StockScreener:
                                 onlyMF=(executeOption == 21 and reversalOption in [5,6]),
                                 hostData=data,
                                 exchangeName=exchangeName,
-                                refreshMFAndFV=(menuOption in ["X"])
+                                refreshMFAndFV=(menuOption in ["X"]),
+                                downloadOnly=True
                             )
                             hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
                 except np.RankWarning as e: # pragma: no cover 
@@ -621,7 +622,8 @@ class StockScreener:
                                 stock,
                                 onlyMF=(executeOption == 21 and reversalOption in [5,6]),
                                 hostData=data,
-                                exchangeName=exchangeName
+                                exchangeName=exchangeName,
+                                downloadOnly=downloadOnly
                             )
                             hostRef.objectDictionaryPrimary[stock] = data.to_dict("split")
 

@@ -2180,7 +2180,7 @@ def printNotifySaveScreenedResults(
                     else ""
                 )
                 caption = f"{title}"
-                elapsed_text = f"<i>({len(saveResults)}{'+' if (len(saveResults) > MAX_ALLOWED) else ''} stocks found in {str(int(elapsed_time))} sec.){warn_text}</i>"
+                elapsed_text = f"<i>({len(saveResults)}{'+' if (len(saveResults) > MAX_ALLOWED) else ''} stocks found in {str(int(elapsed_time))} sec. Queue Wait Time:{int(PKDateUtilities.currentDateTimestamp()-userPassedArgs.triggertimestamp-int(elapsed_time))}s){warn_text}</i>"
                 backtestExtension = "_backtest.png"
                 if len(screenResultsTrimmed) > MAX_ALLOWED:
                     screenResultsTrimmed = screenResultsTrimmed.head(MAX_ALLOWED)
@@ -2206,7 +2206,7 @@ def printNotifySaveScreenedResults(
                             lambda x: str(int(round(float(x),0)))
                         )
                         caption_df.loc[:, "%Chng"] = caption_df.loc[:, "%Chng"].apply(
-                            lambda x: f'{int(round(float(x.replace("%","")),0))}%'
+                            lambda x: f'{int(round(float(x.split(" ")[0].replace("%","")),0))}%'
                         )
                         caption_df.loc[:, "Volume"] = caption_df.loc[:, "Volume"].apply(
                             lambda x: f'{int(round(float(x.replace("x","")),0))}x' if (len(x.replace("x","").strip()) > 0 and not pd.isna(float(x.replace("x","")))) else ''
@@ -2772,28 +2772,19 @@ def saveNotifyResultsFile(
         pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0) if needsCalc else None
         filename = Utility.tools.promptSaveResults(choices,
             saveResults, defaultAnswer=defaultAnswer,pastDate=pastDate)
-        # if filename is not None:
-        #     sendMessageToTelegramChannel(
-        #         document_filePath=filename, caption=caption, user=user
-        #     )
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.WARN
-            + "[+] Notes:1.Trend calculation is based on 'daysToLookBack'. See configuration.\n[+] 2.Reduce the console font size to fit all columns on screen.\n[+] Many columns may have been hidden. Please check pkscreener.ini config."
+            + f"[+] Notes:\n[+] 1.Trend calculation is based on 'daysToLookBack'. See configuration.\n[+] 2.Reduce the console font size to fit all columns on screen.\n[+] Standard data columns were hidden: {configManager.alwaysHiddenDisplayColumns}. If you want, you can change this in pkscreener.ini"
             + colorText.END
         )
-        # try:
-        #     if filename is not None:
-        #         os.remove(filename)
-        # except Exception as e:  # pragma: no cover
-        #     default_logger().debug(e, exc_info=True)
     if userPassedArgs.monitor is None:
         needsCalc = userPassedArgs is not None and userPassedArgs.backtestdaysago is not None
         pastDate = PKDateUtilities.nthPastTradingDateStringFromFutureDate(int(userPassedArgs.backtestdaysago) if needsCalc else 0)
         OutputControls().printOutput(
             colorText.BOLD
             + colorText.GREEN
-            + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec. for {pastDate}! Press Enter to Continue.."
+            + f"[+] Screening Completed. Found {len(screenResults) if screenResults is not None else 0} results in {round(elapsed_time,2)} sec. for {pastDate}. Queue Wait Time:{int(PKDateUtilities.currentDateTimestamp()-userPassedArgs.triggertimestamp-round(elapsed_time,2))}s! Press Enter to Continue.."
             + colorText.END
             , enableMultipleLineOutput=True
         )

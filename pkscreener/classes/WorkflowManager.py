@@ -25,6 +25,7 @@
 import os
 from PKDevTools.classes.Telegram import get_secrets
 from PKDevTools.classes.OutputControls import OutputControls
+from PKDevTools.classes.PKDateUtilities import PKDateUtilities
 
 import pkscreener.classes.ConfigManager as ConfigManager
 from pkscreener.classes.Fetcher import screenerStockDataFetcher
@@ -36,6 +37,7 @@ def run_workflow(command, user, options, workflowType="B"):
     owner = os.popen('git ls-remote --get-url origin | cut -d/ -f4').read().replace("\n","")
     repo = os.popen('git ls-remote --get-url origin | cut -d/ -f5').read().replace(".git","").replace("\n","")
     branch = "main"
+    timestamp = int(PKDateUtilities.currentDateTimestamp())
     if workflowType == "B":
         workflow_name = "w13-workflow-backtest_generic.yml"
         options = f'{options.replace("B:","")}:D:D:D:D:D'.replace("::",":")
@@ -60,7 +62,7 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
+                + f'-a Y -e --triggertimestamp {timestamp} -p -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
                 + '","ref":"main"}}'
             )
         else:
@@ -70,10 +72,10 @@ def run_workflow(command, user, options, workflowType="B"):
                 + '","inputs":{"user":"'
                 + f"{user}"
                 + '","params":"'
-                + f'-a Y -e -p -u {user} -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
+                + f'-a Y -e --triggertimestamp {timestamp} -p -u {user} -o {options.replace("_",":")}:D:D:D:D:D'.replace("::",":")
                 + '","ref":"main"}}'
             )
-    elif workflowType == "R":
+    elif workflowType == "R": #Restart bot
         workflow_name = "w3-workflow-bot.yml"
         data = (
                 '{"ref":"'

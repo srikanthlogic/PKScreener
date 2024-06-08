@@ -35,7 +35,7 @@ from PKDevTools.classes.SuppressOutput import SuppressOutput
 from PKDevTools.classes.log import default_logger
 
 class MarketMonitor(SingletonMixin, metaclass=SingletonType):
-    def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2,pinnedIntervalWaitSeconds=30):
+    def __init__(self,monitors=[], maxNumResultsPerRow=3,maxNumColsInEachResult=6,maxNumRowsInEachResult=10,maxNumResultRowsInMonitor=2,pinnedIntervalWaitSeconds=30,alertOptions=[]):
         super(MarketMonitor, self).__init__()
         if monitors is not None and len(monitors) > 0:
             
@@ -43,6 +43,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
             self.monitorIndex = 0
             self.monitorPositions = {}
             self.monitorResultStocks = {}
+            self.alertOptions = alertOptions
             self.hiddenColumns = ""
             self.pinnedIntervalWaitSeconds = pinnedIntervalWaitSeconds
             # self.monitorNames = {}
@@ -204,7 +205,7 @@ class MarketMonitor(SingletonMixin, metaclass=SingletonType):
         if not self.isPinnedSingleMonitorMode:
             if telegram:
                 self.updateIfRunningInTelegramBotMode(screenOptions, chosenMenu, dbTimestamp, telegram, telegram_df)
-            elif screenOptions.split(":")[2] == "5" and numRecords > 1: # RSI conditions met? Sound alert!
+            elif screenOptions in self.alertOptions and numRecords > 1: # RSI conditions met? Sound alert!
                 Utility.tools.alertSound(beeps=5)
         else:
             sleep(self.pinnedIntervalWaitSeconds)
