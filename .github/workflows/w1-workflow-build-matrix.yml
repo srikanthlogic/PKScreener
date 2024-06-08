@@ -307,15 +307,6 @@ jobs:
           prerelease: false
           make_latest: true
 
-  Call-python-publish-workflow:
-      uses: pkjmesra/PKScreener/.github/workflows/w2-workflow-python-publish.yml@main
-      needs: [Build]
-      with:
-        branch-name: ${{ needs.Build.outputs.tag }}
-        version: ${{ needs.Build.outputs.version }}
-        sendNotification: ${{ needs.Build.outputs.sendNotification }}
-      secrets: inherit
-
   README_Update:
     runs-on: ubuntu-20.04
     permissions: write-all
@@ -348,6 +339,15 @@ jobs:
             git commit -m "GitHub Action Workflow - Updating version to latest"
             git push -v
 
+  Call-python-publish-workflow:
+    uses: pkjmesra/PKScreener/.github/workflows/w2-workflow-python-publish.yml@main
+    needs: [Build, README_Update]
+    with:
+      branch-name: ${{ needs.Build.outputs.tag }}
+      version: ${{ needs.Build.outputs.version }}
+      sendNotification: ${{ needs.Build.outputs.sendNotification }}
+    secrets: inherit
+        
   Call-Docker-workflow:
     uses: pkjmesra/PKScreener/.github/workflows/w15-docker-image.yml@main
     needs: [Build, README_Update]
