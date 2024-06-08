@@ -1555,11 +1555,6 @@ def main(userArgs=None,optionalFinalOutcome_df=None):
                             )
                 elif "|" not in userPassedArgs.options:
                     try:
-                        input("Ready ?")
-                        if screenResults is not None and len(screenResults) > 0:
-                            screenResults, saveResults = labelDataForPrinting(
-                                screenResults, saveResults, configManager, volumeRatio, executeOption, reversalOption or respChartPattern
-                            )
                         printNotifySaveScreenedResults(
                             screenResults,
                             saveResults,
