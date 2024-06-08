@@ -329,7 +329,7 @@ After you have finished the run, go to that copied path, zip the contents of the
 [Codefactor]: https://www.codefactor.io/repository/github/pkjmesra/PKScreener
 [PR-Guidelines-badge]: https://img.shields.io/badge/PULL%20REQUEST-GUIDELINES-red?style=for-the-badge
 [PR-Guidelines]: https://github.com/pkjmesra/PKScreener/blob/new-features/CONTRIBUTING.md
-[github-license]: https://img.shields.io/pypi/l/gspread?logo=github
+[github-license]: https://img.shields.io/github/license/pkjmesra/pkscreener
 [Downloads-badge]: https://static.pepy.tech/personalized-badge/pkscreener?period=total&units=international_system&left_color=black&right_color=brightgreen&left_text=PyPi%20Downloads
 [Downloads]: https://pepy.tech/project/pkscreener
 [Latest-Downloads-badge]: https://img.shields.io/github/downloads-pre/pkjmesra/pkscreener/latest/total?logo=github
