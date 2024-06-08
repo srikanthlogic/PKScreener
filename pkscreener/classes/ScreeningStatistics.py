@@ -221,12 +221,14 @@ class ScreeningStatistics:
         data = data[::-1]  # Reverse the dataframe so that its the oldest date first
         mfis = pktalib.MFI(data["High"],data["Low"],data["Close"],data["Volume"], 14)
         ccis = pktalib.CCI(data["High"],data["Low"],data["Close"], 14)
+        sma7 = pktalib.SMA(data["Close"], 7)
+        sma20 = pktalib.SMA(data["Close"], 20)
         recent = data.tail(2)
         percentChange = round((recent["Close"].iloc[1] - recent["Close"].iloc[0]) *100/recent["Close"].iloc[0],1)
         rsi = recent["RSI"].iloc[1]
         mfi = mfis.tail(1).iloc[0]
         cci = ccis.tail(1).iloc[0]
-        hasDeelMomentum = percentChange >= 1 and rsi>= 68 and mfi >= 68 and cci >= 110
+        hasDeelMomentum = percentChange >= 1 and ((rsi>= 68 and mfi >= 68 and cci >= 110) or (rsi>= 50 and mfi >= 50 and recent["Close"].iloc[1] >= sma7 and recent["Close"].iloc[1] >= sma20))
         # if self.shouldLog:
         #     self.default_logger.debug(data.head(10))
         return hasDeelMomentum
@@ -2293,10 +2295,10 @@ class ScreeningStatistics:
         return False
 
     # Find Conflucence
-    def validateConfluence(self, stock, df, screenDict, saveDict, percentage=0.1,confFilter=3):
+    def validateConfluence(self, stock, df, full_df, screenDict, saveDict, percentage=0.1,confFilter=3):
         if df is None or len(df) == 0:
             return False
-        data = df.copy()
+        data = df.copy() if confFilter < 4 else full_df.copy()
         recent = data.head(2)
         if len(recent) < 2:
             return False
@@ -2304,6 +2306,29 @@ class ScreeningStatistics:
         key2 = "LMA"
         key3 = "50DMA"
         key4 = "200DMA"
+        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
+        if confFilter == 4:
+            # 10 ema>20 eMA > 55 ema >200 smaeach OF THE ema AND THE 200 sma SEPARATED BY LESS THAN 1%(ideally 0.1% TO 0.5%) DURING CONFLUENCE
+            reversedData = data[::-1]  # Reverse the dataframe
+            ema_10 = pktalib.EMA(reversedData["Close"],10).tail(1).iloc[0]
+            ema_20 = pktalib.EMA(reversedData["Close"],20).tail(1).iloc[0]
+            ema_55 = pktalib.EMA(reversedData["Close"],55).tail(1).iloc[0]
+            sma_200 = pktalib.SMA(reversedData["Close"],200).tail(1).iloc[0]
+            smaRange = sma_200 * percentage
+            if ema_10 >= ema_20 and ema_20 >= ema_55 and ema_55 >= sma_200:
+                superbConfluence = (ema_10 - sma_200 <= smaRange) and \
+                                    (ema_20 - sma_200 <= smaRange) and \
+                                    (ema_55 - sma_200 <= smaRange)
+                screenDict["MA-Signal"] = (
+                    saved[0] 
+                    + colorText.BOLD
+                    + (colorText.GREEN)
+                    + "SuperGoldenConfluence"
+                    + colorText.END
+                )
+                saveDict["MA-Signal"] = saved[1] + "SuperGoldenConfluence"
+                return superbConfluence
+            
         is20DMACrossover50DMA = (recent["SSMA20"].iloc[0] >= recent["SMA"].iloc[0]) and \
                             (recent["SSMA20"].iloc[1] <= recent["SMA"].iloc[1])
         is50DMACrossover200DMA = (recent["SMA"].iloc[0] >= recent["LMA"].iloc[0]) and \
@@ -2332,7 +2357,6 @@ class ScreeningStatistics:
             )
         saveDict["ConfDMADifference"] = difference
         screenDict["ConfDMADifference"] = difference
-        saved = self.findCurrentSavedValue(screenDict,saveDict,"MA-Signal")
         # difference = abs(difference)
         confText = f"{goldenxOverText if isGoldenCrossOver else (deadxOverText if isDeadCrossOver else ('Conf.Up' if is50DMAUpTrend else ('Conf.Down' if is50DMADownTrend else (key3 if is50DMA else (key4 if is200DMA else 'Unknown')))))}"
         if abs(recent[key1].iloc[0] - recent[key2].iloc[0]) <= (

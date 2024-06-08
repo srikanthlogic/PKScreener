@@ -2,6 +2,7 @@
 
 ## What's New?
 1. [v0.45.20240608.447] release
+* Super confluence option added (10 EMA > 20 EMA > 55 EMA > 200 SMA within 1-2%). Try X > 12 > 7 > 3 > Option 4.
 * Sound alerts for configured options in pkscreener.ini when running in monitoring mode (option -m)
 * Moved the telegram image quality/size and compression parameters to pkscreener.ini to make it configurable and under control.
 * Defined configurable option for sleep interval between data fetches for pinned scanners. Check out pinnedmonitorsleepintervalseconds value in pkscreener.ini config file.

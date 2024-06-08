@@ -372,10 +372,11 @@ class StockScreener:
                         isConfluence = screener.validateConfluence(
                             stock,
                             processedData,
+                            fullData,
                             screeningDictionary,
                             saveDictionary,
                             percentage=insideBarToLookback,
-                            confFilter=(maLength if maLength > 0 else 3) # 1 = Conf up, 2 = Conf Down, 3 = all
+                            confFilter=(maLength if maLength > 0 else 3) # 1 = Conf up, 2 = Conf Down, 3 = all, 4 super confluence (10>20>55 EMA > 200SMA)
                         )
                         if not isConfluence:
                             return returnLegibleData(f"isConfluence:{isConfluence}")

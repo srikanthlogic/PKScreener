@@ -261,7 +261,7 @@ level4_X_ChartPattern_Confluence_MenuDict = {
     "1": "Confluence up / GoldenCrossOver / DMA50 / DMA200",
     "2": "Confluence Down / DeadCrossOver",
     "3": "Any/All (Confluence up/down/Crossovers)",
-    "4": "10,20,55,200 EMA Confluence",
+    "4": "10,20,55-EMA / 200-SMA Super-Confluence",
     "0": "Cancel",
 }
 
