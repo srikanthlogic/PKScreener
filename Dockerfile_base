@@ -27,43 +27,62 @@
 
 FROM python:3.11.9-slim as base
 ENV PYTHONUNBUFFERED 1
-
-RUN apt-get install -y apt-transport-https
-RUN apt-get -y update && apt-get upgrade -y
-
-RUN apt-get install -y gcc curl make build-essential wget unzip tar pkg-config libhdf5-serial-dev
-
 ENV LANG C.UTF-8
 
-RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && unzip main.zip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    gcc \
+    curl \
+    make \
+    build-essential \
+    wget \
+    unzip \
+    tar \
+    pkg-config \
+    libhdf5-serial-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip && \
+    unzip main.zip && \
+    rm main.zip
+
 WORKDIR /PKScreener-main
 
-RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade pip && \
+    pip3 install setuptools cmake numpy
 
+# Download and install TA-Lib
 RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/.github/dependencies/ta-lib-0.4.0-src.tar.gz && \
-  tar -xzf ta-lib-0.4.0-src.tar.gz && \
-  cd ta-lib/ && \
-  wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' -O config.guess && \
-  wget 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' -O config.sub && \
-  ./configure --prefix=/usr && \
-  make && \
-  make install && \
-  pip3 install setuptools cmake numpy
-
-RUN rm -rf ta-lib ta-lib-0.4.0-src.tar.gz main.zip
-RUN pip3 install ta-lib
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib/ && \
+    wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' && \
+    wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ta-lib ta-lib-0.4.0-src.tar.gz &&\
+    pip3 install ta-lib 
 
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install --no-deps advanced-ta
-RUN pip3 install .
-RUN wget https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf && \
-  cp courbd.ttf /usr/local/share/fonts/courbd.ttf
-RUN export TERM=xterm
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-deps advanced-ta && \
+    pip3 install .
+
+# Optimized font download and installation
+RUN mkdir -p /usr/local/share/fonts && \
+    wget -qO- https://raw.githubusercontent.com/pkjmesra/PKScreener/main/pkscreener/courbd.ttf > /usr/local/share/fonts/courbd.ttf
+
+# Set environment variables
+ENV TERM=xterm
 ENV PKSCREENER_DOCKER=1
 
-# Clean up APT when done.
+# Clean up APT when done
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-ENTRYPOINT ["python3","pkscreener/pkscreenercli.py"]
+
+ENTRYPOINT ["python3", "pkscreener/pkscreenercli.py"]
+
 # Run with 
 # docker run -it pkjmesra/pkscreener:latest

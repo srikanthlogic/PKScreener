@@ -28,25 +28,31 @@
 
 FROM pkjmesra/pkscreener:latest as base
 ENV PYTHONUNBUFFERED 1
+
 WORKDIR /
-RUN rm -rf /PKScreener-main
-RUN rm -rf main.zip main.zip.*
-RUN curl -JL https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip -o main.zip && unzip main.zip
-RUN rm -rf main.zip main.zip.*
+
+RUN rm -rf /PKScreener-main main.zip*
+
+RUN curl -JL https://github.com/pkjmesra/PKScreener/archive/refs/heads/main.zip -o main.zip && \
+    unzip main.zip && \
+    rm -rf main.zip*
+
 WORKDIR /PKScreener-main
-RUN pip3 install --upgrade pip
-RUN pip3 uninstall pkscreener -y
-RUN pip3 uninstall PKNSETools -y
-RUN pip3 uninstall PKDevTools -y
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install .
-RUN export TERM=xterm
+
+RUN pip3 install --upgrade pip && \
+    pip3 uninstall -y pkscreener PKNSETools PKDevTools && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install .
+
+ENV TERM=xterm
 ENV PKSCREENER_DOCKER=1
-RUN mv /PKScreener-main/pkscreener/pkscreenercli.py /pkscreenercli.py
-RUN rm -rf /PKScreener-main
-RUN mkdir -p /PKScreener-main/pkscreener/
-RUN mv /pkscreenercli.py /PKScreener-main/pkscreener/pkscreenercli.py
-ENTRYPOINT ["python3","pkscreener/pkscreenercli.py"]
+
+RUN mv /PKScreener-main/pkscreener/pkscreenercli.py /pkscreenercli.py && \
+    rm -rf /PKScreener-main && \
+    mkdir -p /PKScreener-main/pkscreener/ && \
+    mv /pkscreenercli.py /PKScreener-main/pkscreener/pkscreenercli.py
+
+ENTRYPOINT ["python3", "pkscreener/pkscreenercli.py"]
+
 # Run with 
 # docker run -it pkjmesra/pkscreener:latest
